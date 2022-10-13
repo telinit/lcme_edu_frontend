@@ -30,6 +30,7 @@ module Api.Data exposing
     , MessageTaskSubmission
     , Organization
     , SetPassword
+    , Token
     , UnreadObject, UnreadObjectType(..), unreadObjectTypeVariants
     , User
     , encodeActivity
@@ -47,6 +48,7 @@ module Api.Data exposing
     , encodeMessageTaskSubmission
     , encodeOrganization
     , encodeSetPassword
+    , encodeToken
     , encodeUnreadObject
     , encodeUser
     , activityDecoder
@@ -64,6 +66,7 @@ module Api.Data exposing
     , messageTaskSubmissionDecoder
     , organizationDecoder
     , setPasswordDecoder
+    , tokenDecoder
     , unreadObjectDecoder
     , userDecoder
     )
@@ -275,6 +278,13 @@ type alias Organization =
 
 type alias SetPassword =
     { password : String
+    }
+
+
+type alias Token =
+    { key : String
+    , user : User
+    , created : Maybe Posix
     }
 
 
@@ -781,6 +791,28 @@ encodeSetPasswordPairs model =
     pairs
 
 
+encodeToken : Token -> Json.Encode.Value
+encodeToken =
+    encodeObject << encodeTokenPairs
+
+
+encodeTokenWithTag : ( String, String ) -> Token -> Json.Encode.Value
+encodeTokenWithTag (tagField, tag) model =
+    encodeObject (encodeTokenPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeTokenPairs : Token -> List EncodedField
+encodeTokenPairs model =
+    let
+        pairs =
+            [ encode "key" Json.Encode.string model.key
+            , encode "user" encodeUser model.user
+            , maybeEncode "created" Api.Time.encodeDateTime model.created
+            ]
+    in
+    pairs
+
+
 encodeUnreadObject : UnreadObject -> Json.Encode.Value
 encodeUnreadObject =
     encodeObject << encodeUnreadObjectPairs
@@ -1122,6 +1154,14 @@ setPasswordDecoder : Json.Decode.Decoder SetPassword
 setPasswordDecoder =
     Json.Decode.succeed SetPassword
         |> decode "password" Json.Decode.string 
+
+
+tokenDecoder : Json.Decode.Decoder Token
+tokenDecoder =
+    Json.Decode.succeed Token
+        |> decode "key" Json.Decode.string 
+        |> decode "user" userDecoder 
+        |> maybeDecode "created" Api.Time.dateTimeDecoder Nothing
 
 
 unreadObjectDecoder : Json.Decode.Decoder UnreadObject

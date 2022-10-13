@@ -35,6 +35,7 @@ import Json.Decode
 import Json.Encode
 
 
+
 userCreate : Api.Data.User -> Api.Request Api.Data.User
 userCreate data_body =
     Api.request
@@ -45,6 +46,7 @@ userCreate data_body =
         []
         (Just (Api.Data.encodeUser data_body))
         Api.Data.userDecoder
+
 
 
 userDelete : String -> Api.Request ()
@@ -59,6 +61,7 @@ userDelete id_path =
         (Json.Decode.succeed ())
 
 
+
 userList : Api.Request (List Api.Data.User)
 userList =
     Api.request
@@ -71,7 +74,8 @@ userList =
         (Json.Decode.list Api.Data.userDecoder)
 
 
-userLogin : Api.Data.Login -> Api.Request ()
+
+userLogin : Api.Data.Login -> Api.Request Api.Data.Token
 userLogin data_body =
     Api.request
         "POST"
@@ -80,7 +84,8 @@ userLogin data_body =
         []
         []
         (Just (Api.Data.encodeLogin data_body))
-        (Json.Decode.succeed ())
+        Api.Data.tokenDecoder
+
 
 
 userLogout : Api.Request ()
@@ -95,6 +100,7 @@ userLogout =
         (Json.Decode.succeed ())
 
 
+
 userPartialUpdate : String -> Api.Data.User -> Api.Request Api.Data.User
 userPartialUpdate id_path data_body =
     Api.request
@@ -105,6 +111,7 @@ userPartialUpdate id_path data_body =
         []
         (Just (Api.Data.encodeUser data_body))
         Api.Data.userDecoder
+
 
 
 userRead : String -> Api.Request Api.Data.User
@@ -119,6 +126,7 @@ userRead id_path =
         Api.Data.userDecoder
 
 
+
 userSelf : Api.Request Api.Data.User
 userSelf =
     Api.request
@@ -131,6 +139,7 @@ userSelf =
         Api.Data.userDecoder
 
 
+
 userSetPassword : Api.Data.SetPassword -> Api.Request ()
 userSetPassword data_body =
     Api.request
@@ -141,6 +150,7 @@ userSetPassword data_body =
         []
         (Just (Api.Data.encodeSetPassword data_body))
         (Json.Decode.succeed ())
+
 
 
 userUpdate : String -> Api.Data.User -> Api.Request Api.Data.User
