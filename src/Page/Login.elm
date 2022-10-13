@@ -1,7 +1,7 @@
 module Page.Login exposing (..)
 
 import Api exposing (send)
-import Api.Data
+import Api.Data exposing (Token)
 import Api.Request.User exposing (userLogin, userSelf)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -14,7 +14,7 @@ type Model
     = Login { username : String, password : String }
     | PasswordReset { username : String }
     | Working String
-    | Success { first_name : String }
+    | Success { token : Token }
     | Error String
 
 
@@ -22,10 +22,8 @@ type Msg
     = DoLogin
     | DoPasswordReset
     | ShowPasswordReset
-    | LoginCompleted
+    | LoginCompleted Token
     | LoginFailed String
-    | SelfFetchCompleted Api.Data.User
-    | SelfFetchFailed String
     | CloseError
     | ModelSetUsername String
     | ModelSetPassword String
@@ -41,8 +39,8 @@ doLogin username password =
     let
         onResult r =
             case r of
-                Ok _ ->
-                    LoginCompleted
+                Ok token ->
+                    LoginCompleted token
 
                 Err (Http.BadStatus 403) ->
                     LoginFailed "Неправильно указаны данные учетной записи"
@@ -51,20 +49,6 @@ doLogin username password =
                     LoginFailed <| httpErrorToString e
     in
     userLogin { username = username, password = password } |> send onResult
-
-
-doGetUserFirstName : () -> Cmd Msg
-doGetUserFirstName () =
-    let
-        onResult r =
-            case r of
-                Ok user ->
-                    SelfFetchCompleted user
-
-                Err e ->
-                    SelfFetchFailed <| httpErrorToString e
-    in
-    userSelf |> send onResult
 
 
 
@@ -91,8 +75,8 @@ update msg model =
         ( ShowPasswordReset, _ ) ->
             ( PasswordReset { username = "" }, Cmd.none )
 
-        ( LoginCompleted, Working _ ) ->
-            ( Working "Запрашиваем профиль пользователя", doGetUserFirstName () )
+        ( LoginCompleted token, Working _ ) ->
+            ( Success { token = token }, Cmd.none )
 
         ( LoginFailed reason, _ ) ->
             ( Error reason, Cmd.none )
@@ -108,12 +92,6 @@ update msg model =
 
         ( ModelSetUsername u, PasswordReset pr ) ->
             ( PasswordReset { pr | username = u }, Cmd.none )
-
-        ( SelfFetchCompleted user, Working _ ) ->
-            ( Success { first_name = Maybe.withDefault "Аноним" user.firstName }, Cmd.none )
-
-        ( SelfFetchFailed reason, Working _ ) ->
-            ( Error <| "Не удалось запросить профиль пользователя: " ++ reason, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -164,8 +142,23 @@ view model =
                 Working txt ->
                     div [ class "ui message" ] [ div [ class "ui active inline loader small" ] [], text <| "  " ++ txt ]
 
-                Success { first_name } ->
-                    text <| "Привет, " ++ first_name
+                Success { token } ->
+                    let
+                        a =
+                            "Аноним"
+
+                        nm =
+                            case token.user.firstName of
+                                Just "" ->
+                                    a
+
+                                Nothing ->
+                                    a
+
+                                Just x ->
+                                    x
+                    in
+                    div [ class "ui message" ] [ text <| "Привет, " ++ nm ]
     in
     div
         [ class "ui middle aligned center aligned grid"

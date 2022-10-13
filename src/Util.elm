@@ -18,5 +18,5 @@ httpErrorToString error =
         Http.BadStatus code ->
             "Код ошибки: " ++ String.fromInt code
 
-        Http.BadBody _ ->
-            "Некорректное тело запроса"
+        Http.BadBody s ->
+            "Некорректный формат данных: " ++ s
