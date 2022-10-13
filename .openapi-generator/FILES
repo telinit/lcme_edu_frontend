@@ -1,0 +1,15 @@
+.gitignore
+README.md
+elm.json
+src/Api.elm
+src/Api/Data.elm
+src/Api/Request/Activity.elm
+src/Api/Request/Common.elm
+src/Api/Request/Course.elm
+src/Api/Request/Education.elm
+src/Api/Request/File.elm
+src/Api/Request/Mark.elm
+src/Api/Request/Message.elm
+src/Api/Request/Unread.elm
+src/Api/Request/User.elm
+src/Api/Time.elm
