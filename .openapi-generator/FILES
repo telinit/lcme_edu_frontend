@@ -1,4 +1,3 @@
-.gitignore
 src/Api.elm
 src/Api/Data.elm
 src/Api/Request/Activity.elm

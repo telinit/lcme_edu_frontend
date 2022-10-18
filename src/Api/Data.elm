@@ -121,13 +121,13 @@ activityTypeVariants =
 
 type alias Course =
     { id : Maybe Uuid
+    , forSpecialization : EducationSpecialization
+    , logo : File
+    , cover : File
     , title : String
     , description : String
     , forClass : Maybe String
     , forGroup : Maybe String
-    , forSpecialization : Maybe Uuid
-    , logo : Maybe Uuid
-    , cover : Maybe Uuid
     }
 
 
@@ -282,9 +282,8 @@ type alias SetPassword =
 
 
 type alias Token =
-    { key : String
-    , user : User
-    , created : Maybe Posix
+    { user : User
+    , key : String
     }
 
 
@@ -421,13 +420,13 @@ encodeCoursePairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , encode "for_specialization" encodeEducationSpecialization model.forSpecialization
+            , encode "logo" encodeFile model.logo
+            , encode "cover" encodeFile model.cover
             , encode "title" Json.Encode.string model.title
             , encode "description" Json.Encode.string model.description
             , maybeEncode "for_class" Json.Encode.string model.forClass
             , maybeEncodeNullable "for_group" Json.Encode.string model.forGroup
-            , maybeEncodeNullable "for_specialization" Uuid.encode model.forSpecialization
-            , maybeEncodeNullable "logo" Uuid.encode model.logo
-            , maybeEncodeNullable "cover" Uuid.encode model.cover
             ]
     in
     pairs
@@ -805,9 +804,8 @@ encodeTokenPairs : Token -> List EncodedField
 encodeTokenPairs model =
     let
         pairs =
-            [ encode "key" Json.Encode.string model.key
-            , encode "user" encodeUser model.user
-            , maybeEncode "created" Api.Time.encodeDateTime model.created
+            [ encode "user" encodeUser model.user
+            , encode "key" Json.Encode.string model.key
             ]
     in
     pairs
@@ -965,13 +963,13 @@ courseDecoder : Json.Decode.Decoder Course
 courseDecoder =
     Json.Decode.succeed Course
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> decode "for_specialization" educationSpecializationDecoder 
+        |> decode "logo" fileDecoder 
+        |> decode "cover" fileDecoder 
         |> decode "title" Json.Decode.string 
         |> decode "description" Json.Decode.string 
         |> maybeDecode "for_class" Json.Decode.string Nothing
         |> maybeDecodeNullable "for_group" Json.Decode.string Nothing
-        |> maybeDecodeNullable "for_specialization" Uuid.decoder Nothing
-        |> maybeDecodeNullable "logo" Uuid.decoder Nothing
-        |> maybeDecodeNullable "cover" Uuid.decoder Nothing
 
 
 courseEnrollmentDecoder : Json.Decode.Decoder CourseEnrollment
@@ -1159,9 +1157,8 @@ setPasswordDecoder =
 tokenDecoder : Json.Decode.Decoder Token
 tokenDecoder =
     Json.Decode.succeed Token
-        |> decode "key" Json.Decode.string 
         |> decode "user" userDecoder 
-        |> maybeDecode "created" Api.Time.dateTimeDecoder Nothing
+        |> decode "key" Json.Decode.string 
 
 
 unreadObjectDecoder : Json.Decode.Decoder UnreadObject

@@ -24,3 +24,5 @@
 
 elm.json
 README.md
+.gitignore
+**/Api.elm

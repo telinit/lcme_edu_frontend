@@ -1,37 +1,53 @@
 module Page.Login exposing (..)
 
-import Api exposing (send)
-import Api.Data exposing (Token)
+import Api exposing (send, task, withToken)
+import Api.Data exposing (Token, User)
 import Api.Request.User exposing (userLogin, userSelf)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
-import Util exposing (httpErrorToString)
+import Ports exposing (setStorage)
+import Task exposing (mapError)
+import Time
+import Util exposing (httpErrorToString, link_span, onClickPrevent, onClickPreventStop, onClickStop, task_to_cmd)
 
 
-type Model
-    = Login { username : String, password : String }
-    | PasswordReset { username : String }
-    | Working String
-    | Success { token : Token }
+type UserMessage
+    = None
+    | Info String
     | Error String
+
+
+type ModelState
+    = Login
+    | PasswordReset
+    | CheckingStored
+    | LoggingIn
+    | ResettingPassword
+    | Success { token : String, user : User }
+
+
+type alias Model =
+    { username : String
+    , password : String
+    , message : UserMessage
+    , state : ModelState
+    , token : String
+    }
 
 
 type Msg
     = DoLogin
     | DoPasswordReset
+    | ShowLogin
     | ShowPasswordReset
     | LoginCompleted Token
     | LoginFailed String
-    | CloseError
+    | CheckSessionFailed String
+    | CloseMessage
     | ModelSetUsername String
     | ModelSetPassword String
-
-
-init : () -> ( Model, Cmd Msg )
-init () =
-    ( Login { username = "", password = "" }, Cmd.none )
 
 
 doLogin : String -> String -> Cmd Msg
@@ -51,6 +67,43 @@ doLogin username password =
     userLogin { username = username, password = password } |> send onResult
 
 
+doCheckSession : String -> Cmd Msg
+doCheckSession token =
+    let
+        hide_error =
+            mapError (\_ -> Nothing)
+
+        task_user =
+            withToken (Just token) userSelf
+                |> task
+                |> mapError
+                    (\e ->
+                        Just <|
+                            "Произошла ошибка при попытке восстановить текущую сессию. Возможно, имеются проблемы "
+                                ++ "с вашим интенет-подключением или сервер API в данный момент недоступен: "
+                                ++ httpErrorToString e
+                    )
+
+        task_date =
+            Time.now |> hide_error
+    in
+    Task.map2 (\x y -> ( x, y )) task_user task_date
+        |> task_to_cmd
+            (\err ->
+                if token == "" then
+                    ShowLogin
+
+                else
+                    CheckSessionFailed <| Maybe.withDefault "" err
+            )
+            (\( user, time ) -> LoginCompleted { key = token, user = user, created = Just time })
+
+
+doSaveToken : String -> Cmd Msg
+doSaveToken token =
+    setStorage { key = "token", value = token }
+
+
 
 -- TODO: Password reset
 
@@ -60,38 +113,43 @@ doPasswordReset username =
     Cmd.none
 
 
+init : String -> ( Model, Cmd Msg )
+init token =
+    ( { username = "", password = "", message = None, state = CheckingStored, token = token }, doCheckSession token )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case ( msg, model ) of
-        ( DoLogin, Login { username, password } ) ->
-            ( Working "Выполняется вход", doLogin username password )
+    case ( msg, model.state ) of
+        ( DoLogin, Login ) ->
+            ( { model | state = LoggingIn }, doLogin model.username model.password )
 
-        ( DoPasswordReset, PasswordReset { username } ) ->
-            ( Working "Выполняется сброс пароля", doPasswordReset username )
+        ( DoPasswordReset, PasswordReset ) ->
+            ( { model | state = ResettingPassword }, doPasswordReset model.username )
 
-        ( ShowPasswordReset, Login { username } ) ->
-            ( PasswordReset { username = username }, Cmd.none )
+        ( CheckSessionFailed err, CheckingStored ) ->
+            ( { model | message = Error err, state = Login }, Cmd.none )
 
         ( ShowPasswordReset, _ ) ->
-            ( PasswordReset { username = "" }, Cmd.none )
+            ( { model | state = PasswordReset, message = None }, Cmd.none )
 
-        ( LoginCompleted token, Working _ ) ->
-            ( Success { token = token }, Cmd.none )
+        ( ShowLogin, _ ) ->
+            ( { model | state = Login, message = None }, Cmd.none )
+
+        ( LoginCompleted token, _ ) ->
+            ( { model | state = Success { token = token.key, user = token.user }, message = None }, doSaveToken token.key )
 
         ( LoginFailed reason, _ ) ->
-            ( Error reason, Cmd.none )
+            ( { model | state = Login, message = Error reason }, Cmd.none )
 
-        ( CloseError, _ ) ->
-            init ()
+        ( CloseMessage, _ ) ->
+            ( { model | message = None }, Cmd.none )
 
-        ( ModelSetUsername u, Login login ) ->
-            ( Login { login | username = u }, Cmd.none )
+        ( ModelSetUsername u, _ ) ->
+            ( { model | username = u }, Cmd.none )
 
-        ( ModelSetPassword p, Login login ) ->
-            ( Login { login | password = p }, Cmd.none )
-
-        ( ModelSetUsername u, PasswordReset pr ) ->
-            ( PasswordReset { pr | username = u }, Cmd.none )
+        ( ModelSetPassword p, _ ) ->
+            ( { model | password = p }, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -103,52 +161,66 @@ view model =
         blue_button label on_click =
             div [ class "ui fluid large blue submit button", onClick on_click ] [ text label ]
 
+        progress txt =
+            div [ class "ui message" ] [ div [ class "ui active inline loader small" ] [], text <| "  " ++ txt ]
+
+        msg m =
+            case m of
+                None ->
+                    text ""
+
+                Info s ->
+                    div [ class "ui message" ]
+                        [ i [ class "close icon", onClick CloseMessage ] []
+                        , div [ class "header" ] [ text "Ошибка входа" ]
+                        , p [] [ text s ]
+                        ]
+
+                Error s ->
+                    div [ class "ui negative message" ]
+                        [ i [ class "close icon", onClick CloseMessage ] []
+                        , div [ class "header" ] [ text "Ошибка входа" ]
+                        , p [] [ text s ]
+                        ]
+
         pw_reset =
-            div [ class "ui message" ] [ text "Забыли пароль?  ", a [ href "", onClick ShowPasswordReset ] [ text "Восстановите" ], text " его." ]
+            div [ class "ui message" ] [ text "Забыли пароль?  ", link_span [ onClick ShowPasswordReset ] [ text "Восстановите" ], text " его." ]
+
+        back_to_login =
+            div [ class "ui message" ] [ link_span [ onClick ShowLogin ] [ text "Назад" ], text " к форме входа." ]
 
         form =
-            case model of
-                Login { username, password } ->
+            case model.state of
+                Login ->
                     div []
                         [ Html.form [ class "ui large form", onSubmit DoLogin ]
                             [ div [ class "ui stacked segment" ]
-                                [ viewField "text" username "Логин" "user" ModelSetUsername
-                                , viewField "password" password "Пароль" "lock" ModelSetPassword
+                                [ viewField "text" model.username "Логин" "user" ModelSetUsername
+                                , viewField "password" model.password "Пароль" "lock" ModelSetPassword
                                 , blue_button "Войти" DoLogin
                                 ]
                             ]
                         , pw_reset
                         ]
 
-                Error err ->
+                PasswordReset ->
                     div []
-                        [ div [ class "ui negative message" ]
-                            [ -- i [ class "close icon", onClick CloseError ] []
-                              div [ class "header" ] [ text "Ошибка входа" ]
-                            , p [] [ text err ]
+                        [ Html.form [ class "ui large form", onSubmit DoPasswordReset ]
+                            [ div [ class "ui stacked segment" ]
+                                [ viewField "text" model.username "Логин" "user" ModelSetUsername
+                                , blue_button "Восстановить" DoPasswordReset
+                                ]
                             ]
-                        , blue_button "Попробовать еще раз" CloseError
-                        , pw_reset
+                        , back_to_login
                         ]
 
-                PasswordReset { username } ->
-                    Html.form [ class "ui large form", onSubmit DoPasswordReset ]
-                        [ div [ class "ui stacked segment" ]
-                            [ viewField "text" username "Логин" "user" ModelSetUsername
-                            , blue_button "Восстановить" DoPasswordReset
-                            ]
-                        ]
-
-                Working txt ->
-                    div [ class "ui message" ] [ div [ class "ui active inline loader small" ] [], text <| "  " ++ txt ]
-
-                Success { token } ->
+                Success { token, user } ->
                     let
                         a =
                             "Аноним"
 
                         nm =
-                            case token.user.firstName of
+                            case user.firstName of
                                 Just "" ->
                                     a
 
@@ -159,15 +231,27 @@ view model =
                                     x
                     in
                     div [ class "ui message" ] [ text <| "Привет, " ++ nm ]
+
+                CheckingStored ->
+                    progress "Проверяем текущую сессию"
+
+                LoggingIn ->
+                    progress "Выполняется вход"
+
+                ResettingPassword ->
+                    progress "Выполняется сброс пароля"
     in
     div
-        [ class "ui middle aligned center aligned grid"
+        [ class "row center-xs middle-xs"
         , style "height" "100%"
         , style "background-color" "#EEE"
         ]
-        [ div [ class "column", style "max-width" "400px" ]
-            [ h2 [ class "ui blue image header" ] [ div [ class "content" ] [ text "Вход в систему" ] ]
-            , form
+        [ div [ class "col-4" ]
+            [ div [ class "box", style "width" "400px" ]
+                [ h2 [ class "ui blue image header" ] [ div [ class "content" ] [ text "Вход в систему" ] ]
+                , form
+                , msg model.message
+                ]
             ]
         ]
 
