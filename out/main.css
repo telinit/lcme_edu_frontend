@@ -1,0 +1,12 @@
+@keyframes scalex-animate {
+    0% {
+        transform: scaleX(0);
+    }
+    100% {
+        transform: scaleX(1);
+    }
+}
+
+.ui.container {
+    width: 1202px !important;
+}
