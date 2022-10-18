@@ -16,8 +16,9 @@
 
 module Api.Data exposing
     ( Activity, ActivityType(..), activityTypeVariants
-    , Course
     , CourseEnrollment, CourseEnrollmentRole(..), courseEnrollmentRoleVariants
+    , CourseRead
+    , CourseWrite
     , Department
     , Education
     , EducationSpecialization
@@ -34,8 +35,9 @@ module Api.Data exposing
     , UnreadObject, UnreadObjectType(..), unreadObjectTypeVariants
     , User
     , encodeActivity
-    , encodeCourse
     , encodeCourseEnrollment
+    , encodeCourseRead
+    , encodeCourseWrite
     , encodeDepartment
     , encodeEducation
     , encodeEducationSpecialization
@@ -52,8 +54,9 @@ module Api.Data exposing
     , encodeUnreadObject
     , encodeUser
     , activityDecoder
-    , courseDecoder
     , courseEnrollmentDecoder
+    , courseReadDecoder
+    , courseWriteDecoder
     , departmentDecoder
     , educationDecoder
     , educationSpecializationDecoder
@@ -119,18 +122,6 @@ activityTypeVariants =
     ]
 
 
-type alias Course =
-    { id : Maybe Uuid
-    , forSpecialization : EducationSpecialization
-    , logo : File
-    , cover : File
-    , title : String
-    , description : String
-    , forClass : Maybe String
-    , forGroup : Maybe String
-    }
-
-
 type alias CourseEnrollment =
     { id : Maybe Uuid
     , role : CourseEnrollmentRole
@@ -150,6 +141,30 @@ courseEnrollmentRoleVariants =
     [ CourseEnrollmentRoleT
     , CourseEnrollmentRoleS
     ]
+
+
+type alias CourseRead =
+    { id : Maybe Uuid
+    , forSpecialization : Maybe EducationSpecialization
+    , logo : Maybe File
+    , cover : Maybe File
+    , title : String
+    , description : String
+    , forClass : Maybe String
+    , forGroup : Maybe String
+    }
+
+
+type alias CourseWrite =
+    { id : Maybe Uuid
+    , title : String
+    , description : String
+    , forClass : Maybe String
+    , forGroup : Maybe String
+    , forSpecialization : Maybe Uuid
+    , logo : Maybe Uuid
+    , cover : Maybe Uuid
+    }
 
 
 type alias Department =
@@ -405,33 +420,6 @@ encodeActivityType =
 
 
 
-encodeCourse : Course -> Json.Encode.Value
-encodeCourse =
-    encodeObject << encodeCoursePairs
-
-
-encodeCourseWithTag : ( String, String ) -> Course -> Json.Encode.Value
-encodeCourseWithTag (tagField, tag) model =
-    encodeObject (encodeCoursePairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeCoursePairs : Course -> List EncodedField
-encodeCoursePairs model =
-    let
-        pairs =
-            [ maybeEncode "id" Uuid.encode model.id
-            , encode "for_specialization" encodeEducationSpecialization model.forSpecialization
-            , encode "logo" encodeFile model.logo
-            , encode "cover" encodeFile model.cover
-            , encode "title" Json.Encode.string model.title
-            , encode "description" Json.Encode.string model.description
-            , maybeEncode "for_class" Json.Encode.string model.forClass
-            , maybeEncodeNullable "for_group" Json.Encode.string model.forGroup
-            ]
-    in
-    pairs
-
-
 encodeCourseEnrollment : CourseEnrollment -> Json.Encode.Value
 encodeCourseEnrollment =
     encodeObject << encodeCourseEnrollmentPairs
@@ -469,6 +457,60 @@ encodeCourseEnrollmentRole : CourseEnrollmentRole -> Json.Encode.Value
 encodeCourseEnrollmentRole =
     Json.Encode.string << stringFromCourseEnrollmentRole
 
+
+
+encodeCourseRead : CourseRead -> Json.Encode.Value
+encodeCourseRead =
+    encodeObject << encodeCourseReadPairs
+
+
+encodeCourseReadWithTag : ( String, String ) -> CourseRead -> Json.Encode.Value
+encodeCourseReadWithTag (tagField, tag) model =
+    encodeObject (encodeCourseReadPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeCourseReadPairs : CourseRead -> List EncodedField
+encodeCourseReadPairs model =
+    let
+        pairs =
+            [ maybeEncode "id" Uuid.encode model.id
+            , encodeNullable "for_specialization" encodeEducationSpecialization model.forSpecialization
+            , encodeNullable "logo" encodeFile model.logo
+            , encodeNullable "cover" encodeFile model.cover
+            , encode "title" Json.Encode.string model.title
+            , encode "description" Json.Encode.string model.description
+            , maybeEncode "for_class" Json.Encode.string model.forClass
+            , maybeEncodeNullable "for_group" Json.Encode.string model.forGroup
+            ]
+    in
+    pairs
+
+
+encodeCourseWrite : CourseWrite -> Json.Encode.Value
+encodeCourseWrite =
+    encodeObject << encodeCourseWritePairs
+
+
+encodeCourseWriteWithTag : ( String, String ) -> CourseWrite -> Json.Encode.Value
+encodeCourseWriteWithTag (tagField, tag) model =
+    encodeObject (encodeCourseWritePairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeCourseWritePairs : CourseWrite -> List EncodedField
+encodeCourseWritePairs model =
+    let
+        pairs =
+            [ maybeEncode "id" Uuid.encode model.id
+            , encode "title" Json.Encode.string model.title
+            , encode "description" Json.Encode.string model.description
+            , maybeEncode "for_class" Json.Encode.string model.forClass
+            , maybeEncodeNullable "for_group" Json.Encode.string model.forGroup
+            , maybeEncodeNullable "for_specialization" Uuid.encode model.forSpecialization
+            , maybeEncodeNullable "logo" Uuid.encode model.logo
+            , maybeEncodeNullable "cover" Uuid.encode model.cover
+            ]
+    in
+    pairs
 
 
 encodeDepartment : Department -> Json.Encode.Value
@@ -959,19 +1001,6 @@ activityTypeDecoder =
 
 
 
-courseDecoder : Json.Decode.Decoder Course
-courseDecoder =
-    Json.Decode.succeed Course
-        |> maybeDecode "id" Uuid.decoder Nothing
-        |> decode "for_specialization" educationSpecializationDecoder 
-        |> decode "logo" fileDecoder 
-        |> decode "cover" fileDecoder 
-        |> decode "title" Json.Decode.string 
-        |> decode "description" Json.Decode.string 
-        |> maybeDecode "for_class" Json.Decode.string Nothing
-        |> maybeDecodeNullable "for_group" Json.Decode.string Nothing
-
-
 courseEnrollmentDecoder : Json.Decode.Decoder CourseEnrollment
 courseEnrollmentDecoder =
     Json.Decode.succeed CourseEnrollment
@@ -998,6 +1027,32 @@ courseEnrollmentRoleDecoder =
                         Json.Decode.fail <| "Unknown type: " ++ other
             )
 
+
+
+courseReadDecoder : Json.Decode.Decoder CourseRead
+courseReadDecoder =
+    Json.Decode.succeed CourseRead
+        |> maybeDecode "id" Uuid.decoder Nothing
+        |> decodeNullable "for_specialization" educationSpecializationDecoder 
+        |> decodeNullable "logo" fileDecoder 
+        |> decodeNullable "cover" fileDecoder 
+        |> decode "title" Json.Decode.string 
+        |> decode "description" Json.Decode.string 
+        |> maybeDecode "for_class" Json.Decode.string Nothing
+        |> maybeDecodeNullable "for_group" Json.Decode.string Nothing
+
+
+courseWriteDecoder : Json.Decode.Decoder CourseWrite
+courseWriteDecoder =
+    Json.Decode.succeed CourseWrite
+        |> maybeDecode "id" Uuid.decoder Nothing
+        |> decode "title" Json.Decode.string 
+        |> decode "description" Json.Decode.string 
+        |> maybeDecode "for_class" Json.Decode.string Nothing
+        |> maybeDecodeNullable "for_group" Json.Decode.string Nothing
+        |> maybeDecodeNullable "for_specialization" Uuid.decoder Nothing
+        |> maybeDecodeNullable "logo" Uuid.decoder Nothing
+        |> maybeDecodeNullable "cover" Uuid.decoder Nothing
 
 
 departmentDecoder : Json.Decode.Decoder Department

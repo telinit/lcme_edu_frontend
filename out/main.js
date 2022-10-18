@@ -5745,8 +5745,8 @@ var $elm$core$Basics$composeR = F3(
 		return g(
 			f(x));
 	});
-var $author$project$Api$Data$Course = F8(
-	function (id, title, description, forClass, forGroup, forSpecialization, logo, cover) {
+var $author$project$Api$Data$CourseRead = F8(
+	function (id, forSpecialization, logo, cover, title, description, forClass, forGroup) {
 		return {cover: cover, description: description, forClass: forClass, forGroup: forGroup, forSpecialization: forSpecialization, id: id, logo: logo, title: title};
 	});
 var $author$project$Api$Data$decodeChain = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
@@ -5755,7 +5755,44 @@ var $author$project$Api$Data$decode = F2(
 		return $author$project$Api$Data$decodeChain(
 			A2($elm$json$Json$Decode$field, key, decoder));
 	});
+var $elm$json$Json$Decode$decodeValue = _Json_run;
 var $elm$json$Json$Decode$fail = _Json_fail;
+var $elm$json$Json$Decode$null = _Json_decodeNull;
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $author$project$Api$Data$maybeField = F3(
+	function (key, decoder, fallback) {
+		var valueDecoder = $elm$json$Json$Decode$oneOf(
+			_List_fromArray(
+				[
+					A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder),
+					$elm$json$Json$Decode$null(fallback)
+				]));
+		var fieldDecoder = A2($elm$json$Json$Decode$field, key, $elm$json$Json$Decode$value);
+		var decodeObject = function (rawObject) {
+			var _v0 = A2($elm$json$Json$Decode$decodeValue, fieldDecoder, rawObject);
+			if (_v0.$ === 'Ok') {
+				var rawValue = _v0.a;
+				var _v1 = A2($elm$json$Json$Decode$decodeValue, valueDecoder, rawValue);
+				if (_v1.$ === 'Ok') {
+					var value = _v1.a;
+					return $elm$json$Json$Decode$succeed(value);
+				} else {
+					var error = _v1.a;
+					return $elm$json$Json$Decode$fail(
+						$elm$json$Json$Decode$errorToString(error));
+				}
+			} else {
+				return $elm$json$Json$Decode$succeed(fallback);
+			}
+		};
+		return A2($elm$json$Json$Decode$andThen, decodeObject, $elm$json$Json$Decode$value);
+	});
+var $author$project$Api$Data$decodeNullable = F2(
+	function (key, decoder) {
+		return $author$project$Api$Data$decodeChain(
+			A3($author$project$Api$Data$maybeField, key, decoder, $elm$core$Maybe$Nothing));
+	});
 var $danyx23$elm_uuid$Uuid$Uuid = function (a) {
 	return {$: 'Uuid', a: a};
 };
@@ -5806,87 +5843,97 @@ var $danyx23$elm_uuid$Uuid$decoder = A2(
 		}
 	},
 	$elm$json$Json$Decode$string);
-var $elm$json$Json$Decode$decodeValue = _Json_run;
-var $elm$json$Json$Decode$null = _Json_decodeNull;
-var $elm$json$Json$Decode$oneOf = _Json_oneOf;
-var $elm$json$Json$Decode$value = _Json_decodeValue;
-var $author$project$Api$Data$maybeField = F3(
-	function (key, decoder, fallback) {
-		var valueDecoder = $elm$json$Json$Decode$oneOf(
-			_List_fromArray(
-				[
-					A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder),
-					$elm$json$Json$Decode$null(fallback)
-				]));
-		var fieldDecoder = A2($elm$json$Json$Decode$field, key, $elm$json$Json$Decode$value);
-		var decodeObject = function (rawObject) {
-			var _v0 = A2($elm$json$Json$Decode$decodeValue, fieldDecoder, rawObject);
-			if (_v0.$ === 'Ok') {
-				var rawValue = _v0.a;
-				var _v1 = A2($elm$json$Json$Decode$decodeValue, valueDecoder, rawValue);
-				if (_v1.$ === 'Ok') {
-					var value = _v1.a;
-					return $elm$json$Json$Decode$succeed(value);
-				} else {
-					var error = _v1.a;
-					return $elm$json$Json$Decode$fail(
-						$elm$json$Json$Decode$errorToString(error));
-				}
-			} else {
-				return $elm$json$Json$Decode$succeed(fallback);
-			}
-		};
-		return A2($elm$json$Json$Decode$andThen, decodeObject, $elm$json$Json$Decode$value);
+var $author$project$Api$Data$EducationSpecialization = F3(
+	function (id, name, department) {
+		return {department: department, id: id, name: name};
 	});
 var $author$project$Api$Data$maybeDecode = F3(
 	function (key, decoder, fallback) {
 		return $author$project$Api$Data$decodeChain(
 			A3($author$project$Api$Data$maybeField, key, decoder, fallback));
 	});
+var $author$project$Api$Data$educationSpecializationDecoder = A3(
+	$author$project$Api$Data$decode,
+	'department',
+	$danyx23$elm_uuid$Uuid$decoder,
+	A3(
+		$author$project$Api$Data$decode,
+		'name',
+		$elm$json$Json$Decode$string,
+		A4(
+			$author$project$Api$Data$maybeDecode,
+			'id',
+			$danyx23$elm_uuid$Uuid$decoder,
+			$elm$core$Maybe$Nothing,
+			$elm$json$Json$Decode$succeed($author$project$Api$Data$EducationSpecialization))));
+var $author$project$Api$Data$File = F5(
+	function (id, name, hash, size, mimeType) {
+		return {hash: hash, id: id, mimeType: mimeType, name: name, size: size};
+	});
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $author$project$Api$Data$fileDecoder = A3(
+	$author$project$Api$Data$decode,
+	'mime_type',
+	$elm$json$Json$Decode$string,
+	A3(
+		$author$project$Api$Data$decode,
+		'size',
+		$elm$json$Json$Decode$int,
+		A3(
+			$author$project$Api$Data$decode,
+			'hash',
+			$elm$json$Json$Decode$string,
+			A3(
+				$author$project$Api$Data$decode,
+				'name',
+				$elm$json$Json$Decode$string,
+				A4(
+					$author$project$Api$Data$maybeDecode,
+					'id',
+					$danyx23$elm_uuid$Uuid$decoder,
+					$elm$core$Maybe$Nothing,
+					$elm$json$Json$Decode$succeed($author$project$Api$Data$File))))));
 var $author$project$Api$Data$maybeDecodeNullable = F3(
 	function (key, decoder, fallback) {
 		return $author$project$Api$Data$decodeChain(
 			A3($author$project$Api$Data$maybeField, key, decoder, fallback));
 	});
-var $author$project$Api$Data$courseDecoder = A4(
+var $author$project$Api$Data$courseReadDecoder = A4(
 	$author$project$Api$Data$maybeDecodeNullable,
-	'cover',
-	$danyx23$elm_uuid$Uuid$decoder,
+	'for_group',
+	$elm$json$Json$Decode$string,
 	$elm$core$Maybe$Nothing,
 	A4(
-		$author$project$Api$Data$maybeDecodeNullable,
-		'logo',
-		$danyx23$elm_uuid$Uuid$decoder,
+		$author$project$Api$Data$maybeDecode,
+		'for_class',
+		$elm$json$Json$Decode$string,
 		$elm$core$Maybe$Nothing,
-		A4(
-			$author$project$Api$Data$maybeDecodeNullable,
-			'for_specialization',
-			$danyx23$elm_uuid$Uuid$decoder,
-			$elm$core$Maybe$Nothing,
-			A4(
-				$author$project$Api$Data$maybeDecodeNullable,
-				'for_group',
+		A3(
+			$author$project$Api$Data$decode,
+			'description',
+			$elm$json$Json$Decode$string,
+			A3(
+				$author$project$Api$Data$decode,
+				'title',
 				$elm$json$Json$Decode$string,
-				$elm$core$Maybe$Nothing,
-				A4(
-					$author$project$Api$Data$maybeDecode,
-					'for_class',
-					$elm$json$Json$Decode$string,
-					$elm$core$Maybe$Nothing,
+				A3(
+					$author$project$Api$Data$decodeNullable,
+					'cover',
+					$author$project$Api$Data$fileDecoder,
 					A3(
-						$author$project$Api$Data$decode,
-						'description',
-						$elm$json$Json$Decode$string,
+						$author$project$Api$Data$decodeNullable,
+						'logo',
+						$author$project$Api$Data$fileDecoder,
 						A3(
-							$author$project$Api$Data$decode,
-							'title',
-							$elm$json$Json$Decode$string,
+							$author$project$Api$Data$decodeNullable,
+							'for_specialization',
+							$author$project$Api$Data$educationSpecializationDecoder,
 							A4(
 								$author$project$Api$Data$maybeDecode,
 								'id',
 								$danyx23$elm_uuid$Uuid$decoder,
 								$elm$core$Maybe$Nothing,
-								$elm$json$Json$Decode$succeed($author$project$Api$Data$Course)))))))));
+								$elm$json$Json$Decode$succeed($author$project$Api$Data$CourseRead)))))))));
 var $elm$json$Json$Decode$list = _Json_decodeList;
 var $author$project$Api$Request = function (a) {
 	return {$: 'Request', a: a};
@@ -6573,7 +6620,7 @@ var $author$project$Api$Request$Course$courseList = A7(
 	_List_Nil,
 	_List_Nil,
 	$elm$core$Maybe$Nothing,
-	$elm$json$Json$Decode$list($author$project$Api$Data$courseDecoder));
+	$elm$json$Json$Decode$list($author$project$Api$Data$courseReadDecoder));
 var $author$project$Util$httpErrorToString = function (error) {
 	switch (error.$) {
 		case 'BadUrl':
@@ -6736,28 +6783,22 @@ var $author$project$Util$task_to_cmd = F2(
 		};
 		return $elm$core$Task$attempt(on_result);
 	});
-var $author$project$Api$withHeader = F3(
-	function (key, value, _v0) {
-		var req = _v0.a;
-		return $author$project$Api$Request(
-			_Utils_update(
-				req,
-				{
-					headers: _Utils_ap(
-						req.headers,
-						_List_fromArray(
-							[
-								A2($elm$http$Http$header, key, value)
-							]))
-				}));
-	});
 var $author$project$Api$withToken = F2(
-	function (mb_t, req) {
-		if (mb_t.$ === 'Nothing') {
-			return req;
+	function (token, _v0) {
+		var req = _v0.a;
+		if (token.$ === 'Just') {
+			var t = token.a;
+			return $author$project$Api$Request(
+				_Utils_update(
+					req,
+					{
+						headers: A2(
+							$elm$core$List$cons,
+							A2($elm$http$Http$header, 'Authorization', 'Token ' + t),
+							req.headers)
+					}));
 		} else {
-			var t = mb_t.a;
-			return A3($author$project$Api$withHeader, 'Authorization', 'Token ' + t, req);
+			return $author$project$Api$Request(req);
 		}
 	});
 var $author$project$Page$CourseListPage$doFetchCourses = function (token) {
@@ -7632,7 +7673,6 @@ var $author$project$Api$Time$decodeDateTimeIsoString = function (str) {
 	}
 };
 var $author$project$Api$Time$dateTimeDecoder = A2($elm$json$Json$Decode$andThen, $author$project$Api$Time$decodeDateTimeIsoString, $elm$json$Json$Decode$string);
-var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $author$project$Api$Data$userDecoder = A4(
 	$author$project$Api$Data$maybeDecode,
 	'children',
@@ -7741,11 +7781,7 @@ var $author$project$Page$Login$doCheckSession = function (token) {
 			var user = _v0.a;
 			var time = _v0.b;
 			return $author$project$Page$Login$LoginCompleted(
-				{
-					created: $elm$core$Maybe$Just(time),
-					key: token,
-					user: user
-				});
+				{key: token, user: user});
 		},
 		A3(
 			$elm$core$Task$map2,
@@ -8462,24 +8498,19 @@ var $author$project$Api$Data$encodeObject = A2(
 	$elm$json$Json$Encode$object,
 	$elm$core$List$filterMap($elm$core$Basics$identity));
 var $author$project$Api$Data$encodeLogin = A2($elm$core$Basics$composeL, $author$project$Api$Data$encodeObject, $author$project$Api$Data$encodeLoginPairs);
-var $author$project$Api$Data$Token = F3(
-	function (key, user, created) {
-		return {created: created, key: key, user: user};
+var $author$project$Api$Data$Token = F2(
+	function (user, key) {
+		return {key: key, user: user};
 	});
-var $author$project$Api$Data$tokenDecoder = A4(
-	$author$project$Api$Data$maybeDecode,
-	'created',
-	$author$project$Api$Time$dateTimeDecoder,
-	$elm$core$Maybe$Nothing,
+var $author$project$Api$Data$tokenDecoder = A3(
+	$author$project$Api$Data$decode,
+	'key',
+	$elm$json$Json$Decode$string,
 	A3(
 		$author$project$Api$Data$decode,
 		'user',
 		$author$project$Api$Data$userDecoder,
-		A3(
-			$author$project$Api$Data$decode,
-			'key',
-			$elm$json$Json$Decode$string,
-			$elm$json$Json$Decode$succeed($author$project$Api$Data$Token))));
+		$elm$json$Json$Decode$succeed($author$project$Api$Data$Token)));
 var $author$project$Api$Request$User$userLogin = function (data_body) {
 	return A7(
 		$author$project$Api$request,
@@ -9292,12 +9323,26 @@ var $author$project$Page$CourseListPage$groupBy = F2(
 						_Utils_Tuple2('', courses)
 					]));
 		} else {
-			return A2(
-				$author$project$Page$CourseListPage$dictGroupBy,
-				function (c) {
-					return A2($elm$core$Maybe$withDefault, '', c.forClass);
-				},
-				courses);
+			var key = function (course) {
+				var _v1 = _Utils_Tuple2(
+					$author$project$Page$CourseListPage$empty_to_nothing(course.forClass),
+					course.forSpecialization);
+				if (_v1.a.$ === 'Nothing') {
+					var _v2 = _v1.a;
+					return 'Остальное';
+				} else {
+					if (_v1.b.$ === 'Nothing') {
+						var _class = _v1.a.a;
+						var _v3 = _v1.b;
+						return _class;
+					} else {
+						var _class = _v1.a.a;
+						var spec = _v1.b.a;
+						return _class + (' (' + (spec.name + ' направление)'));
+					}
+				}
+			};
+			return A2($author$project$Page$CourseListPage$dictGroupBy, key, courses);
 		}
 	});
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
@@ -9317,13 +9362,16 @@ var $danyx23$elm_uuid$Uuid$toString = function (_v0) {
 };
 var $author$project$Page$CourseListPage$courseImg = function (mb) {
 	if (mb.$ === 'Just') {
-		var id = mb.a;
+		var file = mb.a;
 		return A2(
 			$elm$html$Html$img,
 			_List_fromArray(
 				[
 					$elm$html$Html$Attributes$src(
-					'/file/' + ($danyx23$elm_uuid$Uuid$toString(id) + '/download'))
+					'/file/' + (A2(
+						$elm$core$Maybe$withDefault,
+						'',
+						A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, file.id)) + '/download'))
 				]),
 			_List_Nil);
 	} else {

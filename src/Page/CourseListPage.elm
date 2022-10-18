@@ -1,7 +1,7 @@
 module Page.CourseListPage exposing (..)
 
 import Api exposing (task, withToken)
-import Api.Data exposing (Course)
+import Api.Data exposing (CourseRead, File)
 import Api.Request.Course exposing (courseList)
 import Dict exposing (Dict)
 import Html exposing (..)
@@ -12,14 +12,14 @@ import Uuid exposing (Uuid)
 
 
 type Msg
-    = GotCourses (List Course)
+    = GotCourses (List CourseRead)
     | CourseListFetchFailed String
     | Retry
 
 
 type State
     = Loading
-    | Completed (List Course)
+    | Completed (List CourseRead)
     | Error String
 
 
@@ -51,14 +51,26 @@ dictGroupBy key list =
     List.foldl f Dict.empty list
 
 
-groupBy : GroupBy -> List Course -> Dict String (List Course)
+groupBy : GroupBy -> List CourseRead -> Dict String (List CourseRead)
 groupBy group_by courses =
     case group_by of
         GroupByNone ->
             Dict.fromList [ ( "", courses ) ]
 
         GroupByClass ->
-            dictGroupBy (\c -> Maybe.withDefault "" c.forClass) courses
+            let
+                key course =
+                    case ( empty_to_nothing course.forClass, course.forSpecialization ) of
+                        ( Nothing, _ ) ->
+                            "Остальное"
+
+                        ( Just class, Nothing ) ->
+                            class
+
+                        ( Just class, Just spec ) ->
+                            class ++ " (" ++ spec.name ++ " направление)"
+            in
+            dictGroupBy key courses
 
 
 doFetchCourses : String -> Cmd Msg
@@ -102,17 +114,18 @@ viewControls =
     text ""
 
 
-courseImg : Maybe Uuid -> Html Msg
+courseImg : Maybe File -> Html Msg
 courseImg mb =
     case mb of
-        Just id ->
-            img [ src ("/file/" ++ Uuid.toString id ++ "/download") ] []
+        Just file ->
+            --TODO: Change with an actual URL
+            img [ src ("/file/" ++ (Maybe.withDefault "" <| Maybe.map Uuid.toString file.id) ++ "/download") ] []
 
         Nothing ->
             img [ src "/img/course.jpg" ] []
 
 
-viewCourse : Course -> Html Msg
+viewCourse : CourseRead -> Html Msg
 viewCourse course =
     div [ class "card" ]
         [ div [ class "image" ] [ courseImg course.logo ]

@@ -96,7 +96,7 @@ doCheckSession token =
                 else
                     CheckSessionFailed <| Maybe.withDefault "" err
             )
-            (\( user, time ) -> LoginCompleted { key = token, user = user, created = Just time })
+            (\( user, time ) -> LoginCompleted { key = token, user = user })
 
 
 doSaveToken : String -> Cmd Msg

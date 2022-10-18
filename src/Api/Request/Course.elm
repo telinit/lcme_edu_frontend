@@ -38,7 +38,7 @@ import Json.Encode
 
 
 
-courseCreate : Api.Data.Course -> Api.Request Api.Data.Course
+courseCreate : Api.Data.CourseWrite -> Api.Request Api.Data.CourseWrite
 courseCreate data_body =
     Api.request
         "POST"
@@ -46,8 +46,8 @@ courseCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeCourse data_body))
-        Api.Data.courseDecoder
+        (Just (Api.Data.encodeCourseWrite data_body))
+        Api.Data.courseWriteDecoder
 
 
 
@@ -142,7 +142,7 @@ courseEnrollmentUpdate id_path data_body =
 
 
 
-courseList : Api.Request (List Api.Data.Course)
+courseList : Api.Request (List Api.Data.CourseRead)
 courseList =
     Api.request
         "GET"
@@ -151,11 +151,11 @@ courseList =
         []
         []
         Nothing
-        (Json.Decode.list Api.Data.courseDecoder)
+        (Json.Decode.list Api.Data.courseReadDecoder)
 
 
 
-coursePartialUpdate : String -> Api.Data.Course -> Api.Request Api.Data.Course
+coursePartialUpdate : String -> Api.Data.CourseRead -> Api.Request Api.Data.CourseRead
 coursePartialUpdate id_path data_body =
     Api.request
         "PATCH"
@@ -163,12 +163,12 @@ coursePartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeCourse data_body))
-        Api.Data.courseDecoder
+        (Just (Api.Data.encodeCourseRead data_body))
+        Api.Data.courseReadDecoder
 
 
 
-courseRead : String -> Api.Request Api.Data.Course
+courseRead : String -> Api.Request Api.Data.CourseRead
 courseRead id_path =
     Api.request
         "GET"
@@ -177,11 +177,11 @@ courseRead id_path =
         []
         []
         Nothing
-        Api.Data.courseDecoder
+        Api.Data.courseReadDecoder
 
 
 
-courseUpdate : String -> Api.Data.Course -> Api.Request Api.Data.Course
+courseUpdate : String -> Api.Data.CourseWrite -> Api.Request Api.Data.CourseWrite
 courseUpdate id_path data_body =
     Api.request
         "PUT"
@@ -189,5 +189,5 @@ courseUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeCourse data_body))
-        Api.Data.courseDecoder
+        (Just (Api.Data.encodeCourseWrite data_body))
+        Api.Data.courseWriteDecoder
