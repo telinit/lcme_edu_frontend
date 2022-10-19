@@ -4839,6 +4839,43 @@ var _Parser_findSubString = F5(function(smallString, offset, row, col, bigString
 
 	return _Utils_Tuple3(newOffset, row, col);
 });
+
+
+
+var _Bitwise_and = F2(function(a, b)
+{
+	return a & b;
+});
+
+var _Bitwise_or = F2(function(a, b)
+{
+	return a | b;
+});
+
+var _Bitwise_xor = F2(function(a, b)
+{
+	return a ^ b;
+});
+
+function _Bitwise_complement(a)
+{
+	return ~a;
+};
+
+var _Bitwise_shiftLeftBy = F2(function(offset, a)
+{
+	return a << offset;
+});
+
+var _Bitwise_shiftRightBy = F2(function(offset, a)
+{
+	return a >> offset;
+});
+
+var _Bitwise_shiftRightZfBy = F2(function(offset, a)
+{
+	return a >>> offset;
+});
 var $author$project$Main$UrlChanged = function (a) {
 	return {$: 'UrlChanged', a: a};
 };
@@ -5672,7 +5709,12 @@ var $author$project$Main$CourseListPage = function (a) {
 var $author$project$Main$CourseListPageMsg = function (a) {
 	return {$: 'CourseListPageMsg', a: a};
 };
-var $author$project$Main$CoursePage = {$: 'CoursePage'};
+var $author$project$Main$CoursePage = function (a) {
+	return {$: 'CoursePage', a: a};
+};
+var $author$project$Main$CoursePageMsg = function (a) {
+	return {$: 'CoursePageMsg', a: a};
+};
 var $author$project$Main$DefaultLayout = function (a) {
 	return {$: 'DefaultLayout', a: a};
 };
@@ -6817,6 +6859,143 @@ var $author$project$Page$CourseListPage$init = function (token) {
 		{group_by: $author$project$Page$CourseListPage$GroupByClass, state: $author$project$Page$CourseListPage$Loading, token: token},
 		$author$project$Page$CourseListPage$doFetchCourses(token));
 };
+var $author$project$Page$CoursePage$Fetching = function (a) {
+	return {$: 'Fetching', a: a};
+};
+var $author$project$Page$CoursePage$MsgFetch = function (a) {
+	return {$: 'MsgFetch', a: a};
+};
+var $author$project$Page$CoursePage$ResActivities = function (a) {
+	return {$: 'ResActivities', a: a};
+};
+var $author$project$Component$MultiTask$Running = {$: 'Running'};
+var $author$project$Component$MultiTask$TaskCompleted = F2(
+	function (a, b) {
+		return {$: 'TaskCompleted', a: a, b: b};
+	});
+var $author$project$Component$MultiTask$TaskFailed = F2(
+	function (a, b) {
+		return {$: 'TaskFailed', a: a, b: b};
+	});
+var $author$project$Component$MultiTask$doFetch = F2(
+	function (idx, task) {
+		return A3(
+			$author$project$Util$task_to_cmd,
+			$author$project$Component$MultiTask$TaskFailed(idx),
+			$author$project$Component$MultiTask$TaskCompleted(idx),
+			task);
+	});
+var $elm$core$Array$fromListHelp = F3(
+	function (list, nodeList, nodeListSize) {
+		fromListHelp:
+		while (true) {
+			var _v0 = A2($elm$core$Elm$JsArray$initializeFromList, $elm$core$Array$branchFactor, list);
+			var jsArray = _v0.a;
+			var remainingItems = _v0.b;
+			if (_Utils_cmp(
+				$elm$core$Elm$JsArray$length(jsArray),
+				$elm$core$Array$branchFactor) < 0) {
+				return A2(
+					$elm$core$Array$builderToArray,
+					true,
+					{nodeList: nodeList, nodeListSize: nodeListSize, tail: jsArray});
+			} else {
+				var $temp$list = remainingItems,
+					$temp$nodeList = A2(
+					$elm$core$List$cons,
+					$elm$core$Array$Leaf(jsArray),
+					nodeList),
+					$temp$nodeListSize = nodeListSize + 1;
+				list = $temp$list;
+				nodeList = $temp$nodeList;
+				nodeListSize = $temp$nodeListSize;
+				continue fromListHelp;
+			}
+		}
+	});
+var $elm$core$Array$fromList = function (list) {
+	if (!list.b) {
+		return $elm$core$Array$empty;
+	} else {
+		return A3($elm$core$Array$fromListHelp, list, _List_Nil, 0);
+	}
+};
+var $elm$core$Array$length = function (_v0) {
+	var len = _v0.a;
+	return len;
+};
+var $elm$core$Elm$JsArray$map = _JsArray_map;
+var $elm$core$Array$map = F2(
+	function (func, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = function (node) {
+			if (node.$ === 'SubTree') {
+				var subTree = node.a;
+				return $elm$core$Array$SubTree(
+					A2($elm$core$Elm$JsArray$map, helper, subTree));
+			} else {
+				var values = node.a;
+				return $elm$core$Array$Leaf(
+					A2($elm$core$Elm$JsArray$map, func, values));
+			}
+		};
+		return A4(
+			$elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			A2($elm$core$Elm$JsArray$map, helper, tree),
+			A2($elm$core$Elm$JsArray$map, func, tail));
+	});
+var $author$project$Component$MultiTask$init = function (tasks) {
+	var states = A2(
+		$elm$core$Array$map,
+		function (_v1) {
+			var t = _v1.a;
+			var label = _v1.b;
+			return _Utils_Tuple3(label, $author$project$Component$MultiTask$Running, t);
+		},
+		$elm$core$Array$fromList(tasks));
+	return _Utils_Tuple2(
+		{
+			task_states: states,
+			tasks_left: $elm$core$Array$length(states)
+		},
+		$elm$core$Platform$Cmd$batch(
+			A2(
+				$elm$core$List$indexedMap,
+				F2(
+					function (i, _v0) {
+						var t = _v0.a;
+						return A2($author$project$Component$MultiTask$doFetch, i, t);
+					}),
+				tasks)));
+};
+var $elm$core$Platform$Cmd$map = _Platform_map;
+var $author$project$Page$CoursePage$init = F2(
+	function (token, id) {
+		var _v0 = $author$project$Component$MultiTask$init(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					$elm$core$Task$succeed(
+						$author$project$Page$CoursePage$ResActivities(_List_Nil)),
+					'Получаем активности'),
+					_Utils_Tuple2(
+					$elm$core$Task$fail($elm$http$Http$Timeout),
+					'Получение чего-то')
+				]));
+		var m = _v0.a;
+		var c = _v0.b;
+		return _Utils_Tuple2(
+			{
+				state: $author$project$Page$CoursePage$Fetching(m),
+				token: token
+			},
+			A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
+	});
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Page$DefaultLayout$init = function (user) {
 	return _Utils_Tuple2(
@@ -7799,7 +7978,6 @@ var $author$project$Page$Login$init = function (token) {
 };
 var $elm$browser$Browser$Navigation$load = _Browser_load;
 var $elm$core$Debug$log = _Debug_log;
-var $elm$core$Platform$Cmd$map = _Platform_map;
 var $author$project$Main$UrlCourse = function (a) {
 	return {$: 'UrlCourse', a: a};
 };
@@ -8252,6 +8430,286 @@ var $author$project$Page$CourseListPage$update = F2(
 					$author$project$Page$CourseListPage$doFetchCourses(model.token));
 		}
 	});
+var $author$project$Page$CoursePage$FetchDone = F2(
+	function (a, b) {
+		return {$: 'FetchDone', a: a, b: b};
+	});
+var $author$project$Page$CoursePage$FetchFailed = function (a) {
+	return {$: 'FetchFailed', a: a};
+};
+var $author$project$Page$CoursePage$collectFetchResults = function (fetchResults) {
+	_v0$2:
+	while (true) {
+		if (fetchResults.b && (fetchResults.a.$ === 'Ok')) {
+			if (fetchResults.a.a.$ === 'ResCourse') {
+				if (((fetchResults.b.b && (fetchResults.b.a.$ === 'Ok')) && (fetchResults.b.a.a.$ === 'ResActivities')) && (!fetchResults.b.b.b)) {
+					var c = fetchResults.a.a.a;
+					var _v1 = fetchResults.b;
+					var a = _v1.a.a.a;
+					return $elm$core$Maybe$Just(
+						_Utils_Tuple2(c, a));
+				} else {
+					break _v0$2;
+				}
+			} else {
+				if (((fetchResults.b.b && (fetchResults.b.a.$ === 'Ok')) && (fetchResults.b.a.a.$ === 'ResCourse')) && (!fetchResults.b.b.b)) {
+					var a = fetchResults.a.a.a;
+					var _v2 = fetchResults.b;
+					var c = _v2.a.a.a;
+					return $elm$core$Maybe$Just(
+						_Utils_Tuple2(c, a));
+				} else {
+					break _v0$2;
+				}
+			}
+		} else {
+			break _v0$2;
+		}
+	}
+	return $elm$core$Maybe$Nothing;
+};
+var $author$project$Component$MultiTask$Complete = function (a) {
+	return {$: 'Complete', a: a};
+};
+var $author$project$Component$MultiTask$Error = function (a) {
+	return {$: 'Error', a: a};
+};
+var $author$project$Component$MultiTask$TaskFinishedAll = function (a) {
+	return {$: 'TaskFinishedAll', a: a};
+};
+var $elm$core$Bitwise$and = _Bitwise_and;
+var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
+var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
+var $elm$core$Basics$ge = _Utils_ge;
+var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
+var $elm$core$Array$getHelp = F3(
+	function (shift, index, tree) {
+		getHelp:
+		while (true) {
+			var pos = $elm$core$Array$bitMask & (index >>> shift);
+			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+			if (_v0.$ === 'SubTree') {
+				var subTree = _v0.a;
+				var $temp$shift = shift - $elm$core$Array$shiftStep,
+					$temp$index = index,
+					$temp$tree = subTree;
+				shift = $temp$shift;
+				index = $temp$index;
+				tree = $temp$tree;
+				continue getHelp;
+			} else {
+				var values = _v0.a;
+				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
+			}
+		}
+	});
+var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
+var $elm$core$Array$tailIndex = function (len) {
+	return (len >>> 5) << 5;
+};
+var $elm$core$Array$get = F2(
+	function (index, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
+			index,
+			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
+			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
+			A3($elm$core$Array$getHelp, startShift, index, tree)));
+	});
+var $elm$core$Elm$JsArray$unsafeSet = _JsArray_unsafeSet;
+var $elm$core$Array$setHelp = F4(
+	function (shift, index, value, tree) {
+		var pos = $elm$core$Array$bitMask & (index >>> shift);
+		var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+		if (_v0.$ === 'SubTree') {
+			var subTree = _v0.a;
+			var newSub = A4($elm$core$Array$setHelp, shift - $elm$core$Array$shiftStep, index, value, subTree);
+			return A3(
+				$elm$core$Elm$JsArray$unsafeSet,
+				pos,
+				$elm$core$Array$SubTree(newSub),
+				tree);
+		} else {
+			var values = _v0.a;
+			var newLeaf = A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, values);
+			return A3(
+				$elm$core$Elm$JsArray$unsafeSet,
+				pos,
+				$elm$core$Array$Leaf(newLeaf),
+				tree);
+		}
+	});
+var $elm$core$Array$set = F3(
+	function (index, value, array) {
+		var len = array.a;
+		var startShift = array.b;
+		var tree = array.c;
+		var tail = array.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? array : ((_Utils_cmp(
+			index,
+			$elm$core$Array$tailIndex(len)) > -1) ? A4(
+			$elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			tree,
+			A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, tail)) : A4(
+			$elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			A4($elm$core$Array$setHelp, startShift, index, value, tree),
+			tail));
+	});
+var $author$project$Util$arrayUpdate = F3(
+	function (ix, transform, array) {
+		var ignore = A2(
+			$elm$core$Debug$log,
+			'arrayUpdate',
+			_Utils_Tuple3(ix, transform, array));
+		var _v0 = A2($elm$core$Array$get, ix, array);
+		if (_v0.$ === 'Just') {
+			var el = _v0.a;
+			return A2(
+				$elm$core$Debug$log,
+				'arrayUpdate: succeded',
+				A3(
+					$elm$core$Array$set,
+					ix,
+					transform(el),
+					array));
+		} else {
+			return A2($elm$core$Debug$log, 'arrayUpdate: failed', array);
+		}
+	});
+var $author$project$Component$MultiTask$collectResults = function (model) {
+	var state2result = function (state) {
+		switch (state.$) {
+			case 'Running':
+				return $elm$core$Maybe$Nothing;
+			case 'Complete':
+				var r = state.a;
+				return $elm$core$Maybe$Just(
+					$elm$core$Result$Ok(r));
+			default:
+				var e = state.a;
+				return $elm$core$Maybe$Just(
+					$elm$core$Result$Err(e));
+		}
+	};
+	return A2(
+		$elm$core$List$filterMap,
+		$elm$core$Basics$identity,
+		$elm$core$Array$toList(
+			A2(
+				$elm$core$Array$map,
+				A2(
+					$elm$core$Basics$composeL,
+					state2result,
+					function (_v0) {
+						var s = _v0.b;
+						return s;
+					}),
+				model.task_states)));
+};
+var $author$project$Component$MultiTask$update = F2(
+	function (msg, model_) {
+		var model = A2($elm$core$Debug$log, 'model_', model_);
+		var _v0 = A2($elm$core$Debug$log, 'msg', msg);
+		switch (_v0.$) {
+			case 'TaskCompleted':
+				var i = _v0.a;
+				var res = _v0.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							task_states: A3(
+								$author$project$Util$arrayUpdate,
+								i,
+								function (_v1) {
+									var l = _v1.a;
+									var t = _v1.c;
+									return _Utils_Tuple3(
+										l,
+										$author$project$Component$MultiTask$Complete(res),
+										t);
+								},
+								model.task_states),
+							tasks_left: model.tasks_left - 1
+						}),
+					(model.tasks_left <= 1) ? A2(
+						$elm$core$Task$perform,
+						function (_v2) {
+							return $author$project$Component$MultiTask$TaskFinishedAll(
+								$author$project$Component$MultiTask$collectResults(model));
+						},
+						$elm$core$Task$succeed(_Utils_Tuple0)) : $elm$core$Platform$Cmd$none);
+			case 'TaskFailed':
+				var i = _v0.a;
+				var err = _v0.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							task_states: A3(
+								$author$project$Util$arrayUpdate,
+								i,
+								function (_v3) {
+									var l = _v3.a;
+									var t = _v3.c;
+									return _Utils_Tuple3(
+										l,
+										$author$project$Component$MultiTask$Error(err),
+										t);
+								},
+								model.task_states)
+						}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		}
+	});
+var $author$project$Page$CoursePage$update = F2(
+	function (msg, model) {
+		var _v0 = _Utils_Tuple2(msg, model.state);
+		if (_v0.b.$ === 'Fetching') {
+			var msg_ = _v0.a.a;
+			var model_ = _v0.b.a;
+			var _v1 = A2($author$project$Component$MultiTask$update, msg_, model_);
+			var m = _v1.a;
+			var c = _v1.b;
+			if (msg_.$ === 'TaskFinishedAll') {
+				var results = msg_.a;
+				var _v3 = $author$project$Page$CoursePage$collectFetchResults(results);
+				if (_v3.$ === 'Just') {
+					var _v4 = _v3.a;
+					var c_ = _v4.a;
+					var a = _v4.b;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								state: A2($author$project$Page$CoursePage$FetchDone, c_, a)
+							}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								state: $author$project$Page$CoursePage$FetchFailed('Не удалось разобрать результаты запросов')
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
+			} else {
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			}
+		} else {
+			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		}
+	});
 var $author$project$Page$DefaultLayout$update = F2(
 	function (msg, model) {
 		if (msg.$ === 'SidebarToggle') {
@@ -8656,7 +9114,7 @@ var $author$project$Page$Login$update = F2(
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		var _v0 = _Utils_Tuple3(msg, model.page, model.layout);
-		_v0$6:
+		_v0$7:
 		while (true) {
 			switch (_v0.a.$) {
 				case 'DefaultLayoutMsg':
@@ -8674,7 +9132,7 @@ var $author$project$Main$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Main$DefaultLayoutMsg, cmd_));
 					} else {
-						break _v0$6;
+						break _v0$7;
 					}
 				case 'UrlRequested':
 					var urlRequest = _v0.a.a;
@@ -8768,26 +9226,40 @@ var $author$project$Main$update = F2(
 									}
 								case 'UrlCourse':
 									if (_v4.b.$ === 'Right') {
-										var string = _v4.a.a;
+										var id = _v4.a.a;
 										var token = _v4.b.a;
+										var _v11 = A2($author$project$Page$CoursePage$init, token.key, id);
+										var model_ = _v11.a;
+										var cmd_2 = _v11.b;
+										var _v12 = $author$project$Page$DefaultLayout$init(token.user);
+										var layout_ = _v12.a;
+										var cmd_1 = _v12.b;
 										return _Utils_Tuple2(
 											_Utils_update(
 												model,
-												{page: $author$project$Main$CoursePage}),
-											$elm$core$Platform$Cmd$none);
+												{
+													layout: $author$project$Main$DefaultLayout(layout_),
+													page: $author$project$Main$CoursePage(model_)
+												}),
+											$elm$core$Platform$Cmd$batch(
+												_List_fromArray(
+													[
+														A2($elm$core$Platform$Cmd$map, $author$project$Main$DefaultLayoutMsg, cmd_1),
+														A2($elm$core$Platform$Cmd$map, $author$project$Main$CoursePageMsg, cmd_2)
+													])));
 									} else {
 										break _v4$13;
 									}
 								case 'UrlCourseList':
 									if (_v4.b.$ === 'Right') {
-										var _v11 = _v4.a;
+										var _v13 = _v4.a;
 										var token = _v4.b.a;
-										var _v12 = $author$project$Page$CourseListPage$init(token.key);
-										var model_ = _v12.a;
-										var cmd_2 = _v12.b;
-										var _v13 = $author$project$Page$DefaultLayout$init(token.user);
-										var layout_ = _v13.a;
-										var cmd_1 = _v13.b;
+										var _v14 = $author$project$Page$CourseListPage$init(token.key);
+										var model_ = _v14.a;
+										var cmd_2 = _v14.b;
+										var _v15 = $author$project$Page$DefaultLayout$init(token.user);
+										var layout_ = _v15.a;
+										var cmd_1 = _v15.b;
 										return _Utils_Tuple2(
 											_Utils_update(
 												model,
@@ -8806,7 +9278,7 @@ var $author$project$Main$update = F2(
 									}
 								case 'UrlMarksOwn':
 									if (_v4.b.$ === 'Right') {
-										var _v14 = _v4.a;
+										var _v16 = _v4.a;
 										var token = _v4.b.a;
 										return _Utils_Tuple2(
 											_Utils_update(
@@ -8842,7 +9314,7 @@ var $author$project$Main$update = F2(
 									}
 								case 'UrlProfileOwn':
 									if (_v4.b.$ === 'Right') {
-										var _v15 = _v4.a;
+										var _v17 = _v4.a;
 										var token = _v4.b.a;
 										return _Utils_Tuple2(
 											_Utils_update(
@@ -8866,7 +9338,7 @@ var $author$project$Main$update = F2(
 									}
 								case 'UrlMessages':
 									if (_v4.b.$ === 'Right') {
-										var _v16 = _v4.a;
+										var _v18 = _v4.a;
 										var token = _v4.b.a;
 										return _Utils_Tuple2(
 											_Utils_update(
@@ -8878,7 +9350,7 @@ var $author$project$Main$update = F2(
 									}
 								default:
 									if (_v4.b.$ === 'Right') {
-										var _v17 = _v4.a;
+										var _v19 = _v4.a;
 										var token = _v4.b.a;
 										return _Utils_Tuple2(
 											_Utils_update(
@@ -8911,9 +9383,9 @@ var $author$project$Main$update = F2(
 							var msg_ = _v0.a.a;
 							var token = msg_.a;
 							var model_ = _v0.b.a;
-							var _v18 = A2($author$project$Page$Login$update, msg_, model_);
-							var m = _v18.a;
-							var c = _v18.b;
+							var _v20 = A2($author$project$Page$Login$update, msg_, model_);
+							var m = _v20.a;
+							var c = _v20.b;
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
@@ -8930,9 +9402,9 @@ var $author$project$Main$update = F2(
 						} else {
 							var msg_ = _v0.a.a;
 							var model_ = _v0.b.a;
-							var _v19 = A2($author$project$Page$Login$update, msg_, model_);
-							var m = _v19.a;
-							var c = _v19.b;
+							var _v21 = A2($author$project$Page$Login$update, msg_, model_);
+							var m = _v21.a;
+							var c = _v21.b;
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
@@ -8942,16 +9414,16 @@ var $author$project$Main$update = F2(
 								A2($elm$core$Platform$Cmd$map, $author$project$Main$LoginMsg, c));
 						}
 					} else {
-						break _v0$6;
+						break _v0$7;
 					}
-				default:
+				case 'CourseListPageMsg':
 					if ((_v0.b.$ === 'CourseListPage') && (_v0.c.$ === 'DefaultLayout')) {
 						var msg_ = _v0.a.a;
 						var model_ = _v0.b.a;
 						var layout_ = _v0.c.a;
-						var _v20 = A2($author$project$Page$CourseListPage$update, msg_, model_);
-						var model__ = _v20.a;
-						var cmd_ = _v20.b;
+						var _v22 = A2($author$project$Page$CourseListPage$update, msg_, model_);
+						var model__ = _v22.a;
+						var cmd_ = _v22.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -8960,7 +9432,25 @@ var $author$project$Main$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Main$CourseListPageMsg, cmd_));
 					} else {
-						break _v0$6;
+						break _v0$7;
+					}
+				default:
+					if ((_v0.b.$ === 'CoursePage') && (_v0.c.$ === 'DefaultLayout')) {
+						var msg_ = _v0.a.a;
+						var model_ = _v0.b.a;
+						var layout_ = _v0.c.a;
+						var _v23 = A2($author$project$Page$CoursePage$update, msg_, model_);
+						var model__ = _v23.a;
+						var cmd_ = _v23.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									page: $author$project$Main$CoursePage(model__)
+								}),
+							A2($elm$core$Platform$Cmd$map, $author$project$Main$CoursePageMsg, cmd_));
+					} else {
+						break _v0$7;
 					}
 			}
 		}
@@ -9386,10 +9876,20 @@ var $author$project$Page$CourseListPage$courseImg = function (mb) {
 };
 var $author$project$Page$CourseListPage$viewCourse = function (course) {
 	return A2(
-		$elm$html$Html$div,
+		$elm$html$Html$a,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('card')
+				$elm$html$Html$Attributes$class('card'),
+				$elm$html$Html$Attributes$href(
+				A2(
+					$elm$core$Maybe$withDefault,
+					'',
+					A2(
+						$elm$core$Maybe$map,
+						function (id) {
+							return '/course/' + $danyx23$elm_uuid$Uuid$toString(id);
+						},
+						course.id)))
 			]),
 		_List_fromArray(
 			[
@@ -9634,6 +10134,145 @@ var $author$project$Page$CourseListPage$view = function (model) {
 					$author$project$Page$CourseListPage$viewControls
 				]),
 			body));
+};
+var $author$project$Page$CoursePage$showFetchResult = function (fetchResult) {
+	if (fetchResult.$ === 'ResCourse') {
+		var courseRead = fetchResult.a;
+		return courseRead.title;
+	} else {
+		var activities = fetchResult.a;
+		return 'Активностей: ' + $elm$core$String$fromInt(
+			$elm$core$List$length(activities));
+	}
+};
+var $author$project$Component$MultiTask$viewTask = F3(
+	function (show_result, show_error, _v0) {
+		var label = _v0.a;
+		var s = _v0.b;
+		var item = F2(
+			function (icon, t) {
+				return A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('item')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('content')
+								]),
+							_List_fromArray(
+								[
+									icon,
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('header')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text(label)
+										])),
+									$elm$html$Html$text(t)
+								]))
+						]));
+			});
+		switch (s.$) {
+			case 'Running':
+				return A3(
+					$elm$core$Basics$apL,
+					item,
+					A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('ui active inline loader small'),
+								A2($elm$html$Html$Attributes$style, 'margin-right', '1em')
+							]),
+						_List_Nil),
+					'');
+			case 'Complete':
+				var res = s.a;
+				return A2(
+					item,
+					A2(
+						$elm$html$Html$i,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('check icon'),
+								A2($elm$html$Html$Attributes$style, 'margin-right', '1em'),
+								A2($elm$html$Html$Attributes$style, 'color', 'green')
+							]),
+						_List_Nil),
+					show_result(res));
+			default:
+				var err = s.a;
+				return A2(
+					item,
+					A2(
+						$elm$html$Html$i,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('exclamation icon'),
+								A2($elm$html$Html$Attributes$style, 'margin-right', '1em'),
+								A2($elm$html$Html$Attributes$style, 'color', 'green')
+							]),
+						_List_Nil),
+					show_error(err));
+		}
+	});
+var $author$project$Component$MultiTask$view = F3(
+	function (show_result, show_error, model) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('ui segment ')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('ui relaxed divided list')
+						]),
+					$elm$core$Array$toList(
+						A2(
+							$elm$core$Array$map,
+							A2($author$project$Component$MultiTask$viewTask, show_result, show_error),
+							model.task_states)))
+				]));
+	});
+var $author$project$Page$CoursePage$view = function (model) {
+	var _v0 = model.state;
+	switch (_v0.$) {
+		case 'Fetching':
+			var model_ = _v0.a;
+			var fetcher = A3($author$project$Component$MultiTask$view, $author$project$Page$CoursePage$showFetchResult, $author$project$Util$httpErrorToString, model_);
+			return A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('ui text container')
+					]),
+				_List_fromArray(
+					[
+						A2($elm$html$Html$map, $author$project$Page$CoursePage$MsgFetch, fetcher)
+					]));
+		case 'FetchDone':
+			var courseRead = _v0.a;
+			var activities = _v0.b;
+			return $elm$html$Html$text('Done');
+		default:
+			var err = _v0.a;
+			return $elm$html$Html$text('Failed' + err);
+	}
 };
 var $author$project$Page$Login$CloseMessage = {$: 'CloseMessage'};
 var $author$project$Page$Login$DoLogin = {$: 'DoLogin'};
@@ -10112,46 +10751,33 @@ var $author$project$Page$NotFound$view = A2(
 				]))
 		]));
 var $author$project$Main$viewPage = function (model) {
-	var _v0 = _Utils_Tuple2(model.page, model.token);
-	_v0$5:
-	while (true) {
-		switch (_v0.a.$) {
-			case 'Login':
-				var m = _v0.a.a;
-				return A2(
-					$elm$html$Html$map,
-					$author$project$Main$LoginMsg,
-					$author$project$Page$Login$view(m));
-			case 'MainPage':
-				if (_v0.b.$ === 'Right') {
-					var _v1 = _v0.a;
-					var token = _v0.b.a;
-					return $elm$html$Html$text('MainPage');
-				} else {
-					break _v0$5;
-				}
-			case 'CourseListPage':
-				if (_v0.b.$ === 'Right') {
-					var model_ = _v0.a.a;
-					var token = _v0.b.a;
-					return A2(
-						$elm$html$Html$map,
-						$author$project$Main$CourseListPageMsg,
-						$author$project$Page$CourseListPage$view(model_));
-				} else {
-					break _v0$5;
-				}
-			case 'NotFound':
-				var _v2 = _v0.a;
-				return $author$project$Page$NotFound$view;
-			case 'Blank':
-				var _v3 = _v0.a;
-				return $elm$html$Html$text('');
-			default:
-				break _v0$5;
-		}
+	var _v0 = model.page;
+	switch (_v0.$) {
+		case 'Login':
+			var m = _v0.a;
+			return A2(
+				$elm$html$Html$map,
+				$author$project$Main$LoginMsg,
+				$author$project$Page$Login$view(m));
+		case 'MainPage':
+			return $elm$html$Html$text('MainPage');
+		case 'CourseListPage':
+			var model_ = _v0.a;
+			return A2(
+				$elm$html$Html$map,
+				$author$project$Main$CourseListPageMsg,
+				$author$project$Page$CourseListPage$view(model_));
+		case 'CoursePage':
+			var model_ = _v0.a;
+			return A2(
+				$elm$html$Html$map,
+				$author$project$Main$CoursePageMsg,
+				$author$project$Page$CoursePage$view(model_));
+		case 'NotFound':
+			return $author$project$Page$NotFound$view;
+		default:
+			return $elm$html$Html$text('');
 	}
-	return $elm$html$Html$text('');
 };
 var $author$project$Main$view = function (model) {
 	return {

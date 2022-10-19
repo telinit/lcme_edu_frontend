@@ -31,7 +31,6 @@ import Json.Decode
 import Json.Encode
 
 
-
 fileCreate : Api.Data.File -> Api.Request Api.Data.File
 fileCreate data_body =
     Api.request
@@ -42,7 +41,6 @@ fileCreate data_body =
         []
         (Just (Api.Data.encodeFile data_body))
         Api.Data.fileDecoder
-
 
 
 fileDelete : String -> Api.Request ()
@@ -57,7 +55,6 @@ fileDelete id_path =
         (Json.Decode.succeed ())
 
 
-
 fileList : Api.Request (List Api.Data.File)
 fileList =
     Api.request
@@ -68,7 +65,6 @@ fileList =
         []
         Nothing
         (Json.Decode.list Api.Data.fileDecoder)
-
 
 
 filePartialUpdate : String -> Api.Data.File -> Api.Request Api.Data.File
@@ -83,7 +79,6 @@ filePartialUpdate id_path data_body =
         Api.Data.fileDecoder
 
 
-
 fileRead : String -> Api.Request Api.Data.File
 fileRead id_path =
     Api.request
@@ -94,7 +89,6 @@ fileRead id_path =
         []
         Nothing
         Api.Data.fileDecoder
-
 
 
 fileUpdate : String -> Api.Data.File -> Api.Request Api.Data.File

@@ -127,7 +127,7 @@ courseImg mb =
 
 viewCourse : CourseRead -> Html Msg
 viewCourse course =
-    div [ class "card" ]
+    a [ class "card", href (Maybe.withDefault "" <| Maybe.map (\id -> "/course/" ++ Uuid.toString id) course.id) ]
         [ div [ class "image" ] [ courseImg course.logo ]
         , div [ class "content" ]
             [ div [ class "header" ] [ text course.title ]

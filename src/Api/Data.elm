@@ -15,8 +15,10 @@
 
 
 module Api.Data exposing
-    ( Activity, ActivityType(..), activityTypeVariants
-    , CourseEnrollment, CourseEnrollmentRole(..), courseEnrollmentRoleVariants
+    ( Activity
+    , ActivityType(..)
+    , CourseEnrollment
+    , CourseEnrollmentRole(..)
     , CourseRead
     , CourseWrite
     , Department
@@ -24,7 +26,8 @@ module Api.Data exposing
     , EducationSpecialization
     , File
     , Login
-    , Mark, MarkFinalType(..), markFinalTypeVariants
+    , Mark
+    , MarkFinalType(..)
     , Message
     , MessageNews
     , MessagePrivate
@@ -32,8 +35,18 @@ module Api.Data exposing
     , Organization
     , SetPassword
     , Token
-    , UnreadObject, UnreadObjectType(..), unreadObjectTypeVariants
+    , UnreadObject
+    , UnreadObjectType(..)
     , User
+    , activityDecoder
+    , activityTypeVariants
+    , courseEnrollmentDecoder
+    , courseEnrollmentRoleVariants
+    , courseReadDecoder
+    , courseWriteDecoder
+    , departmentDecoder
+    , educationDecoder
+    , educationSpecializationDecoder
     , encodeActivity
     , encodeCourseEnrollment
     , encodeCourseRead
@@ -53,16 +66,10 @@ module Api.Data exposing
     , encodeToken
     , encodeUnreadObject
     , encodeUser
-    , activityDecoder
-    , courseEnrollmentDecoder
-    , courseReadDecoder
-    , courseWriteDecoder
-    , departmentDecoder
-    , educationDecoder
-    , educationSpecializationDecoder
     , fileDecoder
     , loginDecoder
     , markDecoder
+    , markFinalTypeVariants
     , messageDecoder
     , messageNewsDecoder
     , messagePrivateDecoder
@@ -71,6 +78,7 @@ module Api.Data exposing
     , setPasswordDecoder
     , tokenDecoder
     , unreadObjectDecoder
+    , unreadObjectTypeVariants
     , userDecoder
     )
 
@@ -80,6 +88,7 @@ import Dict
 import Json.Decode
 import Json.Encode
 import Uuid exposing (Uuid)
+
 
 
 -- MODEL
@@ -100,7 +109,7 @@ type alias Activity =
     , link : Maybe String
     , embed : Maybe Bool
     , course : Uuid
-    , files : Maybe (List (Uuid))
+    , files : Maybe (List Uuid)
     }
 
 
@@ -250,7 +259,7 @@ type alias Message =
     , body : Maybe String
     , sentAt : Posix
     , sender : Uuid
-    , attachments : Maybe (List (Uuid))
+    , attachments : Maybe (List Uuid)
     }
 
 
@@ -259,7 +268,7 @@ type alias MessageNews =
     , body : Maybe String
     , sentAt : Posix
     , sender : Uuid
-    , attachments : Maybe (List (Uuid))
+    , attachments : Maybe (List Uuid)
     }
 
 
@@ -269,7 +278,7 @@ type alias MessagePrivate =
     , sentAt : Posix
     , sender : Uuid
     , receiver : Uuid
-    , attachments : Maybe (List (Uuid))
+    , attachments : Maybe (List Uuid)
     }
 
 
@@ -280,7 +289,7 @@ type alias MessageTaskSubmission =
     , sender : Uuid
     , receiver : Uuid
     , activity : Uuid
-    , attachments : Maybe (List (Uuid))
+    , attachments : Maybe (List Uuid)
     }
 
 
@@ -353,10 +362,11 @@ type alias User =
     , middleName : Maybe String
     , birthDate : Maybe Posix
     , avatar : Maybe String
-    , groups : Maybe (List (Int))
-    , userPermissions : Maybe (List (Int))
-    , children : Maybe (List (Uuid))
+    , groups : Maybe (List Int)
+    , userPermissions : Maybe (List Int)
+    , children : Maybe (List Uuid)
     }
+
 
 
 -- ENCODER
@@ -368,7 +378,7 @@ encodeActivity =
 
 
 encodeActivityWithTag : ( String, String ) -> Activity -> Json.Encode.Value
-encodeActivityWithTag (tagField, tag) model =
+encodeActivityWithTag ( tagField, tag ) model =
     encodeObject (encodeActivityPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -395,6 +405,7 @@ encodeActivityPairs model =
     in
     pairs
 
+
 stringFromActivityType : ActivityType -> String
 stringFromActivityType model =
     case model of
@@ -419,14 +430,13 @@ encodeActivityType =
     Json.Encode.string << stringFromActivityType
 
 
-
 encodeCourseEnrollment : CourseEnrollment -> Json.Encode.Value
 encodeCourseEnrollment =
     encodeObject << encodeCourseEnrollmentPairs
 
 
 encodeCourseEnrollmentWithTag : ( String, String ) -> CourseEnrollment -> Json.Encode.Value
-encodeCourseEnrollmentWithTag (tagField, tag) model =
+encodeCourseEnrollmentWithTag ( tagField, tag ) model =
     encodeObject (encodeCourseEnrollmentPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -443,6 +453,7 @@ encodeCourseEnrollmentPairs model =
     in
     pairs
 
+
 stringFromCourseEnrollmentRole : CourseEnrollmentRole -> String
 stringFromCourseEnrollmentRole model =
     case model of
@@ -458,14 +469,13 @@ encodeCourseEnrollmentRole =
     Json.Encode.string << stringFromCourseEnrollmentRole
 
 
-
 encodeCourseRead : CourseRead -> Json.Encode.Value
 encodeCourseRead =
     encodeObject << encodeCourseReadPairs
 
 
 encodeCourseReadWithTag : ( String, String ) -> CourseRead -> Json.Encode.Value
-encodeCourseReadWithTag (tagField, tag) model =
+encodeCourseReadWithTag ( tagField, tag ) model =
     encodeObject (encodeCourseReadPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -492,7 +502,7 @@ encodeCourseWrite =
 
 
 encodeCourseWriteWithTag : ( String, String ) -> CourseWrite -> Json.Encode.Value
-encodeCourseWriteWithTag (tagField, tag) model =
+encodeCourseWriteWithTag ( tagField, tag ) model =
     encodeObject (encodeCourseWritePairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -519,7 +529,7 @@ encodeDepartment =
 
 
 encodeDepartmentWithTag : ( String, String ) -> Department -> Json.Encode.Value
-encodeDepartmentWithTag (tagField, tag) model =
+encodeDepartmentWithTag ( tagField, tag ) model =
     encodeObject (encodeDepartmentPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -541,7 +551,7 @@ encodeEducation =
 
 
 encodeEducationWithTag : ( String, String ) -> Education -> Json.Encode.Value
-encodeEducationWithTag (tagField, tag) model =
+encodeEducationWithTag ( tagField, tag ) model =
     encodeObject (encodeEducationPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -567,7 +577,7 @@ encodeEducationSpecialization =
 
 
 encodeEducationSpecializationWithTag : ( String, String ) -> EducationSpecialization -> Json.Encode.Value
-encodeEducationSpecializationWithTag (tagField, tag) model =
+encodeEducationSpecializationWithTag ( tagField, tag ) model =
     encodeObject (encodeEducationSpecializationPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -589,7 +599,7 @@ encodeFile =
 
 
 encodeFileWithTag : ( String, String ) -> File -> Json.Encode.Value
-encodeFileWithTag (tagField, tag) model =
+encodeFileWithTag ( tagField, tag ) model =
     encodeObject (encodeFilePairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -613,7 +623,7 @@ encodeLogin =
 
 
 encodeLoginWithTag : ( String, String ) -> Login -> Json.Encode.Value
-encodeLoginWithTag (tagField, tag) model =
+encodeLoginWithTag ( tagField, tag ) model =
     encodeObject (encodeLoginPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -634,7 +644,7 @@ encodeMark =
 
 
 encodeMarkWithTag : ( String, String ) -> Mark -> Json.Encode.Value
-encodeMarkWithTag (tagField, tag) model =
+encodeMarkWithTag ( tagField, tag ) model =
     encodeObject (encodeMarkPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -653,6 +663,7 @@ encodeMarkPairs model =
             ]
     in
     pairs
+
 
 stringFromMarkFinalType : MarkFinalType -> String
 stringFromMarkFinalType model =
@@ -690,14 +701,13 @@ encodeMarkFinalType =
     Json.Encode.string << stringFromMarkFinalType
 
 
-
 encodeMessage : Message -> Json.Encode.Value
 encodeMessage =
     encodeObject << encodeMessagePairs
 
 
 encodeMessageWithTag : ( String, String ) -> Message -> Json.Encode.Value
-encodeMessageWithTag (tagField, tag) model =
+encodeMessageWithTag ( tagField, tag ) model =
     encodeObject (encodeMessagePairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -721,7 +731,7 @@ encodeMessageNews =
 
 
 encodeMessageNewsWithTag : ( String, String ) -> MessageNews -> Json.Encode.Value
-encodeMessageNewsWithTag (tagField, tag) model =
+encodeMessageNewsWithTag ( tagField, tag ) model =
     encodeObject (encodeMessageNewsPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -745,7 +755,7 @@ encodeMessagePrivate =
 
 
 encodeMessagePrivateWithTag : ( String, String ) -> MessagePrivate -> Json.Encode.Value
-encodeMessagePrivateWithTag (tagField, tag) model =
+encodeMessagePrivateWithTag ( tagField, tag ) model =
     encodeObject (encodeMessagePrivatePairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -770,7 +780,7 @@ encodeMessageTaskSubmission =
 
 
 encodeMessageTaskSubmissionWithTag : ( String, String ) -> MessageTaskSubmission -> Json.Encode.Value
-encodeMessageTaskSubmissionWithTag (tagField, tag) model =
+encodeMessageTaskSubmissionWithTag ( tagField, tag ) model =
     encodeObject (encodeMessageTaskSubmissionPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -796,7 +806,7 @@ encodeOrganization =
 
 
 encodeOrganizationWithTag : ( String, String ) -> Organization -> Json.Encode.Value
-encodeOrganizationWithTag (tagField, tag) model =
+encodeOrganizationWithTag ( tagField, tag ) model =
     encodeObject (encodeOrganizationPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -818,7 +828,7 @@ encodeSetPassword =
 
 
 encodeSetPasswordWithTag : ( String, String ) -> SetPassword -> Json.Encode.Value
-encodeSetPasswordWithTag (tagField, tag) model =
+encodeSetPasswordWithTag ( tagField, tag ) model =
     encodeObject (encodeSetPasswordPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -838,7 +848,7 @@ encodeToken =
 
 
 encodeTokenWithTag : ( String, String ) -> Token -> Json.Encode.Value
-encodeTokenWithTag (tagField, tag) model =
+encodeTokenWithTag ( tagField, tag ) model =
     encodeObject (encodeTokenPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -859,7 +869,7 @@ encodeUnreadObject =
 
 
 encodeUnreadObjectWithTag : ( String, String ) -> UnreadObject -> Json.Encode.Value
-encodeUnreadObjectWithTag (tagField, tag) model =
+encodeUnreadObjectWithTag ( tagField, tag ) model =
     encodeObject (encodeUnreadObjectPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -875,6 +885,7 @@ encodeUnreadObjectPairs model =
             ]
     in
     pairs
+
 
 stringFromUnreadObjectType : UnreadObjectType -> String
 stringFromUnreadObjectType model =
@@ -915,14 +926,13 @@ encodeUnreadObjectType =
     Json.Encode.string << stringFromUnreadObjectType
 
 
-
 encodeUser : User -> Json.Encode.Value
 encodeUser =
     encodeObject << encodeUserPairs
 
 
 encodeUserWithTag : ( String, String ) -> User -> Json.Encode.Value
-encodeUserWithTag (tagField, tag) model =
+encodeUserWithTag ( tagField, tag ) model =
     encodeObject (encodeUserPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
@@ -951,6 +961,7 @@ encodeUserPairs model =
     pairs
 
 
+
 -- DECODER
 
 
@@ -959,18 +970,18 @@ activityDecoder =
     Json.Decode.succeed Activity
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecode "type" activityTypeDecoder Nothing
-        |> decode "title" Json.Decode.string 
+        |> decode "title" Json.Decode.string
         |> maybeDecode "keywords" Json.Decode.string Nothing
         |> maybeDecode "is_hidden" Json.Decode.bool Nothing
         |> maybeDecode "marks_limit" Json.Decode.int Nothing
-        |> decode "order" Json.Decode.int 
+        |> decode "order" Json.Decode.int
         |> maybeDecodeNullable "date" Api.Time.dateDecoder Nothing
         |> maybeDecodeNullable "group" Json.Decode.string Nothing
         |> maybeDecode "body" Json.Decode.string Nothing
         |> maybeDecodeNullable "due_date" Api.Time.dateTimeDecoder Nothing
         |> maybeDecodeNullable "link" Json.Decode.string Nothing
         |> maybeDecode "embed" Json.Decode.bool Nothing
-        |> decode "course" Uuid.decoder 
+        |> decode "course" Uuid.decoder
         |> maybeDecode "files" (Json.Decode.list Uuid.decoder) Nothing
 
 
@@ -1000,15 +1011,14 @@ activityTypeDecoder =
             )
 
 
-
 courseEnrollmentDecoder : Json.Decode.Decoder CourseEnrollment
 courseEnrollmentDecoder =
     Json.Decode.succeed CourseEnrollment
         |> maybeDecode "id" Uuid.decoder Nothing
-        |> decode "role" courseEnrollmentRoleDecoder 
+        |> decode "role" courseEnrollmentRoleDecoder
         |> maybeDecodeNullable "finished_on" Api.Time.dateTimeDecoder Nothing
-        |> decode "person" Uuid.decoder 
-        |> decode "course" Uuid.decoder 
+        |> decode "person" Uuid.decoder
+        |> decode "course" Uuid.decoder
 
 
 courseEnrollmentRoleDecoder : Json.Decode.Decoder CourseEnrollmentRole
@@ -1028,16 +1038,15 @@ courseEnrollmentRoleDecoder =
             )
 
 
-
 courseReadDecoder : Json.Decode.Decoder CourseRead
 courseReadDecoder =
     Json.Decode.succeed CourseRead
         |> maybeDecode "id" Uuid.decoder Nothing
-        |> decodeNullable "for_specialization" educationSpecializationDecoder 
-        |> decodeNullable "logo" fileDecoder 
-        |> decodeNullable "cover" fileDecoder 
-        |> decode "title" Json.Decode.string 
-        |> decode "description" Json.Decode.string 
+        |> decodeNullable "for_specialization" educationSpecializationDecoder
+        |> decodeNullable "logo" fileDecoder
+        |> decodeNullable "cover" fileDecoder
+        |> decode "title" Json.Decode.string
+        |> decode "description" Json.Decode.string
         |> maybeDecode "for_class" Json.Decode.string Nothing
         |> maybeDecodeNullable "for_group" Json.Decode.string Nothing
 
@@ -1046,8 +1055,8 @@ courseWriteDecoder : Json.Decode.Decoder CourseWrite
 courseWriteDecoder =
     Json.Decode.succeed CourseWrite
         |> maybeDecode "id" Uuid.decoder Nothing
-        |> decode "title" Json.Decode.string 
-        |> decode "description" Json.Decode.string 
+        |> decode "title" Json.Decode.string
+        |> decode "description" Json.Decode.string
         |> maybeDecode "for_class" Json.Decode.string Nothing
         |> maybeDecodeNullable "for_group" Json.Decode.string Nothing
         |> maybeDecodeNullable "for_specialization" Uuid.decoder Nothing
@@ -1059,58 +1068,58 @@ departmentDecoder : Json.Decode.Decoder Department
 departmentDecoder =
     Json.Decode.succeed Department
         |> maybeDecode "id" Uuid.decoder Nothing
-        |> decode "name" Json.Decode.string 
-        |> decode "organization" Uuid.decoder 
+        |> decode "name" Json.Decode.string
+        |> decode "organization" Uuid.decoder
 
 
 educationDecoder : Json.Decode.Decoder Education
 educationDecoder =
     Json.Decode.succeed Education
         |> maybeDecode "id" Uuid.decoder Nothing
-        |> decode "started" Api.Time.dateDecoder 
+        |> decode "started" Api.Time.dateDecoder
         |> maybeDecodeNullable "finished" Api.Time.dateDecoder Nothing
-        |> decode "starting_class" Json.Decode.string 
+        |> decode "starting_class" Json.Decode.string
         |> maybeDecodeNullable "finishing_class" Json.Decode.string Nothing
-        |> decode "student" Uuid.decoder 
-        |> decode "specialization" Uuid.decoder 
+        |> decode "student" Uuid.decoder
+        |> decode "specialization" Uuid.decoder
 
 
 educationSpecializationDecoder : Json.Decode.Decoder EducationSpecialization
 educationSpecializationDecoder =
     Json.Decode.succeed EducationSpecialization
         |> maybeDecode "id" Uuid.decoder Nothing
-        |> decode "name" Json.Decode.string 
-        |> decode "department" Uuid.decoder 
+        |> decode "name" Json.Decode.string
+        |> decode "department" Uuid.decoder
 
 
 fileDecoder : Json.Decode.Decoder File
 fileDecoder =
     Json.Decode.succeed File
         |> maybeDecode "id" Uuid.decoder Nothing
-        |> decode "name" Json.Decode.string 
-        |> decode "hash" Json.Decode.string 
-        |> decode "size" Json.Decode.int 
-        |> decode "mime_type" Json.Decode.string 
+        |> decode "name" Json.Decode.string
+        |> decode "hash" Json.Decode.string
+        |> decode "size" Json.Decode.int
+        |> decode "mime_type" Json.Decode.string
 
 
 loginDecoder : Json.Decode.Decoder Login
 loginDecoder =
     Json.Decode.succeed Login
-        |> decode "username" Json.Decode.string 
-        |> decode "password" Json.Decode.string 
+        |> decode "username" Json.Decode.string
+        |> decode "password" Json.Decode.string
 
 
 markDecoder : Json.Decode.Decoder Mark
 markDecoder =
     Json.Decode.succeed Mark
         |> maybeDecode "id" Uuid.decoder Nothing
-        |> decode "value" Json.Decode.string 
+        |> decode "value" Json.Decode.string
         |> maybeDecode "comment" Json.Decode.string Nothing
         |> maybeDecodeNullable "final_type" markFinalTypeDecoder Nothing
-        |> decode "teacher" Uuid.decoder 
-        |> decode "student" Uuid.decoder 
-        |> decode "activity" Uuid.decoder 
-        |> decode "course" Uuid.decoder 
+        |> decode "teacher" Uuid.decoder
+        |> decode "student" Uuid.decoder
+        |> decode "activity" Uuid.decoder
+        |> decode "course" Uuid.decoder
 
 
 markFinalTypeDecoder : Json.Decode.Decoder MarkFinalType
@@ -1151,14 +1160,13 @@ markFinalTypeDecoder =
             )
 
 
-
 messageDecoder : Json.Decode.Decoder Message
 messageDecoder =
     Json.Decode.succeed Message
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecode "body" Json.Decode.string Nothing
-        |> decode "sent_at" Api.Time.dateTimeDecoder 
-        |> decode "sender" Uuid.decoder 
+        |> decode "sent_at" Api.Time.dateTimeDecoder
+        |> decode "sender" Uuid.decoder
         |> maybeDecode "attachments" (Json.Decode.list Uuid.decoder) Nothing
 
 
@@ -1167,8 +1175,8 @@ messageNewsDecoder =
     Json.Decode.succeed MessageNews
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecode "body" Json.Decode.string Nothing
-        |> decode "sent_at" Api.Time.dateTimeDecoder 
-        |> decode "sender" Uuid.decoder 
+        |> decode "sent_at" Api.Time.dateTimeDecoder
+        |> decode "sender" Uuid.decoder
         |> maybeDecode "attachments" (Json.Decode.list Uuid.decoder) Nothing
 
 
@@ -1177,9 +1185,9 @@ messagePrivateDecoder =
     Json.Decode.succeed MessagePrivate
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecode "body" Json.Decode.string Nothing
-        |> decode "sent_at" Api.Time.dateTimeDecoder 
-        |> decode "sender" Uuid.decoder 
-        |> decode "receiver" Uuid.decoder 
+        |> decode "sent_at" Api.Time.dateTimeDecoder
+        |> decode "sender" Uuid.decoder
+        |> decode "receiver" Uuid.decoder
         |> maybeDecode "attachments" (Json.Decode.list Uuid.decoder) Nothing
 
 
@@ -1188,10 +1196,10 @@ messageTaskSubmissionDecoder =
     Json.Decode.succeed MessageTaskSubmission
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecode "body" Json.Decode.string Nothing
-        |> decode "sent_at" Api.Time.dateTimeDecoder 
-        |> decode "sender" Uuid.decoder 
-        |> decode "receiver" Uuid.decoder 
-        |> decode "activity" Uuid.decoder 
+        |> decode "sent_at" Api.Time.dateTimeDecoder
+        |> decode "sender" Uuid.decoder
+        |> decode "receiver" Uuid.decoder
+        |> decode "activity" Uuid.decoder
         |> maybeDecode "attachments" (Json.Decode.list Uuid.decoder) Nothing
 
 
@@ -1199,31 +1207,31 @@ organizationDecoder : Json.Decode.Decoder Organization
 organizationDecoder =
     Json.Decode.succeed Organization
         |> maybeDecode "id" Uuid.decoder Nothing
-        |> decode "name" Json.Decode.string 
+        |> decode "name" Json.Decode.string
         |> maybeDecodeNullable "name_short" Json.Decode.string Nothing
 
 
 setPasswordDecoder : Json.Decode.Decoder SetPassword
 setPasswordDecoder =
     Json.Decode.succeed SetPassword
-        |> decode "password" Json.Decode.string 
+        |> decode "password" Json.Decode.string
 
 
 tokenDecoder : Json.Decode.Decoder Token
 tokenDecoder =
     Json.Decode.succeed Token
-        |> decode "user" userDecoder 
-        |> decode "key" Json.Decode.string 
+        |> decode "user" userDecoder
+        |> decode "key" Json.Decode.string
 
 
 unreadObjectDecoder : Json.Decode.Decoder UnreadObject
 unreadObjectDecoder =
     Json.Decode.succeed UnreadObject
         |> maybeDecode "id" Uuid.decoder Nothing
-        |> decode "obj" Uuid.decoder 
+        |> decode "obj" Uuid.decoder
         |> maybeDecode "type" unreadObjectTypeDecoder Nothing
-        |> decode "created" Api.Time.dateTimeDecoder 
-        |> decode "user" Uuid.decoder 
+        |> decode "created" Api.Time.dateTimeDecoder
+        |> decode "user" Uuid.decoder
 
 
 unreadObjectTypeDecoder : Json.Decode.Decoder UnreadObjectType
@@ -1267,14 +1275,13 @@ unreadObjectTypeDecoder =
             )
 
 
-
 userDecoder : Json.Decode.Decoder User
 userDecoder =
     Json.Decode.succeed User
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecodeNullable "last_login" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "is_superuser" Json.Decode.bool Nothing
-        |> decode "username" Json.Decode.string 
+        |> decode "username" Json.Decode.string
         |> maybeDecode "first_name" Json.Decode.string Nothing
         |> maybeDecode "last_name" Json.Decode.string Nothing
         |> maybeDecode "email" Json.Decode.string Nothing
@@ -1287,7 +1294,6 @@ userDecoder =
         |> maybeDecode "groups" (Json.Decode.list Json.Decode.int) Nothing
         |> maybeDecode "user_permissions" (Json.Decode.list Json.Decode.int) Nothing
         |> maybeDecode "children" (Json.Decode.list Uuid.decoder) Nothing
-
 
 
 

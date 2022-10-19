@@ -1,5 +1,6 @@
 module Util exposing (..)
 
+import Array exposing (Array)
 import Html exposing (Attribute, span)
 import Html.Attributes exposing (style)
 import Html.Events exposing (custom, preventDefaultOn, stopPropagationOn)
@@ -83,3 +84,14 @@ onClickPreventStop msg =
 
 link_span attrs body =
     span ([ style "color" "#4183C4", style "cursor" "pointer" ] ++ attrs) body
+
+
+arrayUpdate : Int -> (a -> a) -> Array a -> Array a
+arrayUpdate ix transform array =
+    let ignore = Debug.log "arrayUpdate" (ix,transform,array) in
+    case Array.get ix array of
+        Just el ->
+            (Debug.log "arrayUpdate: succeded" (Array.set ix (transform el) array))
+
+        Nothing ->
+            (Debug.log "arrayUpdate: failed" (array))

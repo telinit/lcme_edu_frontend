@@ -4,9 +4,9 @@ import Api.Data exposing (Token)
 import Browser
 import Browser.Navigation as Nav
 import Debug exposing (log)
-import Html exposing (Html, div, text)
-import Html.Attributes exposing (class, id, style)
+import Html exposing (Html, text)
 import Page.CourseListPage as CourseListPage
+import Page.CoursePage as CoursePage
 import Page.DefaultLayout as DefaultLayout
 import Page.Login as Login
 import Page.NotFound as NotFound
@@ -50,7 +50,7 @@ type Page
     | Login Login.Model
     | MainPage
     | CourseListPage CourseListPage.Model
-    | CoursePage
+    | CoursePage CoursePage.Model
     | NotFound
 
 
@@ -76,6 +76,7 @@ type Msg
     | DefaultLayoutMsg DefaultLayout.Msg
     | LoginMsg Login.Msg
     | CourseListPageMsg CourseListPage.Msg
+    | CoursePageMsg CoursePage.Msg
 
 
 parse_url : Url -> ParsedUrl
@@ -155,8 +156,20 @@ update msg model =
                             in
                             ( { model | page = MainPage, layout = DefaultLayout layout_ }, Cmd.map DefaultLayoutMsg cmd_ )
 
-                        ( UrlCourse string, Right token ) ->
-                            ( { model | page = CoursePage }, Cmd.none )
+                        ( UrlCourse id, Right token ) ->
+                            let
+                                ( layout_, cmd_1 ) =
+                                    DefaultLayout.init token.user
+
+                                ( model_, cmd_2 ) =
+                                    CoursePage.init token.key id
+                            in
+                            ( { model | page = CoursePage model_, layout = DefaultLayout layout_ }
+                            , Cmd.batch
+                                [ Cmd.map DefaultLayoutMsg cmd_1
+                                , Cmd.map CoursePageMsg cmd_2
+                                ]
+                            )
 
                         ( UrlCourseList, Right token ) ->
                             let
@@ -225,6 +238,13 @@ update msg model =
             in
             ( { model | page = CourseListPage model__ }, Cmd.map CourseListPageMsg cmd_ )
 
+        ( CoursePageMsg msg_, CoursePage model_, DefaultLayout layout_ ) ->
+            let
+                ( model__, cmd_ ) =
+                    CoursePage.update msg_ model_
+            in
+            ( { model | page = CoursePage model__ }, Cmd.map CoursePageMsg cmd_ )
+
         ( _, _, _ ) ->
             -- FIXME: remove this general case and add more specific ones
             ( model, Cmd.none )
@@ -246,23 +266,23 @@ subscriptions _ =
 
 viewPage : Model -> Html Msg
 viewPage model =
-    case ( model.page, model.token ) of
-        ( Login m, _ ) ->
+    case model.page of
+        Login m ->
             Html.map LoginMsg <| Login.view m
 
-        ( MainPage, Right token ) ->
+        MainPage ->
             text "MainPage"
 
-        ( CourseListPage model_, Right token ) ->
+        CourseListPage model_ ->
             Html.map CourseListPageMsg <| CourseListPage.view model_
 
-        ( NotFound, _ ) ->
+        CoursePage model_ ->
+            Html.map CoursePageMsg <| CoursePage.view model_
+
+        NotFound ->
             NotFound.view
 
-        ( Blank, _ ) ->
-            text ""
-
-        ( _, _ ) ->
+        Blank ->
             text ""
 
 

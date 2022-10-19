@@ -50,7 +50,6 @@ import Json.Encode
 import Uuid exposing (Uuid)
 
 
-
 messageCreate : Api.Data.Message -> Api.Request Api.Data.Message
 messageCreate data_body =
     Api.request
@@ -61,7 +60,6 @@ messageCreate data_body =
         []
         (Just (Api.Data.encodeMessage data_body))
         Api.Data.messageDecoder
-
 
 
 messageDelete : String -> Api.Request ()
@@ -76,7 +74,6 @@ messageDelete id_path =
         (Json.Decode.succeed ())
 
 
-
 messageList : Api.Request (List Api.Data.Message)
 messageList =
     Api.request
@@ -87,7 +84,6 @@ messageList =
         []
         Nothing
         (Json.Decode.list Api.Data.messageDecoder)
-
 
 
 messageNewsCreate : Api.Data.MessageNews -> Api.Request Api.Data.MessageNews
@@ -102,7 +98,6 @@ messageNewsCreate data_body =
         Api.Data.messageNewsDecoder
 
 
-
 messageNewsDelete : Uuid -> Api.Request ()
 messageNewsDelete id_path =
     Api.request
@@ -113,7 +108,6 @@ messageNewsDelete id_path =
         []
         Nothing
         (Json.Decode.succeed ())
-
 
 
 messageNewsList : Api.Request (List Api.Data.MessageNews)
@@ -128,7 +122,6 @@ messageNewsList =
         (Json.Decode.list Api.Data.messageNewsDecoder)
 
 
-
 messageNewsPartialUpdate : Uuid -> Api.Data.MessageNews -> Api.Request Api.Data.MessageNews
 messageNewsPartialUpdate id_path data_body =
     Api.request
@@ -139,7 +132,6 @@ messageNewsPartialUpdate id_path data_body =
         []
         (Just (Api.Data.encodeMessageNews data_body))
         Api.Data.messageNewsDecoder
-
 
 
 messageNewsRead : Uuid -> Api.Request Api.Data.MessageNews
@@ -154,7 +146,6 @@ messageNewsRead id_path =
         Api.Data.messageNewsDecoder
 
 
-
 messageNewsUpdate : Uuid -> Api.Data.MessageNews -> Api.Request Api.Data.MessageNews
 messageNewsUpdate id_path data_body =
     Api.request
@@ -165,7 +156,6 @@ messageNewsUpdate id_path data_body =
         []
         (Just (Api.Data.encodeMessageNews data_body))
         Api.Data.messageNewsDecoder
-
 
 
 messagePartialUpdate : String -> Api.Data.Message -> Api.Request Api.Data.Message
@@ -180,7 +170,6 @@ messagePartialUpdate id_path data_body =
         Api.Data.messageDecoder
 
 
-
 messagePrivateCreate : Api.Data.MessagePrivate -> Api.Request Api.Data.MessagePrivate
 messagePrivateCreate data_body =
     Api.request
@@ -191,7 +180,6 @@ messagePrivateCreate data_body =
         []
         (Just (Api.Data.encodeMessagePrivate data_body))
         Api.Data.messagePrivateDecoder
-
 
 
 messagePrivateDelete : String -> Api.Request ()
@@ -206,7 +194,6 @@ messagePrivateDelete id_path =
         (Json.Decode.succeed ())
 
 
-
 messagePrivateList : Api.Request (List Api.Data.MessagePrivate)
 messagePrivateList =
     Api.request
@@ -217,7 +204,6 @@ messagePrivateList =
         []
         Nothing
         (Json.Decode.list Api.Data.messagePrivateDecoder)
-
 
 
 messagePrivatePartialUpdate : String -> Api.Data.MessagePrivate -> Api.Request Api.Data.MessagePrivate
@@ -232,7 +218,6 @@ messagePrivatePartialUpdate id_path data_body =
         Api.Data.messagePrivateDecoder
 
 
-
 messagePrivateRead : String -> Api.Request Api.Data.MessagePrivate
 messagePrivateRead id_path =
     Api.request
@@ -243,7 +228,6 @@ messagePrivateRead id_path =
         []
         Nothing
         Api.Data.messagePrivateDecoder
-
 
 
 messagePrivateUpdate : String -> Api.Data.MessagePrivate -> Api.Request Api.Data.MessagePrivate
@@ -258,7 +242,6 @@ messagePrivateUpdate id_path data_body =
         Api.Data.messagePrivateDecoder
 
 
-
 messageRead : String -> Api.Request Api.Data.Message
 messageRead id_path =
     Api.request
@@ -269,7 +252,6 @@ messageRead id_path =
         []
         Nothing
         Api.Data.messageDecoder
-
 
 
 messageTaskCreate : Api.Data.MessageTaskSubmission -> Api.Request Api.Data.MessageTaskSubmission
@@ -284,7 +266,6 @@ messageTaskCreate data_body =
         Api.Data.messageTaskSubmissionDecoder
 
 
-
 messageTaskDelete : String -> Api.Request ()
 messageTaskDelete id_path =
     Api.request
@@ -295,7 +276,6 @@ messageTaskDelete id_path =
         []
         Nothing
         (Json.Decode.succeed ())
-
 
 
 messageTaskList : Api.Request (List Api.Data.MessageTaskSubmission)
@@ -310,7 +290,6 @@ messageTaskList =
         (Json.Decode.list Api.Data.messageTaskSubmissionDecoder)
 
 
-
 messageTaskPartialUpdate : String -> Api.Data.MessageTaskSubmission -> Api.Request Api.Data.MessageTaskSubmission
 messageTaskPartialUpdate id_path data_body =
     Api.request
@@ -321,7 +300,6 @@ messageTaskPartialUpdate id_path data_body =
         []
         (Just (Api.Data.encodeMessageTaskSubmission data_body))
         Api.Data.messageTaskSubmissionDecoder
-
 
 
 messageTaskRead : String -> Api.Request Api.Data.MessageTaskSubmission
@@ -336,7 +314,6 @@ messageTaskRead id_path =
         Api.Data.messageTaskSubmissionDecoder
 
 
-
 messageTaskUpdate : String -> Api.Data.MessageTaskSubmission -> Api.Request Api.Data.MessageTaskSubmission
 messageTaskUpdate id_path data_body =
     Api.request
@@ -347,7 +324,6 @@ messageTaskUpdate id_path data_body =
         []
         (Just (Api.Data.encodeMessageTaskSubmission data_body))
         Api.Data.messageTaskSubmissionDecoder
-
 
 
 messageUpdate : String -> Api.Data.Message -> Api.Request Api.Data.Message

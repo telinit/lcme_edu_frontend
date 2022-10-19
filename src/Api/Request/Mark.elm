@@ -31,7 +31,6 @@ import Json.Decode
 import Json.Encode
 
 
-
 markCreate : Api.Data.Mark -> Api.Request Api.Data.Mark
 markCreate data_body =
     Api.request
@@ -42,7 +41,6 @@ markCreate data_body =
         []
         (Just (Api.Data.encodeMark data_body))
         Api.Data.markDecoder
-
 
 
 markDelete : String -> Api.Request ()
@@ -57,7 +55,6 @@ markDelete id_path =
         (Json.Decode.succeed ())
 
 
-
 markList : Api.Request (List Api.Data.Mark)
 markList =
     Api.request
@@ -68,7 +65,6 @@ markList =
         []
         Nothing
         (Json.Decode.list Api.Data.markDecoder)
-
 
 
 markPartialUpdate : String -> Api.Data.Mark -> Api.Request Api.Data.Mark
@@ -83,7 +79,6 @@ markPartialUpdate id_path data_body =
         Api.Data.markDecoder
 
 
-
 markRead : String -> Api.Request Api.Data.Mark
 markRead id_path =
     Api.request
@@ -94,7 +89,6 @@ markRead id_path =
         []
         Nothing
         Api.Data.markDecoder
-
 
 
 markUpdate : String -> Api.Data.Mark -> Api.Request Api.Data.Mark

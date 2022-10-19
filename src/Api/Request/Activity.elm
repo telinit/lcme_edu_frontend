@@ -31,7 +31,6 @@ import Json.Decode
 import Json.Encode
 
 
-
 activityCreate : Api.Data.Activity -> Api.Request Api.Data.Activity
 activityCreate data_body =
     Api.request
@@ -42,7 +41,6 @@ activityCreate data_body =
         []
         (Just (Api.Data.encodeActivity data_body))
         Api.Data.activityDecoder
-
 
 
 activityDelete : String -> Api.Request ()
@@ -57,7 +55,6 @@ activityDelete id_path =
         (Json.Decode.succeed ())
 
 
-
 activityList : Api.Request (List Api.Data.Activity)
 activityList =
     Api.request
@@ -68,7 +65,6 @@ activityList =
         []
         Nothing
         (Json.Decode.list Api.Data.activityDecoder)
-
 
 
 activityPartialUpdate : String -> Api.Data.Activity -> Api.Request Api.Data.Activity
@@ -83,7 +79,6 @@ activityPartialUpdate id_path data_body =
         Api.Data.activityDecoder
 
 
-
 activityRead : String -> Api.Request Api.Data.Activity
 activityRead id_path =
     Api.request
@@ -94,7 +89,6 @@ activityRead id_path =
         []
         Nothing
         Api.Data.activityDecoder
-
 
 
 activityUpdate : String -> Api.Data.Activity -> Api.Request Api.Data.Activity

@@ -38,7 +38,6 @@ import Json.Encode
 import Uuid exposing (Uuid)
 
 
-
 commonDepartmentCreate : Api.Data.Department -> Api.Request Api.Data.Department
 commonDepartmentCreate data_body =
     Api.request
@@ -49,7 +48,6 @@ commonDepartmentCreate data_body =
         []
         (Just (Api.Data.encodeDepartment data_body))
         Api.Data.departmentDecoder
-
 
 
 commonDepartmentDelete : Uuid -> Api.Request ()
@@ -64,7 +62,6 @@ commonDepartmentDelete id_path =
         (Json.Decode.succeed ())
 
 
-
 commonDepartmentList : Api.Request (List Api.Data.Department)
 commonDepartmentList =
     Api.request
@@ -75,7 +72,6 @@ commonDepartmentList =
         []
         Nothing
         (Json.Decode.list Api.Data.departmentDecoder)
-
 
 
 commonDepartmentPartialUpdate : Uuid -> Api.Data.Department -> Api.Request Api.Data.Department
@@ -90,7 +86,6 @@ commonDepartmentPartialUpdate id_path data_body =
         Api.Data.departmentDecoder
 
 
-
 commonDepartmentRead : Uuid -> Api.Request Api.Data.Department
 commonDepartmentRead id_path =
     Api.request
@@ -101,7 +96,6 @@ commonDepartmentRead id_path =
         []
         Nothing
         Api.Data.departmentDecoder
-
 
 
 commonDepartmentUpdate : Uuid -> Api.Data.Department -> Api.Request Api.Data.Department
@@ -116,7 +110,6 @@ commonDepartmentUpdate id_path data_body =
         Api.Data.departmentDecoder
 
 
-
 commonOrganisationCreate : Api.Data.Organization -> Api.Request Api.Data.Organization
 commonOrganisationCreate data_body =
     Api.request
@@ -127,7 +120,6 @@ commonOrganisationCreate data_body =
         []
         (Just (Api.Data.encodeOrganization data_body))
         Api.Data.organizationDecoder
-
 
 
 commonOrganisationDelete : Uuid -> Api.Request ()
@@ -142,7 +134,6 @@ commonOrganisationDelete id_path =
         (Json.Decode.succeed ())
 
 
-
 commonOrganisationList : Api.Request (List Api.Data.Organization)
 commonOrganisationList =
     Api.request
@@ -153,7 +144,6 @@ commonOrganisationList =
         []
         Nothing
         (Json.Decode.list Api.Data.organizationDecoder)
-
 
 
 commonOrganisationPartialUpdate : Uuid -> Api.Data.Organization -> Api.Request Api.Data.Organization
@@ -168,7 +158,6 @@ commonOrganisationPartialUpdate id_path data_body =
         Api.Data.organizationDecoder
 
 
-
 commonOrganisationRead : Uuid -> Api.Request Api.Data.Organization
 commonOrganisationRead id_path =
     Api.request
@@ -179,7 +168,6 @@ commonOrganisationRead id_path =
         []
         Nothing
         Api.Data.organizationDecoder
-
 
 
 commonOrganisationUpdate : Uuid -> Api.Data.Organization -> Api.Request Api.Data.Organization

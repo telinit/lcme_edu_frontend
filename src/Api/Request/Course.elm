@@ -37,7 +37,6 @@ import Json.Decode
 import Json.Encode
 
 
-
 courseCreate : Api.Data.CourseWrite -> Api.Request Api.Data.CourseWrite
 courseCreate data_body =
     Api.request
@@ -48,7 +47,6 @@ courseCreate data_body =
         []
         (Just (Api.Data.encodeCourseWrite data_body))
         Api.Data.courseWriteDecoder
-
 
 
 courseDelete : String -> Api.Request ()
@@ -63,7 +61,6 @@ courseDelete id_path =
         (Json.Decode.succeed ())
 
 
-
 courseEnrollmentCreate : Api.Data.CourseEnrollment -> Api.Request Api.Data.CourseEnrollment
 courseEnrollmentCreate data_body =
     Api.request
@@ -74,7 +71,6 @@ courseEnrollmentCreate data_body =
         []
         (Just (Api.Data.encodeCourseEnrollment data_body))
         Api.Data.courseEnrollmentDecoder
-
 
 
 courseEnrollmentDelete : String -> Api.Request ()
@@ -89,7 +85,6 @@ courseEnrollmentDelete id_path =
         (Json.Decode.succeed ())
 
 
-
 courseEnrollmentList : Api.Request (List Api.Data.CourseEnrollment)
 courseEnrollmentList =
     Api.request
@@ -100,7 +95,6 @@ courseEnrollmentList =
         []
         Nothing
         (Json.Decode.list Api.Data.courseEnrollmentDecoder)
-
 
 
 courseEnrollmentPartialUpdate : String -> Api.Data.CourseEnrollment -> Api.Request Api.Data.CourseEnrollment
@@ -115,7 +109,6 @@ courseEnrollmentPartialUpdate id_path data_body =
         Api.Data.courseEnrollmentDecoder
 
 
-
 courseEnrollmentRead : String -> Api.Request Api.Data.CourseEnrollment
 courseEnrollmentRead id_path =
     Api.request
@@ -126,7 +119,6 @@ courseEnrollmentRead id_path =
         []
         Nothing
         Api.Data.courseEnrollmentDecoder
-
 
 
 courseEnrollmentUpdate : String -> Api.Data.CourseEnrollment -> Api.Request Api.Data.CourseEnrollment
@@ -141,7 +133,6 @@ courseEnrollmentUpdate id_path data_body =
         Api.Data.courseEnrollmentDecoder
 
 
-
 courseList : Api.Request (List Api.Data.CourseRead)
 courseList =
     Api.request
@@ -152,7 +143,6 @@ courseList =
         []
         Nothing
         (Json.Decode.list Api.Data.courseReadDecoder)
-
 
 
 coursePartialUpdate : String -> Api.Data.CourseRead -> Api.Request Api.Data.CourseRead
@@ -167,7 +157,6 @@ coursePartialUpdate id_path data_body =
         Api.Data.courseReadDecoder
 
 
-
 courseRead : String -> Api.Request Api.Data.CourseRead
 courseRead id_path =
     Api.request
@@ -178,7 +167,6 @@ courseRead id_path =
         []
         Nothing
         Api.Data.courseReadDecoder
-
 
 
 courseUpdate : String -> Api.Data.CourseWrite -> Api.Request Api.Data.CourseWrite

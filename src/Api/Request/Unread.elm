@@ -31,7 +31,6 @@ import Json.Decode
 import Json.Encode
 
 
-
 unreadCreate : Api.Data.UnreadObject -> Api.Request Api.Data.UnreadObject
 unreadCreate data_body =
     Api.request
@@ -42,7 +41,6 @@ unreadCreate data_body =
         []
         (Just (Api.Data.encodeUnreadObject data_body))
         Api.Data.unreadObjectDecoder
-
 
 
 unreadDelete : String -> Api.Request ()
@@ -57,7 +55,6 @@ unreadDelete id_path =
         (Json.Decode.succeed ())
 
 
-
 unreadList : Api.Request (List Api.Data.UnreadObject)
 unreadList =
     Api.request
@@ -68,7 +65,6 @@ unreadList =
         []
         Nothing
         (Json.Decode.list Api.Data.unreadObjectDecoder)
-
 
 
 unreadPartialUpdate : String -> Api.Data.UnreadObject -> Api.Request Api.Data.UnreadObject
@@ -83,7 +79,6 @@ unreadPartialUpdate id_path data_body =
         Api.Data.unreadObjectDecoder
 
 
-
 unreadRead : String -> Api.Request Api.Data.UnreadObject
 unreadRead id_path =
     Api.request
@@ -94,7 +89,6 @@ unreadRead id_path =
         []
         Nothing
         Api.Data.unreadObjectDecoder
-
 
 
 unreadUpdate : String -> Api.Data.UnreadObject -> Api.Request Api.Data.UnreadObject
