@@ -88,10 +88,9 @@ link_span attrs body =
 
 arrayUpdate : Int -> (a -> a) -> Array a -> Array a
 arrayUpdate ix transform array =
-    let ignore = Debug.log "arrayUpdate" (ix,transform,array) in
     case Array.get ix array of
         Just el ->
-            (Debug.log "arrayUpdate: succeded" (Array.set ix (transform el) array))
+            Array.set ix (transform el) array
 
         Nothing ->
-            (Debug.log "arrayUpdate: failed" (array))
+            array

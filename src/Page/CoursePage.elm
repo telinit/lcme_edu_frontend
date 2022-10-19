@@ -1,11 +1,15 @@
 module Page.CoursePage exposing (..)
 
-import Api.Data exposing (Activity, CourseRead)
+import Api exposing (task, withQuery, withToken)
+import Api.Data exposing (Activity, CourseEnrollment, CourseRead)
+import Api.Request.Activity exposing (activityList)
+import Api.Request.Course exposing (courseEnrollmentList, courseRead)
 import Component.MultiTask as MultiTask exposing (Msg(..))
 import Html exposing (..)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, title)
 import Http exposing (Error(..))
-import Task
+import Process
+import Task exposing (andThen)
 import Util exposing (httpErrorToString)
 
 
@@ -22,6 +26,7 @@ type Msg
 type FetchResult
     = ResCourse CourseRead
     | ResActivities (List Activity)
+    | ResEnrollments (List CourseEnrollment)
 
 
 type alias Model =
@@ -39,14 +44,28 @@ showFetchResult fetchResult =
         ResActivities activities ->
             "Активностей: " ++ (String.fromInt <| List.length activities)
 
+        ResEnrollments _ ->
+            "OK"
+
+
+taskCourse token cid =
+    Task.map ResCourse <| task <| withToken (Just token) <| courseRead cid
+
+
+taskActivities token cid =
+    Task.map ResActivities <| task <| withQuery [("course", Just cid)] <| withToken (Just token) <| activityList
+
+taskEnrollments token cid =
+    Task.map ResEnrollments <| task <| withQuery [("course", Just cid)] <| withToken (Just token) <| courseEnrollmentList
 
 init : String -> String -> ( Model, Cmd Msg )
 init token id =
     let
         ( m, c ) =
             MultiTask.init
-                [ ( Task.succeed (ResActivities []), "Получаем активности" )
-                , ( Task.fail Timeout, "Получение чего-то" )
+                [ ( taskCourse token id, "Получаем данные о курсе" )
+                , ( taskActivities token id, "Получаем активности" )
+                , ( taskEnrollments token id, "Получаем записи на курс" )
                 ]
 
         -- TODO
@@ -77,7 +96,7 @@ update msg model =
             in
             case msg_ of
                 TaskFinishedAll results ->
-                    case collectFetchResults results of
+                    case collectFetchResults (Debug.log "results" (results)) of
                         Just ( c_, a ) ->
                             ( { model | state = FetchDone c_ a }, Cmd.none )
 
@@ -85,7 +104,7 @@ update msg model =
                             ( { model | state = FetchFailed "Не удалось разобрать результаты запросов" }, Cmd.none )
 
                 _ ->
-                    ( model, Cmd.none )
+                    ( { model | state = Fetching m }, Cmd.map MsgFetch c )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -105,4 +124,4 @@ view model =
             text "Done"
 
         FetchFailed err ->
-            text ("Failed" ++ err)
+            text ("Failed: " ++ err)

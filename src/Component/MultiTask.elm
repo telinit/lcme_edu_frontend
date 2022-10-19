@@ -70,16 +70,19 @@ collectResults model =
 
 
 update : Msg e a -> Model e a -> ( Model e a, Cmd (Msg e a) )
-update msg model_ =
-    let model = (Debug.log "model_" (model_)) in
-    case Debug.log "msg" msg of
+update msg model =
+    case msg of
         TaskCompleted i res ->
-            ( { model
-                | task_states = arrayUpdate i (\( l, _, t ) -> ( l, Complete res, t )) model.task_states
-                , tasks_left = model.tasks_left - 1
-              }
+            let
+                new_model =
+                    { model
+                      | task_states = arrayUpdate i (\( l, _, t ) -> ( l, Complete res, t )) model.task_states
+                      , tasks_left = model.tasks_left - 1
+                    }
+            in
+            ( new_model
             , if model.tasks_left <= 1 then
-                Task.perform (\_ -> TaskFinishedAll <| collectResults model) <| Task.succeed ()
+                Task.perform (\_ -> TaskFinishedAll <| collectResults new_model) <| Task.succeed ()
 
               else
                 Cmd.none
@@ -101,12 +104,14 @@ viewTask show_result show_error ( label, s, _ ) =
     let
         item icon t =
             div [ class "item" ]
-                [ div [ class "content" ]
-                    [ icon
-                    , div [ class "header" ]
-                        [ text label
+                [ div [ class "content row" ]
+                    [ div [ class "col" ] [ icon ]
+                    , div [ class "col" ]
+                        [ div [ class "header" ]
+                            [ text label
+                            ]
+                        , text t
                         ]
-                    , text t
                     ]
                 ]
     in
@@ -120,7 +125,7 @@ viewTask show_result show_error ( label, s, _ ) =
                 show_result res
 
         Error err ->
-            item (i [ class "exclamation icon", style "margin-right" "1em", style "color" "green" ] []) <|
+            item (i [ class "exclamation icon", style "margin-right" "1em", style "color" "red" ] []) <|
                 show_error err
 
 

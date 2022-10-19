@@ -4666,52 +4666,6 @@ function _Url_percentDecode(string)
 }
 
 
-function _Time_now(millisToPosix)
-{
-	return _Scheduler_binding(function(callback)
-	{
-		callback(_Scheduler_succeed(millisToPosix(Date.now())));
-	});
-}
-
-var _Time_setInterval = F2(function(interval, task)
-{
-	return _Scheduler_binding(function(callback)
-	{
-		var id = setInterval(function() { _Scheduler_rawSpawn(task); }, interval);
-		return function() { clearInterval(id); };
-	});
-});
-
-function _Time_here()
-{
-	return _Scheduler_binding(function(callback)
-	{
-		callback(_Scheduler_succeed(
-			A2($elm$time$Time$customZone, -(new Date().getTimezoneOffset()), _List_Nil)
-		));
-	});
-}
-
-
-function _Time_getZoneName()
-{
-	return _Scheduler_binding(function(callback)
-	{
-		try
-		{
-			var name = $elm$time$Time$Name(Intl.DateTimeFormat().resolvedOptions().timeZone);
-		}
-		catch (e)
-		{
-			var name = $elm$time$Time$Offset(new Date().getTimezoneOffset());
-		}
-		callback(_Scheduler_succeed(name));
-	});
-}
-
-
-
 
 // STRINGS
 
@@ -4839,6 +4793,52 @@ var _Parser_findSubString = F5(function(smallString, offset, row, col, bigString
 
 	return _Utils_Tuple3(newOffset, row, col);
 });
+
+
+
+function _Time_now(millisToPosix)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(millisToPosix(Date.now())));
+	});
+}
+
+var _Time_setInterval = F2(function(interval, task)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var id = setInterval(function() { _Scheduler_rawSpawn(task); }, interval);
+		return function() { clearInterval(id); };
+	});
+});
+
+function _Time_here()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		callback(_Scheduler_succeed(
+			A2($elm$time$Time$customZone, -(new Date().getTimezoneOffset()), _List_Nil)
+		));
+	});
+}
+
+
+function _Time_getZoneName()
+{
+	return _Scheduler_binding(function(callback)
+	{
+		try
+		{
+			var name = $elm$time$Time$Name(Intl.DateTimeFormat().resolvedOptions().timeZone);
+		}
+		catch (e)
+		{
+			var name = $elm$time$Time$Offset(new Date().getTimezoneOffset());
+		}
+		callback(_Scheduler_succeed(name));
+	});
+}
 
 
 
@@ -6865,9 +6865,6 @@ var $author$project$Page$CoursePage$Fetching = function (a) {
 var $author$project$Page$CoursePage$MsgFetch = function (a) {
 	return {$: 'MsgFetch', a: a};
 };
-var $author$project$Page$CoursePage$ResActivities = function (a) {
-	return {$: 'ResActivities', a: a};
-};
 var $author$project$Component$MultiTask$Running = {$: 'Running'};
 var $author$project$Component$MultiTask$TaskCompleted = F2(
 	function (a, b) {
@@ -6974,84 +6971,25 @@ var $author$project$Component$MultiTask$init = function (tasks) {
 				tasks)));
 };
 var $elm$core$Platform$Cmd$map = _Platform_map;
-var $author$project$Page$CoursePage$init = F2(
-	function (token, id) {
-		var _v0 = $author$project$Component$MultiTask$init(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					$elm$core$Task$succeed(
-						$author$project$Page$CoursePage$ResActivities(_List_Nil)),
-					'Получаем активности'),
-					_Utils_Tuple2(
-					$elm$core$Task$fail($elm$http$Http$Timeout),
-					'Получение чего-то')
-				]));
-		var m = _v0.a;
-		var c = _v0.b;
-		return _Utils_Tuple2(
-			{
-				state: $author$project$Page$CoursePage$Fetching(m),
-				token: token
-			},
-			A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
-	});
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$Page$DefaultLayout$init = function (user) {
-	return _Utils_Tuple2(
-		{show_sidebar: false, user: user},
-		$elm$core$Platform$Cmd$none);
+var $author$project$Page$CoursePage$ResActivities = function (a) {
+	return {$: 'ResActivities', a: a};
 };
-var $author$project$Page$Login$CheckingStored = {$: 'CheckingStored'};
-var $author$project$Page$Login$None = {$: 'None'};
-var $author$project$Page$Login$CheckSessionFailed = function (a) {
-	return {$: 'CheckSessionFailed', a: a};
-};
-var $author$project$Page$Login$LoginCompleted = function (a) {
-	return {$: 'LoginCompleted', a: a};
-};
-var $author$project$Page$Login$ShowLogin = {$: 'ShowLogin'};
-var $elm$core$Task$mapError = F2(
-	function (convert, task) {
-		return A2(
-			$elm$core$Task$onError,
-			A2($elm$core$Basics$composeL, $elm$core$Task$fail, convert),
-			task);
-	});
-var $elm$time$Time$Name = function (a) {
-	return {$: 'Name', a: a};
-};
-var $elm$time$Time$Offset = function (a) {
-	return {$: 'Offset', a: a};
-};
-var $elm$time$Time$Zone = F2(
-	function (a, b) {
-		return {$: 'Zone', a: a, b: b};
-	});
-var $elm$time$Time$customZone = $elm$time$Time$Zone;
-var $elm$time$Time$Posix = function (a) {
-	return {$: 'Posix', a: a};
-};
-var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
-var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
-var $author$project$Api$Data$User = function (id) {
-	return function (lastLogin) {
-		return function (isSuperuser) {
-			return function (username) {
-				return function (firstName) {
-					return function (lastName) {
-						return function (email) {
-							return function (isStaff) {
-								return function (isActive) {
-									return function (dateJoined) {
-										return function (middleName) {
-											return function (birthDate) {
-												return function (avatar) {
-													return function (groups) {
-														return function (userPermissions) {
-															return function (children) {
-																return {avatar: avatar, birthDate: birthDate, children: children, dateJoined: dateJoined, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, userPermissions: userPermissions, username: username};
-															};
+var $author$project$Api$Data$Activity = function (id) {
+	return function (type_) {
+		return function (title) {
+			return function (keywords) {
+				return function (isHidden) {
+					return function (marksLimit) {
+						return function (order) {
+							return function (date) {
+								return function (group) {
+									return function (body) {
+										return function (dueDate) {
+											return function (link) {
+												return function (embed) {
+													return function (course) {
+														return function (files) {
+															return {body: body, course: course, date: date, dueDate: dueDate, embed: embed, files: files, group: group, id: id, isHidden: isHidden, keywords: keywords, link: link, marksLimit: marksLimit, order: order, title: title, type_: type_};
 														};
 													};
 												};
@@ -7067,6 +7005,31 @@ var $author$project$Api$Data$User = function (id) {
 		};
 	};
 };
+var $author$project$Api$Data$ActivityTypeART = {$: 'ActivityTypeART'};
+var $author$project$Api$Data$ActivityTypeGEN = {$: 'ActivityTypeGEN'};
+var $author$project$Api$Data$ActivityTypeLNK = {$: 'ActivityTypeLNK'};
+var $author$project$Api$Data$ActivityTypeMED = {$: 'ActivityTypeMED'};
+var $author$project$Api$Data$ActivityTypeTSK = {$: 'ActivityTypeTSK'};
+var $author$project$Api$Data$activityTypeDecoder = A2(
+	$elm$json$Json$Decode$andThen,
+	function (value) {
+		switch (value) {
+			case 'GEN':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeGEN);
+			case 'ART':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeART);
+			case 'TSK':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeTSK);
+			case 'LNK':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeLNK);
+			case 'MED':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeMED);
+			default:
+				var other = value;
+				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
+		}
+	},
+	$elm$json$Json$Decode$string);
 var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$parser$Parser$Advanced$Bad = F2(
 	function (a, b) {
@@ -7268,6 +7231,10 @@ var $rtfeldman$elm_iso8601_date_strings$Iso8601$fractionsOfASecondInMs = A2(
 	},
 	$elm$parser$Parser$getChompedString(
 		$elm$parser$Parser$chompWhile($elm$core$Char$isDigit)));
+var $elm$time$Time$Posix = function (a) {
+	return {$: 'Posix', a: a};
+};
+var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
 var $rtfeldman$elm_iso8601_date_strings$Iso8601$fromParts = F6(
 	function (monthYearDayMs, hour, minute, second, ms, utcOffsetMinutes) {
 		return $elm$time$Time$millisToPosix((((monthYearDayMs + (((hour * 60) * 60) * 1000)) + (((minute - utcOffsetMinutes) * 60) * 1000)) + (second * 1000)) + ms);
@@ -7852,6 +7819,312 @@ var $author$project$Api$Time$decodeDateTimeIsoString = function (str) {
 	}
 };
 var $author$project$Api$Time$dateTimeDecoder = A2($elm$json$Json$Decode$andThen, $author$project$Api$Time$decodeDateTimeIsoString, $elm$json$Json$Decode$string);
+var $author$project$Api$Data$activityDecoder = A4(
+	$author$project$Api$Data$maybeDecode,
+	'files',
+	$elm$json$Json$Decode$list($danyx23$elm_uuid$Uuid$decoder),
+	$elm$core$Maybe$Nothing,
+	A3(
+		$author$project$Api$Data$decode,
+		'course',
+		$danyx23$elm_uuid$Uuid$decoder,
+		A4(
+			$author$project$Api$Data$maybeDecode,
+			'embed',
+			$elm$json$Json$Decode$bool,
+			$elm$core$Maybe$Nothing,
+			A4(
+				$author$project$Api$Data$maybeDecodeNullable,
+				'link',
+				$elm$json$Json$Decode$string,
+				$elm$core$Maybe$Nothing,
+				A4(
+					$author$project$Api$Data$maybeDecodeNullable,
+					'due_date',
+					$author$project$Api$Time$dateTimeDecoder,
+					$elm$core$Maybe$Nothing,
+					A4(
+						$author$project$Api$Data$maybeDecode,
+						'body',
+						$elm$json$Json$Decode$string,
+						$elm$core$Maybe$Nothing,
+						A4(
+							$author$project$Api$Data$maybeDecodeNullable,
+							'group',
+							$elm$json$Json$Decode$string,
+							$elm$core$Maybe$Nothing,
+							A4(
+								$author$project$Api$Data$maybeDecodeNullable,
+								'date',
+								$author$project$Api$Time$dateDecoder,
+								$elm$core$Maybe$Nothing,
+								A3(
+									$author$project$Api$Data$decode,
+									'order',
+									$elm$json$Json$Decode$int,
+									A4(
+										$author$project$Api$Data$maybeDecode,
+										'marks_limit',
+										$elm$json$Json$Decode$int,
+										$elm$core$Maybe$Nothing,
+										A4(
+											$author$project$Api$Data$maybeDecode,
+											'is_hidden',
+											$elm$json$Json$Decode$bool,
+											$elm$core$Maybe$Nothing,
+											A4(
+												$author$project$Api$Data$maybeDecode,
+												'keywords',
+												$elm$json$Json$Decode$string,
+												$elm$core$Maybe$Nothing,
+												A3(
+													$author$project$Api$Data$decode,
+													'title',
+													$elm$json$Json$Decode$string,
+													A4(
+														$author$project$Api$Data$maybeDecode,
+														'type',
+														$author$project$Api$Data$activityTypeDecoder,
+														$elm$core$Maybe$Nothing,
+														A4(
+															$author$project$Api$Data$maybeDecode,
+															'id',
+															$danyx23$elm_uuid$Uuid$decoder,
+															$elm$core$Maybe$Nothing,
+															$elm$json$Json$Decode$succeed($author$project$Api$Data$Activity))))))))))))))));
+var $author$project$Api$Request$Activity$activityList = A7(
+	$author$project$Api$request,
+	'GET',
+	'/activity/',
+	_List_Nil,
+	_List_Nil,
+	_List_Nil,
+	$elm$core$Maybe$Nothing,
+	$elm$json$Json$Decode$list($author$project$Api$Data$activityDecoder));
+var $author$project$Api$withQuery = F2(
+	function (qs, _v0) {
+		var request_ = _v0.a;
+		return $author$project$Api$Request(
+			_Utils_update(
+				request_,
+				{
+					queryParams: $author$project$Api$queries(qs)
+				}));
+	});
+var $author$project$Page$CoursePage$taskActivities = F2(
+	function (token, cid) {
+		return A2(
+			$elm$core$Task$map,
+			$author$project$Page$CoursePage$ResActivities,
+			$author$project$Api$task(
+				A2(
+					$author$project$Api$withQuery,
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'course',
+							$elm$core$Maybe$Just(cid))
+						]),
+					A2(
+						$author$project$Api$withToken,
+						$elm$core$Maybe$Just(token),
+						$author$project$Api$Request$Activity$activityList))));
+	});
+var $author$project$Page$CoursePage$ResCourse = function (a) {
+	return {$: 'ResCourse', a: a};
+};
+var $author$project$Api$Request$Course$courseRead = function (id_path) {
+	return A7(
+		$author$project$Api$request,
+		'GET',
+		'/course/{id}/',
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'id',
+				$elm$core$Basics$identity(id_path))
+			]),
+		_List_Nil,
+		_List_Nil,
+		$elm$core$Maybe$Nothing,
+		$author$project$Api$Data$courseReadDecoder);
+};
+var $author$project$Page$CoursePage$taskCourse = F2(
+	function (token, cid) {
+		return A2(
+			$elm$core$Task$map,
+			$author$project$Page$CoursePage$ResCourse,
+			$author$project$Api$task(
+				A2(
+					$author$project$Api$withToken,
+					$elm$core$Maybe$Just(token),
+					$author$project$Api$Request$Course$courseRead(cid))));
+	});
+var $author$project$Page$CoursePage$ResEnrollments = function (a) {
+	return {$: 'ResEnrollments', a: a};
+};
+var $author$project$Api$Data$CourseEnrollment = F5(
+	function (id, role, finishedOn, person, course) {
+		return {course: course, finishedOn: finishedOn, id: id, person: person, role: role};
+	});
+var $author$project$Api$Data$CourseEnrollmentRoleS = {$: 'CourseEnrollmentRoleS'};
+var $author$project$Api$Data$CourseEnrollmentRoleT = {$: 'CourseEnrollmentRoleT'};
+var $author$project$Api$Data$courseEnrollmentRoleDecoder = A2(
+	$elm$json$Json$Decode$andThen,
+	function (value) {
+		switch (value) {
+			case 't':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentRoleT);
+			case 's':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentRoleS);
+			default:
+				var other = value;
+				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
+		}
+	},
+	$elm$json$Json$Decode$string);
+var $author$project$Api$Data$courseEnrollmentDecoder = A3(
+	$author$project$Api$Data$decode,
+	'course',
+	$danyx23$elm_uuid$Uuid$decoder,
+	A3(
+		$author$project$Api$Data$decode,
+		'person',
+		$danyx23$elm_uuid$Uuid$decoder,
+		A4(
+			$author$project$Api$Data$maybeDecodeNullable,
+			'finished_on',
+			$author$project$Api$Time$dateTimeDecoder,
+			$elm$core$Maybe$Nothing,
+			A3(
+				$author$project$Api$Data$decode,
+				'role',
+				$author$project$Api$Data$courseEnrollmentRoleDecoder,
+				A4(
+					$author$project$Api$Data$maybeDecode,
+					'id',
+					$danyx23$elm_uuid$Uuid$decoder,
+					$elm$core$Maybe$Nothing,
+					$elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollment))))));
+var $author$project$Api$Request$Course$courseEnrollmentList = A7(
+	$author$project$Api$request,
+	'GET',
+	'/course/enrollment/',
+	_List_Nil,
+	_List_Nil,
+	_List_Nil,
+	$elm$core$Maybe$Nothing,
+	$elm$json$Json$Decode$list($author$project$Api$Data$courseEnrollmentDecoder));
+var $author$project$Page$CoursePage$taskEnrollments = F2(
+	function (token, cid) {
+		return A2(
+			$elm$core$Task$map,
+			$author$project$Page$CoursePage$ResEnrollments,
+			$author$project$Api$task(
+				A2(
+					$author$project$Api$withQuery,
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'course',
+							$elm$core$Maybe$Just(cid))
+						]),
+					A2(
+						$author$project$Api$withToken,
+						$elm$core$Maybe$Just(token),
+						$author$project$Api$Request$Course$courseEnrollmentList))));
+	});
+var $author$project$Page$CoursePage$init = F2(
+	function (token, id) {
+		var _v0 = $author$project$Component$MultiTask$init(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					A2($author$project$Page$CoursePage$taskCourse, token, id),
+					'Получаем данные о курсе'),
+					_Utils_Tuple2(
+					A2($author$project$Page$CoursePage$taskActivities, token, id),
+					'Получаем активности'),
+					_Utils_Tuple2(
+					A2($author$project$Page$CoursePage$taskEnrollments, token, id),
+					'Получаем записи на курс')
+				]));
+		var m = _v0.a;
+		var c = _v0.b;
+		return _Utils_Tuple2(
+			{
+				state: $author$project$Page$CoursePage$Fetching(m),
+				token: token
+			},
+			A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
+	});
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$Page$DefaultLayout$init = function (user) {
+	return _Utils_Tuple2(
+		{show_sidebar: false, user: user},
+		$elm$core$Platform$Cmd$none);
+};
+var $author$project$Page$Login$CheckingStored = {$: 'CheckingStored'};
+var $author$project$Page$Login$None = {$: 'None'};
+var $author$project$Page$Login$CheckSessionFailed = function (a) {
+	return {$: 'CheckSessionFailed', a: a};
+};
+var $author$project$Page$Login$LoginCompleted = function (a) {
+	return {$: 'LoginCompleted', a: a};
+};
+var $author$project$Page$Login$ShowLogin = {$: 'ShowLogin'};
+var $elm$core$Task$mapError = F2(
+	function (convert, task) {
+		return A2(
+			$elm$core$Task$onError,
+			A2($elm$core$Basics$composeL, $elm$core$Task$fail, convert),
+			task);
+	});
+var $elm$time$Time$Name = function (a) {
+	return {$: 'Name', a: a};
+};
+var $elm$time$Time$Offset = function (a) {
+	return {$: 'Offset', a: a};
+};
+var $elm$time$Time$Zone = F2(
+	function (a, b) {
+		return {$: 'Zone', a: a, b: b};
+	});
+var $elm$time$Time$customZone = $elm$time$Time$Zone;
+var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
+var $author$project$Api$Data$User = function (id) {
+	return function (lastLogin) {
+		return function (isSuperuser) {
+			return function (username) {
+				return function (firstName) {
+					return function (lastName) {
+						return function (email) {
+							return function (isStaff) {
+								return function (isActive) {
+									return function (dateJoined) {
+										return function (middleName) {
+											return function (birthDate) {
+												return function (avatar) {
+													return function (groups) {
+														return function (userPermissions) {
+															return function (children) {
+																return {avatar: avatar, birthDate: birthDate, children: children, dateJoined: dateJoined, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, userPermissions: userPermissions, username: username};
+															};
+														};
+													};
+												};
+											};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
 var $author$project$Api$Data$userDecoder = A4(
 	$author$project$Api$Data$maybeDecode,
 	'children',
@@ -8440,27 +8713,30 @@ var $author$project$Page$CoursePage$FetchFailed = function (a) {
 var $author$project$Page$CoursePage$collectFetchResults = function (fetchResults) {
 	_v0$2:
 	while (true) {
-		if (fetchResults.b && (fetchResults.a.$ === 'Ok')) {
-			if (fetchResults.a.a.$ === 'ResCourse') {
-				if (((fetchResults.b.b && (fetchResults.b.a.$ === 'Ok')) && (fetchResults.b.a.a.$ === 'ResActivities')) && (!fetchResults.b.b.b)) {
-					var c = fetchResults.a.a.a;
-					var _v1 = fetchResults.b;
-					var a = _v1.a.a.a;
-					return $elm$core$Maybe$Just(
-						_Utils_Tuple2(c, a));
-				} else {
+		if ((((fetchResults.b && (fetchResults.a.$ === 'Ok')) && fetchResults.b.b) && (fetchResults.b.a.$ === 'Ok')) && (!fetchResults.b.b.b)) {
+			switch (fetchResults.a.a.$) {
+				case 'ResCourse':
+					if (fetchResults.b.a.a.$ === 'ResActivities') {
+						var c = fetchResults.a.a.a;
+						var _v1 = fetchResults.b;
+						var a = _v1.a.a.a;
+						return $elm$core$Maybe$Just(
+							_Utils_Tuple2(c, a));
+					} else {
+						break _v0$2;
+					}
+				case 'ResActivities':
+					if (fetchResults.b.a.a.$ === 'ResCourse') {
+						var a = fetchResults.a.a.a;
+						var _v2 = fetchResults.b;
+						var c = _v2.a.a.a;
+						return $elm$core$Maybe$Just(
+							_Utils_Tuple2(c, a));
+					} else {
+						break _v0$2;
+					}
+				default:
 					break _v0$2;
-				}
-			} else {
-				if (((fetchResults.b.b && (fetchResults.b.a.$ === 'Ok')) && (fetchResults.b.a.a.$ === 'ResCourse')) && (!fetchResults.b.b.b)) {
-					var a = fetchResults.a.a.a;
-					var _v2 = fetchResults.b;
-					var c = _v2.a.a.a;
-					return $elm$core$Maybe$Just(
-						_Utils_Tuple2(c, a));
-				} else {
-					break _v0$2;
-				}
 			}
 		} else {
 			break _v0$2;
@@ -8564,23 +8840,16 @@ var $elm$core$Array$set = F3(
 	});
 var $author$project$Util$arrayUpdate = F3(
 	function (ix, transform, array) {
-		var ignore = A2(
-			$elm$core$Debug$log,
-			'arrayUpdate',
-			_Utils_Tuple3(ix, transform, array));
 		var _v0 = A2($elm$core$Array$get, ix, array);
 		if (_v0.$ === 'Just') {
 			var el = _v0.a;
-			return A2(
-				$elm$core$Debug$log,
-				'arrayUpdate: succeded',
-				A3(
-					$elm$core$Array$set,
-					ix,
-					transform(el),
-					array));
+			return A3(
+				$elm$core$Array$set,
+				ix,
+				transform(el),
+				array);
 		} else {
-			return A2($elm$core$Debug$log, 'arrayUpdate: failed', array);
+			return array;
 		}
 	});
 var $author$project$Component$MultiTask$collectResults = function (model) {
@@ -8614,41 +8883,40 @@ var $author$project$Component$MultiTask$collectResults = function (model) {
 				model.task_states)));
 };
 var $author$project$Component$MultiTask$update = F2(
-	function (msg, model_) {
-		var model = A2($elm$core$Debug$log, 'model_', model_);
-		var _v0 = A2($elm$core$Debug$log, 'msg', msg);
-		switch (_v0.$) {
+	function (msg, model) {
+		switch (msg.$) {
 			case 'TaskCompleted':
-				var i = _v0.a;
-				var res = _v0.b;
+				var i = msg.a;
+				var res = msg.b;
+				var new_model = _Utils_update(
+					model,
+					{
+						task_states: A3(
+							$author$project$Util$arrayUpdate,
+							i,
+							function (_v2) {
+								var l = _v2.a;
+								var t = _v2.c;
+								return _Utils_Tuple3(
+									l,
+									$author$project$Component$MultiTask$Complete(res),
+									t);
+							},
+							model.task_states),
+						tasks_left: model.tasks_left - 1
+					});
 				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							task_states: A3(
-								$author$project$Util$arrayUpdate,
-								i,
-								function (_v1) {
-									var l = _v1.a;
-									var t = _v1.c;
-									return _Utils_Tuple3(
-										l,
-										$author$project$Component$MultiTask$Complete(res),
-										t);
-								},
-								model.task_states),
-							tasks_left: model.tasks_left - 1
-						}),
+					new_model,
 					(model.tasks_left <= 1) ? A2(
 						$elm$core$Task$perform,
-						function (_v2) {
+						function (_v1) {
 							return $author$project$Component$MultiTask$TaskFinishedAll(
-								$author$project$Component$MultiTask$collectResults(model));
+								$author$project$Component$MultiTask$collectResults(new_model));
 						},
 						$elm$core$Task$succeed(_Utils_Tuple0)) : $elm$core$Platform$Cmd$none);
 			case 'TaskFailed':
-				var i = _v0.a;
-				var err = _v0.b;
+				var i = msg.a;
+				var err = msg.b;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -8682,7 +8950,8 @@ var $author$project$Page$CoursePage$update = F2(
 			var c = _v1.b;
 			if (msg_.$ === 'TaskFinishedAll') {
 				var results = msg_.a;
-				var _v3 = $author$project$Page$CoursePage$collectFetchResults(results);
+				var _v3 = $author$project$Page$CoursePage$collectFetchResults(
+					A2($elm$core$Debug$log, 'results', results));
 				if (_v3.$ === 'Just') {
 					var _v4 = _v3.a;
 					var c_ = _v4.a;
@@ -8704,7 +8973,13 @@ var $author$project$Page$CoursePage$update = F2(
 						$elm$core$Platform$Cmd$none);
 				}
 			} else {
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							state: $author$project$Page$CoursePage$Fetching(m)
+						}),
+					A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
 			}
 		} else {
 			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -10136,13 +10411,16 @@ var $author$project$Page$CourseListPage$view = function (model) {
 			body));
 };
 var $author$project$Page$CoursePage$showFetchResult = function (fetchResult) {
-	if (fetchResult.$ === 'ResCourse') {
-		var courseRead = fetchResult.a;
-		return courseRead.title;
-	} else {
-		var activities = fetchResult.a;
-		return 'Активностей: ' + $elm$core$String$fromInt(
-			$elm$core$List$length(activities));
+	switch (fetchResult.$) {
+		case 'ResCourse':
+			var courseRead = fetchResult.a;
+			return courseRead.title;
+		case 'ResActivities':
+			var activities = fetchResult.a;
+			return 'Активностей: ' + $elm$core$String$fromInt(
+				$elm$core$List$length(activities));
+		default:
+			return 'OK';
 	}
 };
 var $author$project$Component$MultiTask$viewTask = F3(
@@ -10163,22 +10441,38 @@ var $author$project$Component$MultiTask$viewTask = F3(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('content')
+									$elm$html$Html$Attributes$class('content row')
 								]),
 							_List_fromArray(
 								[
-									icon,
 									A2(
 									$elm$html$Html$div,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$class('header')
+											$elm$html$Html$Attributes$class('col')
+										]),
+									_List_fromArray(
+										[icon])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('col')
 										]),
 									_List_fromArray(
 										[
-											$elm$html$Html$text(label)
-										])),
-									$elm$html$Html$text(t)
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('header')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text(label)
+												])),
+											$elm$html$Html$text(t)
+										]))
 								]))
 						]));
 			});
@@ -10220,7 +10514,7 @@ var $author$project$Component$MultiTask$viewTask = F3(
 							[
 								$elm$html$Html$Attributes$class('exclamation icon'),
 								A2($elm$html$Html$Attributes$style, 'margin-right', '1em'),
-								A2($elm$html$Html$Attributes$style, 'color', 'green')
+								A2($elm$html$Html$Attributes$style, 'color', 'red')
 							]),
 						_List_Nil),
 					show_error(err));
@@ -10271,7 +10565,7 @@ var $author$project$Page$CoursePage$view = function (model) {
 			return $elm$html$Html$text('Done');
 		default:
 			var err = _v0.a;
-			return $elm$html$Html$text('Failed' + err);
+			return $elm$html$Html$text('Failed: ' + err);
 	}
 };
 var $author$project$Page$Login$CloseMessage = {$: 'CloseMessage'};
