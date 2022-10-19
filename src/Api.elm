@@ -1,5 +1,6 @@
 module Api exposing
     ( Request
+    , addQuery
     , map
     , request
     , send
@@ -9,6 +10,7 @@ module Api exposing
     , withBearerToken
     , withHeader
     , withHeaders
+    , withQuery
     , withTimeout
     , withToken
     , withTracker
