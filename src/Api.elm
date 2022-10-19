@@ -125,6 +125,16 @@ withToken token (Request req) =
             Request req
 
 
+withQuery : List ( String, Maybe String ) -> Request a -> Request a
+withQuery qs (Request request_) =
+    Request { request_ | queryParams = queries qs }
+
+
+addQuery : ( String, Maybe String ) -> Request a -> Request a
+addQuery q (Request request_) =
+    Request { request_ | queryParams = request_.queryParams ++ queries [ q ] }
+
+
 withHeader : String -> String -> Request a -> Request a
 withHeader key value (Request req) =
     Request { req | headers = req.headers ++ [ Http.header key value ] }
