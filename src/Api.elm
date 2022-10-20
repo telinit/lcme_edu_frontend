@@ -14,7 +14,7 @@ module Api exposing
     , withTimeout
     , withToken
     , withTracker
-    )
+    , edu_task)
 
 import Http
 import Json.Decode
@@ -80,6 +80,15 @@ task (Request req) =
         , resolver = jsonResolver req.decoder
         , timeout = req.timeout
         }
+
+
+edu_task : (a -> b) -> String -> List ( String, String ) -> Request a -> Task.Task Http.Error b
+edu_task result_mapper token query_params request_ =
+    Task.map result_mapper <|
+        task <|
+            withQuery (List.map (\( a, b ) -> ( a, Just b )) query_params) <|
+                withToken (Just token) <|
+                    request_
 
 
 map : (a -> b) -> Request a -> Request b
