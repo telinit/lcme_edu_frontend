@@ -61,7 +61,7 @@ courseDelete id_path =
         (Json.Decode.succeed ())
 
 
-courseEnrollmentCreate : Api.Data.CourseEnrollment -> Api.Request Api.Data.CourseEnrollment
+courseEnrollmentCreate : Api.Data.CourseEnrollmentWrite -> Api.Request Api.Data.CourseEnrollmentWrite
 courseEnrollmentCreate data_body =
     Api.request
         "POST"
@@ -69,8 +69,8 @@ courseEnrollmentCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeCourseEnrollment data_body))
-        Api.Data.courseEnrollmentDecoder
+        (Just (Api.Data.encodeCourseEnrollmentWrite data_body))
+        Api.Data.courseEnrollmentWriteDecoder
 
 
 courseEnrollmentDelete : String -> Api.Request ()
@@ -85,7 +85,7 @@ courseEnrollmentDelete id_path =
         (Json.Decode.succeed ())
 
 
-courseEnrollmentList : Api.Request (List Api.Data.CourseEnrollment)
+courseEnrollmentList : Api.Request (List Api.Data.CourseEnrollmentRead)
 courseEnrollmentList =
     Api.request
         "GET"
@@ -94,10 +94,10 @@ courseEnrollmentList =
         []
         []
         Nothing
-        (Json.Decode.list Api.Data.courseEnrollmentDecoder)
+        (Json.Decode.list Api.Data.courseEnrollmentReadDecoder)
 
 
-courseEnrollmentPartialUpdate : String -> Api.Data.CourseEnrollment -> Api.Request Api.Data.CourseEnrollment
+courseEnrollmentPartialUpdate : String -> Api.Data.CourseEnrollmentRead -> Api.Request Api.Data.CourseEnrollmentRead
 courseEnrollmentPartialUpdate id_path data_body =
     Api.request
         "PATCH"
@@ -105,11 +105,11 @@ courseEnrollmentPartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeCourseEnrollment data_body))
-        Api.Data.courseEnrollmentDecoder
+        (Just (Api.Data.encodeCourseEnrollmentRead data_body))
+        Api.Data.courseEnrollmentReadDecoder
 
 
-courseEnrollmentRead : String -> Api.Request Api.Data.CourseEnrollment
+courseEnrollmentRead : String -> Api.Request Api.Data.CourseEnrollmentRead
 courseEnrollmentRead id_path =
     Api.request
         "GET"
@@ -118,10 +118,10 @@ courseEnrollmentRead id_path =
         []
         []
         Nothing
-        Api.Data.courseEnrollmentDecoder
+        Api.Data.courseEnrollmentReadDecoder
 
 
-courseEnrollmentUpdate : String -> Api.Data.CourseEnrollment -> Api.Request Api.Data.CourseEnrollment
+courseEnrollmentUpdate : String -> Api.Data.CourseEnrollmentWrite -> Api.Request Api.Data.CourseEnrollmentWrite
 courseEnrollmentUpdate id_path data_body =
     Api.request
         "PUT"
@@ -129,8 +129,8 @@ courseEnrollmentUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeCourseEnrollment data_body))
-        Api.Data.courseEnrollmentDecoder
+        (Just (Api.Data.encodeCourseEnrollmentWrite data_body))
+        Api.Data.courseEnrollmentWriteDecoder
 
 
 courseList : Api.Request (List Api.Data.CourseRead)

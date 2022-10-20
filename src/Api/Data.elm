@@ -17,8 +17,10 @@
 module Api.Data exposing
     ( Activity
     , ActivityType(..)
-    , CourseEnrollment
-    , CourseEnrollmentRole(..)
+    , CourseEnrollmentRead
+    , CourseEnrollmentReadRole(..)
+    , CourseEnrollmentWrite
+    , CourseEnrollmentWriteRole(..)
     , CourseRead
     , CourseWrite
     , Department
@@ -40,15 +42,18 @@ module Api.Data exposing
     , User
     , activityDecoder
     , activityTypeVariants
-    , courseEnrollmentDecoder
-    , courseEnrollmentRoleVariants
+    , courseEnrollmentReadDecoder
+    , courseEnrollmentReadRoleVariants
+    , courseEnrollmentWriteDecoder
+    , courseEnrollmentWriteRoleVariants
     , courseReadDecoder
     , courseWriteDecoder
     , departmentDecoder
     , educationDecoder
     , educationSpecializationDecoder
     , encodeActivity
-    , encodeCourseEnrollment
+    , encodeCourseEnrollmentRead
+    , encodeCourseEnrollmentWrite
     , encodeCourseRead
     , encodeCourseWrite
     , encodeDepartment
@@ -131,24 +136,45 @@ activityTypeVariants =
     ]
 
 
-type alias CourseEnrollment =
+type alias CourseEnrollmentRead =
     { id : Maybe Uuid
-    , role : CourseEnrollmentRole
+    , person : User
+    , role : CourseEnrollmentReadRole
+    , finishedOn : Maybe Posix
+    , course : Uuid
+    }
+
+
+type CourseEnrollmentReadRole
+    = CourseEnrollmentReadRoleT
+    | CourseEnrollmentReadRoleS
+
+
+courseEnrollmentReadRoleVariants : List CourseEnrollmentReadRole
+courseEnrollmentReadRoleVariants =
+    [ CourseEnrollmentReadRoleT
+    , CourseEnrollmentReadRoleS
+    ]
+
+
+type alias CourseEnrollmentWrite =
+    { id : Maybe Uuid
+    , role : CourseEnrollmentWriteRole
     , finishedOn : Maybe Posix
     , person : Uuid
     , course : Uuid
     }
 
 
-type CourseEnrollmentRole
-    = CourseEnrollmentRoleT
-    | CourseEnrollmentRoleS
+type CourseEnrollmentWriteRole
+    = CourseEnrollmentWriteRoleT
+    | CourseEnrollmentWriteRoleS
 
 
-courseEnrollmentRoleVariants : List CourseEnrollmentRole
-courseEnrollmentRoleVariants =
-    [ CourseEnrollmentRoleT
-    , CourseEnrollmentRoleS
+courseEnrollmentWriteRoleVariants : List CourseEnrollmentWriteRole
+courseEnrollmentWriteRoleVariants =
+    [ CourseEnrollmentWriteRoleT
+    , CourseEnrollmentWriteRoleS
     ]
 
 
@@ -157,6 +183,8 @@ type alias CourseRead =
     , forSpecialization : Maybe EducationSpecialization
     , logo : Maybe File
     , cover : Maybe File
+    , activities : List Activity
+    , enrollments : List CourseEnrollmentRead
     , title : String
     , description : String
     , forClass : Maybe String
@@ -430,22 +458,61 @@ encodeActivityType =
     Json.Encode.string << stringFromActivityType
 
 
-encodeCourseEnrollment : CourseEnrollment -> Json.Encode.Value
-encodeCourseEnrollment =
-    encodeObject << encodeCourseEnrollmentPairs
+encodeCourseEnrollmentRead : CourseEnrollmentRead -> Json.Encode.Value
+encodeCourseEnrollmentRead =
+    encodeObject << encodeCourseEnrollmentReadPairs
 
 
-encodeCourseEnrollmentWithTag : ( String, String ) -> CourseEnrollment -> Json.Encode.Value
-encodeCourseEnrollmentWithTag ( tagField, tag ) model =
-    encodeObject (encodeCourseEnrollmentPairs model ++ [ encode tagField Json.Encode.string tag ])
+encodeCourseEnrollmentReadWithTag : ( String, String ) -> CourseEnrollmentRead -> Json.Encode.Value
+encodeCourseEnrollmentReadWithTag ( tagField, tag ) model =
+    encodeObject (encodeCourseEnrollmentReadPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
-encodeCourseEnrollmentPairs : CourseEnrollment -> List EncodedField
-encodeCourseEnrollmentPairs model =
+encodeCourseEnrollmentReadPairs : CourseEnrollmentRead -> List EncodedField
+encodeCourseEnrollmentReadPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
-            , encode "role" encodeCourseEnrollmentRole model.role
+            , encode "person" encodeUser model.person
+            , encode "role" encodeCourseEnrollmentReadRole model.role
+            , maybeEncodeNullable "finished_on" Api.Time.encodeDateTime model.finishedOn
+            , encode "course" Uuid.encode model.course
+            ]
+    in
+    pairs
+
+
+stringFromCourseEnrollmentReadRole : CourseEnrollmentReadRole -> String
+stringFromCourseEnrollmentReadRole model =
+    case model of
+        CourseEnrollmentReadRoleT ->
+            "t"
+
+        CourseEnrollmentReadRoleS ->
+            "s"
+
+
+encodeCourseEnrollmentReadRole : CourseEnrollmentReadRole -> Json.Encode.Value
+encodeCourseEnrollmentReadRole =
+    Json.Encode.string << stringFromCourseEnrollmentReadRole
+
+
+encodeCourseEnrollmentWrite : CourseEnrollmentWrite -> Json.Encode.Value
+encodeCourseEnrollmentWrite =
+    encodeObject << encodeCourseEnrollmentWritePairs
+
+
+encodeCourseEnrollmentWriteWithTag : ( String, String ) -> CourseEnrollmentWrite -> Json.Encode.Value
+encodeCourseEnrollmentWriteWithTag ( tagField, tag ) model =
+    encodeObject (encodeCourseEnrollmentWritePairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeCourseEnrollmentWritePairs : CourseEnrollmentWrite -> List EncodedField
+encodeCourseEnrollmentWritePairs model =
+    let
+        pairs =
+            [ maybeEncode "id" Uuid.encode model.id
+            , encode "role" encodeCourseEnrollmentWriteRole model.role
             , maybeEncodeNullable "finished_on" Api.Time.encodeDateTime model.finishedOn
             , encode "person" Uuid.encode model.person
             , encode "course" Uuid.encode model.course
@@ -454,19 +521,19 @@ encodeCourseEnrollmentPairs model =
     pairs
 
 
-stringFromCourseEnrollmentRole : CourseEnrollmentRole -> String
-stringFromCourseEnrollmentRole model =
+stringFromCourseEnrollmentWriteRole : CourseEnrollmentWriteRole -> String
+stringFromCourseEnrollmentWriteRole model =
     case model of
-        CourseEnrollmentRoleT ->
+        CourseEnrollmentWriteRoleT ->
             "t"
 
-        CourseEnrollmentRoleS ->
+        CourseEnrollmentWriteRoleS ->
             "s"
 
 
-encodeCourseEnrollmentRole : CourseEnrollmentRole -> Json.Encode.Value
-encodeCourseEnrollmentRole =
-    Json.Encode.string << stringFromCourseEnrollmentRole
+encodeCourseEnrollmentWriteRole : CourseEnrollmentWriteRole -> Json.Encode.Value
+encodeCourseEnrollmentWriteRole =
+    Json.Encode.string << stringFromCourseEnrollmentWriteRole
 
 
 encodeCourseRead : CourseRead -> Json.Encode.Value
@@ -487,6 +554,8 @@ encodeCourseReadPairs model =
             , encodeNullable "for_specialization" encodeEducationSpecialization model.forSpecialization
             , encodeNullable "logo" encodeFile model.logo
             , encodeNullable "cover" encodeFile model.cover
+            , encode "activities" (Json.Encode.list encodeActivity) model.activities
+            , encode "enrollments" (Json.Encode.list encodeCourseEnrollmentRead) model.enrollments
             , encode "title" Json.Encode.string model.title
             , encode "description" Json.Encode.string model.description
             , maybeEncode "for_class" Json.Encode.string model.forClass
@@ -1011,27 +1080,54 @@ activityTypeDecoder =
             )
 
 
-courseEnrollmentDecoder : Json.Decode.Decoder CourseEnrollment
-courseEnrollmentDecoder =
-    Json.Decode.succeed CourseEnrollment
+courseEnrollmentReadDecoder : Json.Decode.Decoder CourseEnrollmentRead
+courseEnrollmentReadDecoder =
+    Json.Decode.succeed CourseEnrollmentRead
         |> maybeDecode "id" Uuid.decoder Nothing
-        |> decode "role" courseEnrollmentRoleDecoder
+        |> decode "person" userDecoder
+        |> decode "role" courseEnrollmentReadRoleDecoder
         |> maybeDecodeNullable "finished_on" Api.Time.dateTimeDecoder Nothing
-        |> decode "person" Uuid.decoder
         |> decode "course" Uuid.decoder
 
 
-courseEnrollmentRoleDecoder : Json.Decode.Decoder CourseEnrollmentRole
-courseEnrollmentRoleDecoder =
+courseEnrollmentReadRoleDecoder : Json.Decode.Decoder CourseEnrollmentReadRole
+courseEnrollmentReadRoleDecoder =
     Json.Decode.string
         |> Json.Decode.andThen
             (\value ->
                 case value of
                     "t" ->
-                        Json.Decode.succeed CourseEnrollmentRoleT
+                        Json.Decode.succeed CourseEnrollmentReadRoleT
 
                     "s" ->
-                        Json.Decode.succeed CourseEnrollmentRoleS
+                        Json.Decode.succeed CourseEnrollmentReadRoleS
+
+                    other ->
+                        Json.Decode.fail <| "Unknown type: " ++ other
+            )
+
+
+courseEnrollmentWriteDecoder : Json.Decode.Decoder CourseEnrollmentWrite
+courseEnrollmentWriteDecoder =
+    Json.Decode.succeed CourseEnrollmentWrite
+        |> maybeDecode "id" Uuid.decoder Nothing
+        |> decode "role" courseEnrollmentWriteRoleDecoder
+        |> maybeDecodeNullable "finished_on" Api.Time.dateTimeDecoder Nothing
+        |> decode "person" Uuid.decoder
+        |> decode "course" Uuid.decoder
+
+
+courseEnrollmentWriteRoleDecoder : Json.Decode.Decoder CourseEnrollmentWriteRole
+courseEnrollmentWriteRoleDecoder =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\value ->
+                case value of
+                    "t" ->
+                        Json.Decode.succeed CourseEnrollmentWriteRoleT
+
+                    "s" ->
+                        Json.Decode.succeed CourseEnrollmentWriteRoleS
 
                     other ->
                         Json.Decode.fail <| "Unknown type: " ++ other
@@ -1045,6 +1141,8 @@ courseReadDecoder =
         |> decodeNullable "for_specialization" educationSpecializationDecoder
         |> decodeNullable "logo" fileDecoder
         |> decodeNullable "cover" fileDecoder
+        |> decode "activities" (Json.Decode.list activityDecoder)
+        |> decode "enrollments" (Json.Decode.list courseEnrollmentReadDecoder)
         |> decode "title" Json.Decode.string
         |> decode "description" Json.Decode.string
         |> maybeDecode "for_class" Json.Decode.string Nothing

@@ -4372,6 +4372,136 @@ function _Browser_load(url)
 }
 
 
+
+
+// STRINGS
+
+
+var _Parser_isSubString = F5(function(smallString, offset, row, col, bigString)
+{
+	var smallLength = smallString.length;
+	var isGood = offset + smallLength <= bigString.length;
+
+	for (var i = 0; isGood && i < smallLength; )
+	{
+		var code = bigString.charCodeAt(offset);
+		isGood =
+			smallString[i++] === bigString[offset++]
+			&& (
+				code === 0x000A /* \n */
+					? ( row++, col=1 )
+					: ( col++, (code & 0xF800) === 0xD800 ? smallString[i++] === bigString[offset++] : 1 )
+			)
+	}
+
+	return _Utils_Tuple3(isGood ? offset : -1, row, col);
+});
+
+
+
+// CHARS
+
+
+var _Parser_isSubChar = F3(function(predicate, offset, string)
+{
+	return (
+		string.length <= offset
+			? -1
+			:
+		(string.charCodeAt(offset) & 0xF800) === 0xD800
+			? (predicate(_Utils_chr(string.substr(offset, 2))) ? offset + 2 : -1)
+			:
+		(predicate(_Utils_chr(string[offset]))
+			? ((string[offset] === '\n') ? -2 : (offset + 1))
+			: -1
+		)
+	);
+});
+
+
+var _Parser_isAsciiCode = F3(function(code, offset, string)
+{
+	return string.charCodeAt(offset) === code;
+});
+
+
+
+// NUMBERS
+
+
+var _Parser_chompBase10 = F2(function(offset, string)
+{
+	for (; offset < string.length; offset++)
+	{
+		var code = string.charCodeAt(offset);
+		if (code < 0x30 || 0x39 < code)
+		{
+			return offset;
+		}
+	}
+	return offset;
+});
+
+
+var _Parser_consumeBase = F3(function(base, offset, string)
+{
+	for (var total = 0; offset < string.length; offset++)
+	{
+		var digit = string.charCodeAt(offset) - 0x30;
+		if (digit < 0 || base <= digit) break;
+		total = base * total + digit;
+	}
+	return _Utils_Tuple2(offset, total);
+});
+
+
+var _Parser_consumeBase16 = F2(function(offset, string)
+{
+	for (var total = 0; offset < string.length; offset++)
+	{
+		var code = string.charCodeAt(offset);
+		if (0x30 <= code && code <= 0x39)
+		{
+			total = 16 * total + code - 0x30;
+		}
+		else if (0x41 <= code && code <= 0x46)
+		{
+			total = 16 * total + code - 55;
+		}
+		else if (0x61 <= code && code <= 0x66)
+		{
+			total = 16 * total + code - 87;
+		}
+		else
+		{
+			break;
+		}
+	}
+	return _Utils_Tuple2(offset, total);
+});
+
+
+
+// FIND STRING
+
+
+var _Parser_findSubString = F5(function(smallString, offset, row, col, bigString)
+{
+	var newOffset = bigString.indexOf(smallString, offset);
+	var target = newOffset < 0 ? bigString.length : newOffset + smallString.length;
+
+	while (offset < target)
+	{
+		var code = bigString.charCodeAt(offset++);
+		code === 0x000A /* \n */
+			? ( col=1, row++ )
+			: ( col++, (code & 0xF800) === 0xD800 && offset++ )
+	}
+
+	return _Utils_Tuple3(newOffset, row, col);
+});
+
+
 // CREATE
 
 var _Regex_never = /.^/;
@@ -4664,136 +4794,6 @@ function _Url_percentDecode(string)
 		return $elm$core$Maybe$Nothing;
 	}
 }
-
-
-
-// STRINGS
-
-
-var _Parser_isSubString = F5(function(smallString, offset, row, col, bigString)
-{
-	var smallLength = smallString.length;
-	var isGood = offset + smallLength <= bigString.length;
-
-	for (var i = 0; isGood && i < smallLength; )
-	{
-		var code = bigString.charCodeAt(offset);
-		isGood =
-			smallString[i++] === bigString[offset++]
-			&& (
-				code === 0x000A /* \n */
-					? ( row++, col=1 )
-					: ( col++, (code & 0xF800) === 0xD800 ? smallString[i++] === bigString[offset++] : 1 )
-			)
-	}
-
-	return _Utils_Tuple3(isGood ? offset : -1, row, col);
-});
-
-
-
-// CHARS
-
-
-var _Parser_isSubChar = F3(function(predicate, offset, string)
-{
-	return (
-		string.length <= offset
-			? -1
-			:
-		(string.charCodeAt(offset) & 0xF800) === 0xD800
-			? (predicate(_Utils_chr(string.substr(offset, 2))) ? offset + 2 : -1)
-			:
-		(predicate(_Utils_chr(string[offset]))
-			? ((string[offset] === '\n') ? -2 : (offset + 1))
-			: -1
-		)
-	);
-});
-
-
-var _Parser_isAsciiCode = F3(function(code, offset, string)
-{
-	return string.charCodeAt(offset) === code;
-});
-
-
-
-// NUMBERS
-
-
-var _Parser_chompBase10 = F2(function(offset, string)
-{
-	for (; offset < string.length; offset++)
-	{
-		var code = string.charCodeAt(offset);
-		if (code < 0x30 || 0x39 < code)
-		{
-			return offset;
-		}
-	}
-	return offset;
-});
-
-
-var _Parser_consumeBase = F3(function(base, offset, string)
-{
-	for (var total = 0; offset < string.length; offset++)
-	{
-		var digit = string.charCodeAt(offset) - 0x30;
-		if (digit < 0 || base <= digit) break;
-		total = base * total + digit;
-	}
-	return _Utils_Tuple2(offset, total);
-});
-
-
-var _Parser_consumeBase16 = F2(function(offset, string)
-{
-	for (var total = 0; offset < string.length; offset++)
-	{
-		var code = string.charCodeAt(offset);
-		if (0x30 <= code && code <= 0x39)
-		{
-			total = 16 * total + code - 0x30;
-		}
-		else if (0x41 <= code && code <= 0x46)
-		{
-			total = 16 * total + code - 55;
-		}
-		else if (0x61 <= code && code <= 0x66)
-		{
-			total = 16 * total + code - 87;
-		}
-		else
-		{
-			break;
-		}
-	}
-	return _Utils_Tuple2(offset, total);
-});
-
-
-
-// FIND STRING
-
-
-var _Parser_findSubString = F5(function(smallString, offset, row, col, bigString)
-{
-	var newOffset = bigString.indexOf(smallString, offset);
-	var target = newOffset < 0 ? bigString.length : newOffset + smallString.length;
-
-	while (offset < target)
-	{
-		var code = bigString.charCodeAt(offset++);
-		code === 0x000A /* \n */
-			? ( col=1, row++ )
-			: ( col++, (code & 0xF800) === 0xD800 && offset++ )
-	}
-
-	return _Utils_Tuple3(newOffset, row, col);
-});
-
 
 
 function _Time_now(millisToPosix)
@@ -5680,11 +5680,56 @@ var $author$project$Util$Left = function (a) {
 var $author$project$Main$NoneLayout = {$: 'NoneLayout'};
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
+var $elm$url$Url$addPort = F2(
+	function (maybePort, starter) {
+		if (maybePort.$ === 'Nothing') {
+			return starter;
+		} else {
+			var port_ = maybePort.a;
+			return starter + (':' + $elm$core$String$fromInt(port_));
+		}
+	});
+var $elm$url$Url$addPrefixed = F3(
+	function (prefix, maybeSegment, starter) {
+		if (maybeSegment.$ === 'Nothing') {
+			return starter;
+		} else {
+			var segment = maybeSegment.a;
+			return _Utils_ap(
+				starter,
+				_Utils_ap(prefix, segment));
+		}
+	});
+var $elm$url$Url$toString = function (url) {
+	var http = function () {
+		var _v0 = url.protocol;
+		if (_v0.$ === 'Http') {
+			return 'http://';
+		} else {
+			return 'https://';
+		}
+	}();
+	return A3(
+		$elm$url$Url$addPrefixed,
+		'#',
+		url.fragment,
+		A3(
+			$elm$url$Url$addPrefixed,
+			'?',
+			url.query,
+			_Utils_ap(
+				A2(
+					$elm$url$Url$addPort,
+					url.port_,
+					_Utils_ap(http, url.host)),
+				url.path)));
+};
 var $author$project$Main$init = F3(
 	function (_v0, url, key) {
 		var token = _v0.token;
 		return _Utils_Tuple2(
 			{
+				init_url: $elm$url$Url$toString(url),
 				key: key,
 				layout: $author$project$Main$NoneLayout,
 				page: $author$project$Main$Blank,
@@ -5787,53 +5832,878 @@ var $elm$core$Basics$composeR = F3(
 		return g(
 			f(x));
 	});
-var $author$project$Api$Data$CourseRead = F8(
-	function (id, forSpecialization, logo, cover, title, description, forClass, forGroup) {
-		return {cover: cover, description: description, forClass: forClass, forGroup: forGroup, forSpecialization: forSpecialization, id: id, logo: logo, title: title};
+var $author$project$Api$Data$CourseRead = function (id) {
+	return function (forSpecialization) {
+		return function (logo) {
+			return function (cover) {
+				return function (activities) {
+					return function (enrollments) {
+						return function (title) {
+							return function (description) {
+								return function (forClass) {
+									return function (forGroup) {
+										return {activities: activities, cover: cover, description: description, enrollments: enrollments, forClass: forClass, forGroup: forGroup, forSpecialization: forSpecialization, id: id, logo: logo, title: title};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var $author$project$Api$Data$Activity = function (id) {
+	return function (type_) {
+		return function (title) {
+			return function (keywords) {
+				return function (isHidden) {
+					return function (marksLimit) {
+						return function (order) {
+							return function (date) {
+								return function (group) {
+									return function (body) {
+										return function (dueDate) {
+											return function (link) {
+												return function (embed) {
+													return function (course) {
+														return function (files) {
+															return {body: body, course: course, date: date, dueDate: dueDate, embed: embed, files: files, group: group, id: id, isHidden: isHidden, keywords: keywords, link: link, marksLimit: marksLimit, order: order, title: title, type_: type_};
+														};
+													};
+												};
+											};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var $author$project$Api$Data$ActivityTypeART = {$: 'ActivityTypeART'};
+var $author$project$Api$Data$ActivityTypeGEN = {$: 'ActivityTypeGEN'};
+var $author$project$Api$Data$ActivityTypeLNK = {$: 'ActivityTypeLNK'};
+var $author$project$Api$Data$ActivityTypeMED = {$: 'ActivityTypeMED'};
+var $author$project$Api$Data$ActivityTypeTSK = {$: 'ActivityTypeTSK'};
+var $elm$json$Json$Decode$fail = _Json_fail;
+var $author$project$Api$Data$activityTypeDecoder = A2(
+	$elm$json$Json$Decode$andThen,
+	function (value) {
+		switch (value) {
+			case 'GEN':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeGEN);
+			case 'ART':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeART);
+			case 'TSK':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeTSK);
+			case 'LNK':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeLNK);
+			case 'MED':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeMED);
+			default:
+				var other = value;
+				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
+		}
+	},
+	$elm$json$Json$Decode$string);
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
+var $elm$parser$Parser$Advanced$Bad = F2(
+	function (a, b) {
+		return {$: 'Bad', a: a, b: b};
 	});
+var $elm$parser$Parser$Advanced$Good = F3(
+	function (a, b, c) {
+		return {$: 'Good', a: a, b: b, c: c};
+	});
+var $elm$parser$Parser$Advanced$Parser = function (a) {
+	return {$: 'Parser', a: a};
+};
+var $elm$parser$Parser$Advanced$andThen = F2(
+	function (callback, _v0) {
+		var parseA = _v0.a;
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _v1 = parseA(s0);
+				if (_v1.$ === 'Bad') {
+					var p = _v1.a;
+					var x = _v1.b;
+					return A2($elm$parser$Parser$Advanced$Bad, p, x);
+				} else {
+					var p1 = _v1.a;
+					var a = _v1.b;
+					var s1 = _v1.c;
+					var _v2 = callback(a);
+					var parseB = _v2.a;
+					var _v3 = parseB(s1);
+					if (_v3.$ === 'Bad') {
+						var p2 = _v3.a;
+						var x = _v3.b;
+						return A2($elm$parser$Parser$Advanced$Bad, p1 || p2, x);
+					} else {
+						var p2 = _v3.a;
+						var b = _v3.b;
+						var s2 = _v3.c;
+						return A3($elm$parser$Parser$Advanced$Good, p1 || p2, b, s2);
+					}
+				}
+			});
+	});
+var $elm$parser$Parser$andThen = $elm$parser$Parser$Advanced$andThen;
+var $elm$parser$Parser$ExpectingEnd = {$: 'ExpectingEnd'};
+var $elm$parser$Parser$Advanced$AddRight = F2(
+	function (a, b) {
+		return {$: 'AddRight', a: a, b: b};
+	});
+var $elm$parser$Parser$Advanced$DeadEnd = F4(
+	function (row, col, problem, contextStack) {
+		return {col: col, contextStack: contextStack, problem: problem, row: row};
+	});
+var $elm$parser$Parser$Advanced$Empty = {$: 'Empty'};
+var $elm$parser$Parser$Advanced$fromState = F2(
+	function (s, x) {
+		return A2(
+			$elm$parser$Parser$Advanced$AddRight,
+			$elm$parser$Parser$Advanced$Empty,
+			A4($elm$parser$Parser$Advanced$DeadEnd, s.row, s.col, x, s.context));
+	});
+var $elm$parser$Parser$Advanced$end = function (x) {
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return _Utils_eq(
+				$elm$core$String$length(s.src),
+				s.offset) ? A3($elm$parser$Parser$Advanced$Good, false, _Utils_Tuple0, s) : A2(
+				$elm$parser$Parser$Advanced$Bad,
+				false,
+				A2($elm$parser$Parser$Advanced$fromState, s, x));
+		});
+};
+var $elm$parser$Parser$end = $elm$parser$Parser$Advanced$end($elm$parser$Parser$ExpectingEnd);
+var $elm$parser$Parser$Advanced$isSubChar = _Parser_isSubChar;
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$parser$Parser$Advanced$chompWhileHelp = F5(
+	function (isGood, offset, row, col, s0) {
+		chompWhileHelp:
+		while (true) {
+			var newOffset = A3($elm$parser$Parser$Advanced$isSubChar, isGood, offset, s0.src);
+			if (_Utils_eq(newOffset, -1)) {
+				return A3(
+					$elm$parser$Parser$Advanced$Good,
+					_Utils_cmp(s0.offset, offset) < 0,
+					_Utils_Tuple0,
+					{col: col, context: s0.context, indent: s0.indent, offset: offset, row: row, src: s0.src});
+			} else {
+				if (_Utils_eq(newOffset, -2)) {
+					var $temp$isGood = isGood,
+						$temp$offset = offset + 1,
+						$temp$row = row + 1,
+						$temp$col = 1,
+						$temp$s0 = s0;
+					isGood = $temp$isGood;
+					offset = $temp$offset;
+					row = $temp$row;
+					col = $temp$col;
+					s0 = $temp$s0;
+					continue chompWhileHelp;
+				} else {
+					var $temp$isGood = isGood,
+						$temp$offset = newOffset,
+						$temp$row = row,
+						$temp$col = col + 1,
+						$temp$s0 = s0;
+					isGood = $temp$isGood;
+					offset = $temp$offset;
+					row = $temp$row;
+					col = $temp$col;
+					s0 = $temp$s0;
+					continue chompWhileHelp;
+				}
+			}
+		}
+	});
+var $elm$parser$Parser$Advanced$chompWhile = function (isGood) {
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A5($elm$parser$Parser$Advanced$chompWhileHelp, isGood, s.offset, s.row, s.col, s);
+		});
+};
+var $elm$parser$Parser$chompWhile = $elm$parser$Parser$Advanced$chompWhile;
+var $elm$core$Basics$always = F2(
+	function (a, _v0) {
+		return a;
+	});
+var $elm$parser$Parser$Advanced$mapChompedString = F2(
+	function (func, _v0) {
+		var parse = _v0.a;
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _v1 = parse(s0);
+				if (_v1.$ === 'Bad') {
+					var p = _v1.a;
+					var x = _v1.b;
+					return A2($elm$parser$Parser$Advanced$Bad, p, x);
+				} else {
+					var p = _v1.a;
+					var a = _v1.b;
+					var s1 = _v1.c;
+					return A3(
+						$elm$parser$Parser$Advanced$Good,
+						p,
+						A2(
+							func,
+							A3($elm$core$String$slice, s0.offset, s1.offset, s0.src),
+							a),
+						s1);
+				}
+			});
+	});
+var $elm$parser$Parser$Advanced$getChompedString = function (parser) {
+	return A2($elm$parser$Parser$Advanced$mapChompedString, $elm$core$Basics$always, parser);
+};
+var $elm$parser$Parser$getChompedString = $elm$parser$Parser$Advanced$getChompedString;
+var $elm$parser$Parser$Problem = function (a) {
+	return {$: 'Problem', a: a};
+};
+var $elm$parser$Parser$Advanced$problem = function (x) {
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A2(
+				$elm$parser$Parser$Advanced$Bad,
+				false,
+				A2($elm$parser$Parser$Advanced$fromState, s, x));
+		});
+};
+var $elm$parser$Parser$problem = function (msg) {
+	return $elm$parser$Parser$Advanced$problem(
+		$elm$parser$Parser$Problem(msg));
+};
+var $elm$core$Basics$round = _Basics_round;
+var $elm$parser$Parser$Advanced$succeed = function (a) {
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A3($elm$parser$Parser$Advanced$Good, false, a, s);
+		});
+};
+var $elm$parser$Parser$succeed = $elm$parser$Parser$Advanced$succeed;
+var $elm$core$String$toFloat = _String_toFloat;
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$fractionsOfASecondInMs = A2(
+	$elm$parser$Parser$andThen,
+	function (str) {
+		if ($elm$core$String$length(str) <= 9) {
+			var _v0 = $elm$core$String$toFloat('0.' + str);
+			if (_v0.$ === 'Just') {
+				var floatVal = _v0.a;
+				return $elm$parser$Parser$succeed(
+					$elm$core$Basics$round(floatVal * 1000));
+			} else {
+				return $elm$parser$Parser$problem('Invalid float: \"' + (str + '\"'));
+			}
+		} else {
+			return $elm$parser$Parser$problem(
+				'Expected at most 9 digits, but got ' + $elm$core$String$fromInt(
+					$elm$core$String$length(str)));
+		}
+	},
+	$elm$parser$Parser$getChompedString(
+		$elm$parser$Parser$chompWhile($elm$core$Char$isDigit)));
+var $elm$time$Time$Posix = function (a) {
+	return {$: 'Posix', a: a};
+};
+var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$fromParts = F6(
+	function (monthYearDayMs, hour, minute, second, ms, utcOffsetMinutes) {
+		return $elm$time$Time$millisToPosix((((monthYearDayMs + (((hour * 60) * 60) * 1000)) + (((minute - utcOffsetMinutes) * 60) * 1000)) + (second * 1000)) + ms);
+	});
+var $elm$parser$Parser$Advanced$map2 = F3(
+	function (func, _v0, _v1) {
+		var parseA = _v0.a;
+		var parseB = _v1.a;
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _v2 = parseA(s0);
+				if (_v2.$ === 'Bad') {
+					var p = _v2.a;
+					var x = _v2.b;
+					return A2($elm$parser$Parser$Advanced$Bad, p, x);
+				} else {
+					var p1 = _v2.a;
+					var a = _v2.b;
+					var s1 = _v2.c;
+					var _v3 = parseB(s1);
+					if (_v3.$ === 'Bad') {
+						var p2 = _v3.a;
+						var x = _v3.b;
+						return A2($elm$parser$Parser$Advanced$Bad, p1 || p2, x);
+					} else {
+						var p2 = _v3.a;
+						var b = _v3.b;
+						var s2 = _v3.c;
+						return A3(
+							$elm$parser$Parser$Advanced$Good,
+							p1 || p2,
+							A2(func, a, b),
+							s2);
+					}
+				}
+			});
+	});
+var $elm$parser$Parser$Advanced$ignorer = F2(
+	function (keepParser, ignoreParser) {
+		return A3($elm$parser$Parser$Advanced$map2, $elm$core$Basics$always, keepParser, ignoreParser);
+	});
+var $elm$parser$Parser$ignorer = $elm$parser$Parser$Advanced$ignorer;
+var $elm$parser$Parser$Advanced$keeper = F2(
+	function (parseFunc, parseArg) {
+		return A3($elm$parser$Parser$Advanced$map2, $elm$core$Basics$apL, parseFunc, parseArg);
+	});
+var $elm$parser$Parser$keeper = $elm$parser$Parser$Advanced$keeper;
+var $elm$parser$Parser$Advanced$Append = F2(
+	function (a, b) {
+		return {$: 'Append', a: a, b: b};
+	});
+var $elm$parser$Parser$Advanced$oneOfHelp = F3(
+	function (s0, bag, parsers) {
+		oneOfHelp:
+		while (true) {
+			if (!parsers.b) {
+				return A2($elm$parser$Parser$Advanced$Bad, false, bag);
+			} else {
+				var parse = parsers.a.a;
+				var remainingParsers = parsers.b;
+				var _v1 = parse(s0);
+				if (_v1.$ === 'Good') {
+					var step = _v1;
+					return step;
+				} else {
+					var step = _v1;
+					var p = step.a;
+					var x = step.b;
+					if (p) {
+						return step;
+					} else {
+						var $temp$s0 = s0,
+							$temp$bag = A2($elm$parser$Parser$Advanced$Append, bag, x),
+							$temp$parsers = remainingParsers;
+						s0 = $temp$s0;
+						bag = $temp$bag;
+						parsers = $temp$parsers;
+						continue oneOfHelp;
+					}
+				}
+			}
+		}
+	});
+var $elm$parser$Parser$Advanced$oneOf = function (parsers) {
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A3($elm$parser$Parser$Advanced$oneOfHelp, s, $elm$parser$Parser$Advanced$Empty, parsers);
+		});
+};
+var $elm$parser$Parser$oneOf = $elm$parser$Parser$Advanced$oneOf;
+var $elm$parser$Parser$Done = function (a) {
+	return {$: 'Done', a: a};
+};
+var $elm$parser$Parser$Loop = function (a) {
+	return {$: 'Loop', a: a};
+};
+var $elm$core$String$append = _String_append;
+var $elm$parser$Parser$UnexpectedChar = {$: 'UnexpectedChar'};
+var $elm$parser$Parser$Advanced$chompIf = F2(
+	function (isGood, expecting) {
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s) {
+				var newOffset = A3($elm$parser$Parser$Advanced$isSubChar, isGood, s.offset, s.src);
+				return _Utils_eq(newOffset, -1) ? A2(
+					$elm$parser$Parser$Advanced$Bad,
+					false,
+					A2($elm$parser$Parser$Advanced$fromState, s, expecting)) : (_Utils_eq(newOffset, -2) ? A3(
+					$elm$parser$Parser$Advanced$Good,
+					true,
+					_Utils_Tuple0,
+					{col: 1, context: s.context, indent: s.indent, offset: s.offset + 1, row: s.row + 1, src: s.src}) : A3(
+					$elm$parser$Parser$Advanced$Good,
+					true,
+					_Utils_Tuple0,
+					{col: s.col + 1, context: s.context, indent: s.indent, offset: newOffset, row: s.row, src: s.src}));
+			});
+	});
+var $elm$parser$Parser$chompIf = function (isGood) {
+	return A2($elm$parser$Parser$Advanced$chompIf, isGood, $elm$parser$Parser$UnexpectedChar);
+};
+var $elm$parser$Parser$Advanced$loopHelp = F4(
+	function (p, state, callback, s0) {
+		loopHelp:
+		while (true) {
+			var _v0 = callback(state);
+			var parse = _v0.a;
+			var _v1 = parse(s0);
+			if (_v1.$ === 'Good') {
+				var p1 = _v1.a;
+				var step = _v1.b;
+				var s1 = _v1.c;
+				if (step.$ === 'Loop') {
+					var newState = step.a;
+					var $temp$p = p || p1,
+						$temp$state = newState,
+						$temp$callback = callback,
+						$temp$s0 = s1;
+					p = $temp$p;
+					state = $temp$state;
+					callback = $temp$callback;
+					s0 = $temp$s0;
+					continue loopHelp;
+				} else {
+					var result = step.a;
+					return A3($elm$parser$Parser$Advanced$Good, p || p1, result, s1);
+				}
+			} else {
+				var p1 = _v1.a;
+				var x = _v1.b;
+				return A2($elm$parser$Parser$Advanced$Bad, p || p1, x);
+			}
+		}
+	});
+var $elm$parser$Parser$Advanced$loop = F2(
+	function (state, callback) {
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s) {
+				return A4($elm$parser$Parser$Advanced$loopHelp, false, state, callback, s);
+			});
+	});
+var $elm$parser$Parser$Advanced$map = F2(
+	function (func, _v0) {
+		var parse = _v0.a;
+		return $elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _v1 = parse(s0);
+				if (_v1.$ === 'Good') {
+					var p = _v1.a;
+					var a = _v1.b;
+					var s1 = _v1.c;
+					return A3(
+						$elm$parser$Parser$Advanced$Good,
+						p,
+						func(a),
+						s1);
+				} else {
+					var p = _v1.a;
+					var x = _v1.b;
+					return A2($elm$parser$Parser$Advanced$Bad, p, x);
+				}
+			});
+	});
+var $elm$parser$Parser$map = $elm$parser$Parser$Advanced$map;
+var $elm$parser$Parser$Advanced$Done = function (a) {
+	return {$: 'Done', a: a};
+};
+var $elm$parser$Parser$Advanced$Loop = function (a) {
+	return {$: 'Loop', a: a};
+};
+var $elm$parser$Parser$toAdvancedStep = function (step) {
+	if (step.$ === 'Loop') {
+		var s = step.a;
+		return $elm$parser$Parser$Advanced$Loop(s);
+	} else {
+		var a = step.a;
+		return $elm$parser$Parser$Advanced$Done(a);
+	}
+};
+var $elm$parser$Parser$loop = F2(
+	function (state, callback) {
+		return A2(
+			$elm$parser$Parser$Advanced$loop,
+			state,
+			function (s) {
+				return A2(
+					$elm$parser$Parser$map,
+					$elm$parser$Parser$toAdvancedStep,
+					callback(s));
+			});
+	});
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt = function (quantity) {
+	var helper = function (str) {
+		if (_Utils_eq(
+			$elm$core$String$length(str),
+			quantity)) {
+			var _v0 = $elm$core$String$toInt(str);
+			if (_v0.$ === 'Just') {
+				var intVal = _v0.a;
+				return A2(
+					$elm$parser$Parser$map,
+					$elm$parser$Parser$Done,
+					$elm$parser$Parser$succeed(intVal));
+			} else {
+				return $elm$parser$Parser$problem('Invalid integer: \"' + (str + '\"'));
+			}
+		} else {
+			return A2(
+				$elm$parser$Parser$map,
+				function (nextChar) {
+					return $elm$parser$Parser$Loop(
+						A2($elm$core$String$append, str, nextChar));
+				},
+				$elm$parser$Parser$getChompedString(
+					$elm$parser$Parser$chompIf($elm$core$Char$isDigit)));
+		}
+	};
+	return A2($elm$parser$Parser$loop, '', helper);
+};
+var $elm$parser$Parser$ExpectingSymbol = function (a) {
+	return {$: 'ExpectingSymbol', a: a};
+};
+var $elm$parser$Parser$Advanced$Token = F2(
+	function (a, b) {
+		return {$: 'Token', a: a, b: b};
+	});
+var $elm$parser$Parser$Advanced$isSubString = _Parser_isSubString;
+var $elm$core$Basics$not = _Basics_not;
+var $elm$parser$Parser$Advanced$token = function (_v0) {
+	var str = _v0.a;
+	var expecting = _v0.b;
+	var progress = !$elm$core$String$isEmpty(str);
+	return $elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			var _v1 = A5($elm$parser$Parser$Advanced$isSubString, str, s.offset, s.row, s.col, s.src);
+			var newOffset = _v1.a;
+			var newRow = _v1.b;
+			var newCol = _v1.c;
+			return _Utils_eq(newOffset, -1) ? A2(
+				$elm$parser$Parser$Advanced$Bad,
+				false,
+				A2($elm$parser$Parser$Advanced$fromState, s, expecting)) : A3(
+				$elm$parser$Parser$Advanced$Good,
+				progress,
+				_Utils_Tuple0,
+				{col: newCol, context: s.context, indent: s.indent, offset: newOffset, row: newRow, src: s.src});
+		});
+};
+var $elm$parser$Parser$Advanced$symbol = $elm$parser$Parser$Advanced$token;
+var $elm$parser$Parser$symbol = function (str) {
+	return $elm$parser$Parser$Advanced$symbol(
+		A2(
+			$elm$parser$Parser$Advanced$Token,
+			str,
+			$elm$parser$Parser$ExpectingSymbol(str)));
+};
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$epochYear = 1970;
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay = function (day) {
+	return $elm$parser$Parser$problem(
+		'Invalid day: ' + $elm$core$String$fromInt(day));
+};
+var $elm$core$Basics$modBy = _Basics_modBy;
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$isLeapYear = function (year) {
+	return (!A2($elm$core$Basics$modBy, 4, year)) && ((!(!A2($elm$core$Basics$modBy, 100, year))) || (!A2($elm$core$Basics$modBy, 400, year)));
+};
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$leapYearsBefore = function (y1) {
+	var y = y1 - 1;
+	return (((y / 4) | 0) - ((y / 100) | 0)) + ((y / 400) | 0);
+};
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$msPerDay = 86400000;
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$msPerYear = 31536000000;
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$yearMonthDay = function (_v0) {
+	var year = _v0.a;
+	var month = _v0.b;
+	var dayInMonth = _v0.c;
+	if (dayInMonth < 0) {
+		return $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth);
+	} else {
+		var succeedWith = function (extraMs) {
+			var yearMs = $rtfeldman$elm_iso8601_date_strings$Iso8601$msPerYear * (year - $rtfeldman$elm_iso8601_date_strings$Iso8601$epochYear);
+			var days = ((month < 3) || (!$rtfeldman$elm_iso8601_date_strings$Iso8601$isLeapYear(year))) ? (dayInMonth - 1) : dayInMonth;
+			var dayMs = $rtfeldman$elm_iso8601_date_strings$Iso8601$msPerDay * (days + ($rtfeldman$elm_iso8601_date_strings$Iso8601$leapYearsBefore(year) - $rtfeldman$elm_iso8601_date_strings$Iso8601$leapYearsBefore($rtfeldman$elm_iso8601_date_strings$Iso8601$epochYear)));
+			return $elm$parser$Parser$succeed((extraMs + yearMs) + dayMs);
+		};
+		switch (month) {
+			case 1:
+				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(0);
+			case 2:
+				return ((dayInMonth > 29) || ((dayInMonth === 29) && (!$rtfeldman$elm_iso8601_date_strings$Iso8601$isLeapYear(year)))) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(2678400000);
+			case 3:
+				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(5097600000);
+			case 4:
+				return (dayInMonth > 30) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(7776000000);
+			case 5:
+				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(10368000000);
+			case 6:
+				return (dayInMonth > 30) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(13046400000);
+			case 7:
+				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(15638400000);
+			case 8:
+				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(18316800000);
+			case 9:
+				return (dayInMonth > 30) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(20995200000);
+			case 10:
+				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(23587200000);
+			case 11:
+				return (dayInMonth > 30) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(26265600000);
+			case 12:
+				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(28857600000);
+			default:
+				return $elm$parser$Parser$problem(
+					'Invalid month: \"' + ($elm$core$String$fromInt(month) + '\"'));
+		}
+	}
+};
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$monthYearDayInMs = A2(
+	$elm$parser$Parser$andThen,
+	$rtfeldman$elm_iso8601_date_strings$Iso8601$yearMonthDay,
+	A2(
+		$elm$parser$Parser$keeper,
+		A2(
+			$elm$parser$Parser$keeper,
+			A2(
+				$elm$parser$Parser$keeper,
+				$elm$parser$Parser$succeed(
+					F3(
+						function (year, month, day) {
+							return _Utils_Tuple3(year, month, day);
+						})),
+				$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(4)),
+			$elm$parser$Parser$oneOf(
+				_List_fromArray(
+					[
+						A2(
+						$elm$parser$Parser$keeper,
+						A2(
+							$elm$parser$Parser$ignorer,
+							$elm$parser$Parser$succeed($elm$core$Basics$identity),
+							$elm$parser$Parser$symbol('-')),
+						$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
+						$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)
+					]))),
+		$elm$parser$Parser$oneOf(
+			_List_fromArray(
+				[
+					A2(
+					$elm$parser$Parser$keeper,
+					A2(
+						$elm$parser$Parser$ignorer,
+						$elm$parser$Parser$succeed($elm$core$Basics$identity),
+						$elm$parser$Parser$symbol('-')),
+					$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
+					$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)
+				]))));
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$utcOffsetInMinutes = function () {
+	var utcOffsetMinutesFromParts = F3(
+		function (multiplier, hours, minutes) {
+			return (multiplier * (hours * 60)) + minutes;
+		});
+	return A2(
+		$elm$parser$Parser$keeper,
+		$elm$parser$Parser$succeed($elm$core$Basics$identity),
+		$elm$parser$Parser$oneOf(
+			_List_fromArray(
+				[
+					A2(
+					$elm$parser$Parser$map,
+					function (_v0) {
+						return 0;
+					},
+					$elm$parser$Parser$symbol('Z')),
+					A2(
+					$elm$parser$Parser$keeper,
+					A2(
+						$elm$parser$Parser$keeper,
+						A2(
+							$elm$parser$Parser$keeper,
+							$elm$parser$Parser$succeed(utcOffsetMinutesFromParts),
+							$elm$parser$Parser$oneOf(
+								_List_fromArray(
+									[
+										A2(
+										$elm$parser$Parser$map,
+										function (_v1) {
+											return 1;
+										},
+										$elm$parser$Parser$symbol('+')),
+										A2(
+										$elm$parser$Parser$map,
+										function (_v2) {
+											return -1;
+										},
+										$elm$parser$Parser$symbol('-'))
+									]))),
+						$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
+					$elm$parser$Parser$oneOf(
+						_List_fromArray(
+							[
+								A2(
+								$elm$parser$Parser$keeper,
+								A2(
+									$elm$parser$Parser$ignorer,
+									$elm$parser$Parser$succeed($elm$core$Basics$identity),
+									$elm$parser$Parser$symbol(':')),
+								$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
+								$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2),
+								$elm$parser$Parser$succeed(0)
+							]))),
+					A2(
+					$elm$parser$Parser$ignorer,
+					$elm$parser$Parser$succeed(0),
+					$elm$parser$Parser$end)
+				])));
+}();
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$iso8601 = A2(
+	$elm$parser$Parser$andThen,
+	function (datePart) {
+		return $elm$parser$Parser$oneOf(
+			_List_fromArray(
+				[
+					A2(
+					$elm$parser$Parser$keeper,
+					A2(
+						$elm$parser$Parser$keeper,
+						A2(
+							$elm$parser$Parser$keeper,
+							A2(
+								$elm$parser$Parser$keeper,
+								A2(
+									$elm$parser$Parser$keeper,
+									A2(
+										$elm$parser$Parser$ignorer,
+										$elm$parser$Parser$succeed(
+											$rtfeldman$elm_iso8601_date_strings$Iso8601$fromParts(datePart)),
+										$elm$parser$Parser$symbol('T')),
+									$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
+								$elm$parser$Parser$oneOf(
+									_List_fromArray(
+										[
+											A2(
+											$elm$parser$Parser$keeper,
+											A2(
+												$elm$parser$Parser$ignorer,
+												$elm$parser$Parser$succeed($elm$core$Basics$identity),
+												$elm$parser$Parser$symbol(':')),
+											$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
+											$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)
+										]))),
+							$elm$parser$Parser$oneOf(
+								_List_fromArray(
+									[
+										A2(
+										$elm$parser$Parser$keeper,
+										A2(
+											$elm$parser$Parser$ignorer,
+											$elm$parser$Parser$succeed($elm$core$Basics$identity),
+											$elm$parser$Parser$symbol(':')),
+										$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
+										$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2),
+										$elm$parser$Parser$succeed(0)
+									]))),
+						$elm$parser$Parser$oneOf(
+							_List_fromArray(
+								[
+									A2(
+									$elm$parser$Parser$keeper,
+									A2(
+										$elm$parser$Parser$ignorer,
+										$elm$parser$Parser$succeed($elm$core$Basics$identity),
+										$elm$parser$Parser$symbol('.')),
+									$rtfeldman$elm_iso8601_date_strings$Iso8601$fractionsOfASecondInMs),
+									$elm$parser$Parser$succeed(0)
+								]))),
+					A2($elm$parser$Parser$ignorer, $rtfeldman$elm_iso8601_date_strings$Iso8601$utcOffsetInMinutes, $elm$parser$Parser$end)),
+					A2(
+					$elm$parser$Parser$ignorer,
+					$elm$parser$Parser$succeed(
+						A6($rtfeldman$elm_iso8601_date_strings$Iso8601$fromParts, datePart, 0, 0, 0, 0, 0)),
+					$elm$parser$Parser$end)
+				]));
+	},
+	$rtfeldman$elm_iso8601_date_strings$Iso8601$monthYearDayInMs);
+var $elm$parser$Parser$DeadEnd = F3(
+	function (row, col, problem) {
+		return {col: col, problem: problem, row: row};
+	});
+var $elm$parser$Parser$problemToDeadEnd = function (p) {
+	return A3($elm$parser$Parser$DeadEnd, p.row, p.col, p.problem);
+};
+var $elm$parser$Parser$Advanced$bagToList = F2(
+	function (bag, list) {
+		bagToList:
+		while (true) {
+			switch (bag.$) {
+				case 'Empty':
+					return list;
+				case 'AddRight':
+					var bag1 = bag.a;
+					var x = bag.b;
+					var $temp$bag = bag1,
+						$temp$list = A2($elm$core$List$cons, x, list);
+					bag = $temp$bag;
+					list = $temp$list;
+					continue bagToList;
+				default:
+					var bag1 = bag.a;
+					var bag2 = bag.b;
+					var $temp$bag = bag1,
+						$temp$list = A2($elm$parser$Parser$Advanced$bagToList, bag2, list);
+					bag = $temp$bag;
+					list = $temp$list;
+					continue bagToList;
+			}
+		}
+	});
+var $elm$parser$Parser$Advanced$run = F2(
+	function (_v0, src) {
+		var parse = _v0.a;
+		var _v1 = parse(
+			{col: 1, context: _List_Nil, indent: 1, offset: 0, row: 1, src: src});
+		if (_v1.$ === 'Good') {
+			var value = _v1.b;
+			return $elm$core$Result$Ok(value);
+		} else {
+			var bag = _v1.b;
+			return $elm$core$Result$Err(
+				A2($elm$parser$Parser$Advanced$bagToList, bag, _List_Nil));
+		}
+	});
+var $elm$parser$Parser$run = F2(
+	function (parser, source) {
+		var _v0 = A2($elm$parser$Parser$Advanced$run, parser, source);
+		if (_v0.$ === 'Ok') {
+			var a = _v0.a;
+			return $elm$core$Result$Ok(a);
+		} else {
+			var problems = _v0.a;
+			return $elm$core$Result$Err(
+				A2($elm$core$List$map, $elm$parser$Parser$problemToDeadEnd, problems));
+		}
+	});
+var $rtfeldman$elm_iso8601_date_strings$Iso8601$toTime = function (str) {
+	return A2($elm$parser$Parser$run, $rtfeldman$elm_iso8601_date_strings$Iso8601$iso8601, str);
+};
+var $author$project$Api$Time$decodeDateIsoString = function (str) {
+	var _v0 = $rtfeldman$elm_iso8601_date_strings$Iso8601$toTime(str + 'T00:00:00.000Z');
+	if (_v0.$ === 'Ok') {
+		var posix = _v0.a;
+		return $elm$json$Json$Decode$succeed(posix);
+	} else {
+		return $elm$json$Json$Decode$fail('Invalid calendar date: ' + str);
+	}
+};
+var $author$project$Api$Time$dateDecoder = A2($elm$json$Json$Decode$andThen, $author$project$Api$Time$decodeDateIsoString, $elm$json$Json$Decode$string);
+var $author$project$Api$Time$decodeDateTimeIsoString = function (str) {
+	var _v0 = $rtfeldman$elm_iso8601_date_strings$Iso8601$toTime(str);
+	if (_v0.$ === 'Ok') {
+		var posix = _v0.a;
+		return $elm$json$Json$Decode$succeed(posix);
+	} else {
+		return $elm$json$Json$Decode$fail('Invalid ISO date: ' + str);
+	}
+};
+var $author$project$Api$Time$dateTimeDecoder = A2($elm$json$Json$Decode$andThen, $author$project$Api$Time$decodeDateTimeIsoString, $elm$json$Json$Decode$string);
 var $author$project$Api$Data$decodeChain = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $author$project$Api$Data$decode = F2(
 	function (key, decoder) {
 		return $author$project$Api$Data$decodeChain(
 			A2($elm$json$Json$Decode$field, key, decoder));
-	});
-var $elm$json$Json$Decode$decodeValue = _Json_run;
-var $elm$json$Json$Decode$fail = _Json_fail;
-var $elm$json$Json$Decode$null = _Json_decodeNull;
-var $elm$json$Json$Decode$oneOf = _Json_oneOf;
-var $elm$json$Json$Decode$value = _Json_decodeValue;
-var $author$project$Api$Data$maybeField = F3(
-	function (key, decoder, fallback) {
-		var valueDecoder = $elm$json$Json$Decode$oneOf(
-			_List_fromArray(
-				[
-					A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder),
-					$elm$json$Json$Decode$null(fallback)
-				]));
-		var fieldDecoder = A2($elm$json$Json$Decode$field, key, $elm$json$Json$Decode$value);
-		var decodeObject = function (rawObject) {
-			var _v0 = A2($elm$json$Json$Decode$decodeValue, fieldDecoder, rawObject);
-			if (_v0.$ === 'Ok') {
-				var rawValue = _v0.a;
-				var _v1 = A2($elm$json$Json$Decode$decodeValue, valueDecoder, rawValue);
-				if (_v1.$ === 'Ok') {
-					var value = _v1.a;
-					return $elm$json$Json$Decode$succeed(value);
-				} else {
-					var error = _v1.a;
-					return $elm$json$Json$Decode$fail(
-						$elm$json$Json$Decode$errorToString(error));
-				}
-			} else {
-				return $elm$json$Json$Decode$succeed(fallback);
-			}
-		};
-		return A2($elm$json$Json$Decode$andThen, decodeObject, $elm$json$Json$Decode$value);
-	});
-var $author$project$Api$Data$decodeNullable = F2(
-	function (key, decoder) {
-		return $author$project$Api$Data$decodeChain(
-			A3($author$project$Api$Data$maybeField, key, decoder, $elm$core$Maybe$Nothing));
 	});
 var $danyx23$elm_uuid$Uuid$Uuid = function (a) {
 	return {$: 'Uuid', a: a};
@@ -5885,14 +6755,287 @@ var $danyx23$elm_uuid$Uuid$decoder = A2(
 		}
 	},
 	$elm$json$Json$Decode$string);
-var $author$project$Api$Data$EducationSpecialization = F3(
-	function (id, name, department) {
-		return {department: department, id: id, name: name};
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$json$Json$Decode$null = _Json_decodeNull;
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $author$project$Api$Data$maybeField = F3(
+	function (key, decoder, fallback) {
+		var valueDecoder = $elm$json$Json$Decode$oneOf(
+			_List_fromArray(
+				[
+					A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder),
+					$elm$json$Json$Decode$null(fallback)
+				]));
+		var fieldDecoder = A2($elm$json$Json$Decode$field, key, $elm$json$Json$Decode$value);
+		var decodeObject = function (rawObject) {
+			var _v0 = A2($elm$json$Json$Decode$decodeValue, fieldDecoder, rawObject);
+			if (_v0.$ === 'Ok') {
+				var rawValue = _v0.a;
+				var _v1 = A2($elm$json$Json$Decode$decodeValue, valueDecoder, rawValue);
+				if (_v1.$ === 'Ok') {
+					var value = _v1.a;
+					return $elm$json$Json$Decode$succeed(value);
+				} else {
+					var error = _v1.a;
+					return $elm$json$Json$Decode$fail(
+						$elm$json$Json$Decode$errorToString(error));
+				}
+			} else {
+				return $elm$json$Json$Decode$succeed(fallback);
+			}
+		};
+		return A2($elm$json$Json$Decode$andThen, decodeObject, $elm$json$Json$Decode$value);
 	});
 var $author$project$Api$Data$maybeDecode = F3(
 	function (key, decoder, fallback) {
 		return $author$project$Api$Data$decodeChain(
 			A3($author$project$Api$Data$maybeField, key, decoder, fallback));
+	});
+var $author$project$Api$Data$maybeDecodeNullable = F3(
+	function (key, decoder, fallback) {
+		return $author$project$Api$Data$decodeChain(
+			A3($author$project$Api$Data$maybeField, key, decoder, fallback));
+	});
+var $author$project$Api$Data$activityDecoder = A4(
+	$author$project$Api$Data$maybeDecode,
+	'files',
+	$elm$json$Json$Decode$list($danyx23$elm_uuid$Uuid$decoder),
+	$elm$core$Maybe$Nothing,
+	A3(
+		$author$project$Api$Data$decode,
+		'course',
+		$danyx23$elm_uuid$Uuid$decoder,
+		A4(
+			$author$project$Api$Data$maybeDecode,
+			'embed',
+			$elm$json$Json$Decode$bool,
+			$elm$core$Maybe$Nothing,
+			A4(
+				$author$project$Api$Data$maybeDecodeNullable,
+				'link',
+				$elm$json$Json$Decode$string,
+				$elm$core$Maybe$Nothing,
+				A4(
+					$author$project$Api$Data$maybeDecodeNullable,
+					'due_date',
+					$author$project$Api$Time$dateTimeDecoder,
+					$elm$core$Maybe$Nothing,
+					A4(
+						$author$project$Api$Data$maybeDecode,
+						'body',
+						$elm$json$Json$Decode$string,
+						$elm$core$Maybe$Nothing,
+						A4(
+							$author$project$Api$Data$maybeDecodeNullable,
+							'group',
+							$elm$json$Json$Decode$string,
+							$elm$core$Maybe$Nothing,
+							A4(
+								$author$project$Api$Data$maybeDecodeNullable,
+								'date',
+								$author$project$Api$Time$dateDecoder,
+								$elm$core$Maybe$Nothing,
+								A3(
+									$author$project$Api$Data$decode,
+									'order',
+									$elm$json$Json$Decode$int,
+									A4(
+										$author$project$Api$Data$maybeDecode,
+										'marks_limit',
+										$elm$json$Json$Decode$int,
+										$elm$core$Maybe$Nothing,
+										A4(
+											$author$project$Api$Data$maybeDecode,
+											'is_hidden',
+											$elm$json$Json$Decode$bool,
+											$elm$core$Maybe$Nothing,
+											A4(
+												$author$project$Api$Data$maybeDecode,
+												'keywords',
+												$elm$json$Json$Decode$string,
+												$elm$core$Maybe$Nothing,
+												A3(
+													$author$project$Api$Data$decode,
+													'title',
+													$elm$json$Json$Decode$string,
+													A4(
+														$author$project$Api$Data$maybeDecode,
+														'type',
+														$author$project$Api$Data$activityTypeDecoder,
+														$elm$core$Maybe$Nothing,
+														A4(
+															$author$project$Api$Data$maybeDecode,
+															'id',
+															$danyx23$elm_uuid$Uuid$decoder,
+															$elm$core$Maybe$Nothing,
+															$elm$json$Json$Decode$succeed($author$project$Api$Data$Activity))))))))))))))));
+var $author$project$Api$Data$CourseEnrollmentRead = F5(
+	function (id, person, role, finishedOn, course) {
+		return {course: course, finishedOn: finishedOn, id: id, person: person, role: role};
+	});
+var $author$project$Api$Data$CourseEnrollmentReadRoleS = {$: 'CourseEnrollmentReadRoleS'};
+var $author$project$Api$Data$CourseEnrollmentReadRoleT = {$: 'CourseEnrollmentReadRoleT'};
+var $author$project$Api$Data$courseEnrollmentReadRoleDecoder = A2(
+	$elm$json$Json$Decode$andThen,
+	function (value) {
+		switch (value) {
+			case 't':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentReadRoleT);
+			case 's':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentReadRoleS);
+			default:
+				var other = value;
+				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
+		}
+	},
+	$elm$json$Json$Decode$string);
+var $author$project$Api$Data$User = function (id) {
+	return function (lastLogin) {
+		return function (isSuperuser) {
+			return function (username) {
+				return function (firstName) {
+					return function (lastName) {
+						return function (email) {
+							return function (isStaff) {
+								return function (isActive) {
+									return function (dateJoined) {
+										return function (middleName) {
+											return function (birthDate) {
+												return function (avatar) {
+													return function (groups) {
+														return function (userPermissions) {
+															return function (children) {
+																return {avatar: avatar, birthDate: birthDate, children: children, dateJoined: dateJoined, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, userPermissions: userPermissions, username: username};
+															};
+														};
+													};
+												};
+											};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var $author$project$Api$Data$userDecoder = A4(
+	$author$project$Api$Data$maybeDecode,
+	'children',
+	$elm$json$Json$Decode$list($danyx23$elm_uuid$Uuid$decoder),
+	$elm$core$Maybe$Nothing,
+	A4(
+		$author$project$Api$Data$maybeDecode,
+		'user_permissions',
+		$elm$json$Json$Decode$list($elm$json$Json$Decode$int),
+		$elm$core$Maybe$Nothing,
+		A4(
+			$author$project$Api$Data$maybeDecode,
+			'groups',
+			$elm$json$Json$Decode$list($elm$json$Json$Decode$int),
+			$elm$core$Maybe$Nothing,
+			A4(
+				$author$project$Api$Data$maybeDecodeNullable,
+				'avatar',
+				$elm$json$Json$Decode$string,
+				$elm$core$Maybe$Nothing,
+				A4(
+					$author$project$Api$Data$maybeDecodeNullable,
+					'birth_date',
+					$author$project$Api$Time$dateDecoder,
+					$elm$core$Maybe$Nothing,
+					A4(
+						$author$project$Api$Data$maybeDecodeNullable,
+						'middle_name',
+						$elm$json$Json$Decode$string,
+						$elm$core$Maybe$Nothing,
+						A4(
+							$author$project$Api$Data$maybeDecode,
+							'date_joined',
+							$author$project$Api$Time$dateTimeDecoder,
+							$elm$core$Maybe$Nothing,
+							A4(
+								$author$project$Api$Data$maybeDecode,
+								'is_active',
+								$elm$json$Json$Decode$bool,
+								$elm$core$Maybe$Nothing,
+								A4(
+									$author$project$Api$Data$maybeDecode,
+									'is_staff',
+									$elm$json$Json$Decode$bool,
+									$elm$core$Maybe$Nothing,
+									A4(
+										$author$project$Api$Data$maybeDecode,
+										'email',
+										$elm$json$Json$Decode$string,
+										$elm$core$Maybe$Nothing,
+										A4(
+											$author$project$Api$Data$maybeDecode,
+											'last_name',
+											$elm$json$Json$Decode$string,
+											$elm$core$Maybe$Nothing,
+											A4(
+												$author$project$Api$Data$maybeDecode,
+												'first_name',
+												$elm$json$Json$Decode$string,
+												$elm$core$Maybe$Nothing,
+												A3(
+													$author$project$Api$Data$decode,
+													'username',
+													$elm$json$Json$Decode$string,
+													A4(
+														$author$project$Api$Data$maybeDecode,
+														'is_superuser',
+														$elm$json$Json$Decode$bool,
+														$elm$core$Maybe$Nothing,
+														A4(
+															$author$project$Api$Data$maybeDecodeNullable,
+															'last_login',
+															$author$project$Api$Time$dateTimeDecoder,
+															$elm$core$Maybe$Nothing,
+															A4(
+																$author$project$Api$Data$maybeDecode,
+																'id',
+																$danyx23$elm_uuid$Uuid$decoder,
+																$elm$core$Maybe$Nothing,
+																$elm$json$Json$Decode$succeed($author$project$Api$Data$User)))))))))))))))));
+var $author$project$Api$Data$courseEnrollmentReadDecoder = A3(
+	$author$project$Api$Data$decode,
+	'course',
+	$danyx23$elm_uuid$Uuid$decoder,
+	A4(
+		$author$project$Api$Data$maybeDecodeNullable,
+		'finished_on',
+		$author$project$Api$Time$dateTimeDecoder,
+		$elm$core$Maybe$Nothing,
+		A3(
+			$author$project$Api$Data$decode,
+			'role',
+			$author$project$Api$Data$courseEnrollmentReadRoleDecoder,
+			A3(
+				$author$project$Api$Data$decode,
+				'person',
+				$author$project$Api$Data$userDecoder,
+				A4(
+					$author$project$Api$Data$maybeDecode,
+					'id',
+					$danyx23$elm_uuid$Uuid$decoder,
+					$elm$core$Maybe$Nothing,
+					$elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentRead))))));
+var $author$project$Api$Data$decodeNullable = F2(
+	function (key, decoder) {
+		return $author$project$Api$Data$decodeChain(
+			A3($author$project$Api$Data$maybeField, key, decoder, $elm$core$Maybe$Nothing));
+	});
+var $author$project$Api$Data$EducationSpecialization = F3(
+	function (id, name, department) {
+		return {department: department, id: id, name: name};
 	});
 var $author$project$Api$Data$educationSpecializationDecoder = A3(
 	$author$project$Api$Data$decode,
@@ -5912,7 +7055,6 @@ var $author$project$Api$Data$File = F5(
 	function (id, name, hash, size, mimeType) {
 		return {hash: hash, id: id, mimeType: mimeType, name: name, size: size};
 	});
-var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $author$project$Api$Data$fileDecoder = A3(
 	$author$project$Api$Data$decode,
 	'mime_type',
@@ -5935,11 +7077,6 @@ var $author$project$Api$Data$fileDecoder = A3(
 					$danyx23$elm_uuid$Uuid$decoder,
 					$elm$core$Maybe$Nothing,
 					$elm$json$Json$Decode$succeed($author$project$Api$Data$File))))));
-var $author$project$Api$Data$maybeDecodeNullable = F3(
-	function (key, decoder, fallback) {
-		return $author$project$Api$Data$decodeChain(
-			A3($author$project$Api$Data$maybeField, key, decoder, fallback));
-	});
 var $author$project$Api$Data$courseReadDecoder = A4(
 	$author$project$Api$Data$maybeDecodeNullable,
 	'for_group',
@@ -5959,24 +7096,31 @@ var $author$project$Api$Data$courseReadDecoder = A4(
 				'title',
 				$elm$json$Json$Decode$string,
 				A3(
-					$author$project$Api$Data$decodeNullable,
-					'cover',
-					$author$project$Api$Data$fileDecoder,
+					$author$project$Api$Data$decode,
+					'enrollments',
+					$elm$json$Json$Decode$list($author$project$Api$Data$courseEnrollmentReadDecoder),
 					A3(
-						$author$project$Api$Data$decodeNullable,
-						'logo',
-						$author$project$Api$Data$fileDecoder,
+						$author$project$Api$Data$decode,
+						'activities',
+						$elm$json$Json$Decode$list($author$project$Api$Data$activityDecoder),
 						A3(
 							$author$project$Api$Data$decodeNullable,
-							'for_specialization',
-							$author$project$Api$Data$educationSpecializationDecoder,
-							A4(
-								$author$project$Api$Data$maybeDecode,
-								'id',
-								$danyx23$elm_uuid$Uuid$decoder,
-								$elm$core$Maybe$Nothing,
-								$elm$json$Json$Decode$succeed($author$project$Api$Data$CourseRead)))))))));
-var $elm$json$Json$Decode$list = _Json_decodeList;
+							'cover',
+							$author$project$Api$Data$fileDecoder,
+							A3(
+								$author$project$Api$Data$decodeNullable,
+								'logo',
+								$author$project$Api$Data$fileDecoder,
+								A3(
+									$author$project$Api$Data$decodeNullable,
+									'for_specialization',
+									$author$project$Api$Data$educationSpecializationDecoder,
+									A4(
+										$author$project$Api$Data$maybeDecode,
+										'id',
+										$danyx23$elm_uuid$Uuid$decoder,
+										$elm$core$Maybe$Nothing,
+										$elm$json$Json$Decode$succeed($author$project$Api$Data$CourseRead)))))))))));
 var $author$project$Api$Request = function (a) {
 	return {$: 'Request', a: a};
 };
@@ -6971,965 +8115,6 @@ var $author$project$Component$MultiTask$init = function (tasks) {
 				tasks)));
 };
 var $elm$core$Platform$Cmd$map = _Platform_map;
-var $author$project$Page$CoursePage$ResActivities = function (a) {
-	return {$: 'ResActivities', a: a};
-};
-var $author$project$Api$Data$Activity = function (id) {
-	return function (type_) {
-		return function (title) {
-			return function (keywords) {
-				return function (isHidden) {
-					return function (marksLimit) {
-						return function (order) {
-							return function (date) {
-								return function (group) {
-									return function (body) {
-										return function (dueDate) {
-											return function (link) {
-												return function (embed) {
-													return function (course) {
-														return function (files) {
-															return {body: body, course: course, date: date, dueDate: dueDate, embed: embed, files: files, group: group, id: id, isHidden: isHidden, keywords: keywords, link: link, marksLimit: marksLimit, order: order, title: title, type_: type_};
-														};
-													};
-												};
-											};
-										};
-									};
-								};
-							};
-						};
-					};
-				};
-			};
-		};
-	};
-};
-var $author$project$Api$Data$ActivityTypeART = {$: 'ActivityTypeART'};
-var $author$project$Api$Data$ActivityTypeGEN = {$: 'ActivityTypeGEN'};
-var $author$project$Api$Data$ActivityTypeLNK = {$: 'ActivityTypeLNK'};
-var $author$project$Api$Data$ActivityTypeMED = {$: 'ActivityTypeMED'};
-var $author$project$Api$Data$ActivityTypeTSK = {$: 'ActivityTypeTSK'};
-var $author$project$Api$Data$activityTypeDecoder = A2(
-	$elm$json$Json$Decode$andThen,
-	function (value) {
-		switch (value) {
-			case 'GEN':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeGEN);
-			case 'ART':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeART);
-			case 'TSK':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeTSK);
-			case 'LNK':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeLNK);
-			case 'MED':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeMED);
-			default:
-				var other = value;
-				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
-		}
-	},
-	$elm$json$Json$Decode$string);
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
-var $elm$parser$Parser$Advanced$Bad = F2(
-	function (a, b) {
-		return {$: 'Bad', a: a, b: b};
-	});
-var $elm$parser$Parser$Advanced$Good = F3(
-	function (a, b, c) {
-		return {$: 'Good', a: a, b: b, c: c};
-	});
-var $elm$parser$Parser$Advanced$Parser = function (a) {
-	return {$: 'Parser', a: a};
-};
-var $elm$parser$Parser$Advanced$andThen = F2(
-	function (callback, _v0) {
-		var parseA = _v0.a;
-		return $elm$parser$Parser$Advanced$Parser(
-			function (s0) {
-				var _v1 = parseA(s0);
-				if (_v1.$ === 'Bad') {
-					var p = _v1.a;
-					var x = _v1.b;
-					return A2($elm$parser$Parser$Advanced$Bad, p, x);
-				} else {
-					var p1 = _v1.a;
-					var a = _v1.b;
-					var s1 = _v1.c;
-					var _v2 = callback(a);
-					var parseB = _v2.a;
-					var _v3 = parseB(s1);
-					if (_v3.$ === 'Bad') {
-						var p2 = _v3.a;
-						var x = _v3.b;
-						return A2($elm$parser$Parser$Advanced$Bad, p1 || p2, x);
-					} else {
-						var p2 = _v3.a;
-						var b = _v3.b;
-						var s2 = _v3.c;
-						return A3($elm$parser$Parser$Advanced$Good, p1 || p2, b, s2);
-					}
-				}
-			});
-	});
-var $elm$parser$Parser$andThen = $elm$parser$Parser$Advanced$andThen;
-var $elm$parser$Parser$ExpectingEnd = {$: 'ExpectingEnd'};
-var $elm$parser$Parser$Advanced$AddRight = F2(
-	function (a, b) {
-		return {$: 'AddRight', a: a, b: b};
-	});
-var $elm$parser$Parser$Advanced$DeadEnd = F4(
-	function (row, col, problem, contextStack) {
-		return {col: col, contextStack: contextStack, problem: problem, row: row};
-	});
-var $elm$parser$Parser$Advanced$Empty = {$: 'Empty'};
-var $elm$parser$Parser$Advanced$fromState = F2(
-	function (s, x) {
-		return A2(
-			$elm$parser$Parser$Advanced$AddRight,
-			$elm$parser$Parser$Advanced$Empty,
-			A4($elm$parser$Parser$Advanced$DeadEnd, s.row, s.col, x, s.context));
-	});
-var $elm$parser$Parser$Advanced$end = function (x) {
-	return $elm$parser$Parser$Advanced$Parser(
-		function (s) {
-			return _Utils_eq(
-				$elm$core$String$length(s.src),
-				s.offset) ? A3($elm$parser$Parser$Advanced$Good, false, _Utils_Tuple0, s) : A2(
-				$elm$parser$Parser$Advanced$Bad,
-				false,
-				A2($elm$parser$Parser$Advanced$fromState, s, x));
-		});
-};
-var $elm$parser$Parser$end = $elm$parser$Parser$Advanced$end($elm$parser$Parser$ExpectingEnd);
-var $elm$parser$Parser$Advanced$isSubChar = _Parser_isSubChar;
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
-var $elm$parser$Parser$Advanced$chompWhileHelp = F5(
-	function (isGood, offset, row, col, s0) {
-		chompWhileHelp:
-		while (true) {
-			var newOffset = A3($elm$parser$Parser$Advanced$isSubChar, isGood, offset, s0.src);
-			if (_Utils_eq(newOffset, -1)) {
-				return A3(
-					$elm$parser$Parser$Advanced$Good,
-					_Utils_cmp(s0.offset, offset) < 0,
-					_Utils_Tuple0,
-					{col: col, context: s0.context, indent: s0.indent, offset: offset, row: row, src: s0.src});
-			} else {
-				if (_Utils_eq(newOffset, -2)) {
-					var $temp$isGood = isGood,
-						$temp$offset = offset + 1,
-						$temp$row = row + 1,
-						$temp$col = 1,
-						$temp$s0 = s0;
-					isGood = $temp$isGood;
-					offset = $temp$offset;
-					row = $temp$row;
-					col = $temp$col;
-					s0 = $temp$s0;
-					continue chompWhileHelp;
-				} else {
-					var $temp$isGood = isGood,
-						$temp$offset = newOffset,
-						$temp$row = row,
-						$temp$col = col + 1,
-						$temp$s0 = s0;
-					isGood = $temp$isGood;
-					offset = $temp$offset;
-					row = $temp$row;
-					col = $temp$col;
-					s0 = $temp$s0;
-					continue chompWhileHelp;
-				}
-			}
-		}
-	});
-var $elm$parser$Parser$Advanced$chompWhile = function (isGood) {
-	return $elm$parser$Parser$Advanced$Parser(
-		function (s) {
-			return A5($elm$parser$Parser$Advanced$chompWhileHelp, isGood, s.offset, s.row, s.col, s);
-		});
-};
-var $elm$parser$Parser$chompWhile = $elm$parser$Parser$Advanced$chompWhile;
-var $elm$core$Basics$always = F2(
-	function (a, _v0) {
-		return a;
-	});
-var $elm$parser$Parser$Advanced$mapChompedString = F2(
-	function (func, _v0) {
-		var parse = _v0.a;
-		return $elm$parser$Parser$Advanced$Parser(
-			function (s0) {
-				var _v1 = parse(s0);
-				if (_v1.$ === 'Bad') {
-					var p = _v1.a;
-					var x = _v1.b;
-					return A2($elm$parser$Parser$Advanced$Bad, p, x);
-				} else {
-					var p = _v1.a;
-					var a = _v1.b;
-					var s1 = _v1.c;
-					return A3(
-						$elm$parser$Parser$Advanced$Good,
-						p,
-						A2(
-							func,
-							A3($elm$core$String$slice, s0.offset, s1.offset, s0.src),
-							a),
-						s1);
-				}
-			});
-	});
-var $elm$parser$Parser$Advanced$getChompedString = function (parser) {
-	return A2($elm$parser$Parser$Advanced$mapChompedString, $elm$core$Basics$always, parser);
-};
-var $elm$parser$Parser$getChompedString = $elm$parser$Parser$Advanced$getChompedString;
-var $elm$parser$Parser$Problem = function (a) {
-	return {$: 'Problem', a: a};
-};
-var $elm$parser$Parser$Advanced$problem = function (x) {
-	return $elm$parser$Parser$Advanced$Parser(
-		function (s) {
-			return A2(
-				$elm$parser$Parser$Advanced$Bad,
-				false,
-				A2($elm$parser$Parser$Advanced$fromState, s, x));
-		});
-};
-var $elm$parser$Parser$problem = function (msg) {
-	return $elm$parser$Parser$Advanced$problem(
-		$elm$parser$Parser$Problem(msg));
-};
-var $elm$core$Basics$round = _Basics_round;
-var $elm$parser$Parser$Advanced$succeed = function (a) {
-	return $elm$parser$Parser$Advanced$Parser(
-		function (s) {
-			return A3($elm$parser$Parser$Advanced$Good, false, a, s);
-		});
-};
-var $elm$parser$Parser$succeed = $elm$parser$Parser$Advanced$succeed;
-var $elm$core$String$toFloat = _String_toFloat;
-var $rtfeldman$elm_iso8601_date_strings$Iso8601$fractionsOfASecondInMs = A2(
-	$elm$parser$Parser$andThen,
-	function (str) {
-		if ($elm$core$String$length(str) <= 9) {
-			var _v0 = $elm$core$String$toFloat('0.' + str);
-			if (_v0.$ === 'Just') {
-				var floatVal = _v0.a;
-				return $elm$parser$Parser$succeed(
-					$elm$core$Basics$round(floatVal * 1000));
-			} else {
-				return $elm$parser$Parser$problem('Invalid float: \"' + (str + '\"'));
-			}
-		} else {
-			return $elm$parser$Parser$problem(
-				'Expected at most 9 digits, but got ' + $elm$core$String$fromInt(
-					$elm$core$String$length(str)));
-		}
-	},
-	$elm$parser$Parser$getChompedString(
-		$elm$parser$Parser$chompWhile($elm$core$Char$isDigit)));
-var $elm$time$Time$Posix = function (a) {
-	return {$: 'Posix', a: a};
-};
-var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
-var $rtfeldman$elm_iso8601_date_strings$Iso8601$fromParts = F6(
-	function (monthYearDayMs, hour, minute, second, ms, utcOffsetMinutes) {
-		return $elm$time$Time$millisToPosix((((monthYearDayMs + (((hour * 60) * 60) * 1000)) + (((minute - utcOffsetMinutes) * 60) * 1000)) + (second * 1000)) + ms);
-	});
-var $elm$parser$Parser$Advanced$map2 = F3(
-	function (func, _v0, _v1) {
-		var parseA = _v0.a;
-		var parseB = _v1.a;
-		return $elm$parser$Parser$Advanced$Parser(
-			function (s0) {
-				var _v2 = parseA(s0);
-				if (_v2.$ === 'Bad') {
-					var p = _v2.a;
-					var x = _v2.b;
-					return A2($elm$parser$Parser$Advanced$Bad, p, x);
-				} else {
-					var p1 = _v2.a;
-					var a = _v2.b;
-					var s1 = _v2.c;
-					var _v3 = parseB(s1);
-					if (_v3.$ === 'Bad') {
-						var p2 = _v3.a;
-						var x = _v3.b;
-						return A2($elm$parser$Parser$Advanced$Bad, p1 || p2, x);
-					} else {
-						var p2 = _v3.a;
-						var b = _v3.b;
-						var s2 = _v3.c;
-						return A3(
-							$elm$parser$Parser$Advanced$Good,
-							p1 || p2,
-							A2(func, a, b),
-							s2);
-					}
-				}
-			});
-	});
-var $elm$parser$Parser$Advanced$ignorer = F2(
-	function (keepParser, ignoreParser) {
-		return A3($elm$parser$Parser$Advanced$map2, $elm$core$Basics$always, keepParser, ignoreParser);
-	});
-var $elm$parser$Parser$ignorer = $elm$parser$Parser$Advanced$ignorer;
-var $elm$parser$Parser$Advanced$keeper = F2(
-	function (parseFunc, parseArg) {
-		return A3($elm$parser$Parser$Advanced$map2, $elm$core$Basics$apL, parseFunc, parseArg);
-	});
-var $elm$parser$Parser$keeper = $elm$parser$Parser$Advanced$keeper;
-var $elm$parser$Parser$Advanced$Append = F2(
-	function (a, b) {
-		return {$: 'Append', a: a, b: b};
-	});
-var $elm$parser$Parser$Advanced$oneOfHelp = F3(
-	function (s0, bag, parsers) {
-		oneOfHelp:
-		while (true) {
-			if (!parsers.b) {
-				return A2($elm$parser$Parser$Advanced$Bad, false, bag);
-			} else {
-				var parse = parsers.a.a;
-				var remainingParsers = parsers.b;
-				var _v1 = parse(s0);
-				if (_v1.$ === 'Good') {
-					var step = _v1;
-					return step;
-				} else {
-					var step = _v1;
-					var p = step.a;
-					var x = step.b;
-					if (p) {
-						return step;
-					} else {
-						var $temp$s0 = s0,
-							$temp$bag = A2($elm$parser$Parser$Advanced$Append, bag, x),
-							$temp$parsers = remainingParsers;
-						s0 = $temp$s0;
-						bag = $temp$bag;
-						parsers = $temp$parsers;
-						continue oneOfHelp;
-					}
-				}
-			}
-		}
-	});
-var $elm$parser$Parser$Advanced$oneOf = function (parsers) {
-	return $elm$parser$Parser$Advanced$Parser(
-		function (s) {
-			return A3($elm$parser$Parser$Advanced$oneOfHelp, s, $elm$parser$Parser$Advanced$Empty, parsers);
-		});
-};
-var $elm$parser$Parser$oneOf = $elm$parser$Parser$Advanced$oneOf;
-var $elm$parser$Parser$Done = function (a) {
-	return {$: 'Done', a: a};
-};
-var $elm$parser$Parser$Loop = function (a) {
-	return {$: 'Loop', a: a};
-};
-var $elm$core$String$append = _String_append;
-var $elm$parser$Parser$UnexpectedChar = {$: 'UnexpectedChar'};
-var $elm$parser$Parser$Advanced$chompIf = F2(
-	function (isGood, expecting) {
-		return $elm$parser$Parser$Advanced$Parser(
-			function (s) {
-				var newOffset = A3($elm$parser$Parser$Advanced$isSubChar, isGood, s.offset, s.src);
-				return _Utils_eq(newOffset, -1) ? A2(
-					$elm$parser$Parser$Advanced$Bad,
-					false,
-					A2($elm$parser$Parser$Advanced$fromState, s, expecting)) : (_Utils_eq(newOffset, -2) ? A3(
-					$elm$parser$Parser$Advanced$Good,
-					true,
-					_Utils_Tuple0,
-					{col: 1, context: s.context, indent: s.indent, offset: s.offset + 1, row: s.row + 1, src: s.src}) : A3(
-					$elm$parser$Parser$Advanced$Good,
-					true,
-					_Utils_Tuple0,
-					{col: s.col + 1, context: s.context, indent: s.indent, offset: newOffset, row: s.row, src: s.src}));
-			});
-	});
-var $elm$parser$Parser$chompIf = function (isGood) {
-	return A2($elm$parser$Parser$Advanced$chompIf, isGood, $elm$parser$Parser$UnexpectedChar);
-};
-var $elm$parser$Parser$Advanced$loopHelp = F4(
-	function (p, state, callback, s0) {
-		loopHelp:
-		while (true) {
-			var _v0 = callback(state);
-			var parse = _v0.a;
-			var _v1 = parse(s0);
-			if (_v1.$ === 'Good') {
-				var p1 = _v1.a;
-				var step = _v1.b;
-				var s1 = _v1.c;
-				if (step.$ === 'Loop') {
-					var newState = step.a;
-					var $temp$p = p || p1,
-						$temp$state = newState,
-						$temp$callback = callback,
-						$temp$s0 = s1;
-					p = $temp$p;
-					state = $temp$state;
-					callback = $temp$callback;
-					s0 = $temp$s0;
-					continue loopHelp;
-				} else {
-					var result = step.a;
-					return A3($elm$parser$Parser$Advanced$Good, p || p1, result, s1);
-				}
-			} else {
-				var p1 = _v1.a;
-				var x = _v1.b;
-				return A2($elm$parser$Parser$Advanced$Bad, p || p1, x);
-			}
-		}
-	});
-var $elm$parser$Parser$Advanced$loop = F2(
-	function (state, callback) {
-		return $elm$parser$Parser$Advanced$Parser(
-			function (s) {
-				return A4($elm$parser$Parser$Advanced$loopHelp, false, state, callback, s);
-			});
-	});
-var $elm$parser$Parser$Advanced$map = F2(
-	function (func, _v0) {
-		var parse = _v0.a;
-		return $elm$parser$Parser$Advanced$Parser(
-			function (s0) {
-				var _v1 = parse(s0);
-				if (_v1.$ === 'Good') {
-					var p = _v1.a;
-					var a = _v1.b;
-					var s1 = _v1.c;
-					return A3(
-						$elm$parser$Parser$Advanced$Good,
-						p,
-						func(a),
-						s1);
-				} else {
-					var p = _v1.a;
-					var x = _v1.b;
-					return A2($elm$parser$Parser$Advanced$Bad, p, x);
-				}
-			});
-	});
-var $elm$parser$Parser$map = $elm$parser$Parser$Advanced$map;
-var $elm$parser$Parser$Advanced$Done = function (a) {
-	return {$: 'Done', a: a};
-};
-var $elm$parser$Parser$Advanced$Loop = function (a) {
-	return {$: 'Loop', a: a};
-};
-var $elm$parser$Parser$toAdvancedStep = function (step) {
-	if (step.$ === 'Loop') {
-		var s = step.a;
-		return $elm$parser$Parser$Advanced$Loop(s);
-	} else {
-		var a = step.a;
-		return $elm$parser$Parser$Advanced$Done(a);
-	}
-};
-var $elm$parser$Parser$loop = F2(
-	function (state, callback) {
-		return A2(
-			$elm$parser$Parser$Advanced$loop,
-			state,
-			function (s) {
-				return A2(
-					$elm$parser$Parser$map,
-					$elm$parser$Parser$toAdvancedStep,
-					callback(s));
-			});
-	});
-var $rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt = function (quantity) {
-	var helper = function (str) {
-		if (_Utils_eq(
-			$elm$core$String$length(str),
-			quantity)) {
-			var _v0 = $elm$core$String$toInt(str);
-			if (_v0.$ === 'Just') {
-				var intVal = _v0.a;
-				return A2(
-					$elm$parser$Parser$map,
-					$elm$parser$Parser$Done,
-					$elm$parser$Parser$succeed(intVal));
-			} else {
-				return $elm$parser$Parser$problem('Invalid integer: \"' + (str + '\"'));
-			}
-		} else {
-			return A2(
-				$elm$parser$Parser$map,
-				function (nextChar) {
-					return $elm$parser$Parser$Loop(
-						A2($elm$core$String$append, str, nextChar));
-				},
-				$elm$parser$Parser$getChompedString(
-					$elm$parser$Parser$chompIf($elm$core$Char$isDigit)));
-		}
-	};
-	return A2($elm$parser$Parser$loop, '', helper);
-};
-var $elm$parser$Parser$ExpectingSymbol = function (a) {
-	return {$: 'ExpectingSymbol', a: a};
-};
-var $elm$parser$Parser$Advanced$Token = F2(
-	function (a, b) {
-		return {$: 'Token', a: a, b: b};
-	});
-var $elm$parser$Parser$Advanced$isSubString = _Parser_isSubString;
-var $elm$core$Basics$not = _Basics_not;
-var $elm$parser$Parser$Advanced$token = function (_v0) {
-	var str = _v0.a;
-	var expecting = _v0.b;
-	var progress = !$elm$core$String$isEmpty(str);
-	return $elm$parser$Parser$Advanced$Parser(
-		function (s) {
-			var _v1 = A5($elm$parser$Parser$Advanced$isSubString, str, s.offset, s.row, s.col, s.src);
-			var newOffset = _v1.a;
-			var newRow = _v1.b;
-			var newCol = _v1.c;
-			return _Utils_eq(newOffset, -1) ? A2(
-				$elm$parser$Parser$Advanced$Bad,
-				false,
-				A2($elm$parser$Parser$Advanced$fromState, s, expecting)) : A3(
-				$elm$parser$Parser$Advanced$Good,
-				progress,
-				_Utils_Tuple0,
-				{col: newCol, context: s.context, indent: s.indent, offset: newOffset, row: newRow, src: s.src});
-		});
-};
-var $elm$parser$Parser$Advanced$symbol = $elm$parser$Parser$Advanced$token;
-var $elm$parser$Parser$symbol = function (str) {
-	return $elm$parser$Parser$Advanced$symbol(
-		A2(
-			$elm$parser$Parser$Advanced$Token,
-			str,
-			$elm$parser$Parser$ExpectingSymbol(str)));
-};
-var $rtfeldman$elm_iso8601_date_strings$Iso8601$epochYear = 1970;
-var $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay = function (day) {
-	return $elm$parser$Parser$problem(
-		'Invalid day: ' + $elm$core$String$fromInt(day));
-};
-var $elm$core$Basics$modBy = _Basics_modBy;
-var $elm$core$Basics$neq = _Utils_notEqual;
-var $rtfeldman$elm_iso8601_date_strings$Iso8601$isLeapYear = function (year) {
-	return (!A2($elm$core$Basics$modBy, 4, year)) && ((!(!A2($elm$core$Basics$modBy, 100, year))) || (!A2($elm$core$Basics$modBy, 400, year)));
-};
-var $rtfeldman$elm_iso8601_date_strings$Iso8601$leapYearsBefore = function (y1) {
-	var y = y1 - 1;
-	return (((y / 4) | 0) - ((y / 100) | 0)) + ((y / 400) | 0);
-};
-var $rtfeldman$elm_iso8601_date_strings$Iso8601$msPerDay = 86400000;
-var $rtfeldman$elm_iso8601_date_strings$Iso8601$msPerYear = 31536000000;
-var $rtfeldman$elm_iso8601_date_strings$Iso8601$yearMonthDay = function (_v0) {
-	var year = _v0.a;
-	var month = _v0.b;
-	var dayInMonth = _v0.c;
-	if (dayInMonth < 0) {
-		return $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth);
-	} else {
-		var succeedWith = function (extraMs) {
-			var yearMs = $rtfeldman$elm_iso8601_date_strings$Iso8601$msPerYear * (year - $rtfeldman$elm_iso8601_date_strings$Iso8601$epochYear);
-			var days = ((month < 3) || (!$rtfeldman$elm_iso8601_date_strings$Iso8601$isLeapYear(year))) ? (dayInMonth - 1) : dayInMonth;
-			var dayMs = $rtfeldman$elm_iso8601_date_strings$Iso8601$msPerDay * (days + ($rtfeldman$elm_iso8601_date_strings$Iso8601$leapYearsBefore(year) - $rtfeldman$elm_iso8601_date_strings$Iso8601$leapYearsBefore($rtfeldman$elm_iso8601_date_strings$Iso8601$epochYear)));
-			return $elm$parser$Parser$succeed((extraMs + yearMs) + dayMs);
-		};
-		switch (month) {
-			case 1:
-				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(0);
-			case 2:
-				return ((dayInMonth > 29) || ((dayInMonth === 29) && (!$rtfeldman$elm_iso8601_date_strings$Iso8601$isLeapYear(year)))) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(2678400000);
-			case 3:
-				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(5097600000);
-			case 4:
-				return (dayInMonth > 30) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(7776000000);
-			case 5:
-				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(10368000000);
-			case 6:
-				return (dayInMonth > 30) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(13046400000);
-			case 7:
-				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(15638400000);
-			case 8:
-				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(18316800000);
-			case 9:
-				return (dayInMonth > 30) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(20995200000);
-			case 10:
-				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(23587200000);
-			case 11:
-				return (dayInMonth > 30) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(26265600000);
-			case 12:
-				return (dayInMonth > 31) ? $rtfeldman$elm_iso8601_date_strings$Iso8601$invalidDay(dayInMonth) : succeedWith(28857600000);
-			default:
-				return $elm$parser$Parser$problem(
-					'Invalid month: \"' + ($elm$core$String$fromInt(month) + '\"'));
-		}
-	}
-};
-var $rtfeldman$elm_iso8601_date_strings$Iso8601$monthYearDayInMs = A2(
-	$elm$parser$Parser$andThen,
-	$rtfeldman$elm_iso8601_date_strings$Iso8601$yearMonthDay,
-	A2(
-		$elm$parser$Parser$keeper,
-		A2(
-			$elm$parser$Parser$keeper,
-			A2(
-				$elm$parser$Parser$keeper,
-				$elm$parser$Parser$succeed(
-					F3(
-						function (year, month, day) {
-							return _Utils_Tuple3(year, month, day);
-						})),
-				$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(4)),
-			$elm$parser$Parser$oneOf(
-				_List_fromArray(
-					[
-						A2(
-						$elm$parser$Parser$keeper,
-						A2(
-							$elm$parser$Parser$ignorer,
-							$elm$parser$Parser$succeed($elm$core$Basics$identity),
-							$elm$parser$Parser$symbol('-')),
-						$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
-						$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)
-					]))),
-		$elm$parser$Parser$oneOf(
-			_List_fromArray(
-				[
-					A2(
-					$elm$parser$Parser$keeper,
-					A2(
-						$elm$parser$Parser$ignorer,
-						$elm$parser$Parser$succeed($elm$core$Basics$identity),
-						$elm$parser$Parser$symbol('-')),
-					$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
-					$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)
-				]))));
-var $rtfeldman$elm_iso8601_date_strings$Iso8601$utcOffsetInMinutes = function () {
-	var utcOffsetMinutesFromParts = F3(
-		function (multiplier, hours, minutes) {
-			return (multiplier * (hours * 60)) + minutes;
-		});
-	return A2(
-		$elm$parser$Parser$keeper,
-		$elm$parser$Parser$succeed($elm$core$Basics$identity),
-		$elm$parser$Parser$oneOf(
-			_List_fromArray(
-				[
-					A2(
-					$elm$parser$Parser$map,
-					function (_v0) {
-						return 0;
-					},
-					$elm$parser$Parser$symbol('Z')),
-					A2(
-					$elm$parser$Parser$keeper,
-					A2(
-						$elm$parser$Parser$keeper,
-						A2(
-							$elm$parser$Parser$keeper,
-							$elm$parser$Parser$succeed(utcOffsetMinutesFromParts),
-							$elm$parser$Parser$oneOf(
-								_List_fromArray(
-									[
-										A2(
-										$elm$parser$Parser$map,
-										function (_v1) {
-											return 1;
-										},
-										$elm$parser$Parser$symbol('+')),
-										A2(
-										$elm$parser$Parser$map,
-										function (_v2) {
-											return -1;
-										},
-										$elm$parser$Parser$symbol('-'))
-									]))),
-						$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
-					$elm$parser$Parser$oneOf(
-						_List_fromArray(
-							[
-								A2(
-								$elm$parser$Parser$keeper,
-								A2(
-									$elm$parser$Parser$ignorer,
-									$elm$parser$Parser$succeed($elm$core$Basics$identity),
-									$elm$parser$Parser$symbol(':')),
-								$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
-								$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2),
-								$elm$parser$Parser$succeed(0)
-							]))),
-					A2(
-					$elm$parser$Parser$ignorer,
-					$elm$parser$Parser$succeed(0),
-					$elm$parser$Parser$end)
-				])));
-}();
-var $rtfeldman$elm_iso8601_date_strings$Iso8601$iso8601 = A2(
-	$elm$parser$Parser$andThen,
-	function (datePart) {
-		return $elm$parser$Parser$oneOf(
-			_List_fromArray(
-				[
-					A2(
-					$elm$parser$Parser$keeper,
-					A2(
-						$elm$parser$Parser$keeper,
-						A2(
-							$elm$parser$Parser$keeper,
-							A2(
-								$elm$parser$Parser$keeper,
-								A2(
-									$elm$parser$Parser$keeper,
-									A2(
-										$elm$parser$Parser$ignorer,
-										$elm$parser$Parser$succeed(
-											$rtfeldman$elm_iso8601_date_strings$Iso8601$fromParts(datePart)),
-										$elm$parser$Parser$symbol('T')),
-									$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
-								$elm$parser$Parser$oneOf(
-									_List_fromArray(
-										[
-											A2(
-											$elm$parser$Parser$keeper,
-											A2(
-												$elm$parser$Parser$ignorer,
-												$elm$parser$Parser$succeed($elm$core$Basics$identity),
-												$elm$parser$Parser$symbol(':')),
-											$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
-											$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)
-										]))),
-							$elm$parser$Parser$oneOf(
-								_List_fromArray(
-									[
-										A2(
-										$elm$parser$Parser$keeper,
-										A2(
-											$elm$parser$Parser$ignorer,
-											$elm$parser$Parser$succeed($elm$core$Basics$identity),
-											$elm$parser$Parser$symbol(':')),
-										$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2)),
-										$rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt(2),
-										$elm$parser$Parser$succeed(0)
-									]))),
-						$elm$parser$Parser$oneOf(
-							_List_fromArray(
-								[
-									A2(
-									$elm$parser$Parser$keeper,
-									A2(
-										$elm$parser$Parser$ignorer,
-										$elm$parser$Parser$succeed($elm$core$Basics$identity),
-										$elm$parser$Parser$symbol('.')),
-									$rtfeldman$elm_iso8601_date_strings$Iso8601$fractionsOfASecondInMs),
-									$elm$parser$Parser$succeed(0)
-								]))),
-					A2($elm$parser$Parser$ignorer, $rtfeldman$elm_iso8601_date_strings$Iso8601$utcOffsetInMinutes, $elm$parser$Parser$end)),
-					A2(
-					$elm$parser$Parser$ignorer,
-					$elm$parser$Parser$succeed(
-						A6($rtfeldman$elm_iso8601_date_strings$Iso8601$fromParts, datePart, 0, 0, 0, 0, 0)),
-					$elm$parser$Parser$end)
-				]));
-	},
-	$rtfeldman$elm_iso8601_date_strings$Iso8601$monthYearDayInMs);
-var $elm$parser$Parser$DeadEnd = F3(
-	function (row, col, problem) {
-		return {col: col, problem: problem, row: row};
-	});
-var $elm$parser$Parser$problemToDeadEnd = function (p) {
-	return A3($elm$parser$Parser$DeadEnd, p.row, p.col, p.problem);
-};
-var $elm$parser$Parser$Advanced$bagToList = F2(
-	function (bag, list) {
-		bagToList:
-		while (true) {
-			switch (bag.$) {
-				case 'Empty':
-					return list;
-				case 'AddRight':
-					var bag1 = bag.a;
-					var x = bag.b;
-					var $temp$bag = bag1,
-						$temp$list = A2($elm$core$List$cons, x, list);
-					bag = $temp$bag;
-					list = $temp$list;
-					continue bagToList;
-				default:
-					var bag1 = bag.a;
-					var bag2 = bag.b;
-					var $temp$bag = bag1,
-						$temp$list = A2($elm$parser$Parser$Advanced$bagToList, bag2, list);
-					bag = $temp$bag;
-					list = $temp$list;
-					continue bagToList;
-			}
-		}
-	});
-var $elm$parser$Parser$Advanced$run = F2(
-	function (_v0, src) {
-		var parse = _v0.a;
-		var _v1 = parse(
-			{col: 1, context: _List_Nil, indent: 1, offset: 0, row: 1, src: src});
-		if (_v1.$ === 'Good') {
-			var value = _v1.b;
-			return $elm$core$Result$Ok(value);
-		} else {
-			var bag = _v1.b;
-			return $elm$core$Result$Err(
-				A2($elm$parser$Parser$Advanced$bagToList, bag, _List_Nil));
-		}
-	});
-var $elm$parser$Parser$run = F2(
-	function (parser, source) {
-		var _v0 = A2($elm$parser$Parser$Advanced$run, parser, source);
-		if (_v0.$ === 'Ok') {
-			var a = _v0.a;
-			return $elm$core$Result$Ok(a);
-		} else {
-			var problems = _v0.a;
-			return $elm$core$Result$Err(
-				A2($elm$core$List$map, $elm$parser$Parser$problemToDeadEnd, problems));
-		}
-	});
-var $rtfeldman$elm_iso8601_date_strings$Iso8601$toTime = function (str) {
-	return A2($elm$parser$Parser$run, $rtfeldman$elm_iso8601_date_strings$Iso8601$iso8601, str);
-};
-var $author$project$Api$Time$decodeDateIsoString = function (str) {
-	var _v0 = $rtfeldman$elm_iso8601_date_strings$Iso8601$toTime(str + 'T00:00:00.000Z');
-	if (_v0.$ === 'Ok') {
-		var posix = _v0.a;
-		return $elm$json$Json$Decode$succeed(posix);
-	} else {
-		return $elm$json$Json$Decode$fail('Invalid calendar date: ' + str);
-	}
-};
-var $author$project$Api$Time$dateDecoder = A2($elm$json$Json$Decode$andThen, $author$project$Api$Time$decodeDateIsoString, $elm$json$Json$Decode$string);
-var $author$project$Api$Time$decodeDateTimeIsoString = function (str) {
-	var _v0 = $rtfeldman$elm_iso8601_date_strings$Iso8601$toTime(str);
-	if (_v0.$ === 'Ok') {
-		var posix = _v0.a;
-		return $elm$json$Json$Decode$succeed(posix);
-	} else {
-		return $elm$json$Json$Decode$fail('Invalid ISO date: ' + str);
-	}
-};
-var $author$project$Api$Time$dateTimeDecoder = A2($elm$json$Json$Decode$andThen, $author$project$Api$Time$decodeDateTimeIsoString, $elm$json$Json$Decode$string);
-var $author$project$Api$Data$activityDecoder = A4(
-	$author$project$Api$Data$maybeDecode,
-	'files',
-	$elm$json$Json$Decode$list($danyx23$elm_uuid$Uuid$decoder),
-	$elm$core$Maybe$Nothing,
-	A3(
-		$author$project$Api$Data$decode,
-		'course',
-		$danyx23$elm_uuid$Uuid$decoder,
-		A4(
-			$author$project$Api$Data$maybeDecode,
-			'embed',
-			$elm$json$Json$Decode$bool,
-			$elm$core$Maybe$Nothing,
-			A4(
-				$author$project$Api$Data$maybeDecodeNullable,
-				'link',
-				$elm$json$Json$Decode$string,
-				$elm$core$Maybe$Nothing,
-				A4(
-					$author$project$Api$Data$maybeDecodeNullable,
-					'due_date',
-					$author$project$Api$Time$dateTimeDecoder,
-					$elm$core$Maybe$Nothing,
-					A4(
-						$author$project$Api$Data$maybeDecode,
-						'body',
-						$elm$json$Json$Decode$string,
-						$elm$core$Maybe$Nothing,
-						A4(
-							$author$project$Api$Data$maybeDecodeNullable,
-							'group',
-							$elm$json$Json$Decode$string,
-							$elm$core$Maybe$Nothing,
-							A4(
-								$author$project$Api$Data$maybeDecodeNullable,
-								'date',
-								$author$project$Api$Time$dateDecoder,
-								$elm$core$Maybe$Nothing,
-								A3(
-									$author$project$Api$Data$decode,
-									'order',
-									$elm$json$Json$Decode$int,
-									A4(
-										$author$project$Api$Data$maybeDecode,
-										'marks_limit',
-										$elm$json$Json$Decode$int,
-										$elm$core$Maybe$Nothing,
-										A4(
-											$author$project$Api$Data$maybeDecode,
-											'is_hidden',
-											$elm$json$Json$Decode$bool,
-											$elm$core$Maybe$Nothing,
-											A4(
-												$author$project$Api$Data$maybeDecode,
-												'keywords',
-												$elm$json$Json$Decode$string,
-												$elm$core$Maybe$Nothing,
-												A3(
-													$author$project$Api$Data$decode,
-													'title',
-													$elm$json$Json$Decode$string,
-													A4(
-														$author$project$Api$Data$maybeDecode,
-														'type',
-														$author$project$Api$Data$activityTypeDecoder,
-														$elm$core$Maybe$Nothing,
-														A4(
-															$author$project$Api$Data$maybeDecode,
-															'id',
-															$danyx23$elm_uuid$Uuid$decoder,
-															$elm$core$Maybe$Nothing,
-															$elm$json$Json$Decode$succeed($author$project$Api$Data$Activity))))))))))))))));
-var $author$project$Api$Request$Activity$activityList = A7(
-	$author$project$Api$request,
-	'GET',
-	'/activity/',
-	_List_Nil,
-	_List_Nil,
-	_List_Nil,
-	$elm$core$Maybe$Nothing,
-	$elm$json$Json$Decode$list($author$project$Api$Data$activityDecoder));
-var $author$project$Api$withQuery = F2(
-	function (qs, _v0) {
-		var request_ = _v0.a;
-		return $author$project$Api$Request(
-			_Utils_update(
-				request_,
-				{
-					queryParams: $author$project$Api$queries(qs)
-				}));
-	});
-var $author$project$Page$CoursePage$taskActivities = F2(
-	function (token, cid) {
-		return A2(
-			$elm$core$Task$map,
-			$author$project$Page$CoursePage$ResActivities,
-			$author$project$Api$task(
-				A2(
-					$author$project$Api$withQuery,
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'course',
-							$elm$core$Maybe$Just(cid))
-						]),
-					A2(
-						$author$project$Api$withToken,
-						$elm$core$Maybe$Just(token),
-						$author$project$Api$Request$Activity$activityList))));
-	});
 var $author$project$Page$CoursePage$ResCourse = function (a) {
 	return {$: 'ResCourse', a: a};
 };
@@ -7960,80 +8145,6 @@ var $author$project$Page$CoursePage$taskCourse = F2(
 					$elm$core$Maybe$Just(token),
 					$author$project$Api$Request$Course$courseRead(cid))));
 	});
-var $author$project$Page$CoursePage$ResEnrollments = function (a) {
-	return {$: 'ResEnrollments', a: a};
-};
-var $author$project$Api$Data$CourseEnrollment = F5(
-	function (id, role, finishedOn, person, course) {
-		return {course: course, finishedOn: finishedOn, id: id, person: person, role: role};
-	});
-var $author$project$Api$Data$CourseEnrollmentRoleS = {$: 'CourseEnrollmentRoleS'};
-var $author$project$Api$Data$CourseEnrollmentRoleT = {$: 'CourseEnrollmentRoleT'};
-var $author$project$Api$Data$courseEnrollmentRoleDecoder = A2(
-	$elm$json$Json$Decode$andThen,
-	function (value) {
-		switch (value) {
-			case 't':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentRoleT);
-			case 's':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentRoleS);
-			default:
-				var other = value;
-				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
-		}
-	},
-	$elm$json$Json$Decode$string);
-var $author$project$Api$Data$courseEnrollmentDecoder = A3(
-	$author$project$Api$Data$decode,
-	'course',
-	$danyx23$elm_uuid$Uuid$decoder,
-	A3(
-		$author$project$Api$Data$decode,
-		'person',
-		$danyx23$elm_uuid$Uuid$decoder,
-		A4(
-			$author$project$Api$Data$maybeDecodeNullable,
-			'finished_on',
-			$author$project$Api$Time$dateTimeDecoder,
-			$elm$core$Maybe$Nothing,
-			A3(
-				$author$project$Api$Data$decode,
-				'role',
-				$author$project$Api$Data$courseEnrollmentRoleDecoder,
-				A4(
-					$author$project$Api$Data$maybeDecode,
-					'id',
-					$danyx23$elm_uuid$Uuid$decoder,
-					$elm$core$Maybe$Nothing,
-					$elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollment))))));
-var $author$project$Api$Request$Course$courseEnrollmentList = A7(
-	$author$project$Api$request,
-	'GET',
-	'/course/enrollment/',
-	_List_Nil,
-	_List_Nil,
-	_List_Nil,
-	$elm$core$Maybe$Nothing,
-	$elm$json$Json$Decode$list($author$project$Api$Data$courseEnrollmentDecoder));
-var $author$project$Page$CoursePage$taskEnrollments = F2(
-	function (token, cid) {
-		return A2(
-			$elm$core$Task$map,
-			$author$project$Page$CoursePage$ResEnrollments,
-			$author$project$Api$task(
-				A2(
-					$author$project$Api$withQuery,
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'course',
-							$elm$core$Maybe$Just(cid))
-						]),
-					A2(
-						$author$project$Api$withToken,
-						$elm$core$Maybe$Just(token),
-						$author$project$Api$Request$Course$courseEnrollmentList))));
-	});
 var $author$project$Page$CoursePage$init = F2(
 	function (token, id) {
 		var _v0 = $author$project$Component$MultiTask$init(
@@ -8041,13 +8152,7 @@ var $author$project$Page$CoursePage$init = F2(
 				[
 					_Utils_Tuple2(
 					A2($author$project$Page$CoursePage$taskCourse, token, id),
-					'Получаем данные о курсе'),
-					_Utils_Tuple2(
-					A2($author$project$Page$CoursePage$taskActivities, token, id),
-					'Получаем активности'),
-					_Utils_Tuple2(
-					A2($author$project$Page$CoursePage$taskEnrollments, token, id),
-					'Получаем записи на курс')
+					'Получаем данные о курсе')
 				]));
 		var m = _v0.a;
 		var c = _v0.b;
@@ -8092,119 +8197,6 @@ var $elm$time$Time$Zone = F2(
 	});
 var $elm$time$Time$customZone = $elm$time$Time$Zone;
 var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
-var $author$project$Api$Data$User = function (id) {
-	return function (lastLogin) {
-		return function (isSuperuser) {
-			return function (username) {
-				return function (firstName) {
-					return function (lastName) {
-						return function (email) {
-							return function (isStaff) {
-								return function (isActive) {
-									return function (dateJoined) {
-										return function (middleName) {
-											return function (birthDate) {
-												return function (avatar) {
-													return function (groups) {
-														return function (userPermissions) {
-															return function (children) {
-																return {avatar: avatar, birthDate: birthDate, children: children, dateJoined: dateJoined, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, userPermissions: userPermissions, username: username};
-															};
-														};
-													};
-												};
-											};
-										};
-									};
-								};
-							};
-						};
-					};
-				};
-			};
-		};
-	};
-};
-var $author$project$Api$Data$userDecoder = A4(
-	$author$project$Api$Data$maybeDecode,
-	'children',
-	$elm$json$Json$Decode$list($danyx23$elm_uuid$Uuid$decoder),
-	$elm$core$Maybe$Nothing,
-	A4(
-		$author$project$Api$Data$maybeDecode,
-		'user_permissions',
-		$elm$json$Json$Decode$list($elm$json$Json$Decode$int),
-		$elm$core$Maybe$Nothing,
-		A4(
-			$author$project$Api$Data$maybeDecode,
-			'groups',
-			$elm$json$Json$Decode$list($elm$json$Json$Decode$int),
-			$elm$core$Maybe$Nothing,
-			A4(
-				$author$project$Api$Data$maybeDecodeNullable,
-				'avatar',
-				$elm$json$Json$Decode$string,
-				$elm$core$Maybe$Nothing,
-				A4(
-					$author$project$Api$Data$maybeDecodeNullable,
-					'birth_date',
-					$author$project$Api$Time$dateDecoder,
-					$elm$core$Maybe$Nothing,
-					A4(
-						$author$project$Api$Data$maybeDecodeNullable,
-						'middle_name',
-						$elm$json$Json$Decode$string,
-						$elm$core$Maybe$Nothing,
-						A4(
-							$author$project$Api$Data$maybeDecode,
-							'date_joined',
-							$author$project$Api$Time$dateTimeDecoder,
-							$elm$core$Maybe$Nothing,
-							A4(
-								$author$project$Api$Data$maybeDecode,
-								'is_active',
-								$elm$json$Json$Decode$bool,
-								$elm$core$Maybe$Nothing,
-								A4(
-									$author$project$Api$Data$maybeDecode,
-									'is_staff',
-									$elm$json$Json$Decode$bool,
-									$elm$core$Maybe$Nothing,
-									A4(
-										$author$project$Api$Data$maybeDecode,
-										'email',
-										$elm$json$Json$Decode$string,
-										$elm$core$Maybe$Nothing,
-										A4(
-											$author$project$Api$Data$maybeDecode,
-											'last_name',
-											$elm$json$Json$Decode$string,
-											$elm$core$Maybe$Nothing,
-											A4(
-												$author$project$Api$Data$maybeDecode,
-												'first_name',
-												$elm$json$Json$Decode$string,
-												$elm$core$Maybe$Nothing,
-												A3(
-													$author$project$Api$Data$decode,
-													'username',
-													$elm$json$Json$Decode$string,
-													A4(
-														$author$project$Api$Data$maybeDecode,
-														'is_superuser',
-														$elm$json$Json$Decode$bool,
-														$elm$core$Maybe$Nothing,
-														A4(
-															$author$project$Api$Data$maybeDecodeNullable,
-															'last_login',
-															$author$project$Api$Time$dateTimeDecoder,
-															$elm$core$Maybe$Nothing,
-															A4(
-																$author$project$Api$Data$maybeDecode,
-																'id',
-																$danyx23$elm_uuid$Uuid$decoder,
-																$elm$core$Maybe$Nothing,
-																$elm$json$Json$Decode$succeed($author$project$Api$Data$User)))))))))))))))));
 var $author$project$Api$Request$User$userSelf = A7($author$project$Api$request, 'GET', '/user/self/', _List_Nil, _List_Nil, _List_Nil, $elm$core$Maybe$Nothing, $author$project$Api$Data$userDecoder);
 var $author$project$Page$Login$doCheckSession = function (token) {
 	var task_user = A2(
@@ -8552,7 +8544,7 @@ var $author$project$Main$parse_url = function (url) {
 						A2(
 						$elm$url$Url$Parser$map,
 						$author$project$Main$UrlCourseList,
-						$elm$url$Url$Parser$s('course')),
+						$elm$url$Url$Parser$s('courses')),
 						A2(
 						$elm$url$Url$Parser$map,
 						$author$project$Main$UrlCourse,
@@ -8605,50 +8597,6 @@ var $author$project$Main$parse_url = function (url) {
 						$elm$url$Url$Parser$s('news'))
 					])),
 			url));
-};
-var $elm$url$Url$addPort = F2(
-	function (maybePort, starter) {
-		if (maybePort.$ === 'Nothing') {
-			return starter;
-		} else {
-			var port_ = maybePort.a;
-			return starter + (':' + $elm$core$String$fromInt(port_));
-		}
-	});
-var $elm$url$Url$addPrefixed = F3(
-	function (prefix, maybeSegment, starter) {
-		if (maybeSegment.$ === 'Nothing') {
-			return starter;
-		} else {
-			var segment = maybeSegment.a;
-			return _Utils_ap(
-				starter,
-				_Utils_ap(prefix, segment));
-		}
-	});
-var $elm$url$Url$toString = function (url) {
-	var http = function () {
-		var _v0 = url.protocol;
-		if (_v0.$ === 'Http') {
-			return 'http://';
-		} else {
-			return 'https://';
-		}
-	}();
-	return A3(
-		$elm$url$Url$addPrefixed,
-		'#',
-		url.fragment,
-		A3(
-			$elm$url$Url$addPrefixed,
-			'?',
-			url.query,
-			_Utils_ap(
-				A2(
-					$elm$url$Url$addPort,
-					url.port_,
-					_Utils_ap(http, url.host)),
-				url.path)));
 };
 var $author$project$Page$CourseListPage$Completed = function (a) {
 	return {$: 'Completed', a: a};
@@ -8703,46 +8651,19 @@ var $author$project$Page$CourseListPage$update = F2(
 					$author$project$Page$CourseListPage$doFetchCourses(model.token));
 		}
 	});
-var $author$project$Page$CoursePage$FetchDone = F2(
-	function (a, b) {
-		return {$: 'FetchDone', a: a, b: b};
-	});
+var $author$project$Page$CoursePage$FetchDone = function (a) {
+	return {$: 'FetchDone', a: a};
+};
 var $author$project$Page$CoursePage$FetchFailed = function (a) {
 	return {$: 'FetchFailed', a: a};
 };
 var $author$project$Page$CoursePage$collectFetchResults = function (fetchResults) {
-	_v0$2:
-	while (true) {
-		if ((((fetchResults.b && (fetchResults.a.$ === 'Ok')) && fetchResults.b.b) && (fetchResults.b.a.$ === 'Ok')) && (!fetchResults.b.b.b)) {
-			switch (fetchResults.a.a.$) {
-				case 'ResCourse':
-					if (fetchResults.b.a.a.$ === 'ResActivities') {
-						var c = fetchResults.a.a.a;
-						var _v1 = fetchResults.b;
-						var a = _v1.a.a.a;
-						return $elm$core$Maybe$Just(
-							_Utils_Tuple2(c, a));
-					} else {
-						break _v0$2;
-					}
-				case 'ResActivities':
-					if (fetchResults.b.a.a.$ === 'ResCourse') {
-						var a = fetchResults.a.a.a;
-						var _v2 = fetchResults.b;
-						var c = _v2.a.a.a;
-						return $elm$core$Maybe$Just(
-							_Utils_Tuple2(c, a));
-					} else {
-						break _v0$2;
-					}
-				default:
-					break _v0$2;
-			}
-		} else {
-			break _v0$2;
-		}
+	if (((fetchResults.b && (fetchResults.a.$ === 'Ok')) && (fetchResults.a.a.$ === 'ResCourse')) && (!fetchResults.b.b)) {
+		var crs = fetchResults.a.a.a;
+		return $elm$core$Maybe$Just(crs);
+	} else {
+		return $elm$core$Maybe$Nothing;
 	}
-	return $elm$core$Maybe$Nothing;
 };
 var $author$project$Component$MultiTask$Complete = function (a) {
 	return {$: 'Complete', a: a};
@@ -8953,14 +8874,12 @@ var $author$project$Page$CoursePage$update = F2(
 				var _v3 = $author$project$Page$CoursePage$collectFetchResults(
 					A2($elm$core$Debug$log, 'results', results));
 				if (_v3.$ === 'Just') {
-					var _v4 = _v3.a;
-					var c_ = _v4.a;
-					var a = _v4.b;
+					var c_ = _v3.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								state: A2($author$project$Page$CoursePage$FetchDone, c_, a)
+								state: $author$project$Page$CoursePage$FetchDone(c_)
 							}),
 						$elm$core$Platform$Cmd$none);
 				} else {
@@ -9672,7 +9591,7 @@ var $author$project$Main$update = F2(
 									_List_fromArray(
 										[
 											A2($elm$core$Platform$Cmd$map, $author$project$Main$LoginMsg, c),
-											A2($elm$browser$Browser$Navigation$pushUrl, model.key, '/')
+											A2($elm$browser$Browser$Navigation$pushUrl, model.key, model.init_url)
 										])));
 						} else {
 							var msg_ = _v0.a.a;
@@ -9972,7 +9891,7 @@ var $author$project$Page$DefaultLayout$view = F3(
 		};
 		var items = _List_fromArray(
 			[
-				{href: '/course', icon: 'book', label: 'Предметы'},
+				{href: '/courses', icon: 'book', label: 'Предметы'},
 				{href: '/marks', icon: 'chart bar outline', label: 'Оценки'},
 				{href: '/messages', icon: 'envelope outline', label: 'Сообщения'}
 			]);
@@ -10410,6 +10329,7 @@ var $author$project$Page$CourseListPage$view = function (model) {
 				]),
 			body));
 };
+var $author$project$Component$MessageBox$Error = {$: 'Error'};
 var $author$project$Page$CoursePage$showFetchResult = function (fetchResult) {
 	switch (fetchResult.$) {
 		case 'ResCourse':
@@ -10423,6 +10343,67 @@ var $author$project$Page$CoursePage$showFetchResult = function (fetchResult) {
 			return 'OK';
 	}
 };
+var $author$project$Component$MessageBox$view = F4(
+	function (type_, onClose, header, body) {
+		var type_class = function () {
+			switch (type_.$) {
+				case 'None':
+					return '';
+				case 'Success':
+					return '';
+				case 'Error':
+					return '';
+				default:
+					return '';
+			}
+		}();
+		var close_button = function () {
+			if (onClose.$ === 'Just') {
+				var msg = onClose.a;
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$i,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('close icon'),
+								$elm$html$Html$Events$onClick(msg)
+							]),
+						_List_Nil)
+					]);
+			} else {
+				return _List_Nil;
+			}
+		}();
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('ui negative message ' + type_class)
+				]),
+			_Utils_ap(
+				close_button,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('header')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(header)
+							])),
+						A2(
+						$elm$html$Html$p,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(body)
+							]))
+					])));
+	});
 var $author$project$Component$MultiTask$viewTask = F3(
 	function (show_result, show_error, _v0) {
 		var label = _v0.a;
@@ -10543,6 +10524,326 @@ var $author$project$Component$MultiTask$view = F3(
 							model.task_states)))
 				]));
 	});
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$String$trim = _String_trim;
+var $author$project$Page$CoursePage$viewActivity = function (activity) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('text container segment ui')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h2,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(activity.title)
+					]))
+			]));
+};
+var $author$project$Page$CoursePage$viewCourse = function (courseRead) {
+	var header = function () {
+		var teacher = function () {
+			var _v3 = $elm$core$List$head(
+				A2(
+					$elm$core$List$filter,
+					function (e) {
+						return _Utils_eq(e.role, $author$project$Api$Data$CourseEnrollmentReadRoleT);
+					},
+					courseRead.enrollments));
+			if (_v3.$ === 'Just') {
+				var t = _v3.a;
+				var full_name = A2($elm$core$Maybe$withDefault, '', t.person.firstName) + (' ' + A2($elm$core$Maybe$withDefault, '', t.person.lastName));
+				var name = function () {
+					var _v4 = t.person.id;
+					if (_v4.$ === 'Just') {
+						var id = _v4.a;
+						return A2(
+							$elm$html$Html$a,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$href(
+									'/user/' + $danyx23$elm_uuid$Uuid$toString(id))
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(full_name)
+								]));
+					} else {
+						return $elm$html$Html$text(full_name);
+					}
+				}();
+				return A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$i,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('user icon'),
+									A2($elm$html$Html$Attributes$style, 'color', '#679')
+								]),
+							_List_Nil),
+							$elm$html$Html$text('Преподаватель: '),
+							name
+						]));
+			} else {
+				return $elm$html$Html$text('');
+			}
+		}();
+		var for_group = function () {
+			var _v2 = courseRead.forGroup;
+			if (_v2.$ === 'Just') {
+				var g = _v2.a;
+				return A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$i,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('list ol icon'),
+									A2($elm$html$Html$Attributes$style, 'color', '#679')
+								]),
+							_List_Nil),
+							$elm$html$Html$text(g)
+						]));
+			} else {
+				return $elm$html$Html$text('');
+			}
+		}();
+		var for_class = function () {
+			var classes = _List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('users icon'),
+					A2($elm$html$Html$Attributes$style, 'color', '#679'),
+					A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap')
+				]);
+			var _v0 = _Utils_Tuple2(courseRead.forClass, courseRead.forSpecialization);
+			if (_v0.a.$ === 'Just') {
+				if (_v0.b.$ === 'Just') {
+					var cls = _v0.a.a;
+					var spec = _v0.b.a;
+					return A2(
+						$elm$html$Html$span,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$i, classes, _List_Nil),
+								$elm$html$Html$text(cls + (' класс (' + (spec.name + ' направление)')))
+							]));
+				} else {
+					var cls = _v0.a.a;
+					var _v1 = _v0.b;
+					return A2(
+						$elm$html$Html$span,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$i, classes, _List_Nil),
+								$elm$html$Html$text(cls + ' класс')
+							]));
+				}
+			} else {
+				return $elm$html$Html$text('');
+			}
+		}();
+		var description = ($elm$core$String$trim(courseRead.description) === '') ? '(нет описания)' : courseRead.description;
+		var default_logo_url = '/img/course.jpg';
+		var default_cover_url = '/img/course_cover.webp';
+		var logo_img = A2(
+			$elm$core$Maybe$withDefault,
+			default_logo_url,
+			A2(
+				$elm$core$Maybe$map,
+				function (f) {
+					return A2(
+						$elm$core$Maybe$withDefault,
+						default_cover_url,
+						A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, f.id));
+				},
+				courseRead.logo));
+		var cover_img = A2(
+			$elm$core$Maybe$withDefault,
+			default_cover_url,
+			A2(
+				$elm$core$Maybe$map,
+				function (f) {
+					return A2(
+						$elm$core$Maybe$withDefault,
+						default_cover_url,
+						A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, f.id));
+				},
+				courseRead.cover));
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'background', 'linear-gradient( rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8) ), url(\'' + (cover_img + '\')')),
+					A2($elm$html$Html$Attributes$style, 'padding', '1em'),
+					A2($elm$html$Html$Attributes$style, 'margin', '1em'),
+					A2($elm$html$Html$Attributes$style, 'overflow', 'hidden'),
+					A2($elm$html$Html$Attributes$style, 'color', 'white'),
+					$elm$html$Html$Attributes$class('row center-xs')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('col-sm-3 col-xs center-xs'),
+							A2($elm$html$Html$Attributes$style, 'margin-right', '1em'),
+							A2($elm$html$Html$Attributes$style, 'min-width', '300px'),
+							A2($elm$html$Html$Attributes$style, 'max-width', '300px')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$img,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$src(logo_img),
+									A2($elm$html$Html$Attributes$style, 'object-fit', 'cover'),
+									A2($elm$html$Html$Attributes$style, 'object-position', 'center'),
+									A2($elm$html$Html$Attributes$style, 'width', '100%'),
+									A2($elm$html$Html$Attributes$style, 'height', '300px')
+								]),
+							_List_Nil)
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('col-sm between-xs row start-xs'),
+							A2($elm$html$Html$Attributes$style, 'margin', '1em'),
+							A2($elm$html$Html$Attributes$style, 'flex-flow', 'column nowrap')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$h1,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(courseRead.title)
+										])),
+									A2(
+									$elm$html$Html$p,
+									_List_fromArray(
+										[
+											A2($elm$html$Html$Attributes$style, 'max-height', '180px'),
+											A2($elm$html$Html$Attributes$style, 'overflow', 'hidden'),
+											A2($elm$html$Html$Attributes$style, 'margin-left', '2em')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text(description)
+										]))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('row around-xs'),
+									A2($elm$html$Html$Attributes$style, 'margin-top', '2em')
+								]),
+							_List_fromArray(
+								[for_class, for_group, teacher]))
+						]))
+				]));
+	}();
+	var breadcrumbs = A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('ui large breadcrumb')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$a,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('section'),
+						$elm$html$Html$Attributes$href('/courses')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Предметы')
+					])),
+				A2(
+				$elm$html$Html$i,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('right chevron icon divider')
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('active section')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(courseRead.title)
+					]))
+			]));
+	var activities = A2($elm$core$List$map, $author$project$Page$CoursePage$viewActivity, courseRead.activities);
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				breadcrumbs,
+				header,
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('col center-xs')
+					]),
+				activities)
+			]));
+};
 var $author$project$Page$CoursePage$view = function (model) {
 	var _v0 = model.state;
 	switch (_v0.$) {
@@ -10561,11 +10862,10 @@ var $author$project$Page$CoursePage$view = function (model) {
 					]));
 		case 'FetchDone':
 			var courseRead = _v0.a;
-			var activities = _v0.b;
-			return $elm$html$Html$text('Done');
+			return $author$project$Page$CoursePage$viewCourse(courseRead);
 		default:
 			var err = _v0.a;
-			return $elm$html$Html$text('Failed: ' + err);
+			return A4($author$project$Component$MessageBox$view, $author$project$Component$MessageBox$Error, $elm$core$Maybe$Nothing, 'Ошибка', 'Не удалось получить данные курса: ' + err);
 	}
 };
 var $author$project$Page$Login$CloseMessage = {$: 'CloseMessage'};
@@ -10601,17 +10901,6 @@ var $elm$html$Html$Events$onSubmit = function (msg) {
 			$elm$html$Html$Events$alwaysPreventDefault,
 			$elm$json$Json$Decode$succeed(msg)));
 };
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
 var $elm$core$Tuple$second = function (_v0) {
 	var y = _v0.b;
 	return y;

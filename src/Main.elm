@@ -34,6 +34,7 @@ type alias State =
 type alias Model =
     { key : Nav.Key
     , url : Url.Url
+    , init_url : String
     , token : Either String Token
     , page : Page
     , layout : Layout
@@ -87,7 +88,7 @@ parse_url url =
                 [ map UrlMainPage top
                 , map UrlLogin (s "login")
                 , map UrlLogout (s "logout")
-                , map UrlCourseList (s "course")
+                , map UrlCourseList (s "courses")
                 , map UrlCourse (s "course" </> string)
                 , map UrlMarksOwn (s "marks")
                 , map UrlMarksOfPerson (s "marks" </> s "user" </> string)
@@ -104,7 +105,7 @@ parse_url url =
 
 init : State -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init { token } url key =
-    ( { key = key, url = url, token = Left token, page = Blank, layout = NoneLayout }
+    ( { key = key, url = url, init_url = Url.toString url, token = Left token, page = Blank, layout = NoneLayout }
     , Cmd.batch [ Nav.pushUrl key "/login" ]
     )
 
@@ -222,7 +223,7 @@ update msg model =
                 ( m, c ) =
                     Login.update msg_ model_
             in
-            ( { model | token = Right token, page = Login m }, Cmd.batch [ Cmd.map LoginMsg c, Nav.pushUrl model.key "/" ] )
+            ( { model | token = Right token, page = Login m }, Cmd.batch [ Cmd.map LoginMsg c, Nav.pushUrl model.key model.init_url ] )
 
         ( LoginMsg msg_, Login model_, _ ) ->
             let

@@ -97,7 +97,7 @@ view map_msg model html =
             { name = mb model.user.firstName ++ " " ++ mb model.user.lastName, avatar = "/profile.png" }
 
         items =
-            [ { label = "Предметы", href = "/course", icon = "book" }
+            [ { label = "Предметы", href = "/courses", icon = "book" }
             , { label = "Оценки", href = "/marks", icon = "chart bar outline" }
             , { label = "Сообщения", href = "/messages", icon = "envelope outline" }
             ]

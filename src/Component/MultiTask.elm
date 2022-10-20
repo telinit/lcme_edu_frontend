@@ -76,8 +76,8 @@ update msg model =
             let
                 new_model =
                     { model
-                      | task_states = arrayUpdate i (\( l, _, t ) -> ( l, Complete res, t )) model.task_states
-                      , tasks_left = model.tasks_left - 1
+                        | task_states = arrayUpdate i (\( l, _, t ) -> ( l, Complete res, t )) model.task_states
+                        , tasks_left = model.tasks_left - 1
                     }
             in
             ( new_model
