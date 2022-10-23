@@ -5763,6 +5763,9 @@ var $author$project$Main$MsgDefaultLayout = function (a) {
 var $author$project$Main$MsgLogin = function (a) {
 	return {$: 'MsgLogin', a: a};
 };
+var $author$project$Main$MsgPageMarksOfCourse = function (a) {
+	return {$: 'MsgPageMarksOfCourse', a: a};
+};
 var $author$project$Main$MsgPageMarksOfStudent = function (a) {
 	return {$: 'MsgPageMarksOfStudent', a: a};
 };
@@ -5779,6 +5782,9 @@ var $author$project$Main$PageLogin = function (a) {
 	return {$: 'PageLogin', a: a};
 };
 var $author$project$Main$PageMain = {$: 'PageMain'};
+var $author$project$Main$PageMarksOfCourse = function (a) {
+	return {$: 'PageMarksOfCourse', a: a};
+};
 var $author$project$Main$PageMarksOfStudent = function (a) {
 	return {$: 'PageMarksOfStudent', a: a};
 };
@@ -5828,6 +5834,7 @@ var $author$project$Util$either_map = F3(
 			return fr(b);
 		}
 	});
+var $elm$core$String$endsWith = _String_endsWith;
 var $elm$core$Basics$composeL = F3(
 	function (g, f, x) {
 		return g(
@@ -8058,22 +8065,24 @@ var $author$project$Api$Data$courseEnrollmentReadRoleDecoder = A2(
 	},
 	$elm$json$Json$Decode$string);
 var $author$project$Api$Data$User = function (id) {
-	return function (lastLogin) {
-		return function (isSuperuser) {
-			return function (username) {
-				return function (firstName) {
-					return function (lastName) {
-						return function (email) {
-							return function (isStaff) {
-								return function (isActive) {
-									return function (dateJoined) {
-										return function (middleName) {
-											return function (birthDate) {
-												return function (avatar) {
-													return function (groups) {
-														return function (userPermissions) {
-															return function (children) {
-																return {avatar: avatar, birthDate: birthDate, children: children, dateJoined: dateJoined, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, userPermissions: userPermissions, username: username};
+	return function (roles) {
+		return function (lastLogin) {
+			return function (isSuperuser) {
+				return function (username) {
+					return function (firstName) {
+						return function (lastName) {
+							return function (email) {
+								return function (isStaff) {
+									return function (isActive) {
+										return function (dateJoined) {
+											return function (middleName) {
+												return function (birthDate) {
+													return function (avatar) {
+														return function (groups) {
+															return function (userPermissions) {
+																return function (children) {
+																	return {avatar: avatar, birthDate: birthDate, children: children, dateJoined: dateJoined, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, roles: roles, userPermissions: userPermissions, username: username};
+																};
 															};
 														};
 													};
@@ -8166,10 +8175,15 @@ var $author$project$Api$Data$userDecoder = A4(
 															$elm$core$Maybe$Nothing,
 															A4(
 																$author$project$Api$Data$maybeDecode,
-																'id',
-																$danyx23$elm_uuid$Uuid$decoder,
+																'roles',
+																$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
 																$elm$core$Maybe$Nothing,
-																$elm$json$Json$Decode$succeed($author$project$Api$Data$User)))))))))))))))));
+																A4(
+																	$author$project$Api$Data$maybeDecode,
+																	'id',
+																	$danyx23$elm_uuid$Uuid$decoder,
+																	$elm$core$Maybe$Nothing,
+																	$elm$json$Json$Decode$succeed($author$project$Api$Data$User))))))))))))))))));
 var $author$project$Api$Data$courseEnrollmentReadDecoder = A3(
 	$author$project$Api$Data$decode,
 	'course',
@@ -9595,7 +9609,10 @@ var $author$project$Page$Login$update = F2(
 							{
 								message: $author$project$Page$Login$None,
 								state: $author$project$Page$Login$Success(
-									{token: token.key, user: token.user})
+									{
+										token: token.key,
+										user: A2($elm$core$Debug$log, 'token.user', token.user)
+									})
 							}),
 						$author$project$Page$Login$doSaveToken(token.key));
 				case 'LoginFailed':
@@ -9633,6 +9650,9 @@ var $author$project$Page$Login$update = F2(
 		}
 		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 	});
+var $author$project$Page$MarksCourse$MsgTable = function (a) {
+	return {$: 'MsgTable', a: a};
+};
 var $author$project$Component$MarkTable$Activity = function (a) {
 	return {$: 'Activity', a: a};
 };
@@ -10019,6 +10039,18 @@ var $author$project$Component$MarkTable$update = F2(
 			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
+var $author$project$Page$MarksCourse$update = F2(
+	function (msg, model) {
+		var msg_ = msg.a;
+		var _v1 = A2($author$project$Component$MarkTable$update, msg_, model.table);
+		var m = _v1.a;
+		var c = _v1.b;
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{table: m}),
+			A2($elm$core$Platform$Cmd$map, $author$project$Page$MarksCourse$MsgTable, c));
+	});
 var $author$project$Page$MarksStudent$update = F2(
 	function (msg, model) {
 		var msg_ = msg.a;
@@ -10034,7 +10066,7 @@ var $author$project$Page$MarksStudent$update = F2(
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		var _v0 = _Utils_Tuple3(msg, model.page, model.layout);
-		_v0$9:
+		_v0$10:
 		while (true) {
 			switch (_v0.a.$) {
 				case 'MsgDefaultLayout':
@@ -10052,7 +10084,7 @@ var $author$project$Main$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgDefaultLayout, cmd_));
 					} else {
-						break _v0$9;
+						break _v0$10;
 					}
 				case 'MsgUrlRequested':
 					var urlRequest = _v0.a.a;
@@ -10348,7 +10380,13 @@ var $author$project$Main$update = F2(
 									_List_fromArray(
 										[
 											A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgLogin, c),
-											A2($elm$browser$Browser$Navigation$pushUrl, model.key, model.init_url)
+											A2(
+											$elm$browser$Browser$Navigation$pushUrl,
+											model.key,
+											A2(
+												$elm$core$String$endsWith,
+												'/login',
+												A2($elm$core$Debug$log, 'model.init_url', model.init_url)) ? '/' : model.init_url)
 										])));
 						} else {
 							var msg_ = _v0.a.a;
@@ -10365,7 +10403,7 @@ var $author$project$Main$update = F2(
 								A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgLogin, c));
 						}
 					} else {
-						break _v0$9;
+						break _v0$10;
 					}
 				case 'MsgCourseListPage':
 					if ((_v0.b.$ === 'PageCourseList') && (_v0.c.$ === 'LayoutDefault')) {
@@ -10383,7 +10421,7 @@ var $author$project$Main$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgCourseListPage, cmd_));
 					} else {
-						break _v0$9;
+						break _v0$10;
 					}
 				case 'MsgCoursePage':
 					if ((_v0.b.$ === 'PageCourse') && (_v0.c.$ === 'LayoutDefault')) {
@@ -10401,7 +10439,7 @@ var $author$project$Main$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgCoursePage, cmd_));
 					} else {
-						break _v0$9;
+						break _v0$10;
 					}
 				case 'MsgPageMarksOfStudent':
 					if ((_v0.b.$ === 'PageMarksOfStudent') && (_v0.c.$ === 'LayoutDefault')) {
@@ -10419,10 +10457,28 @@ var $author$project$Main$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageMarksOfStudent, cmd_));
 					} else {
-						break _v0$9;
+						break _v0$10;
+					}
+				case 'MsgPageMarksOfCourse':
+					if ((_v0.b.$ === 'PageMarksOfCourse') && (_v0.c.$ === 'LayoutDefault')) {
+						var msg_ = _v0.a.a;
+						var model_ = _v0.b.a;
+						var layout_ = _v0.c.a;
+						var _v29 = A2($author$project$Page$MarksCourse$update, msg_, model_);
+						var model__ = _v29.a;
+						var cmd_ = _v29.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									page: $author$project$Main$PageMarksOfCourse(model__)
+								}),
+							A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageMarksOfCourse, cmd_));
+					} else {
+						break _v0$10;
 					}
 				default:
-					var _v29 = _v0.a;
+					var _v30 = _v0.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
@@ -12578,6 +12634,21 @@ var $author$project$Component$MarkTable$view = function (model) {
 			return $elm$html$Html$text(string);
 	}
 };
+var $author$project$Page$MarksCourse$view = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('row center-xs')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$map,
+				$author$project$Page$MarksCourse$MsgTable,
+				$author$project$Component$MarkTable$view(model.table))
+			]));
+};
 var $author$project$Page$MarksStudent$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -12665,12 +12736,11 @@ var $author$project$Main$viewPage = function (model) {
 				$author$project$Main$MsgPageMarksOfStudent,
 				$author$project$Page$MarksStudent$view(model_));
 		case 'PageMarksOfCourse':
-			return _Debug_todo(
-				'Main',
-				{
-					start: {line: 350, column: 13},
-					end: {line: 350, column: 23}
-				})('');
+			var model_ = _v0.a;
+			return A2(
+				$elm$html$Html$map,
+				$author$project$Main$MsgPageMarksOfCourse,
+				$author$project$Page$MarksCourse$view(model_));
 		default:
 			var string = _v0.a;
 			return $author$project$Page$FatalError$view(string);

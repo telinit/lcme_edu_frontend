@@ -379,6 +379,7 @@ unreadObjectTypeVariants =
 
 type alias User =
     { id : Maybe Uuid
+    , roles : Maybe (List String)
     , lastLogin : Maybe Posix
     , isSuperuser : Maybe Bool
     , username : String
@@ -1013,6 +1014,7 @@ encodeUserPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "roles" (Json.Encode.list Json.Encode.string) model.roles
             , maybeEncodeNullable "last_login" Api.Time.encodeDateTime model.lastLogin
             , maybeEncode "is_superuser" Json.Encode.bool model.isSuperuser
             , encode "username" Json.Encode.string model.username
@@ -1382,6 +1384,7 @@ userDecoder : Json.Decode.Decoder User
 userDecoder =
     Json.Decode.succeed User
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "roles" (Json.Decode.list Json.Decode.string) Nothing
         |> maybeDecodeNullable "last_login" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "is_superuser" Json.Decode.bool Nothing
         |> decode "username" Json.Decode.string

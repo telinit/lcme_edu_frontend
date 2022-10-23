@@ -10,6 +10,7 @@ import Page.CoursePage as CoursePage
 import Page.DefaultLayout as DefaultLayout
 import Page.FatalError as FatalError
 import Page.Login as Login
+import Page.MarksCourse as MarksCourse
 import Page.MarksStudent as MarksStudent
 import Page.NotFound as NotFound
 import Url exposing (Url)
@@ -55,7 +56,7 @@ type Page
     | PageCourseList CourseListPage.Model
     | PageCourse CoursePage.Model
     | PageMarksOfStudent MarksStudent.Model
-    | PageMarksOfCourse
+    | PageMarksOfCourse MarksCourse.Model
     | PageNotFound
     | PageFatalError String
 
@@ -84,6 +85,7 @@ type Msg
     | MsgCourseListPage CourseListPage.Msg
     | MsgCoursePage CoursePage.Msg
     | MsgPageMarksOfStudent MarksStudent.Msg
+    | MsgPageMarksOfCourse MarksCourse.Msg
     | MsgUnauthorized
 
 
@@ -266,7 +268,12 @@ update msg model =
                 ( m, c ) =
                     Login.update msg_ model_
             in
-            ( { model | token = Right token, page = PageLogin m }, Cmd.batch [ Cmd.map MsgLogin c, Nav.pushUrl model.key model.init_url ] )
+            ( { model | token = Right token, page = PageLogin m }
+            , Cmd.batch
+                [ Cmd.map MsgLogin c
+                , Nav.pushUrl model.key (if String.endsWith "/login" (Debug.log "model.init_url" (model.init_url)) then "/" else model.init_url)
+                ]
+            )
 
         ( MsgLogin msg_, PageLogin model_, _ ) ->
             let
@@ -295,6 +302,13 @@ update msg model =
                     MarksStudent.update msg_ model_
             in
             ( { model | page = PageMarksOfStudent model__ }, Cmd.map MsgPageMarksOfStudent cmd_ )
+
+        ( MsgPageMarksOfCourse msg_, PageMarksOfCourse model_, LayoutDefault layout_ ) ->
+            let
+                ( model__, cmd_ ) =
+                    MarksCourse.update msg_ model_
+            in
+            ( { model | page = PageMarksOfCourse model__ }, Cmd.map MsgPageMarksOfCourse cmd_ )
 
         ( MsgUnauthorized, _, _ ) ->
             ( { model | page = PageBlank, token = Left "", layout = LayoutNone }
@@ -346,8 +360,8 @@ viewPage model =
         PageMarksOfStudent model_ ->
             Html.map MsgPageMarksOfStudent <| MarksStudent.view model_
 
-        PageMarksOfCourse ->
-            Debug.todo ""
+        PageMarksOfCourse model_ ->
+            Html.map MsgPageMarksOfCourse <| MarksCourse.view model_
 
         PageFatalError string ->
             FatalError.view string
