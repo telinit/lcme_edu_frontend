@@ -1,14 +1,15 @@
 module Page.CoursePage exposing (..)
 
 import Api exposing (task, withQuery, withToken)
-import Api.Data exposing (Activity, CourseEnrollmentRead, CourseEnrollmentReadRole(..), CourseRead)
+import Api.Data exposing (Activity, CourseDeep, CourseEnrollmentRead, CourseEnrollmentReadRole(..))
 import Api.Request.Activity exposing (activityList)
-import Api.Request.Course exposing (courseEnrollmentList, courseRead)
+import Api.Request.Course exposing (courseEnrollmentList, courseGetDeep, courseRead)
 import Component.MessageBox as MessageBox exposing (Type(..))
 import Component.MultiTask as MultiTask exposing (Msg(..))
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http exposing (Error(..))
+import Page.CourseListPage exposing (empty_to_nothing)
 import Task
 import Util exposing (httpErrorToString)
 import Uuid
@@ -16,7 +17,7 @@ import Uuid
 
 type State
     = Fetching (MultiTask.Model Http.Error FetchResult)
-    | FetchDone CourseRead
+    | FetchDone CourseDeep
     | FetchFailed String
 
 
@@ -25,7 +26,7 @@ type Msg
 
 
 type FetchResult
-    = ResCourse CourseRead
+    = ResCourse CourseDeep
     | ResActivities (List Activity)
     | ResEnrollments (List CourseEnrollmentRead)
 
@@ -50,7 +51,7 @@ showFetchResult fetchResult =
 
 
 taskCourse token cid =
-    Task.map ResCourse <| task <| withToken (Just token) <| courseRead cid
+    Task.map ResCourse <| task <| withToken (Just token) <| courseGetDeep cid
 
 
 taskActivities token cid =
@@ -77,7 +78,7 @@ init token id =
     ( { state = Fetching m, token = token }, Cmd.map MsgFetch c )
 
 
-collectFetchResults : List (Result e FetchResult) -> Maybe CourseRead
+collectFetchResults : List (Result e FetchResult) -> Maybe CourseDeep
 collectFetchResults fetchResults =
     case fetchResults of
         --[ Ok (ResCourse crs), Ok (ResActivities act), Ok (ResEnrollments enr) ] ->
@@ -118,7 +119,7 @@ viewActivity activity =
     div [ class "text container segment ui" ] [ h2 [] [ text activity.title ] ]
 
 
-viewCourse : CourseRead -> Html Msg
+viewCourse : CourseDeep -> Html Msg
 viewCourse courseRead =
     let
         breadcrumbs =
@@ -169,7 +170,7 @@ viewCourse courseRead =
                             text ""
 
                 for_group =
-                    case courseRead.forGroup of
+                    case empty_to_nothing courseRead.forGroup of
                         Just g ->
                             span [ style "white-space" "nowrap" ]
                                 [ i [ class "list ol icon", style "color" "#679" ] []

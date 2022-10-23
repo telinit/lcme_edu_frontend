@@ -4,7 +4,6 @@ import Api.Data exposing (User)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import Ports exposing (toggleSidebar)
 import Util exposing (link_span)
 
 

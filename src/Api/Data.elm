@@ -16,20 +16,20 @@
 
 module Api.Data exposing
     ( Activity
+    , ActivityFinalType(..)
     , ActivityType(..)
+    , CourseDeep
     , CourseEnrollmentRead
     , CourseEnrollmentReadRole(..)
     , CourseEnrollmentWrite
     , CourseEnrollmentWriteRole(..)
-    , CourseRead
-    , CourseWrite
+    , CourseShallow
     , Department
     , Education
     , EducationSpecialization
     , File
     , Login
     , Mark
-    , MarkFinalType(..)
     , Message
     , MessageNews
     , MessagePrivate
@@ -41,21 +41,22 @@ module Api.Data exposing
     , UnreadObjectType(..)
     , User
     , activityDecoder
+    , activityFinalTypeVariants
     , activityTypeVariants
+    , courseDeepDecoder
     , courseEnrollmentReadDecoder
     , courseEnrollmentReadRoleVariants
     , courseEnrollmentWriteDecoder
     , courseEnrollmentWriteRoleVariants
-    , courseReadDecoder
-    , courseWriteDecoder
+    , courseShallowDecoder
     , departmentDecoder
     , educationDecoder
     , educationSpecializationDecoder
     , encodeActivity
+    , encodeCourseDeep
     , encodeCourseEnrollmentRead
     , encodeCourseEnrollmentWrite
-    , encodeCourseRead
-    , encodeCourseWrite
+    , encodeCourseShallow
     , encodeDepartment
     , encodeEducation
     , encodeEducationSpecialization
@@ -74,7 +75,6 @@ module Api.Data exposing
     , fileDecoder
     , loginDecoder
     , markDecoder
-    , markFinalTypeVariants
     , messageDecoder
     , messageNewsDecoder
     , messagePrivateDecoder
@@ -107,12 +107,13 @@ type alias Activity =
     , isHidden : Maybe Bool
     , marksLimit : Maybe Int
     , order : Int
-    , date : Maybe Posix
+    , date : Posix
     , group : Maybe String
     , body : Maybe String
     , dueDate : Maybe Posix
     , link : Maybe String
     , embed : Maybe Bool
+    , finalType : Maybe ActivityFinalType
     , course : Uuid
     , files : Maybe (List Uuid)
     }
@@ -124,6 +125,7 @@ type ActivityType
     | ActivityTypeTSK
     | ActivityTypeLNK
     | ActivityTypeMED
+    | ActivityTypeFIN
 
 
 activityTypeVariants : List ActivityType
@@ -133,7 +135,48 @@ activityTypeVariants =
     , ActivityTypeTSK
     , ActivityTypeLNK
     , ActivityTypeMED
+    , ActivityTypeFIN
     ]
+
+
+type ActivityFinalType
+    = ActivityFinalTypeQ1
+    | ActivityFinalTypeQ2
+    | ActivityFinalTypeQ3
+    | ActivityFinalTypeQ4
+    | ActivityFinalTypeH1
+    | ActivityFinalTypeH2
+    | ActivityFinalTypeY
+    | ActivityFinalTypeE
+    | ActivityFinalTypeF
+
+
+activityFinalTypeVariants : List ActivityFinalType
+activityFinalTypeVariants =
+    [ ActivityFinalTypeQ1
+    , ActivityFinalTypeQ2
+    , ActivityFinalTypeQ3
+    , ActivityFinalTypeQ4
+    , ActivityFinalTypeH1
+    , ActivityFinalTypeH2
+    , ActivityFinalTypeY
+    , ActivityFinalTypeE
+    , ActivityFinalTypeF
+    ]
+
+
+type alias CourseDeep =
+    { id : Maybe Uuid
+    , forSpecialization : Maybe EducationSpecialization
+    , logo : Maybe File
+    , cover : Maybe File
+    , activities : List Activity
+    , enrollments : List CourseEnrollmentRead
+    , title : String
+    , description : String
+    , forClass : Maybe String
+    , forGroup : Maybe String
+    }
 
 
 type alias CourseEnrollmentRead =
@@ -178,21 +221,7 @@ courseEnrollmentWriteRoleVariants =
     ]
 
 
-type alias CourseRead =
-    { id : Maybe Uuid
-    , forSpecialization : Maybe EducationSpecialization
-    , logo : Maybe File
-    , cover : Maybe File
-    , activities : List Activity
-    , enrollments : List CourseEnrollmentRead
-    , title : String
-    , description : String
-    , forClass : Maybe String
-    , forGroup : Maybe String
-    }
-
-
-type alias CourseWrite =
+type alias CourseShallow =
     { id : Maybe Uuid
     , title : String
     , description : String
@@ -248,38 +277,10 @@ type alias Mark =
     { id : Maybe Uuid
     , value : String
     , comment : Maybe String
-    , finalType : Maybe MarkFinalType
     , teacher : Uuid
     , student : Uuid
     , activity : Uuid
-    , course : Uuid
     }
-
-
-type MarkFinalType
-    = MarkFinalTypeQ1
-    | MarkFinalTypeQ2
-    | MarkFinalTypeQ3
-    | MarkFinalTypeQ4
-    | MarkFinalTypeH1
-    | MarkFinalTypeH2
-    | MarkFinalTypeY
-    | MarkFinalTypeE
-    | MarkFinalTypeF
-
-
-markFinalTypeVariants : List MarkFinalType
-markFinalTypeVariants =
-    [ MarkFinalTypeQ1
-    , MarkFinalTypeQ2
-    , MarkFinalTypeQ3
-    , MarkFinalTypeQ4
-    , MarkFinalTypeH1
-    , MarkFinalTypeH2
-    , MarkFinalTypeY
-    , MarkFinalTypeE
-    , MarkFinalTypeF
-    ]
 
 
 type alias Message =
@@ -421,12 +422,13 @@ encodeActivityPairs model =
             , maybeEncode "is_hidden" Json.Encode.bool model.isHidden
             , maybeEncode "marks_limit" Json.Encode.int model.marksLimit
             , encode "order" Json.Encode.int model.order
-            , maybeEncodeNullable "date" Api.Time.encodeDate model.date
+            , encode "date" Api.Time.encodeDate model.date
             , maybeEncodeNullable "group" Json.Encode.string model.group
             , maybeEncode "body" Json.Encode.string model.body
             , maybeEncodeNullable "due_date" Api.Time.encodeDateTime model.dueDate
             , maybeEncodeNullable "link" Json.Encode.string model.link
             , maybeEncode "embed" Json.Encode.bool model.embed
+            , maybeEncodeNullable "final_type" encodeActivityFinalType model.finalType
             , encode "course" Uuid.encode model.course
             , maybeEncode "files" (Json.Encode.list Uuid.encode) model.files
             ]
@@ -452,10 +454,78 @@ stringFromActivityType model =
         ActivityTypeMED ->
             "MED"
 
+        ActivityTypeFIN ->
+            "FIN"
+
 
 encodeActivityType : ActivityType -> Json.Encode.Value
 encodeActivityType =
     Json.Encode.string << stringFromActivityType
+
+
+stringFromActivityFinalType : ActivityFinalType -> String
+stringFromActivityFinalType model =
+    case model of
+        ActivityFinalTypeQ1 ->
+            "Q1"
+
+        ActivityFinalTypeQ2 ->
+            "Q2"
+
+        ActivityFinalTypeQ3 ->
+            "Q3"
+
+        ActivityFinalTypeQ4 ->
+            "Q4"
+
+        ActivityFinalTypeH1 ->
+            "H1"
+
+        ActivityFinalTypeH2 ->
+            "H2"
+
+        ActivityFinalTypeY ->
+            "Y"
+
+        ActivityFinalTypeE ->
+            "E"
+
+        ActivityFinalTypeF ->
+            "F"
+
+
+encodeActivityFinalType : ActivityFinalType -> Json.Encode.Value
+encodeActivityFinalType =
+    Json.Encode.string << stringFromActivityFinalType
+
+
+encodeCourseDeep : CourseDeep -> Json.Encode.Value
+encodeCourseDeep =
+    encodeObject << encodeCourseDeepPairs
+
+
+encodeCourseDeepWithTag : ( String, String ) -> CourseDeep -> Json.Encode.Value
+encodeCourseDeepWithTag ( tagField, tag ) model =
+    encodeObject (encodeCourseDeepPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeCourseDeepPairs : CourseDeep -> List EncodedField
+encodeCourseDeepPairs model =
+    let
+        pairs =
+            [ maybeEncode "id" Uuid.encode model.id
+            , encodeNullable "for_specialization" encodeEducationSpecialization model.forSpecialization
+            , encodeNullable "logo" encodeFile model.logo
+            , encodeNullable "cover" encodeFile model.cover
+            , encode "activities" (Json.Encode.list encodeActivity) model.activities
+            , encode "enrollments" (Json.Encode.list encodeCourseEnrollmentRead) model.enrollments
+            , encode "title" Json.Encode.string model.title
+            , encode "description" Json.Encode.string model.description
+            , maybeEncode "for_class" Json.Encode.string model.forClass
+            , maybeEncodeNullable "for_group" Json.Encode.string model.forGroup
+            ]
+    in
+    pairs
 
 
 encodeCourseEnrollmentRead : CourseEnrollmentRead -> Json.Encode.Value
@@ -536,47 +606,18 @@ encodeCourseEnrollmentWriteRole =
     Json.Encode.string << stringFromCourseEnrollmentWriteRole
 
 
-encodeCourseRead : CourseRead -> Json.Encode.Value
-encodeCourseRead =
-    encodeObject << encodeCourseReadPairs
+encodeCourseShallow : CourseShallow -> Json.Encode.Value
+encodeCourseShallow =
+    encodeObject << encodeCourseShallowPairs
 
 
-encodeCourseReadWithTag : ( String, String ) -> CourseRead -> Json.Encode.Value
-encodeCourseReadWithTag ( tagField, tag ) model =
-    encodeObject (encodeCourseReadPairs model ++ [ encode tagField Json.Encode.string tag ])
+encodeCourseShallowWithTag : ( String, String ) -> CourseShallow -> Json.Encode.Value
+encodeCourseShallowWithTag ( tagField, tag ) model =
+    encodeObject (encodeCourseShallowPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
-encodeCourseReadPairs : CourseRead -> List EncodedField
-encodeCourseReadPairs model =
-    let
-        pairs =
-            [ maybeEncode "id" Uuid.encode model.id
-            , encodeNullable "for_specialization" encodeEducationSpecialization model.forSpecialization
-            , encodeNullable "logo" encodeFile model.logo
-            , encodeNullable "cover" encodeFile model.cover
-            , encode "activities" (Json.Encode.list encodeActivity) model.activities
-            , encode "enrollments" (Json.Encode.list encodeCourseEnrollmentRead) model.enrollments
-            , encode "title" Json.Encode.string model.title
-            , encode "description" Json.Encode.string model.description
-            , maybeEncode "for_class" Json.Encode.string model.forClass
-            , maybeEncodeNullable "for_group" Json.Encode.string model.forGroup
-            ]
-    in
-    pairs
-
-
-encodeCourseWrite : CourseWrite -> Json.Encode.Value
-encodeCourseWrite =
-    encodeObject << encodeCourseWritePairs
-
-
-encodeCourseWriteWithTag : ( String, String ) -> CourseWrite -> Json.Encode.Value
-encodeCourseWriteWithTag ( tagField, tag ) model =
-    encodeObject (encodeCourseWritePairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeCourseWritePairs : CourseWrite -> List EncodedField
-encodeCourseWritePairs model =
+encodeCourseShallowPairs : CourseShallow -> List EncodedField
+encodeCourseShallowPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
@@ -724,50 +765,12 @@ encodeMarkPairs model =
             [ maybeEncode "id" Uuid.encode model.id
             , encode "value" Json.Encode.string model.value
             , maybeEncode "comment" Json.Encode.string model.comment
-            , maybeEncodeNullable "final_type" encodeMarkFinalType model.finalType
             , encode "teacher" Uuid.encode model.teacher
             , encode "student" Uuid.encode model.student
             , encode "activity" Uuid.encode model.activity
-            , encode "course" Uuid.encode model.course
             ]
     in
     pairs
-
-
-stringFromMarkFinalType : MarkFinalType -> String
-stringFromMarkFinalType model =
-    case model of
-        MarkFinalTypeQ1 ->
-            "Q1"
-
-        MarkFinalTypeQ2 ->
-            "Q2"
-
-        MarkFinalTypeQ3 ->
-            "Q3"
-
-        MarkFinalTypeQ4 ->
-            "Q4"
-
-        MarkFinalTypeH1 ->
-            "H1"
-
-        MarkFinalTypeH2 ->
-            "H2"
-
-        MarkFinalTypeY ->
-            "Y"
-
-        MarkFinalTypeE ->
-            "E"
-
-        MarkFinalTypeF ->
-            "F"
-
-
-encodeMarkFinalType : MarkFinalType -> Json.Encode.Value
-encodeMarkFinalType =
-    Json.Encode.string << stringFromMarkFinalType
 
 
 encodeMessage : Message -> Json.Encode.Value
@@ -1044,12 +1047,13 @@ activityDecoder =
         |> maybeDecode "is_hidden" Json.Decode.bool Nothing
         |> maybeDecode "marks_limit" Json.Decode.int Nothing
         |> decode "order" Json.Decode.int
-        |> maybeDecodeNullable "date" Api.Time.dateDecoder Nothing
+        |> decode "date" Api.Time.dateDecoder
         |> maybeDecodeNullable "group" Json.Decode.string Nothing
         |> maybeDecode "body" Json.Decode.string Nothing
         |> maybeDecodeNullable "due_date" Api.Time.dateTimeDecoder Nothing
         |> maybeDecodeNullable "link" Json.Decode.string Nothing
         |> maybeDecode "embed" Json.Decode.bool Nothing
+        |> maybeDecodeNullable "final_type" activityFinalTypeDecoder Nothing
         |> decode "course" Uuid.decoder
         |> maybeDecode "files" (Json.Decode.list Uuid.decoder) Nothing
 
@@ -1075,9 +1079,65 @@ activityTypeDecoder =
                     "MED" ->
                         Json.Decode.succeed ActivityTypeMED
 
+                    "FIN" ->
+                        Json.Decode.succeed ActivityTypeFIN
+
                     other ->
                         Json.Decode.fail <| "Unknown type: " ++ other
             )
+
+
+activityFinalTypeDecoder : Json.Decode.Decoder ActivityFinalType
+activityFinalTypeDecoder =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\value ->
+                case value of
+                    "Q1" ->
+                        Json.Decode.succeed ActivityFinalTypeQ1
+
+                    "Q2" ->
+                        Json.Decode.succeed ActivityFinalTypeQ2
+
+                    "Q3" ->
+                        Json.Decode.succeed ActivityFinalTypeQ3
+
+                    "Q4" ->
+                        Json.Decode.succeed ActivityFinalTypeQ4
+
+                    "H1" ->
+                        Json.Decode.succeed ActivityFinalTypeH1
+
+                    "H2" ->
+                        Json.Decode.succeed ActivityFinalTypeH2
+
+                    "Y" ->
+                        Json.Decode.succeed ActivityFinalTypeY
+
+                    "E" ->
+                        Json.Decode.succeed ActivityFinalTypeE
+
+                    "F" ->
+                        Json.Decode.succeed ActivityFinalTypeF
+
+                    other ->
+                        Json.Decode.fail <| "Unknown type: " ++ other
+            )
+
+
+courseDeepDecoder : Json.Decode.Decoder CourseDeep
+courseDeepDecoder =
+    Json.Decode.succeed CourseDeep
+        |> maybeDecode "id" Uuid.decoder Nothing
+        |> decodeNullable "for_specialization" educationSpecializationDecoder
+        |> decodeNullable "logo" fileDecoder
+        |> decodeNullable "cover" fileDecoder
+        |> decode "activities" (Json.Decode.list activityDecoder)
+        |> decode "enrollments" (Json.Decode.list courseEnrollmentReadDecoder)
+        |> decode "title" Json.Decode.string
+        |> decode "description" Json.Decode.string
+        |> maybeDecode "for_class" Json.Decode.string Nothing
+        |> maybeDecodeNullable "for_group" Json.Decode.string Nothing
 
 
 courseEnrollmentReadDecoder : Json.Decode.Decoder CourseEnrollmentRead
@@ -1134,24 +1194,9 @@ courseEnrollmentWriteRoleDecoder =
             )
 
 
-courseReadDecoder : Json.Decode.Decoder CourseRead
-courseReadDecoder =
-    Json.Decode.succeed CourseRead
-        |> maybeDecode "id" Uuid.decoder Nothing
-        |> decodeNullable "for_specialization" educationSpecializationDecoder
-        |> decodeNullable "logo" fileDecoder
-        |> decodeNullable "cover" fileDecoder
-        |> decode "activities" (Json.Decode.list activityDecoder)
-        |> decode "enrollments" (Json.Decode.list courseEnrollmentReadDecoder)
-        |> decode "title" Json.Decode.string
-        |> decode "description" Json.Decode.string
-        |> maybeDecode "for_class" Json.Decode.string Nothing
-        |> maybeDecodeNullable "for_group" Json.Decode.string Nothing
-
-
-courseWriteDecoder : Json.Decode.Decoder CourseWrite
-courseWriteDecoder =
-    Json.Decode.succeed CourseWrite
+courseShallowDecoder : Json.Decode.Decoder CourseShallow
+courseShallowDecoder =
+    Json.Decode.succeed CourseShallow
         |> maybeDecode "id" Uuid.decoder Nothing
         |> decode "title" Json.Decode.string
         |> decode "description" Json.Decode.string
@@ -1213,49 +1258,9 @@ markDecoder =
         |> maybeDecode "id" Uuid.decoder Nothing
         |> decode "value" Json.Decode.string
         |> maybeDecode "comment" Json.Decode.string Nothing
-        |> maybeDecodeNullable "final_type" markFinalTypeDecoder Nothing
         |> decode "teacher" Uuid.decoder
         |> decode "student" Uuid.decoder
         |> decode "activity" Uuid.decoder
-        |> decode "course" Uuid.decoder
-
-
-markFinalTypeDecoder : Json.Decode.Decoder MarkFinalType
-markFinalTypeDecoder =
-    Json.Decode.string
-        |> Json.Decode.andThen
-            (\value ->
-                case value of
-                    "Q1" ->
-                        Json.Decode.succeed MarkFinalTypeQ1
-
-                    "Q2" ->
-                        Json.Decode.succeed MarkFinalTypeQ2
-
-                    "Q3" ->
-                        Json.Decode.succeed MarkFinalTypeQ3
-
-                    "Q4" ->
-                        Json.Decode.succeed MarkFinalTypeQ4
-
-                    "H1" ->
-                        Json.Decode.succeed MarkFinalTypeH1
-
-                    "H2" ->
-                        Json.Decode.succeed MarkFinalTypeH2
-
-                    "Y" ->
-                        Json.Decode.succeed MarkFinalTypeY
-
-                    "E" ->
-                        Json.Decode.succeed MarkFinalTypeE
-
-                    "F" ->
-                        Json.Decode.succeed MarkFinalTypeF
-
-                    other ->
-                        Json.Decode.fail <| "Unknown type: " ++ other
-            )
 
 
 messageDecoder : Json.Decode.Decoder Message

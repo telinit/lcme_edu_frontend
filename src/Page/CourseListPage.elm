@@ -1,25 +1,31 @@
 module Page.CourseListPage exposing (..)
 
-import Api exposing (task, withToken)
-import Api.Data exposing (CourseRead, File)
+import Api exposing (ext_task, task, withToken)
+import Api.Data exposing (CourseShallow, EducationSpecialization, File)
 import Api.Request.Course exposing (courseList)
+import Api.Request.Education exposing (educationSpecializationList)
+import Component.MultiTask as MT
 import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
-import Util exposing (httpErrorToString, task_to_cmd)
+import Http
+import Util exposing (dictGroupBy, httpErrorToString, task_to_cmd)
 import Uuid exposing (Uuid)
 
 
 type Msg
-    = GotCourses (List CourseRead)
-    | CourseListFetchFailed String
-    | Retry
+    = CourseListFetchFailed String
+    | MsgFetch (MT.Msg Http.Error FetchedData)
+
+
+type FetchedData
+    = FetchedCourses (List CourseShallow)
+    | FetchedSpecs (List EducationSpecialization)
 
 
 type State
-    = Loading
-    | Completed (List CourseRead)
+    = Loading (MT.Model Http.Error FetchedData)
+    | Completed (List CourseShallow) (Dict String EducationSpecialization)
     | Error String
 
 
@@ -42,17 +48,8 @@ empty_to_nothing x =
             x
 
 
-dictGroupBy : (b -> comparable) -> List b -> Dict comparable (List b)
-dictGroupBy key list =
-    let
-        f x acc =
-            Dict.update (key x) (Just << Maybe.withDefault [ x ] << Maybe.map (\old_list -> x :: old_list)) acc
-    in
-    List.foldl f Dict.empty list
-
-
-groupBy : GroupBy -> List CourseRead -> Dict String (List CourseRead)
-groupBy group_by courses =
+groupBy : GroupBy -> List CourseShallow -> Dict String EducationSpecialization -> Dict String (List CourseShallow)
+groupBy group_by courses specs =
     case group_by of
         GroupByNone ->
             Dict.fromList [ ( "", courses ) ]
@@ -67,46 +64,57 @@ groupBy group_by courses =
                         ( Just class, Nothing ) ->
                             class
 
-                        ( Just class, Just spec ) ->
-                            class ++ " (" ++ spec.name ++ " направление)"
+                        ( Just class, Just spec_id ) ->
+                            class
+                                ++ " ("
+                                ++ (Maybe.withDefault "Неизвестное" <|
+                                        Maybe.map .name <|
+                                            Dict.get (Uuid.toString spec_id) specs
+                                   )
+                                ++ " направление)"
             in
             dictGroupBy key courses
 
 
-doFetchCourses : String -> Cmd Msg
-doFetchCourses token =
-    task_to_cmd (httpErrorToString >> CourseListFetchFailed) GotCourses <| task <| withToken (Just token) courseList
-
-
 init : String -> ( Model, Cmd Msg )
 init token =
-    ( { state = Loading, token = token, group_by = GroupByClass }, doFetchCourses token )
+    let
+        ( m, c ) =
+            MT.init
+                [ ( ext_task FetchedCourses token [] courseList, "Получаем список курсов" )
+                , ( ext_task FetchedSpecs token [] educationSpecializationList, "Получаем список специализаций" )
+                ]
+    in
+    ( { state = Loading m, token = token, group_by = GroupByClass }, Cmd.map MsgFetch c )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        GotCourses cs ->
-            ( { model
-                | state =
-                    Completed <|
-                        List.map
-                            (\c ->
-                                { c
-                                    | forClass = empty_to_nothing c.forClass
-                                    , forGroup = empty_to_nothing c.forGroup
-                                }
-                            )
-                            cs
-              }
-            , Cmd.none
-            )
-
-        CourseListFetchFailed err ->
+    case ( msg, model.state ) of
+        ( CourseListFetchFailed err, _ ) ->
             ( { model | state = Error err }, Cmd.none )
 
-        Retry ->
-            ( { model | state = Loading }, doFetchCourses model.token )
+        ( MsgFetch msg_, Loading model_ ) ->
+            let
+                ( m, c ) =
+                    MT.update msg_ model_
+            in
+            case msg_ of
+                MT.TaskFinishedAll [ Ok (FetchedCourses courses), Ok (FetchedSpecs specs) ] ->
+                    ( { model
+                        | state =
+                            Completed courses <|
+                                Dict.fromList <|
+                                    List.filterMap (\s -> Maybe.map (\id_ -> ( Uuid.toString id_, s )) s.id) specs
+                      }
+                    , Cmd.map MsgFetch c
+                    )
+
+                _ ->
+                    ( { model | state = Loading m }, Cmd.map MsgFetch c )
+
+        ( _, _ ) ->
+            ( model, Cmd.none )
 
 
 viewControls : Html Msg
@@ -114,18 +122,18 @@ viewControls =
     text ""
 
 
-courseImg : Maybe File -> Html Msg
+courseImg : Maybe Uuid -> Html Msg
 courseImg mb =
     case mb of
         Just file ->
             --TODO: Change with an actual URL
-            img [ src ("/file/" ++ (Maybe.withDefault "" <| Maybe.map Uuid.toString file.id) ++ "/download") ] []
+            img [ src ("/file/" ++ Uuid.toString file ++ "/download") ] []
 
         Nothing ->
             img [ src "/img/course.jpg" ] []
 
 
-viewCourse : CourseRead -> Html Msg
+viewCourse : CourseShallow -> Html Msg
 viewCourse course =
     a [ class "card", href (Maybe.withDefault "" <| Maybe.map (\id -> "/course/" ++ Uuid.toString id) course.id) ]
         [ div [ class "image" ] [ courseImg course.logo ]
@@ -138,7 +146,7 @@ viewCourse course =
             [ span [ class "" ]
                 (Maybe.withDefault [] <| Maybe.map (\c -> [ i [ class "users icon" ] [], text (c ++ " класс") ]) course.forClass)
             , span [ class "right floated" ]
-                (Maybe.withDefault [] <| Maybe.map (\g -> [ i [ class "list ol icon" ] [], text g ]) course.forGroup)
+                (Maybe.withDefault [] <| Maybe.map (\g -> [ i [ class "list ol icon" ] [], text g ]) <| empty_to_nothing course.forGroup)
             ]
         ]
 
@@ -151,12 +159,12 @@ view model =
 
         body =
             case model.state of
-                Completed [] ->
+                Completed [] _ ->
                     [ div [ class "row center-xs" ]
                         [ h2 [] [ text "У вас нет курсов" ] ]
                     ]
 
-                Completed courses ->
+                Completed courses specs ->
                     case model.group_by of
                         GroupByNone ->
                             view_courses courses
@@ -164,7 +172,7 @@ view model =
                         _ ->
                             let
                                 grouped =
-                                    groupBy model.group_by courses
+                                    groupBy model.group_by courses specs
                             in
                             List.concat <|
                                 List.map (\( g, cs ) -> [ h2 [] [ text g ] ] ++ view_courses cs) <|
@@ -177,12 +185,8 @@ view model =
                         ]
                     ]
 
-                Loading ->
-                    [ div [ class "ui message" ]
-                        [ div [ class "ui active inline loader small", style "margin-right" "1em" ] []
-                        , text "Загружаем список предметов"
-                        ]
-                    ]
+                Loading m ->
+                    [ Html.map MsgFetch <| MT.view (\_ -> "OK") httpErrorToString m ]
     in
     div [] <|
         [ h1 [] [ text "Ваши предметы" ]

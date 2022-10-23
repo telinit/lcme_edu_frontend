@@ -1,17 +1,30 @@
 module Util exposing (..)
 
+import Api.Data exposing (User)
 import Array exposing (Array)
+import Dict exposing (Dict)
 import Html exposing (Attribute, span)
 import Html.Attributes exposing (style)
 import Html.Events exposing (custom, preventDefaultOn, stopPropagationOn)
 import Http
-import Json.Decode as Json
-import Task exposing (onError)
+import Json.Decode as JD
+import Task
+import Time exposing (Month(..))
+import Uuid exposing (Uuid)
 
 
 type Either a b
     = Left a
     | Right b
+
+
+user_full_name : User -> String
+user_full_name user =
+    let
+        mb =
+            Maybe.withDefault ""
+    in
+    mb user.lastName ++ " " ++ mb user.firstName ++ " " ++ mb user.middleName
 
 
 either_map : (a -> c) -> (b -> c) -> Either a b -> c
@@ -69,17 +82,17 @@ task_map_to_bool =
 
 onClickPrevent : msg -> Attribute msg
 onClickPrevent msg =
-    preventDefaultOn "click" (Json.map (\x -> ( x, True )) (Json.succeed msg))
+    preventDefaultOn "click" (JD.map (\x -> ( x, True )) (JD.succeed msg))
 
 
 onClickStop : msg -> Attribute msg
 onClickStop msg =
-    stopPropagationOn "click" (Json.map (\x -> ( x, True )) (Json.succeed msg))
+    stopPropagationOn "click" (JD.map (\x -> ( x, True )) (JD.succeed msg))
 
 
 onClickPreventStop : msg -> Attribute msg
 onClickPreventStop msg =
-    custom "click" <| Json.succeed { message = msg, stopPropagation = True, preventDefault = True }
+    custom "click" <| JD.succeed { message = msg, stopPropagation = True, preventDefault = True }
 
 
 link_span attrs body =
@@ -94,3 +107,120 @@ arrayUpdate ix transform array =
 
         Nothing ->
             array
+
+
+index_by : (a -> comparable) -> List a -> Dict comparable a
+index_by key list =
+    Dict.fromList <| List.map (\x -> ( key x, x )) list
+
+
+index_by_id : List { a | id : Maybe comparable } -> Dict comparable { a | id : Maybe comparable }
+index_by_id records =
+    Dict.fromList <| List.filterMap (\rec -> Maybe.map (\id -> ( id, rec )) rec.id) records
+
+
+
+-- FIXME: Remove this later
+
+
+get_id : { a | id : Maybe Uuid } -> Uuid
+get_id record =
+    case record.id of
+        Just id ->
+            id
+
+        Nothing ->
+            Debug.todo <| "get_id: " ++ Debug.toString record
+
+
+get_id_str : { a | id : Maybe Uuid } -> String
+get_id_str =
+    Uuid.toString << get_id
+
+
+dictGroupBy : (b -> comparable) -> List b -> Dict comparable (List b)
+dictGroupBy key list =
+    let
+        f x acc =
+            Dict.update (key x) (Just << Maybe.withDefault [ x ] << Maybe.map (\old_list -> x :: old_list)) acc
+    in
+    List.foldl f Dict.empty list
+
+
+dictFromTupleListMany : List ( comparable, b ) -> Dict comparable (List b)
+dictFromTupleListMany =
+    let
+        update_ : a -> Maybe (List a) -> Maybe (List a)
+        update_ new mb =
+            case mb of
+                Just l ->
+                    Just <| new :: l
+
+                Nothing ->
+                    Just [ new ]
+    in
+    List.foldl (\( a, b ) -> Dict.update a (update_ b)) Dict.empty
+
+
+maybeForceJust : Maybe a -> a
+maybeForceJust =
+    Maybe.withDefault <| Debug.todo "maybeForceJust"
+
+
+zip : List a -> List b -> List ( a, b )
+zip =
+    List.map2 Tuple.pair
+
+
+monthToInt : Month -> Int
+monthToInt month =
+    case month of
+        Jan ->
+            1
+
+        Feb ->
+            2
+
+        Mar ->
+            3
+
+        Apr ->
+            4
+
+        May ->
+            5
+
+        Jun ->
+            6
+
+        Jul ->
+            7
+
+        Aug ->
+            8
+
+        Sep ->
+            9
+
+        Oct ->
+            10
+
+        Nov ->
+            11
+
+        Dec ->
+            12
+
+
+posixToDDMMYYYY zone posix =
+    let
+        dd =
+            String.padLeft 2 '0' <| String.fromInt <| Time.toDay zone posix
+
+        mm =
+            String.padLeft 2 '0' <| String.fromInt <| monthToInt <| Time.toMonth zone posix
+
+        yyyy =
+            String.padLeft 4 '0' <| String.fromInt <| Time.toYear zone posix
+    in
+    dd ++ "." ++ mm ++ "." ++ yyyy

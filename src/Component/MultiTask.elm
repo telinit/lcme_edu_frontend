@@ -3,6 +3,7 @@ module Component.MultiTask exposing (..)
 import Array exposing (Array)
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Http exposing (Error(..))
 import Task exposing (Task)
 import Util exposing (arrayUpdate, task_to_cmd)
 
@@ -92,7 +93,9 @@ update msg model =
             ( { model
                 | task_states = arrayUpdate i (\( l, _, t ) -> ( l, Error err, t )) model.task_states
               }
-            , Cmd.none
+            , case err of
+                --BadStatus 401 -> Task.perform (\_ -> MsgUnauthorized) <| Task.succeed ()
+                _ -> Cmd.none
             )
 
         TaskFinishedAll _ ->

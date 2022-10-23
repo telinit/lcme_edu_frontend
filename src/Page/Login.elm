@@ -10,7 +10,7 @@ import Http
 import Ports exposing (setStorage)
 import Task exposing (mapError)
 import Time
-import Util exposing (httpErrorToString, link_span, onClickPrevent, onClickPreventStop, onClickStop, task_to_cmd)
+import Util exposing (httpErrorToString, link_span, task_to_cmd)
 
 
 type UserMessage
