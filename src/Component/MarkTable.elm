@@ -113,7 +113,7 @@ initForStudent token student_id =
     let
         ( m, c ) =
             MultiTask.init
-                [ ( ext_task FetchedCourseList token [("enrollments__person", student_id), ("enrollments__role", "s")] courseList
+                [ ( ext_task FetchedCourseList token [ ( "enrollments__person", student_id ), ( "enrollments__role", "s" ) ] courseList
                   , "Получение данных о курсах"
                   )
                 , ( ext_task FetchedActivities token [ ( "student", student_id ) ] activityList
@@ -210,9 +210,10 @@ update msg model =
                                     )
 
                         marks_ix =
-                            Debug.log "marks_ix" <| dictFromTupleListMany <|
-                                L.map (\( mark, x, y ) -> ( ( x, y ), SlotMark False mark )) <|
-                                    L.filterMap mark_coords marks
+                            Debug.log "marks_ix" <|
+                                dictFromTupleListMany <|
+                                    L.map (\( mark, x, y ) -> ( ( x, y ), SlotMark False mark )) <|
+                                        L.filterMap mark_coords marks
                     in
                     ( { model
                         | state = Complete
@@ -329,10 +330,10 @@ viewRow : Row -> Html Msg
 viewRow row =
     case row of
         User user ->
-            a [href <| "/profile/" ++ get_id_str user] [text <| user_full_name user]
+            a [ href <| "/profile/" ++ get_id_str user ] [ text <| user_full_name user ]
 
         Course course ->
-            a [href <| "/course/" ++ get_id_str course] [text course.title]
+            a [ href <| "/course/" ++ get_id_str course ] [ text course.title ]
 
 
 markValueColors : String -> ( String, String )

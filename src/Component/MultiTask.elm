@@ -95,7 +95,8 @@ update msg model =
               }
             , case err of
                 --BadStatus 401 -> Task.perform (\_ -> MsgUnauthorized) <| Task.succeed ()
-                _ -> Cmd.none
+                _ ->
+                    Cmd.none
             )
 
         TaskFinishedAll _ ->

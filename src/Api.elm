@@ -1,6 +1,7 @@
 module Api exposing
     ( Request
     , addQuery
+    , ext_task
     , map
     , request
     , send
@@ -14,7 +15,7 @@ module Api exposing
     , withTimeout
     , withToken
     , withTracker
-    , ext_task)
+    )
 
 import Http
 import Json.Decode
