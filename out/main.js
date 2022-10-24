@@ -8421,8 +8421,9 @@ var $author$project$Page$CoursePage$init = F3(
 		var c = _v0.b;
 		return _Utils_Tuple2(
 			{
+				add_activity: {show_form: false, title: ''},
 				roles: roles,
-				show_modal: false,
+				show_members: false,
 				state: $author$project$Page$CoursePage$Fetching(m),
 				token: token
 			},
@@ -9387,305 +9388,8 @@ var $author$project$Page$CoursePage$FetchDone = function (a) {
 var $author$project$Page$CoursePage$FetchFailed = function (a) {
 	return {$: 'FetchFailed', a: a};
 };
-var $author$project$Page$CoursePage$collectFetchResults = function (fetchResults) {
-	if ((fetchResults.b && (fetchResults.a.$ === 'Ok')) && (!fetchResults.b.b)) {
-		var crs = fetchResults.a.a.a;
-		return $elm$core$Maybe$Just(crs);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $author$project$Page$CoursePage$update = F2(
-	function (msg, model) {
-		var _v0 = _Utils_Tuple2(msg, model.state);
-		switch (_v0.a.$) {
-			case 'MsgFetch':
-				if (_v0.b.$ === 'Fetching') {
-					var msg_ = _v0.a.a;
-					var model_ = _v0.b.a;
-					var _v1 = A2($author$project$Component$MultiTask$update, msg_, model_);
-					var m = _v1.a;
-					var c = _v1.b;
-					if (msg_.$ === 'TaskFinishedAll') {
-						var results = msg_.a;
-						var _v3 = $author$project$Page$CoursePage$collectFetchResults(results);
-						if (_v3.$ === 'Just') {
-							var c_ = _v3.a;
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{
-										state: $author$project$Page$CoursePage$FetchDone(c_)
-									}),
-								$elm$core$Platform$Cmd$none);
-						} else {
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{
-										state: $author$project$Page$CoursePage$FetchFailed('Не удалось разобрать результаты запросов')
-									}),
-								$elm$core$Platform$Cmd$none);
-						}
-					} else {
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									state: $author$project$Page$CoursePage$Fetching(m)
-								}),
-							A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
-					}
-				} else {
-					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-				}
-			case 'MsgClickMembers':
-				var _v4 = _v0.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{show_modal: true}),
-					$elm$core$Platform$Cmd$none);
-			default:
-				var _v5 = _v0.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{show_modal: false}),
-					$elm$core$Platform$Cmd$none);
-		}
-	});
-var $author$project$Page$DefaultLayout$update = F2(
-	function (msg, model) {
-		if (msg.$ === 'SidebarToggle') {
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{show_sidebar: !model.show_sidebar}),
-				$elm$core$Platform$Cmd$none);
-		} else {
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{show_sidebar: false}),
-				$elm$core$Platform$Cmd$none);
-		}
-	});
-var $author$project$Page$Login$Error = function (a) {
-	return {$: 'Error', a: a};
-};
-var $author$project$Page$Login$LoggingIn = {$: 'LoggingIn'};
-var $author$project$Page$Login$Login = {$: 'Login'};
-var $author$project$Page$Login$PasswordReset = {$: 'PasswordReset'};
-var $author$project$Page$Login$ResettingPassword = {$: 'ResettingPassword'};
-var $author$project$Page$Login$Success = function (a) {
-	return {$: 'Success', a: a};
-};
-var $author$project$Page$Login$LoginFailed = function (a) {
-	return {$: 'LoginFailed', a: a};
-};
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
-var $elm$http$Http$expectStringResponse = F2(
-	function (toMsg, toResult) {
-		return A3(
-			_Http_expect,
-			'',
-			$elm$core$Basics$identity,
-			A2($elm$core$Basics$composeR, toResult, toMsg));
-	});
-var $elm$core$Result$mapError = F2(
-	function (f, result) {
-		if (result.$ === 'Ok') {
-			var v = result.a;
-			return $elm$core$Result$Ok(v);
-		} else {
-			var e = result.a;
-			return $elm$core$Result$Err(
-				f(e));
-		}
-	});
-var $author$project$Api$expectJson = F3(
-	function (mapError, toMsg, decoder) {
-		return A2(
-			$elm$http$Http$expectStringResponse,
-			toMsg,
-			A2(
-				$elm$core$Basics$composeL,
-				$elm$core$Result$mapError(mapError),
-				$author$project$Api$decodeResponse(decoder)));
-	});
-var $elm$http$Http$Request = function (a) {
-	return {$: 'Request', a: a};
-};
-var $elm$http$Http$State = F2(
-	function (reqs, subs) {
-		return {reqs: reqs, subs: subs};
-	});
-var $elm$http$Http$init = $elm$core$Task$succeed(
-	A2($elm$http$Http$State, $elm$core$Dict$empty, _List_Nil));
-var $elm$core$Process$kill = _Scheduler_kill;
-var $elm$core$Process$spawn = _Scheduler_spawn;
-var $elm$http$Http$updateReqs = F3(
-	function (router, cmds, reqs) {
-		updateReqs:
-		while (true) {
-			if (!cmds.b) {
-				return $elm$core$Task$succeed(reqs);
-			} else {
-				var cmd = cmds.a;
-				var otherCmds = cmds.b;
-				if (cmd.$ === 'Cancel') {
-					var tracker = cmd.a;
-					var _v2 = A2($elm$core$Dict$get, tracker, reqs);
-					if (_v2.$ === 'Nothing') {
-						var $temp$router = router,
-							$temp$cmds = otherCmds,
-							$temp$reqs = reqs;
-						router = $temp$router;
-						cmds = $temp$cmds;
-						reqs = $temp$reqs;
-						continue updateReqs;
-					} else {
-						var pid = _v2.a;
-						return A2(
-							$elm$core$Task$andThen,
-							function (_v3) {
-								return A3(
-									$elm$http$Http$updateReqs,
-									router,
-									otherCmds,
-									A2($elm$core$Dict$remove, tracker, reqs));
-							},
-							$elm$core$Process$kill(pid));
-					}
-				} else {
-					var req = cmd.a;
-					return A2(
-						$elm$core$Task$andThen,
-						function (pid) {
-							var _v4 = req.tracker;
-							if (_v4.$ === 'Nothing') {
-								return A3($elm$http$Http$updateReqs, router, otherCmds, reqs);
-							} else {
-								var tracker = _v4.a;
-								return A3(
-									$elm$http$Http$updateReqs,
-									router,
-									otherCmds,
-									A3($elm$core$Dict$insert, tracker, pid, reqs));
-							}
-						},
-						$elm$core$Process$spawn(
-							A3(
-								_Http_toTask,
-								router,
-								$elm$core$Platform$sendToApp(router),
-								req)));
-				}
-			}
-		}
-	});
-var $elm$http$Http$onEffects = F4(
-	function (router, cmds, subs, state) {
-		return A2(
-			$elm$core$Task$andThen,
-			function (reqs) {
-				return $elm$core$Task$succeed(
-					A2($elm$http$Http$State, reqs, subs));
-			},
-			A3($elm$http$Http$updateReqs, router, cmds, state.reqs));
-	});
-var $elm$http$Http$maybeSend = F4(
-	function (router, desiredTracker, progress, _v0) {
-		var actualTracker = _v0.a;
-		var toMsg = _v0.b;
-		return _Utils_eq(desiredTracker, actualTracker) ? $elm$core$Maybe$Just(
-			A2(
-				$elm$core$Platform$sendToApp,
-				router,
-				toMsg(progress))) : $elm$core$Maybe$Nothing;
-	});
-var $elm$http$Http$onSelfMsg = F3(
-	function (router, _v0, state) {
-		var tracker = _v0.a;
-		var progress = _v0.b;
-		return A2(
-			$elm$core$Task$andThen,
-			function (_v1) {
-				return $elm$core$Task$succeed(state);
-			},
-			$elm$core$Task$sequence(
-				A2(
-					$elm$core$List$filterMap,
-					A3($elm$http$Http$maybeSend, router, tracker, progress),
-					state.subs)));
-	});
-var $elm$http$Http$Cancel = function (a) {
-	return {$: 'Cancel', a: a};
-};
-var $elm$http$Http$cmdMap = F2(
-	function (func, cmd) {
-		if (cmd.$ === 'Cancel') {
-			var tracker = cmd.a;
-			return $elm$http$Http$Cancel(tracker);
-		} else {
-			var r = cmd.a;
-			return $elm$http$Http$Request(
-				{
-					allowCookiesFromOtherDomains: r.allowCookiesFromOtherDomains,
-					body: r.body,
-					expect: A2(_Http_mapExpect, func, r.expect),
-					headers: r.headers,
-					method: r.method,
-					timeout: r.timeout,
-					tracker: r.tracker,
-					url: r.url
-				});
-		}
-	});
-var $elm$http$Http$MySub = F2(
-	function (a, b) {
-		return {$: 'MySub', a: a, b: b};
-	});
-var $elm$http$Http$subMap = F2(
-	function (func, _v0) {
-		var tracker = _v0.a;
-		var toMsg = _v0.b;
-		return A2(
-			$elm$http$Http$MySub,
-			tracker,
-			A2($elm$core$Basics$composeR, toMsg, func));
-	});
-_Platform_effectManagers['Http'] = _Platform_createManager($elm$http$Http$init, $elm$http$Http$onEffects, $elm$http$Http$onSelfMsg, $elm$http$Http$cmdMap, $elm$http$Http$subMap);
-var $elm$http$Http$command = _Platform_leaf('Http');
-var $elm$http$Http$subscription = _Platform_leaf('Http');
-var $elm$http$Http$request = function (r) {
-	return $elm$http$Http$command(
-		$elm$http$Http$Request(
-			{allowCookiesFromOtherDomains: false, body: r.body, expect: r.expect, headers: r.headers, method: r.method, timeout: r.timeout, tracker: r.tracker, url: r.url}));
-};
-var $author$project$Api$sendWithCustomError = F3(
-	function (mapError, toMsg, _v0) {
-		var req = _v0.a;
-		return $elm$http$Http$request(
-			{
-				body: req.body,
-				expect: A3($author$project$Api$expectJson, mapError, toMsg, req.decoder),
-				headers: req.headers,
-				method: req.method,
-				timeout: req.timeout,
-				tracker: req.tracker,
-				url: A3($elm$url$Url$Builder$crossOrigin, req.basePath, req.pathParams, req.queryParams)
-			});
-	});
-var $author$project$Api$send = F2(
-	function (toMsg, req) {
-		return A3($author$project$Api$sendWithCustomError, $elm$core$Basics$identity, toMsg, req);
-	});
+var $author$project$Page$CoursePage$MsgNoop = {$: 'MsgNoop'};
+var $elm$json$Json$Encode$bool = _Json_wrap;
 var $author$project$Api$Data$encode = F3(
 	function (key, encoder, value) {
 		return $elm$core$Maybe$Just(
@@ -9693,235 +9397,52 @@ var $author$project$Api$Data$encode = F3(
 				key,
 				encoder(value)));
 	});
-var $author$project$Api$Data$encodeLoginPairs = function (model) {
-	var pairs = _List_fromArray(
-		[
-			A3($author$project$Api$Data$encode, 'username', $elm$json$Json$Encode$string, model.username),
-			A3($author$project$Api$Data$encode, 'password', $elm$json$Json$Encode$string, model.password)
-		]);
-	return pairs;
-};
-var $author$project$Api$Data$encodeObject = A2(
-	$elm$core$Basics$composeL,
-	$elm$json$Json$Encode$object,
-	$elm$core$List$filterMap($elm$core$Basics$identity));
-var $author$project$Api$Data$encodeLogin = A2($elm$core$Basics$composeL, $author$project$Api$Data$encodeObject, $author$project$Api$Data$encodeLoginPairs);
-var $author$project$Api$Data$Token = F2(
-	function (user, key) {
-		return {key: key, user: user};
-	});
-var $author$project$Api$Data$tokenDecoder = A3(
-	$author$project$Api$Data$decode,
-	'key',
-	$elm$json$Json$Decode$string,
-	A3(
-		$author$project$Api$Data$decode,
-		'user',
-		$author$project$Api$Data$userDecoder,
-		$elm$json$Json$Decode$succeed($author$project$Api$Data$Token)));
-var $author$project$Api$Request$User$userLogin = function (data_body) {
-	return A7(
-		$author$project$Api$request,
-		'POST',
-		'/user/login/',
-		_List_Nil,
-		_List_Nil,
-		_List_Nil,
-		$elm$core$Maybe$Just(
-			$author$project$Api$Data$encodeLogin(data_body)),
-		$author$project$Api$Data$tokenDecoder);
-};
-var $author$project$Page$Login$doLogin = F2(
-	function (username, password) {
-		var onResult = function (r) {
-			if (r.$ === 'Ok') {
-				var token = r.a;
-				return $author$project$Page$Login$LoginCompleted(token);
-			} else {
-				if ((r.a.$ === 'BadStatus') && (r.a.a === 403)) {
-					return $author$project$Page$Login$LoginFailed('Неправильно указаны данные учетной записи');
-				} else {
-					var e = r.a;
-					return $author$project$Page$Login$LoginFailed(
-						$author$project$Util$httpErrorToString(e));
-				}
-			}
-		};
-		return A2(
-			$author$project$Api$send,
-			onResult,
-			$author$project$Api$Request$User$userLogin(
-				{password: password, username: username}));
-	});
-var $author$project$Page$Login$doPasswordReset = function (username) {
-	return $elm$core$Platform$Cmd$none;
-};
-var $author$project$Page$Login$update = F2(
-	function (msg, model) {
-		var _v0 = _Utils_Tuple2(msg, model.state);
-		_v0$10:
-		while (true) {
-			switch (_v0.a.$) {
-				case 'DoLogin':
-					if (_v0.b.$ === 'Login') {
-						var _v1 = _v0.a;
-						var _v2 = _v0.b;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{state: $author$project$Page$Login$LoggingIn}),
-							A2($author$project$Page$Login$doLogin, model.username, model.password));
-					} else {
-						break _v0$10;
-					}
-				case 'DoPasswordReset':
-					if (_v0.b.$ === 'PasswordReset') {
-						var _v3 = _v0.a;
-						var _v4 = _v0.b;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{state: $author$project$Page$Login$ResettingPassword}),
-							$author$project$Page$Login$doPasswordReset(model.username));
-					} else {
-						break _v0$10;
-					}
-				case 'CheckSessionFailed':
-					if (_v0.b.$ === 'CheckingStored') {
-						var err = _v0.a.a;
-						var _v5 = _v0.b;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									message: $author$project$Page$Login$Error(err),
-									state: $author$project$Page$Login$Login
-								}),
-							$elm$core$Platform$Cmd$none);
-					} else {
-						break _v0$10;
-					}
-				case 'ShowPasswordReset':
-					var _v6 = _v0.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{message: $author$project$Page$Login$None, state: $author$project$Page$Login$PasswordReset}),
-						$elm$core$Platform$Cmd$none);
-				case 'ShowLogin':
-					var _v7 = _v0.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{message: $author$project$Page$Login$None, state: $author$project$Page$Login$Login}),
-						$elm$core$Platform$Cmd$none);
-				case 'LoginCompleted':
-					var token = _v0.a.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								message: $author$project$Page$Login$None,
-								state: $author$project$Page$Login$Success(
-									{token: token.key, user: token.user})
-							}),
-						$author$project$Page$Login$doSaveToken(token.key));
-				case 'LoginFailed':
-					var reason = _v0.a.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								message: $author$project$Page$Login$Error(reason),
-								state: $author$project$Page$Login$Login
-							}),
-						$elm$core$Platform$Cmd$none);
-				case 'CloseMessage':
-					var _v8 = _v0.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{message: $author$project$Page$Login$None}),
-						$elm$core$Platform$Cmd$none);
-				case 'ModelSetUsername':
-					var u = _v0.a.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{username: u}),
-						$elm$core$Platform$Cmd$none);
-				default:
-					var p = _v0.a.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{password: p}),
-						$elm$core$Platform$Cmd$none);
-			}
-		}
-		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-	});
-var $author$project$Component$MarkTable$Activity = function (a) {
-	return {$: 'Activity', a: a};
-};
-var $author$project$Component$MarkTable$Complete = {$: 'Complete'};
-var $author$project$Component$MarkTable$Course = function (a) {
-	return {$: 'Course', a: a};
-};
-var $author$project$Component$MarkTable$Date = function (a) {
-	return {$: 'Date', a: a};
-};
-var $author$project$Component$MarkTable$MsgNop = {$: 'MsgNop'};
-var $author$project$Component$MarkTable$SlotMark = F2(
-	function (a, b) {
-		return {$: 'SlotMark', a: a, b: b};
-	});
-var $author$project$Component$MarkTable$SlotVirtual = F3(
-	function (a, b, c) {
-		return {$: 'SlotVirtual', a: a, b: b, c: c};
-	});
-var $author$project$Component$MarkTable$User = function (a) {
-	return {$: 'User', a: a};
-};
-var $elm$core$Maybe$andThen = F2(
-	function (callback, maybeValue) {
-		if (maybeValue.$ === 'Just') {
-			var value = maybeValue.a;
-			return callback(value);
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $author$project$Util$dictFromTupleListMany = function () {
-	var update_ = F2(
-		function (_new, mb) {
-			if (mb.$ === 'Just') {
-				var l = mb.a;
-				return $elm$core$Maybe$Just(
-					A2($elm$core$List$cons, _new, l));
-			} else {
-				return $elm$core$Maybe$Just(
-					_List_fromArray(
-						[_new]));
-			}
-		});
-	return A2(
-		$elm$core$List$foldl,
-		function (_v0) {
-			var a = _v0.a;
-			var b = _v0.b;
-			return A2(
-				$elm$core$Dict$update,
-				a,
-				update_(b));
-		},
-		$elm$core$Dict$empty);
-}();
-var $author$project$Component$MarkTable$MsgMarkCreated = F2(
-	function (a, b) {
-		return {$: 'MsgMarkCreated', a: a, b: b};
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
 	});
 var $danyx23$elm_uuid$Uuid$encode = A2($elm$core$Basics$composeR, $danyx23$elm_uuid$Uuid$toString, $elm$json$Json$Encode$string);
+var $author$project$Api$Data$stringFromActivityFinalType = function (model) {
+	switch (model.$) {
+		case 'ActivityFinalTypeQ1':
+			return 'Q1';
+		case 'ActivityFinalTypeQ2':
+			return 'Q2';
+		case 'ActivityFinalTypeQ3':
+			return 'Q3';
+		case 'ActivityFinalTypeQ4':
+			return 'Q4';
+		case 'ActivityFinalTypeH1':
+			return 'H1';
+		case 'ActivityFinalTypeH2':
+			return 'H2';
+		case 'ActivityFinalTypeY':
+			return 'Y';
+		case 'ActivityFinalTypeE':
+			return 'E';
+		default:
+			return 'F';
+	}
+};
+var $author$project$Api$Data$encodeActivityFinalType = A2($elm$core$Basics$composeL, $elm$json$Json$Encode$string, $author$project$Api$Data$stringFromActivityFinalType);
+var $author$project$Api$Data$stringFromActivityType = function (model) {
+	switch (model.$) {
+		case 'ActivityTypeGEN':
+			return 'GEN';
+		case 'ActivityTypeART':
+			return 'ART';
+		case 'ActivityTypeTSK':
+			return 'TSK';
+		case 'ActivityTypeLNK':
+			return 'LNK';
+		case 'ActivityTypeMED':
+			return 'MED';
+		default:
+			return 'FIN';
+	}
+};
+var $author$project$Api$Data$encodeActivityType = A2($elm$core$Basics$composeL, $elm$json$Json$Encode$string, $author$project$Api$Data$stringFromActivityType);
 var $rtfeldman$elm_iso8601_date_strings$Iso8601$fromMonth = function (month) {
 	switch (month.$) {
 		case 'Jan':
@@ -10157,7 +9678,22 @@ var $rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime = function (time) {
 		A2($elm$time$Time$toMillis, $elm$time$Time$utc, time)) + 'Z'))))))))))));
 };
 var $author$project$Api$Time$dateTimeToString = $rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime;
+var $author$project$Api$Time$dateToString = A2(
+	$elm$core$Basics$composeL,
+	$elm$core$String$left(10),
+	$author$project$Api$Time$dateTimeToString);
+var $author$project$Api$Time$encodeDate = A2($elm$core$Basics$composeL, $elm$json$Json$Encode$string, $author$project$Api$Time$dateToString);
 var $author$project$Api$Time$encodeDateTime = A2($elm$core$Basics$composeL, $elm$json$Json$Encode$string, $author$project$Api$Time$dateTimeToString);
+var $elm$json$Json$Encode$int = _Json_wrap;
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
 var $elm$core$Tuple$pair = F2(
 	function (a, b) {
 		return _Utils_Tuple2(a, b);
@@ -10169,6 +9705,686 @@ var $author$project$Api$Data$maybeEncode = F2(
 				$elm$core$Basics$composeL,
 				$elm$core$Tuple$pair(key),
 				encoder));
+	});
+var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $author$project$Api$Data$encodeNullable = F3(
+	function (key, encoder, value) {
+		return $elm$core$Maybe$Just(
+			_Utils_Tuple2(
+				key,
+				A2(
+					$elm$core$Maybe$withDefault,
+					$elm$json$Json$Encode$null,
+					A2($elm$core$Maybe$map, encoder, value))));
+	});
+var $author$project$Api$Data$maybeEncodeNullable = $author$project$Api$Data$encodeNullable;
+var $author$project$Api$Data$encodeActivityPairs = function (model) {
+	var pairs = _List_fromArray(
+		[
+			A3($author$project$Api$Data$maybeEncode, 'id', $danyx23$elm_uuid$Uuid$encode, model.id),
+			A3($author$project$Api$Data$maybeEncode, 'created_at', $author$project$Api$Time$encodeDateTime, model.createdAt),
+			A3($author$project$Api$Data$maybeEncode, 'updated_at', $author$project$Api$Time$encodeDateTime, model.updatedAt),
+			A3($author$project$Api$Data$maybeEncode, 'type', $author$project$Api$Data$encodeActivityType, model.type_),
+			A3($author$project$Api$Data$encode, 'title', $elm$json$Json$Encode$string, model.title),
+			A3($author$project$Api$Data$maybeEncode, 'keywords', $elm$json$Json$Encode$string, model.keywords),
+			A3($author$project$Api$Data$maybeEncode, 'is_hidden', $elm$json$Json$Encode$bool, model.isHidden),
+			A3($author$project$Api$Data$maybeEncode, 'marks_limit', $elm$json$Json$Encode$int, model.marksLimit),
+			A3($author$project$Api$Data$encode, 'order', $elm$json$Json$Encode$int, model.order),
+			A3($author$project$Api$Data$encode, 'date', $author$project$Api$Time$encodeDate, model.date),
+			A3($author$project$Api$Data$maybeEncodeNullable, 'group', $elm$json$Json$Encode$string, model.group),
+			A3($author$project$Api$Data$maybeEncode, 'body', $elm$json$Json$Encode$string, model.body),
+			A3($author$project$Api$Data$maybeEncodeNullable, 'due_date', $author$project$Api$Time$encodeDateTime, model.dueDate),
+			A3($author$project$Api$Data$maybeEncodeNullable, 'link', $elm$json$Json$Encode$string, model.link),
+			A3($author$project$Api$Data$maybeEncode, 'embed', $elm$json$Json$Encode$bool, model.embed),
+			A3($author$project$Api$Data$maybeEncodeNullable, 'final_type', $author$project$Api$Data$encodeActivityFinalType, model.finalType),
+			A3($author$project$Api$Data$encode, 'course', $danyx23$elm_uuid$Uuid$encode, model.course),
+			A3(
+			$author$project$Api$Data$maybeEncode,
+			'files',
+			$elm$json$Json$Encode$list($danyx23$elm_uuid$Uuid$encode),
+			model.files)
+		]);
+	return pairs;
+};
+var $author$project$Api$Data$encodeObject = A2(
+	$elm$core$Basics$composeL,
+	$elm$json$Json$Encode$object,
+	$elm$core$List$filterMap($elm$core$Basics$identity));
+var $author$project$Api$Data$encodeActivity = A2($elm$core$Basics$composeL, $author$project$Api$Data$encodeObject, $author$project$Api$Data$encodeActivityPairs);
+var $author$project$Api$Request$Activity$activityCreate = function (data_body) {
+	return A7(
+		$author$project$Api$request,
+		'POST',
+		'/activity/',
+		_List_Nil,
+		_List_Nil,
+		_List_Nil,
+		$elm$core$Maybe$Just(
+			$author$project$Api$Data$encodeActivity(data_body)),
+		$author$project$Api$Data$activityDecoder);
+};
+var $author$project$Page$CoursePage$collectFetchResults = function (fetchResults) {
+	if ((fetchResults.b && (fetchResults.a.$ === 'Ok')) && (!fetchResults.b.b)) {
+		var crs = fetchResults.a.a.a;
+		return $elm$core$Maybe$Just(crs);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$List$maximum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Page$CoursePage$update = F2(
+	function (msg, model) {
+		var add_activity = model.add_activity;
+		var _v0 = _Utils_Tuple2(msg, model.state);
+		_v0$7:
+		while (true) {
+			switch (_v0.a.$) {
+				case 'MsgFetch':
+					if (_v0.b.$ === 'Fetching') {
+						var msg_ = _v0.a.a;
+						var model_ = _v0.b.a;
+						var _v1 = A2($author$project$Component$MultiTask$update, msg_, model_);
+						var m = _v1.a;
+						var c = _v1.b;
+						if (msg_.$ === 'TaskFinishedAll') {
+							var results = msg_.a;
+							var _v3 = $author$project$Page$CoursePage$collectFetchResults(results);
+							if (_v3.$ === 'Just') {
+								var c_ = _v3.a;
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											state: $author$project$Page$CoursePage$FetchDone(c_)
+										}),
+									$elm$core$Platform$Cmd$none);
+							} else {
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											state: $author$project$Page$CoursePage$FetchFailed('Не удалось разобрать результаты запросов')
+										}),
+									$elm$core$Platform$Cmd$none);
+							}
+						} else {
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										state: $author$project$Page$CoursePage$Fetching(m)
+									}),
+								A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
+						}
+					} else {
+						break _v0$7;
+					}
+				case 'MsgClickMembers':
+					var _v4 = _v0.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{show_members: true}),
+						$elm$core$Platform$Cmd$none);
+				case 'MsgCloseMembers':
+					var _v5 = _v0.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{show_members: false}),
+						$elm$core$Platform$Cmd$none);
+				case 'MsgAddActivity':
+					var _v6 = _v0.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								add_activity: _Utils_update(
+									add_activity,
+									{show_form: true})
+							}),
+						$elm$core$Platform$Cmd$none);
+				case 'MsgCloseAddActivity':
+					var _v7 = _v0.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								add_activity: _Utils_update(
+									add_activity,
+									{show_form: false})
+							}),
+						$elm$core$Platform$Cmd$none);
+				case 'MsgAddActivityChangeTitle':
+					var t = _v0.a.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								add_activity: _Utils_update(
+									add_activity,
+									{title: t})
+							}),
+						$elm$core$Platform$Cmd$none);
+				case 'MsgAddActivityDoAdd':
+					if (_v0.b.$ === 'FetchDone') {
+						var _v8 = _v0.a;
+						var course = _v0.b.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									add_activity: _Utils_update(
+										add_activity,
+										{show_form: false, title: ''})
+								}),
+							A2(
+								$elm$core$Task$attempt,
+								function (_v9) {
+									return $author$project$Page$CoursePage$MsgNoop;
+								},
+								A4(
+									$author$project$Api$ext_task,
+									$elm$core$Basics$identity,
+									model.token,
+									_List_Nil,
+									$author$project$Api$Request$Activity$activityCreate(
+										{
+											body: $elm$core$Maybe$Nothing,
+											course: $author$project$Util$get_id(course),
+											createdAt: $elm$core$Maybe$Nothing,
+											date: $elm$time$Time$millisToPosix(0),
+											dueDate: $elm$core$Maybe$Nothing,
+											embed: $elm$core$Maybe$Nothing,
+											files: $elm$core$Maybe$Nothing,
+											finalType: $elm$core$Maybe$Nothing,
+											group: $elm$core$Maybe$Nothing,
+											id: $elm$core$Maybe$Nothing,
+											isHidden: $elm$core$Maybe$Just(false),
+											keywords: $elm$core$Maybe$Nothing,
+											link: $elm$core$Maybe$Nothing,
+											marksLimit: $elm$core$Maybe$Just(2),
+											order: 1 + A2(
+												$elm$core$Maybe$withDefault,
+												0,
+												$elm$core$List$maximum(
+													A2(
+														$elm$core$List$map,
+														function ($) {
+															return $.order;
+														},
+														course.activities))),
+											title: add_activity.title,
+											type_: $elm$core$Maybe$Nothing,
+											updatedAt: $elm$core$Maybe$Nothing
+										}))));
+					} else {
+						break _v0$7;
+					}
+				default:
+					break _v0$7;
+			}
+		}
+		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+	});
+var $author$project$Page$DefaultLayout$update = F2(
+	function (msg, model) {
+		if (msg.$ === 'SidebarToggle') {
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{show_sidebar: !model.show_sidebar}),
+				$elm$core$Platform$Cmd$none);
+		} else {
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{show_sidebar: false}),
+				$elm$core$Platform$Cmd$none);
+		}
+	});
+var $author$project$Page$Login$Error = function (a) {
+	return {$: 'Error', a: a};
+};
+var $author$project$Page$Login$LoggingIn = {$: 'LoggingIn'};
+var $author$project$Page$Login$Login = {$: 'Login'};
+var $author$project$Page$Login$PasswordReset = {$: 'PasswordReset'};
+var $author$project$Page$Login$ResettingPassword = {$: 'ResettingPassword'};
+var $author$project$Page$Login$Success = function (a) {
+	return {$: 'Success', a: a};
+};
+var $author$project$Page$Login$LoginFailed = function (a) {
+	return {$: 'LoginFailed', a: a};
+};
+var $elm$http$Http$expectStringResponse = F2(
+	function (toMsg, toResult) {
+		return A3(
+			_Http_expect,
+			'',
+			$elm$core$Basics$identity,
+			A2($elm$core$Basics$composeR, toResult, toMsg));
+	});
+var $elm$core$Result$mapError = F2(
+	function (f, result) {
+		if (result.$ === 'Ok') {
+			var v = result.a;
+			return $elm$core$Result$Ok(v);
+		} else {
+			var e = result.a;
+			return $elm$core$Result$Err(
+				f(e));
+		}
+	});
+var $author$project$Api$expectJson = F3(
+	function (mapError, toMsg, decoder) {
+		return A2(
+			$elm$http$Http$expectStringResponse,
+			toMsg,
+			A2(
+				$elm$core$Basics$composeL,
+				$elm$core$Result$mapError(mapError),
+				$author$project$Api$decodeResponse(decoder)));
+	});
+var $elm$http$Http$Request = function (a) {
+	return {$: 'Request', a: a};
+};
+var $elm$http$Http$State = F2(
+	function (reqs, subs) {
+		return {reqs: reqs, subs: subs};
+	});
+var $elm$http$Http$init = $elm$core$Task$succeed(
+	A2($elm$http$Http$State, $elm$core$Dict$empty, _List_Nil));
+var $elm$core$Process$kill = _Scheduler_kill;
+var $elm$core$Process$spawn = _Scheduler_spawn;
+var $elm$http$Http$updateReqs = F3(
+	function (router, cmds, reqs) {
+		updateReqs:
+		while (true) {
+			if (!cmds.b) {
+				return $elm$core$Task$succeed(reqs);
+			} else {
+				var cmd = cmds.a;
+				var otherCmds = cmds.b;
+				if (cmd.$ === 'Cancel') {
+					var tracker = cmd.a;
+					var _v2 = A2($elm$core$Dict$get, tracker, reqs);
+					if (_v2.$ === 'Nothing') {
+						var $temp$router = router,
+							$temp$cmds = otherCmds,
+							$temp$reqs = reqs;
+						router = $temp$router;
+						cmds = $temp$cmds;
+						reqs = $temp$reqs;
+						continue updateReqs;
+					} else {
+						var pid = _v2.a;
+						return A2(
+							$elm$core$Task$andThen,
+							function (_v3) {
+								return A3(
+									$elm$http$Http$updateReqs,
+									router,
+									otherCmds,
+									A2($elm$core$Dict$remove, tracker, reqs));
+							},
+							$elm$core$Process$kill(pid));
+					}
+				} else {
+					var req = cmd.a;
+					return A2(
+						$elm$core$Task$andThen,
+						function (pid) {
+							var _v4 = req.tracker;
+							if (_v4.$ === 'Nothing') {
+								return A3($elm$http$Http$updateReqs, router, otherCmds, reqs);
+							} else {
+								var tracker = _v4.a;
+								return A3(
+									$elm$http$Http$updateReqs,
+									router,
+									otherCmds,
+									A3($elm$core$Dict$insert, tracker, pid, reqs));
+							}
+						},
+						$elm$core$Process$spawn(
+							A3(
+								_Http_toTask,
+								router,
+								$elm$core$Platform$sendToApp(router),
+								req)));
+				}
+			}
+		}
+	});
+var $elm$http$Http$onEffects = F4(
+	function (router, cmds, subs, state) {
+		return A2(
+			$elm$core$Task$andThen,
+			function (reqs) {
+				return $elm$core$Task$succeed(
+					A2($elm$http$Http$State, reqs, subs));
+			},
+			A3($elm$http$Http$updateReqs, router, cmds, state.reqs));
+	});
+var $elm$http$Http$maybeSend = F4(
+	function (router, desiredTracker, progress, _v0) {
+		var actualTracker = _v0.a;
+		var toMsg = _v0.b;
+		return _Utils_eq(desiredTracker, actualTracker) ? $elm$core$Maybe$Just(
+			A2(
+				$elm$core$Platform$sendToApp,
+				router,
+				toMsg(progress))) : $elm$core$Maybe$Nothing;
+	});
+var $elm$http$Http$onSelfMsg = F3(
+	function (router, _v0, state) {
+		var tracker = _v0.a;
+		var progress = _v0.b;
+		return A2(
+			$elm$core$Task$andThen,
+			function (_v1) {
+				return $elm$core$Task$succeed(state);
+			},
+			$elm$core$Task$sequence(
+				A2(
+					$elm$core$List$filterMap,
+					A3($elm$http$Http$maybeSend, router, tracker, progress),
+					state.subs)));
+	});
+var $elm$http$Http$Cancel = function (a) {
+	return {$: 'Cancel', a: a};
+};
+var $elm$http$Http$cmdMap = F2(
+	function (func, cmd) {
+		if (cmd.$ === 'Cancel') {
+			var tracker = cmd.a;
+			return $elm$http$Http$Cancel(tracker);
+		} else {
+			var r = cmd.a;
+			return $elm$http$Http$Request(
+				{
+					allowCookiesFromOtherDomains: r.allowCookiesFromOtherDomains,
+					body: r.body,
+					expect: A2(_Http_mapExpect, func, r.expect),
+					headers: r.headers,
+					method: r.method,
+					timeout: r.timeout,
+					tracker: r.tracker,
+					url: r.url
+				});
+		}
+	});
+var $elm$http$Http$MySub = F2(
+	function (a, b) {
+		return {$: 'MySub', a: a, b: b};
+	});
+var $elm$http$Http$subMap = F2(
+	function (func, _v0) {
+		var tracker = _v0.a;
+		var toMsg = _v0.b;
+		return A2(
+			$elm$http$Http$MySub,
+			tracker,
+			A2($elm$core$Basics$composeR, toMsg, func));
+	});
+_Platform_effectManagers['Http'] = _Platform_createManager($elm$http$Http$init, $elm$http$Http$onEffects, $elm$http$Http$onSelfMsg, $elm$http$Http$cmdMap, $elm$http$Http$subMap);
+var $elm$http$Http$command = _Platform_leaf('Http');
+var $elm$http$Http$subscription = _Platform_leaf('Http');
+var $elm$http$Http$request = function (r) {
+	return $elm$http$Http$command(
+		$elm$http$Http$Request(
+			{allowCookiesFromOtherDomains: false, body: r.body, expect: r.expect, headers: r.headers, method: r.method, timeout: r.timeout, tracker: r.tracker, url: r.url}));
+};
+var $author$project$Api$sendWithCustomError = F3(
+	function (mapError, toMsg, _v0) {
+		var req = _v0.a;
+		return $elm$http$Http$request(
+			{
+				body: req.body,
+				expect: A3($author$project$Api$expectJson, mapError, toMsg, req.decoder),
+				headers: req.headers,
+				method: req.method,
+				timeout: req.timeout,
+				tracker: req.tracker,
+				url: A3($elm$url$Url$Builder$crossOrigin, req.basePath, req.pathParams, req.queryParams)
+			});
+	});
+var $author$project$Api$send = F2(
+	function (toMsg, req) {
+		return A3($author$project$Api$sendWithCustomError, $elm$core$Basics$identity, toMsg, req);
+	});
+var $author$project$Api$Data$encodeLoginPairs = function (model) {
+	var pairs = _List_fromArray(
+		[
+			A3($author$project$Api$Data$encode, 'username', $elm$json$Json$Encode$string, model.username),
+			A3($author$project$Api$Data$encode, 'password', $elm$json$Json$Encode$string, model.password)
+		]);
+	return pairs;
+};
+var $author$project$Api$Data$encodeLogin = A2($elm$core$Basics$composeL, $author$project$Api$Data$encodeObject, $author$project$Api$Data$encodeLoginPairs);
+var $author$project$Api$Data$Token = F2(
+	function (user, key) {
+		return {key: key, user: user};
+	});
+var $author$project$Api$Data$tokenDecoder = A3(
+	$author$project$Api$Data$decode,
+	'key',
+	$elm$json$Json$Decode$string,
+	A3(
+		$author$project$Api$Data$decode,
+		'user',
+		$author$project$Api$Data$userDecoder,
+		$elm$json$Json$Decode$succeed($author$project$Api$Data$Token)));
+var $author$project$Api$Request$User$userLogin = function (data_body) {
+	return A7(
+		$author$project$Api$request,
+		'POST',
+		'/user/login/',
+		_List_Nil,
+		_List_Nil,
+		_List_Nil,
+		$elm$core$Maybe$Just(
+			$author$project$Api$Data$encodeLogin(data_body)),
+		$author$project$Api$Data$tokenDecoder);
+};
+var $author$project$Page$Login$doLogin = F2(
+	function (username, password) {
+		var onResult = function (r) {
+			if (r.$ === 'Ok') {
+				var token = r.a;
+				return $author$project$Page$Login$LoginCompleted(token);
+			} else {
+				if ((r.a.$ === 'BadStatus') && (r.a.a === 403)) {
+					return $author$project$Page$Login$LoginFailed('Неправильно указаны данные учетной записи');
+				} else {
+					var e = r.a;
+					return $author$project$Page$Login$LoginFailed(
+						$author$project$Util$httpErrorToString(e));
+				}
+			}
+		};
+		return A2(
+			$author$project$Api$send,
+			onResult,
+			$author$project$Api$Request$User$userLogin(
+				{password: password, username: username}));
+	});
+var $author$project$Page$Login$doPasswordReset = function (username) {
+	return $elm$core$Platform$Cmd$none;
+};
+var $author$project$Page$Login$update = F2(
+	function (msg, model) {
+		var _v0 = _Utils_Tuple2(msg, model.state);
+		_v0$10:
+		while (true) {
+			switch (_v0.a.$) {
+				case 'DoLogin':
+					if (_v0.b.$ === 'Login') {
+						var _v1 = _v0.a;
+						var _v2 = _v0.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{state: $author$project$Page$Login$LoggingIn}),
+							A2($author$project$Page$Login$doLogin, model.username, model.password));
+					} else {
+						break _v0$10;
+					}
+				case 'DoPasswordReset':
+					if (_v0.b.$ === 'PasswordReset') {
+						var _v3 = _v0.a;
+						var _v4 = _v0.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{state: $author$project$Page$Login$ResettingPassword}),
+							$author$project$Page$Login$doPasswordReset(model.username));
+					} else {
+						break _v0$10;
+					}
+				case 'CheckSessionFailed':
+					if (_v0.b.$ === 'CheckingStored') {
+						var err = _v0.a.a;
+						var _v5 = _v0.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									message: $author$project$Page$Login$Error(err),
+									state: $author$project$Page$Login$Login
+								}),
+							$elm$core$Platform$Cmd$none);
+					} else {
+						break _v0$10;
+					}
+				case 'ShowPasswordReset':
+					var _v6 = _v0.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{message: $author$project$Page$Login$None, state: $author$project$Page$Login$PasswordReset}),
+						$elm$core$Platform$Cmd$none);
+				case 'ShowLogin':
+					var _v7 = _v0.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{message: $author$project$Page$Login$None, state: $author$project$Page$Login$Login}),
+						$elm$core$Platform$Cmd$none);
+				case 'LoginCompleted':
+					var token = _v0.a.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								message: $author$project$Page$Login$None,
+								state: $author$project$Page$Login$Success(
+									{token: token.key, user: token.user})
+							}),
+						$author$project$Page$Login$doSaveToken(token.key));
+				case 'LoginFailed':
+					var reason = _v0.a.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								message: $author$project$Page$Login$Error(reason),
+								state: $author$project$Page$Login$Login
+							}),
+						$elm$core$Platform$Cmd$none);
+				case 'CloseMessage':
+					var _v8 = _v0.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{message: $author$project$Page$Login$None}),
+						$elm$core$Platform$Cmd$none);
+				case 'ModelSetUsername':
+					var u = _v0.a.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{username: u}),
+						$elm$core$Platform$Cmd$none);
+				default:
+					var p = _v0.a.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{password: p}),
+						$elm$core$Platform$Cmd$none);
+			}
+		}
+		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+	});
+var $author$project$Component$MarkTable$Activity = function (a) {
+	return {$: 'Activity', a: a};
+};
+var $author$project$Component$MarkTable$Complete = {$: 'Complete'};
+var $author$project$Component$MarkTable$Course = function (a) {
+	return {$: 'Course', a: a};
+};
+var $author$project$Component$MarkTable$Date = function (a) {
+	return {$: 'Date', a: a};
+};
+var $author$project$Component$MarkTable$MsgNop = {$: 'MsgNop'};
+var $author$project$Component$MarkTable$SlotMark = F2(
+	function (a, b) {
+		return {$: 'SlotMark', a: a, b: b};
+	});
+var $author$project$Component$MarkTable$SlotVirtual = F3(
+	function (a, b, c) {
+		return {$: 'SlotVirtual', a: a, b: b, c: c};
+	});
+var $author$project$Component$MarkTable$User = function (a) {
+	return {$: 'User', a: a};
+};
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (maybeValue.$ === 'Just') {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $author$project$Util$dictFromTupleListMany = function () {
+	var update_ = F2(
+		function (_new, mb) {
+			if (mb.$ === 'Just') {
+				var l = mb.a;
+				return $elm$core$Maybe$Just(
+					A2($elm$core$List$cons, _new, l));
+			} else {
+				return $elm$core$Maybe$Just(
+					_List_fromArray(
+						[_new]));
+			}
+		});
+	return A2(
+		$elm$core$List$foldl,
+		function (_v0) {
+			var a = _v0.a;
+			var b = _v0.b;
+			return A2(
+				$elm$core$Dict$update,
+				a,
+				update_(b));
+		},
+		$elm$core$Dict$empty);
+}();
+var $author$project$Component$MarkTable$MsgMarkCreated = F2(
+	function (a, b) {
+		return {$: 'MsgMarkCreated', a: a, b: b};
 	});
 var $author$project$Api$Data$encodeMarkPairs = function (model) {
 	var pairs = _List_fromArray(
@@ -10332,17 +10548,6 @@ var $author$project$Util$index_by = F2(
 				},
 				list));
 	});
-var $elm$core$Debug$log = _Debug_log;
-var $elm$core$List$maximum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(
-			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $elm$core$List$repeatHelp = F3(
 	function (result, n, value) {
 		repeatHelp:
@@ -10443,7 +10648,7 @@ var $author$project$Component$MarkTable$updateMark = F3(
 									function (col, _v4) {
 										var slots_cnt = _v4.a;
 										var res = _v4.b;
-										var new_col = A3(update_col, cell_x, col, mb_mark);
+										var new_col = A3(update_col, cell_x - slots_cnt, col, mb_mark);
 										return _Utils_Tuple2(
 											slots_cnt + $elm$core$List$length(new_col),
 											_Utils_ap(
@@ -10550,7 +10755,21 @@ var $author$project$Component$MarkTable$update = F2(
 													_Utils_Tuple2(x, y),
 													A2($author$project$Component$MarkTable$SlotMark, false, mark));
 											},
-											A2($elm$core$List$filterMap, mark_coords, marks)));
+											A2(
+												$elm$core$List$filterMap,
+												mark_coords,
+												A2(
+													$elm$core$List$sortBy,
+													A2(
+														$elm$core$Basics$composeR,
+														function ($) {
+															return $.createdAt;
+														},
+														A2(
+															$elm$core$Basics$composeR,
+															$elm$core$Maybe$map($elm$time$Time$posixToMillis),
+															$elm$core$Maybe$withDefault(0))),
+													marks))));
 									var cells = A2(
 										$elm$core$List$map,
 										function (row) {
@@ -10634,8 +10853,7 @@ var $author$project$Component$MarkTable$update = F2(
 												return $elm$core$Maybe$Just(
 													_Utils_Tuple3(
 														mark,
-														$elm$core$String$fromInt(
-															$elm$time$Time$posixToMillis(act.date)),
+														$author$project$Util$get_id_str(act),
 														$danyx23$elm_uuid$Uuid$toString(mark.student)));
 											},
 											A2(
@@ -10643,21 +10861,32 @@ var $author$project$Component$MarkTable$update = F2(
 												$danyx23$elm_uuid$Uuid$toString(mark.activity),
 												ix_acts));
 									};
-									var marks_ix = A2(
-										$elm$core$Debug$log,
-										'marks_ix',
-										$author$project$Util$dictFromTupleListMany(
+									var marks_ix = $author$project$Util$dictFromTupleListMany(
+										A2(
+											$elm$core$List$map,
+											function (_v11) {
+												var a = _v11.a;
+												var b = _v11.b;
+												var c_ = _v11.c;
+												return _Utils_Tuple2(
+													_Utils_Tuple2(b, c_),
+													A2($author$project$Component$MarkTable$SlotMark, false, a));
+											},
 											A2(
-												$elm$core$List$map,
-												function (_v11) {
-													var a = _v11.a;
-													var b = _v11.b;
-													var c_ = _v11.c;
-													return _Utils_Tuple2(
-														_Utils_Tuple2(b, c_),
-														A2($author$project$Component$MarkTable$SlotMark, false, a));
-												},
-												A2($elm$core$List$filterMap, mark_coords, marks))));
+												$elm$core$List$filterMap,
+												mark_coords,
+												A2(
+													$elm$core$List$sortBy,
+													A2(
+														$elm$core$Basics$composeR,
+														function ($) {
+															return $.createdAt;
+														},
+														A2(
+															$elm$core$Basics$composeR,
+															$elm$core$Maybe$map($elm$time$Time$posixToMillis),
+															$elm$core$Maybe$withDefault(0))),
+													marks))));
 									var columns = A2(
 										$elm$core$List$map,
 										$author$project$Component$MarkTable$Activity,
@@ -10667,10 +10896,6 @@ var $author$project$Component$MarkTable$update = F2(
 												return $.order;
 											},
 											course.activities));
-									var activity_timestamp = function (act) {
-										return $elm$core$String$fromInt(
-											$elm$time$Time$posixToMillis(act.date));
-									};
 									var cells = A2(
 										$elm$core$List$map,
 										function (row) {
@@ -10681,12 +10906,9 @@ var $author$project$Component$MarkTable$update = F2(
 													if ((_v10.a.$ === 'User') && (_v10.b.$ === 'Activity')) {
 														var student = _v10.a.a;
 														var act = _v10.b.a;
-														var coords = A2(
-															$elm$core$Debug$log,
-															'coords',
-															_Utils_Tuple2(
-																activity_timestamp(act),
-																$author$project$Util$get_id_str(student)));
+														var coords = _Utils_Tuple2(
+															$author$project$Util$get_id_str(act),
+															$author$project$Util$get_id_str(student));
 														var mark_slots = A2(
 															$elm$core$Maybe$withDefault,
 															_List_Nil,
@@ -10708,6 +10930,10 @@ var $author$project$Component$MarkTable$update = F2(
 												columns);
 										},
 										rows);
+									var activity_timestamp = function (act) {
+										return $elm$core$String$fromInt(
+											$elm$time$Time$posixToMillis(act.date));
+									};
 									return _Utils_Tuple2(
 										_Utils_update(
 											model,
@@ -10813,21 +11039,15 @@ var $author$project$Component$MarkTable$update = F2(
 							check_coords,
 							_Utils_Tuple2(nx, ny),
 							model.size) ? _Utils_Tuple2(
-							A2($elm$core$Debug$log, 'model', model),
+							model,
 							A2(
-								$elm$core$Debug$log,
-								'moving',
-								A2(
-									$elm$core$Task$attempt,
-									onResult,
-									$elm$browser$Browser$Dom$focus(
-										'slot-' + ($elm$core$String$fromInt(nx) + ('-' + $elm$core$String$fromInt(ny))))))) : _Utils_Tuple2(
-							A2($elm$core$Debug$log, 'model', model),
-							A2($elm$core$Debug$log, 'not moving', $elm$core$Platform$Cmd$none));
+								$elm$core$Task$attempt,
+								onResult,
+								$elm$browser$Browser$Dom$focus(
+									'slot-' + ($elm$core$String$fromInt(nx) + ('-' + $elm$core$String$fromInt(ny)))))) : _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					case 'CmdSetMark':
 						var new_mark = cmd.a;
 						if (mark_slot.$ === 'SlotMark') {
-							var isSelected = mark_slot.a;
 							var mark = mark_slot.b;
 							return _Utils_Tuple2(
 								model,
@@ -10838,7 +11058,6 @@ var $author$project$Component$MarkTable$update = F2(
 									_Utils_Tuple2(x, y),
 									new_mark));
 						} else {
-							var isSelected = mark_slot.a;
 							var activityID = mark_slot.b;
 							var studentID = mark_slot.c;
 							return _Utils_Tuple2(
@@ -10861,9 +11080,7 @@ var $author$project$Component$MarkTable$update = F2(
 										model.teacher_id)));
 						}
 					case 'CmdUnknown':
-						return _Utils_Tuple2(
-							model,
-							A2($elm$core$Debug$log, 'none', $elm$core$Platform$Cmd$none));
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					default:
 						if (mark_slot.$ === 'SlotMark') {
 							var isSelected = mark_slot.a;
@@ -12270,7 +12487,7 @@ var $author$project$Page$CourseListPage$view = function (model) {
 					_List_Nil,
 					_List_fromArray(
 						[
-							$elm$html$Html$text('Ваши предметы')
+							$elm$html$Html$text('Доступные предметы')
 						])),
 					$author$project$Page$CourseListPage$viewControls
 				]),
@@ -12342,7 +12559,13 @@ var $author$project$Component$MessageBox$view = F4(
 							]))
 					])));
 	});
+var $author$project$Page$CoursePage$MsgAddActivity = {$: 'MsgAddActivity'};
+var $author$project$Page$CoursePage$MsgAddActivityChangeTitle = function (a) {
+	return {$: 'MsgAddActivityChangeTitle', a: a};
+};
+var $author$project$Page$CoursePage$MsgAddActivityDoAdd = {$: 'MsgAddActivityDoAdd'};
 var $author$project$Page$CoursePage$MsgClickMembers = {$: 'MsgClickMembers'};
+var $author$project$Page$CoursePage$MsgCloseAddActivity = {$: 'MsgCloseAddActivity'};
 var $author$project$Page$CoursePage$MsgCloseMembers = {$: 'MsgCloseMembers'};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$core$List$filter = F2(
@@ -12356,6 +12579,7 @@ var $elm$core$List$filter = F2(
 			_List_Nil,
 			list);
 	});
+var $elm$html$Html$form = _VirtualDom_node('form');
 var $elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -12365,7 +12589,42 @@ var $elm$core$List$head = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
+var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$html$Html$label = _VirtualDom_node('label');
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $elm$core$String$trim = _String_trim;
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $author$project$Component$Misc$user_link = function (user) {
 	return A2(
 		$elm$html$Html$a,
@@ -12399,6 +12658,7 @@ var $author$project$Component$Misc$user_link = function (user) {
 					]))
 			]));
 };
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Component$Modal$view = F6(
 	function (id_, title, body_, msg_close, buttons, do_show) {
 		return do_show ? A2(
@@ -12579,7 +12839,7 @@ var $author$project$Page$CoursePage$viewCourse = F2(
 						user_list(students))
 					]));
 		}();
-		var modal = function (do_show) {
+		var modal_members = function (do_show) {
 			return A6(
 				$author$project$Component$Modal$view,
 				'members',
@@ -12920,15 +13180,97 @@ var $author$project$Page$CoursePage$viewCourse = F2(
 							$elm$html$Html$text(courseRead.title)
 						]))
 				]));
+		var add_activity_form = A2(
+			$elm$html$Html$form,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('ui form')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('field')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$label,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Название темы')
+								])),
+							A2(
+							$elm$html$Html$input,
+							_List_fromArray(
+								[
+									$elm$html$Html$Events$onInput($author$project$Page$CoursePage$MsgAddActivityChangeTitle),
+									$elm$html$Html$Attributes$placeholder('Название темы'),
+									$elm$html$Html$Attributes$type_('text'),
+									$elm$html$Html$Attributes$value(model.add_activity.title)
+								]),
+							_List_Nil)
+						]))
+				]));
+		var modal_add_activity = function (do_show) {
+			return A6(
+				$author$project$Component$Modal$view,
+				'members',
+				'Добавить активность',
+				add_activity_form,
+				$author$project$Page$CoursePage$MsgCloseAddActivity,
+				_List_fromArray(
+					[
+						_Utils_Tuple2('Закрыть', $author$project$Page$CoursePage$MsgCloseAddActivity),
+						_Utils_Tuple2('Добавить', $author$project$Page$CoursePage$MsgAddActivityDoAdd)
+					]),
+				do_show);
+		};
+		var activities_title = A2(
+			$elm$html$Html$h1,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('row between-xs')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Содержание'),
+					A2(
+					$elm$html$Html$button,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('ui button green'),
+							$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgAddActivity)
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$i,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('icon plus')
+								]),
+							_List_Nil),
+							$elm$html$Html$text('Добавить')
+						]))
+				]));
 		var activities = A2($elm$core$List$map, $author$project$Page$CoursePage$viewActivity, courseRead.activities);
 		return A2(
 			$elm$html$Html$div,
-			_List_Nil,
 			_List_fromArray(
 				[
-					modal(model.show_modal),
+					A2($elm$html$Html$Attributes$style, 'padding-bottom', '3em')
+				]),
+			_List_fromArray(
+				[
+					modal_members(model.show_members),
+					modal_add_activity(model.add_activity.show_form),
 					breadcrumbs,
 					header,
+					activities_title,
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -13002,7 +13344,6 @@ var $author$project$Page$Login$ModelSetUsername = function (a) {
 	return {$: 'ModelSetUsername', a: a};
 };
 var $author$project$Page$Login$ShowPasswordReset = {$: 'ShowPasswordReset'};
-var $elm$html$Html$form = _VirtualDom_node('form');
 var $elm$html$Html$Events$alwaysPreventDefault = function (msg) {
 	return _Utils_Tuple2(msg, true);
 };
@@ -13035,41 +13376,6 @@ var $elm$html$Html$Attributes$classList = function (classes) {
 				$elm$core$Tuple$first,
 				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
 };
-var $elm$html$Html$input = _VirtualDom_node('input');
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var $elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
-};
-var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
-var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
-var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Page$Login$viewField = F5(
 	function (field_type, value_, placeholder_, icon, on_input) {
 		return A2(
@@ -13434,6 +13740,7 @@ var $author$project$Component$MarkTable$showFetchedData = function (fetchedData)
 				$elm$core$List$length(activities));
 	}
 };
+var $elm$core$Debug$log = _Debug_log;
 var $elm$html$Html$table = _VirtualDom_node('table');
 var $elm$core$List$singleton = function (value) {
 	return _List_fromArray(
@@ -13589,7 +13896,6 @@ var $author$project$Component$MarkTable$MsgMarkKeyPress = F4(
 	function (a, b, c, d) {
 		return {$: 'MsgMarkKeyPress', a: a, b: b, c: c, d: d};
 	});
-var $elm$json$Json$Encode$bool = _Json_wrap;
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -13854,6 +14160,38 @@ var $author$project$Component$MarkTable$viewTableRow = F2(
 var $author$project$Util$zip = $elm$core$List$map2($elm$core$Tuple$pair);
 var $author$project$Component$MarkTable$viewTable = F3(
 	function (rows, columns, cells) {
+		var scell = function (c) {
+			if (c.$ === 'SlotVirtual') {
+				return '_';
+			} else {
+				var m = c.b;
+				return m.value;
+			}
+		};
+		var _v0 = A2(
+			$elm$core$Debug$log,
+			A2(
+				$elm$core$String$join,
+				'\n',
+				A2(
+					$elm$core$List$map,
+					function (row) {
+						return A2(
+							$elm$core$String$join,
+							'  ',
+							A2(
+								$elm$core$List$map,
+								A2(
+									$elm$core$Basics$composeR,
+									scell,
+									A2(
+										$elm$core$String$padLeft,
+										2,
+										_Utils_chr(' '))),
+								$elm$core$List$concat(row)));
+					},
+					cells)),
+			_Utils_Tuple0);
 		return A2(
 			$elm$html$Html$table,
 			_List_fromArray(

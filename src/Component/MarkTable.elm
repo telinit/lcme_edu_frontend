@@ -18,7 +18,7 @@ import List as L
 import Maybe as M
 import Set
 import Task
-import Time as T exposing (Posix)
+import Time as T exposing (Posix, millisToPosix)
 import Util exposing (dictFromTupleListMany, get_id, get_id_str, httpErrorToString, index_by, posixToDDMMYYYY, user_full_name, zip)
 import Uuid exposing (Uuid)
 
@@ -367,7 +367,7 @@ updateMark model ( cell_x, cell_y ) mb_mark =
                                 (\col ( slots_cnt, res ) ->
                                     let
                                         new_col =
-                                            update_col cell_x col mb_mark
+                                            update_col (cell_x - slots_cnt) col mb_mark
                                     in
                                     ( slots_cnt + L.length new_col, res ++ [ new_col ] )
                                 )
@@ -427,7 +427,8 @@ update msg model =
                         marks_ix =
                             dictFromTupleListMany <|
                                 L.map (\( mark, x, y ) -> ( ( x, y ), SlotMark False mark )) <|
-                                    L.filterMap mark_coords marks
+                                    L.filterMap mark_coords <|
+                                        L.sortBy (.createdAt >> M.map T.posixToMillis >> M.withDefault 0) marks
 
                         cells =
                             L.map
@@ -438,7 +439,13 @@ update msg model =
                                                 ( Course course, Date date ) ->
                                                     let
                                                         mark_slots =
-                                                            M.withDefault [] <| D.get ( String.fromInt <| T.posixToMillis date, get_id_str course ) marks_ix
+                                                            M.withDefault [] <|
+                                                                D.get
+                                                                    ( String.fromInt <|
+                                                                        T.posixToMillis date
+                                                                    , get_id_str course
+                                                                    )
+                                                                    marks_ix
                                                     in
                                                     mark_slots
 
@@ -493,16 +500,16 @@ update msg model =
                                     (\act ->
                                         Just
                                             ( mark
-                                            , String.fromInt <| T.posixToMillis act.date
+                                            , get_id_str act
                                             , Uuid.toString mark.student
                                             )
                                     )
 
                         marks_ix =
-                            Debug.log "marks_ix" <|
-                                dictFromTupleListMany <|
-                                    L.map (\( a, b, c_ ) -> ( ( b, c_ ), SlotMark False a )) <|
-                                        L.filterMap mark_coords marks
+                            dictFromTupleListMany <|
+                                L.map (\( a, b, c_ ) -> ( ( b, c_ ), SlotMark False a )) <|
+                                    L.filterMap mark_coords <|
+                                        L.sortBy (.createdAt >> M.map T.posixToMillis >> M.withDefault 0) marks
 
                         cells =
                             L.map
@@ -513,7 +520,7 @@ update msg model =
                                                 ( User student, Activity act ) ->
                                                     let
                                                         coords =
-                                                            Debug.log "coords" <| ( activity_timestamp act, get_id_str student )
+                                                            ( get_id_str act, get_id_str student )
 
                                                         mark_slots =
                                                             M.withDefault [] <| D.get coords marks_ix
@@ -590,16 +597,16 @@ update msg model =
             case cmd of
                 CmdMove _ ->
                     if check_coords ( nx, ny ) model.size then
-                        ( Debug.log "model" model
-                        , Debug.log "moving" (Task.attempt onResult <| focus <| "slot-" ++ String.fromInt nx ++ "-" ++ String.fromInt ny)
+                        ( model
+                        , Task.attempt onResult <| focus <| "slot-" ++ String.fromInt nx ++ "-" ++ String.fromInt ny
                         )
 
                     else
-                        ( Debug.log "model" model, Debug.log "not moving" Cmd.none )
+                        ( model, Cmd.none )
 
                 CmdSetMark new_mark ->
                     case mark_slot of
-                        SlotMark isSelected mark ->
+                        SlotMark _ mark ->
                             ( model
                             , doUpdateMark
                                 model.token
@@ -608,7 +615,7 @@ update msg model =
                                 new_mark
                             )
 
-                        SlotVirtual isSelected activityID studentID ->
+                        SlotVirtual _ activityID studentID ->
                             ( model
                             , Maybe.withDefault Cmd.none <|
                                 Maybe.map
@@ -625,7 +632,7 @@ update msg model =
                             )
 
                 CmdUnknown _ ->
-                    ( model, Debug.log "none" Cmd.none )
+                    ( model, Cmd.none )
 
                 CmdDeleteMark ->
                     case mark_slot of
@@ -817,6 +824,16 @@ viewTableRow y ( row, cols ) =
 
 viewTable : List Row -> List Column -> RowList -> Html Msg
 viewTable rows columns cells =
+    let
+        scell c =
+            case c of
+                SlotVirtual _ _ _ ->
+                    "_"
+                SlotMark _ m ->
+                    m.value
+
+        _ = Debug.log (String.join "\n" <| L.map (\row -> String.join "  " <| L.map (scell >> String.padLeft 2 ' ') <| L.concat row) cells) ()
+    in
     table [ class "ui collapsing celled striped table" ]
         ((++) [ viewTableHeader columns ] <| L.indexedMap viewTableRow <| zip rows cells)
 

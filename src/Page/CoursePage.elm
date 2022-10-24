@@ -1,8 +1,8 @@
 module Page.CoursePage exposing (..)
 
-import Api exposing (task, withQuery, withToken)
+import Api exposing (ext_task, task, withQuery, withToken)
 import Api.Data exposing (Activity, CourseDeep, CourseEnrollmentRead, CourseEnrollmentReadRole(..), User)
-import Api.Request.Activity exposing (activityList)
+import Api.Request.Activity exposing (activityCreate, activityList)
 import Api.Request.Course exposing (courseEnrollmentList, courseGetDeep, courseRead)
 import Component.MessageBox as MessageBox exposing (Type(..))
 import Component.Misc exposing (user_link)
@@ -10,11 +10,12 @@ import Component.Modal as Modal
 import Component.MultiTask as MultiTask exposing (Msg(..))
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onInput)
 import Http exposing (Error(..))
 import Page.CourseListPage exposing (empty_to_nothing)
 import Task
-import Util exposing (get_id_str, httpErrorToString, user_full_name)
+import Time exposing (millisToPosix)
+import Util exposing (get_id, get_id_str, httpErrorToString, user_full_name)
 
 
 type State
@@ -27,17 +28,29 @@ type Msg
     = MsgFetch (MultiTask.Msg Http.Error FetchResult)
     | MsgClickMembers
     | MsgCloseMembers
+    | MsgAddActivity
+    | MsgAddActivityChangeTitle String
+    | MsgAddActivityDoAdd
+    | MsgCloseAddActivity
+    | MsgNoop
 
 
 type FetchResult
     = ResCourse CourseDeep
 
 
+type alias AddActivityModel =
+    { show_form : Bool
+    , title : String
+    }
+
+
 type alias Model =
     { state : State
     , token : String
     , roles : List String
-    , show_modal : Bool
+    , show_members : Bool
+    , add_activity : AddActivityModel
     }
 
 
@@ -59,10 +72,18 @@ init token course_id roles =
             MultiTask.init
                 [ ( taskCourse token course_id, "Получаем данные о курсе" )
                 ]
-
-        -- TODO
     in
-    ( { state = Fetching m, token = token, roles = roles, show_modal = False }, Cmd.map MsgFetch c )
+    ( { state = Fetching m
+      , token = token
+      , roles = roles
+      , show_members = False
+      , add_activity =
+            { show_form = False
+            , title = ""
+            }
+      }
+    , Cmd.map MsgFetch c
+    )
 
 
 collectFetchResults : List (Result e FetchResult) -> Maybe CourseDeep
@@ -76,7 +97,7 @@ collectFetchResults fetchResults =
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update msg ({ add_activity } as model) =
     case ( msg, model.state ) of
         ( MsgFetch msg_, Fetching model_ ) ->
             let
@@ -96,10 +117,45 @@ update msg model =
                     ( { model | state = Fetching m }, Cmd.map MsgFetch c )
 
         ( MsgClickMembers, _ ) ->
-            ( { model | show_modal = True }, Cmd.none )
+            ( { model | show_members = True }, Cmd.none )
 
         ( MsgCloseMembers, _ ) ->
-            ( { model | show_modal = False }, Cmd.none )
+            ( { model | show_members = False }, Cmd.none )
+
+        ( MsgAddActivity, _ ) ->
+            ( { model | add_activity = { add_activity | show_form = True } }, Cmd.none )
+
+        ( MsgCloseAddActivity, _ ) ->
+            ( { model | add_activity = { add_activity | show_form = False } }, Cmd.none )
+
+        ( MsgAddActivityChangeTitle t, _ ) ->
+            ( { model | add_activity = { add_activity | title = t } }, Cmd.none )
+
+        ( MsgAddActivityDoAdd, FetchDone course ) ->
+            ( { model | add_activity = { add_activity | title = "", show_form = False } }
+            , Task.attempt (\_ -> MsgNoop) <|
+                ext_task identity model.token [] <|
+                    activityCreate
+                        { id = Nothing
+                        , createdAt = Nothing
+                        , updatedAt = Nothing
+                        , type_ = Nothing
+                        , title = add_activity.title
+                        , keywords = Nothing
+                        , isHidden = Just False
+                        , marksLimit = Just 2
+                        , order = 1 + (Maybe.withDefault 0 <| List.maximum <| List.map .order course.activities)
+                        , date = millisToPosix 0
+                        , group = Nothing
+                        , body = Nothing
+                        , dueDate = Nothing
+                        , link = Nothing
+                        , embed = Nothing
+                        , finalType = Nothing
+                        , course = get_id course
+                        , files = Nothing
+                        }
+            )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -271,13 +327,46 @@ viewCourse courseRead model =
                 , div [ style "padding-left" "1em" ] <| user_list students
                 ]
 
-        modal do_show =
-            Modal.view "members" "Участники" members MsgCloseMembers [ ( "Закрыть", MsgCloseMembers ) ] do_show
+        add_activity_form =
+            Html.form [ class "ui form" ]
+                [ div [ class "field" ]
+                    [ label []
+                        [ text "Название темы" ]
+                    , input [ onInput MsgAddActivityChangeTitle, placeholder "Название темы", type_ "text", value model.add_activity.title ]
+                        []
+                    ]
+                ]
+
+        modal_members do_show =
+            Modal.view
+                "members"
+                "Участники"
+                members
+                MsgCloseMembers
+                [ ( "Закрыть", MsgCloseMembers ) ]
+                do_show
+
+        modal_add_activity do_show =
+            Modal.view
+                "members"
+                "Добавить активность"
+                add_activity_form
+                MsgCloseAddActivity
+                [ ( "Закрыть", MsgCloseAddActivity ), ( "Добавить", MsgAddActivityDoAdd ) ]
+                do_show
+
+        activities_title =
+            h1 [ class "row between-xs" ]
+                [ text "Содержание"
+                , button [ class "ui button green", onClick MsgAddActivity ] [ i [ class "icon plus" ] [], text "Добавить" ]
+                ]
     in
-    div []
-        [ modal model.show_modal
+    div [ style "padding-bottom" "3em"]
+        [ modal_members model.show_members
+        , modal_add_activity model.add_activity.show_form
         , breadcrumbs
         , header
+        , activities_title
         , div [ class "col center-xs" ] activities
         ]
 

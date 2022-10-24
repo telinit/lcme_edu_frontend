@@ -189,7 +189,7 @@ view model =
                     [ Html.map MsgFetch <| MT.view (\_ -> "OK") httpErrorToString m ]
     in
     div [] <|
-        [ h1 [] [ text "Ваши предметы" ]
+        [ h1 [] [ text "Доступные предметы" ]
         , viewControls
         ]
             ++ body
