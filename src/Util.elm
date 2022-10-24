@@ -224,3 +224,7 @@ posixToDDMMYYYY zone posix =
             String.padLeft 4 '0' <| String.fromInt <| Time.toYear zone posix
     in
     dd ++ "." ++ mm ++ "." ++ yyyy
+
+
+user_has_role user role =
+    Maybe.withDefault False <| Maybe.map (List.member role) user.roles

@@ -3,7 +3,6 @@ module Main exposing (Model, Msg(..), init, main, subscriptions, update, view)
 import Api.Data exposing (Token)
 import Browser
 import Browser.Navigation as Nav
-import Debug exposing (log)
 import Html exposing (Html, text)
 import Page.CourseListPage as CourseListPage
 import Page.CoursePage as CoursePage
@@ -15,7 +14,8 @@ import Page.MarksStudent as MarksStudent
 import Page.NotFound as NotFound
 import Url exposing (Url)
 import Url.Parser exposing ((</>), map, oneOf, parse, s, string, top)
-import Util exposing (Either(..), either_map, get_id_str)
+import Util exposing (Either(..), either_map, get_id, get_id_str)
+import Uuid exposing (Uuid)
 
 
 main : Program State Model Msg
@@ -69,10 +69,10 @@ type ParsedUrl
     | UrlCourseList
     | UrlCourse String
     | UrlMarksOwn
-    | UrlMarksOfPerson String
-    | UrlMarksOfCourse String
+    | UrlMarksOfPerson Uuid
+    | UrlMarksOfCourse Uuid
     | UrlProfileOwn
-    | UrlProfileOfUser String
+    | UrlProfileOfUser Uuid
     | UrlMessages
     | UrlNews
 
@@ -100,10 +100,10 @@ parse_url url =
                 , map UrlCourseList (s "courses")
                 , map UrlCourse (s "course" </> string)
                 , map UrlMarksOwn (s "marks")
-                , map UrlMarksOfPerson (s "marks" </> s "user" </> string)
-                , map UrlMarksOfCourse (s "marks" </> s "course" </> string)
+                , map (Maybe.withDefault UrlNotFound << Maybe.map UrlMarksOfPerson << Uuid.fromString) (s "marks" </> s "user" </> string)
+                , map (Maybe.withDefault UrlNotFound << Maybe.map UrlMarksOfCourse << Uuid.fromString) (s "marks" </> s "course" </> string)
                 , map UrlProfileOwn (s "profile")
-                , map UrlProfileOfUser (s "profile" </> string)
+                , map (Maybe.withDefault UrlNotFound << Maybe.map UrlProfileOfUser << Uuid.fromString) (s "profile" </> string)
                 , map UrlMessages (s "messages")
                 , map UrlNews (s "news")
                 ]
@@ -138,7 +138,11 @@ update msg model =
         ( MsgUrlRequested urlRequest, _, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
-                    ( model, Nav.pushUrl model.key (Url.toString url) )
+                    ( model
+                    , Cmd.batch
+                        [ Nav.pushUrl model.key (Url.toString url)
+                        ]
+                    )
 
                 Browser.External href ->
                     ( model, Nav.load href )
@@ -178,7 +182,7 @@ update msg model =
                                     DefaultLayout.init token.user
 
                                 ( model_, cmd_2 ) =
-                                    CoursePage.init token.key id
+                                    CoursePage.init token.key id <| Maybe.withDefault [] token.user.roles
                             in
                             ( { model | page = PageCourse model_, layout = LayoutDefault layout_ }
                             , Cmd.batch
@@ -211,7 +215,7 @@ update msg model =
                                     DefaultLayout.init token.user
 
                                 ( model_, cmd_2 ) =
-                                    MarksStudent.init token.key (get_id_str token.user)
+                                    MarksStudent.init token.key (get_id token.user)
                             in
                             ( { model
                                 | page = PageMarksOfStudent model_
@@ -241,8 +245,23 @@ update msg model =
                                 ]
                             )
 
-                        ( UrlMarksOfCourse string, Right token ) ->
-                            ( { model | page = PageBlank }, Cmd.none )
+                        ( UrlMarksOfCourse course_id, Right token ) ->
+                            let
+                                ( layout_, cmd_1 ) =
+                                    DefaultLayout.init token.user
+
+                                ( model_, cmd_2 ) =
+                                    MarksCourse.init token.key course_id token.user.id
+                            in
+                            ( { model
+                                | page = PageMarksOfCourse model_
+                                , layout = LayoutDefault layout_
+                              }
+                            , Cmd.batch
+                                [ Cmd.map MsgDefaultLayout cmd_1
+                                , Cmd.map MsgPageMarksOfCourse cmd_2
+                                ]
+                            )
 
                         ( UrlProfileOwn, Right token ) ->
                             ( { model | page = PageBlank }, Cmd.none )
@@ -259,8 +278,8 @@ update msg model =
                         ( _, _ ) ->
                             ( { model | page = PageBlank }, Cmd.none )
             in
-            ( { new_model | url = log "url changed" url }
-            , cmd
+            ( { new_model | url = url }
+            , Cmd.batch [ cmd ]
             )
 
         ( MsgLogin ((Login.LoginCompleted token) as msg_), PageLogin model_, _ ) ->
@@ -271,7 +290,13 @@ update msg model =
             ( { model | token = Right token, page = PageLogin m }
             , Cmd.batch
                 [ Cmd.map MsgLogin c
-                , Nav.pushUrl model.key (if String.endsWith "/login" (Debug.log "model.init_url" (model.init_url)) then "/" else model.init_url)
+                , Nav.pushUrl model.key
+                    (if String.endsWith "/login" model.init_url then
+                        "/"
+
+                     else
+                        model.init_url
+                    )
                 ]
             )
 

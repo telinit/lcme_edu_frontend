@@ -3,6 +3,7 @@ module Page.MarksStudent exposing (..)
 import Component.MarkTable as MT
 import Html exposing (Html, div, text)
 import Html.Attributes exposing (class)
+import Uuid exposing (Uuid)
 
 
 type Msg
@@ -15,7 +16,7 @@ type alias Model =
     }
 
 
-init : String -> String -> ( Model, Cmd Msg )
+init : String -> Uuid -> ( Model, Cmd Msg )
 init token student_id =
     let
         ( m, c ) =

@@ -101,6 +101,8 @@ import Uuid exposing (Uuid)
 
 type alias Activity =
     { id : Maybe Uuid
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , type_ : Maybe ActivityType
     , title : String
     , keywords : Maybe String
@@ -172,6 +174,8 @@ type alias CourseDeep =
     , cover : Maybe File
     , activities : List Activity
     , enrollments : List CourseEnrollmentRead
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , title : String
     , description : String
     , forClass : Maybe String
@@ -182,6 +186,8 @@ type alias CourseDeep =
 type alias CourseEnrollmentRead =
     { id : Maybe Uuid
     , person : User
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , role : CourseEnrollmentReadRole
     , finishedOn : Maybe Posix
     , course : Uuid
@@ -202,6 +208,8 @@ courseEnrollmentReadRoleVariants =
 
 type alias CourseEnrollmentWrite =
     { id : Maybe Uuid
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , role : CourseEnrollmentWriteRole
     , finishedOn : Maybe Posix
     , person : Uuid
@@ -223,6 +231,8 @@ courseEnrollmentWriteRoleVariants =
 
 type alias CourseShallow =
     { id : Maybe Uuid
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , title : String
     , description : String
     , forClass : Maybe String
@@ -235,6 +245,8 @@ type alias CourseShallow =
 
 type alias Department =
     { id : Maybe Uuid
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , name : String
     , organization : Uuid
     }
@@ -242,6 +254,8 @@ type alias Department =
 
 type alias Education =
     { id : Maybe Uuid
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , started : Posix
     , finished : Maybe Posix
     , startingClass : String
@@ -253,6 +267,8 @@ type alias Education =
 
 type alias EducationSpecialization =
     { id : Maybe Uuid
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , name : String
     , department : Uuid
     }
@@ -260,6 +276,9 @@ type alias EducationSpecialization =
 
 type alias File =
     { id : Maybe Uuid
+    , downloadUrl : Maybe String
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , name : String
     , hash : String
     , size : Int
@@ -275,6 +294,8 @@ type alias Login =
 
 type alias Mark =
     { id : Maybe Uuid
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , value : String
     , comment : Maybe String
     , teacher : Uuid
@@ -285,6 +306,8 @@ type alias Mark =
 
 type alias Message =
     { id : Maybe Uuid
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , body : Maybe String
     , sentAt : Posix
     , sender : Uuid
@@ -294,6 +317,8 @@ type alias Message =
 
 type alias MessageNews =
     { id : Maybe Uuid
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , body : Maybe String
     , sentAt : Posix
     , sender : Uuid
@@ -303,6 +328,8 @@ type alias MessageNews =
 
 type alias MessagePrivate =
     { id : Maybe Uuid
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , body : Maybe String
     , sentAt : Posix
     , sender : Uuid
@@ -313,6 +340,8 @@ type alias MessagePrivate =
 
 type alias MessageTaskSubmission =
     { id : Maybe Uuid
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , body : Maybe String
     , sentAt : Posix
     , sender : Uuid
@@ -324,6 +353,8 @@ type alias MessageTaskSubmission =
 
 type alias Organization =
     { id : Maybe Uuid
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , name : String
     , nameShort : Maybe String
     }
@@ -342,6 +373,8 @@ type alias Token =
 
 type alias UnreadObject =
     { id : Maybe Uuid
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , obj : Uuid
     , type_ : Maybe UnreadObjectType
     , created : Posix
@@ -389,6 +422,8 @@ type alias User =
     , isStaff : Maybe Bool
     , isActive : Maybe Bool
     , dateJoined : Maybe Posix
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
     , middleName : Maybe String
     , birthDate : Maybe Posix
     , avatar : Maybe String
@@ -417,6 +452,8 @@ encodeActivityPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , maybeEncode "type" encodeActivityType model.type_
             , encode "title" Json.Encode.string model.title
             , maybeEncode "keywords" Json.Encode.string model.keywords
@@ -520,6 +557,8 @@ encodeCourseDeepPairs model =
             , encodeNullable "cover" encodeFile model.cover
             , encode "activities" (Json.Encode.list encodeActivity) model.activities
             , encode "enrollments" (Json.Encode.list encodeCourseEnrollmentRead) model.enrollments
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "title" Json.Encode.string model.title
             , encode "description" Json.Encode.string model.description
             , maybeEncode "for_class" Json.Encode.string model.forClass
@@ -545,6 +584,8 @@ encodeCourseEnrollmentReadPairs model =
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
             , encode "person" encodeUser model.person
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "role" encodeCourseEnrollmentReadRole model.role
             , maybeEncodeNullable "finished_on" Api.Time.encodeDateTime model.finishedOn
             , encode "course" Uuid.encode model.course
@@ -583,6 +624,8 @@ encodeCourseEnrollmentWritePairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "role" encodeCourseEnrollmentWriteRole model.role
             , maybeEncodeNullable "finished_on" Api.Time.encodeDateTime model.finishedOn
             , encode "person" Uuid.encode model.person
@@ -622,6 +665,8 @@ encodeCourseShallowPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "title" Json.Encode.string model.title
             , encode "description" Json.Encode.string model.description
             , maybeEncode "for_class" Json.Encode.string model.forClass
@@ -649,6 +694,8 @@ encodeDepartmentPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "name" Json.Encode.string model.name
             , encode "organization" Uuid.encode model.organization
             ]
@@ -671,6 +718,8 @@ encodeEducationPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "started" Api.Time.encodeDate model.started
             , maybeEncodeNullable "finished" Api.Time.encodeDate model.finished
             , encode "starting_class" Json.Encode.string model.startingClass
@@ -697,6 +746,8 @@ encodeEducationSpecializationPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "name" Json.Encode.string model.name
             , encode "department" Uuid.encode model.department
             ]
@@ -719,6 +770,9 @@ encodeFilePairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "download_url" Json.Encode.string model.downloadUrl
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "name" Json.Encode.string model.name
             , encode "hash" Json.Encode.string model.hash
             , encode "size" Json.Encode.int model.size
@@ -764,6 +818,8 @@ encodeMarkPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "value" Json.Encode.string model.value
             , maybeEncode "comment" Json.Encode.string model.comment
             , encode "teacher" Uuid.encode model.teacher
@@ -789,6 +845,8 @@ encodeMessagePairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , maybeEncode "body" Json.Encode.string model.body
             , encode "sent_at" Api.Time.encodeDateTime model.sentAt
             , encode "sender" Uuid.encode model.sender
@@ -813,6 +871,8 @@ encodeMessageNewsPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , maybeEncode "body" Json.Encode.string model.body
             , encode "sent_at" Api.Time.encodeDateTime model.sentAt
             , encode "sender" Uuid.encode model.sender
@@ -837,6 +897,8 @@ encodeMessagePrivatePairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , maybeEncode "body" Json.Encode.string model.body
             , encode "sent_at" Api.Time.encodeDateTime model.sentAt
             , encode "sender" Uuid.encode model.sender
@@ -862,6 +924,8 @@ encodeMessageTaskSubmissionPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , maybeEncode "body" Json.Encode.string model.body
             , encode "sent_at" Api.Time.encodeDateTime model.sentAt
             , encode "sender" Uuid.encode model.sender
@@ -888,6 +952,8 @@ encodeOrganizationPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "name" Json.Encode.string model.name
             , maybeEncodeNullable "name_short" Json.Encode.string model.nameShort
             ]
@@ -951,6 +1017,8 @@ encodeUnreadObjectPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "obj" Uuid.encode model.obj
             , maybeEncode "type" encodeUnreadObjectType model.type_
             , encode "created" Api.Time.encodeDateTime model.created
@@ -1024,6 +1092,8 @@ encodeUserPairs model =
             , maybeEncode "is_staff" Json.Encode.bool model.isStaff
             , maybeEncode "is_active" Json.Encode.bool model.isActive
             , maybeEncode "date_joined" Api.Time.encodeDateTime model.dateJoined
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , maybeEncodeNullable "middle_name" Json.Encode.string model.middleName
             , maybeEncodeNullable "birth_date" Api.Time.encodeDate model.birthDate
             , maybeEncodeNullable "avatar" Json.Encode.string model.avatar
@@ -1043,6 +1113,8 @@ activityDecoder : Json.Decode.Decoder Activity
 activityDecoder =
     Json.Decode.succeed Activity
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "type" activityTypeDecoder Nothing
         |> decode "title" Json.Decode.string
         |> maybeDecode "keywords" Json.Decode.string Nothing
@@ -1136,6 +1208,8 @@ courseDeepDecoder =
         |> decodeNullable "cover" fileDecoder
         |> decode "activities" (Json.Decode.list activityDecoder)
         |> decode "enrollments" (Json.Decode.list courseEnrollmentReadDecoder)
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "title" Json.Decode.string
         |> decode "description" Json.Decode.string
         |> maybeDecode "for_class" Json.Decode.string Nothing
@@ -1147,6 +1221,8 @@ courseEnrollmentReadDecoder =
     Json.Decode.succeed CourseEnrollmentRead
         |> maybeDecode "id" Uuid.decoder Nothing
         |> decode "person" userDecoder
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "role" courseEnrollmentReadRoleDecoder
         |> maybeDecodeNullable "finished_on" Api.Time.dateTimeDecoder Nothing
         |> decode "course" Uuid.decoder
@@ -1173,6 +1249,8 @@ courseEnrollmentWriteDecoder : Json.Decode.Decoder CourseEnrollmentWrite
 courseEnrollmentWriteDecoder =
     Json.Decode.succeed CourseEnrollmentWrite
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "role" courseEnrollmentWriteRoleDecoder
         |> maybeDecodeNullable "finished_on" Api.Time.dateTimeDecoder Nothing
         |> decode "person" Uuid.decoder
@@ -1200,6 +1278,8 @@ courseShallowDecoder : Json.Decode.Decoder CourseShallow
 courseShallowDecoder =
     Json.Decode.succeed CourseShallow
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "title" Json.Decode.string
         |> decode "description" Json.Decode.string
         |> maybeDecode "for_class" Json.Decode.string Nothing
@@ -1213,6 +1293,8 @@ departmentDecoder : Json.Decode.Decoder Department
 departmentDecoder =
     Json.Decode.succeed Department
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "name" Json.Decode.string
         |> decode "organization" Uuid.decoder
 
@@ -1221,6 +1303,8 @@ educationDecoder : Json.Decode.Decoder Education
 educationDecoder =
     Json.Decode.succeed Education
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "started" Api.Time.dateDecoder
         |> maybeDecodeNullable "finished" Api.Time.dateDecoder Nothing
         |> decode "starting_class" Json.Decode.string
@@ -1233,6 +1317,8 @@ educationSpecializationDecoder : Json.Decode.Decoder EducationSpecialization
 educationSpecializationDecoder =
     Json.Decode.succeed EducationSpecialization
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "name" Json.Decode.string
         |> decode "department" Uuid.decoder
 
@@ -1241,6 +1327,9 @@ fileDecoder : Json.Decode.Decoder File
 fileDecoder =
     Json.Decode.succeed File
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "download_url" Json.Decode.string Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "name" Json.Decode.string
         |> decode "hash" Json.Decode.string
         |> decode "size" Json.Decode.int
@@ -1258,6 +1347,8 @@ markDecoder : Json.Decode.Decoder Mark
 markDecoder =
     Json.Decode.succeed Mark
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "value" Json.Decode.string
         |> maybeDecode "comment" Json.Decode.string Nothing
         |> decode "teacher" Uuid.decoder
@@ -1269,6 +1360,8 @@ messageDecoder : Json.Decode.Decoder Message
 messageDecoder =
     Json.Decode.succeed Message
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "body" Json.Decode.string Nothing
         |> decode "sent_at" Api.Time.dateTimeDecoder
         |> decode "sender" Uuid.decoder
@@ -1279,6 +1372,8 @@ messageNewsDecoder : Json.Decode.Decoder MessageNews
 messageNewsDecoder =
     Json.Decode.succeed MessageNews
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "body" Json.Decode.string Nothing
         |> decode "sent_at" Api.Time.dateTimeDecoder
         |> decode "sender" Uuid.decoder
@@ -1289,6 +1384,8 @@ messagePrivateDecoder : Json.Decode.Decoder MessagePrivate
 messagePrivateDecoder =
     Json.Decode.succeed MessagePrivate
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "body" Json.Decode.string Nothing
         |> decode "sent_at" Api.Time.dateTimeDecoder
         |> decode "sender" Uuid.decoder
@@ -1300,6 +1397,8 @@ messageTaskSubmissionDecoder : Json.Decode.Decoder MessageTaskSubmission
 messageTaskSubmissionDecoder =
     Json.Decode.succeed MessageTaskSubmission
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "body" Json.Decode.string Nothing
         |> decode "sent_at" Api.Time.dateTimeDecoder
         |> decode "sender" Uuid.decoder
@@ -1312,6 +1411,8 @@ organizationDecoder : Json.Decode.Decoder Organization
 organizationDecoder =
     Json.Decode.succeed Organization
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "name" Json.Decode.string
         |> maybeDecodeNullable "name_short" Json.Decode.string Nothing
 
@@ -1333,6 +1434,8 @@ unreadObjectDecoder : Json.Decode.Decoder UnreadObject
 unreadObjectDecoder =
     Json.Decode.succeed UnreadObject
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "obj" Uuid.decoder
         |> maybeDecode "type" unreadObjectTypeDecoder Nothing
         |> decode "created" Api.Time.dateTimeDecoder
@@ -1394,6 +1497,8 @@ userDecoder =
         |> maybeDecode "is_staff" Json.Decode.bool Nothing
         |> maybeDecode "is_active" Json.Decode.bool Nothing
         |> maybeDecode "date_joined" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecodeNullable "middle_name" Json.Decode.string Nothing
         |> maybeDecodeNullable "birth_date" Api.Time.dateDecoder Nothing
         |> maybeDecodeNullable "avatar" Json.Decode.string Nothing

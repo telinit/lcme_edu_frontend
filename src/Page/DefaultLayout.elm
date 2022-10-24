@@ -4,7 +4,7 @@ import Api.Data exposing (User)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import Util exposing (link_span)
+import Util exposing (link_span, user_has_role)
 
 
 type alias Model =
@@ -96,10 +96,16 @@ view map_msg model html =
             { name = mb model.user.firstName ++ " " ++ mb model.user.lastName, avatar = "/profile.png" }
 
         items =
-            [ { label = "Предметы", href = "/courses", icon = "book" }
-            , { label = "Оценки", href = "/marks", icon = "chart bar outline" }
-            , { label = "Сообщения", href = "/messages", icon = "envelope outline" }
-            ]
+            List.filterMap identity
+                [ Just { label = "Предметы", href = "/courses", icon = "book" }
+                , if user_has_role model.user "student" then
+                    Just { label = "Мои оценки", href = "/marks", icon = "chart bar outline" }
+
+                  else
+                    Nothing
+                , Just { label = "Сообщения", href = "/messages", icon = "envelope outline" }
+                , Just { label = "Администрирование", href = "/admin", icon = "cog" }
+                ]
 
         sidebar =
             div
@@ -128,11 +134,13 @@ view map_msg model html =
                     ([ div [ class "item" ] [] ] ++ menu items ++ right_menu profile)
                 ]
     in
-    div [ class "ui container" ]
-        [ Html.map map_msg <| make_header_pc profile items
-        , Html.map map_msg <| header_mobile
-        , Html.map map_msg <| sidebar
-        , html
+    div [ id "modal_context" ]
+        [ div [ class "ui container", id "main_container" ]
+            [ Html.map map_msg <| make_header_pc profile items
+            , Html.map map_msg <| header_mobile
+            , Html.map map_msg <| sidebar
+            , html
+            ]
         ]
 
 

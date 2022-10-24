@@ -14,3 +14,16 @@ port getStorageDone : ({ key : String, value : String } -> msg) -> Sub msg
 
 
 port toggleSidebar : String -> Cmd msg
+
+
+
+--port showModal : String -> Cmd msg
+--
+--
+--port closeModal : String -> Cmd msg
+
+
+port removeNodes : String -> Cmd msg
+
+
+port scrollIdIntoView : String -> Cmd msg

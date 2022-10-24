@@ -137,7 +137,7 @@ update msg model =
             ( { model | state = Login, message = None }, Cmd.none )
 
         ( LoginCompleted token, _ ) ->
-            ( { model | state = Success { token = token.key, user = (Debug.log "token.user" (token.user)) }, message = None }, doSaveToken token.key )
+            ( { model | state = Success { token = token.key, user = token.user }, message = None }, doSaveToken token.key )
 
         ( LoginFailed reason, _ ) ->
             ( { model | state = Login, message = Error reason }, Cmd.none )

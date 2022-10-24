@@ -1,18 +1,20 @@
 module Page.CoursePage exposing (..)
 
 import Api exposing (task, withQuery, withToken)
-import Api.Data exposing (Activity, CourseDeep, CourseEnrollmentRead, CourseEnrollmentReadRole(..))
+import Api.Data exposing (Activity, CourseDeep, CourseEnrollmentRead, CourseEnrollmentReadRole(..), User)
 import Api.Request.Activity exposing (activityList)
 import Api.Request.Course exposing (courseEnrollmentList, courseGetDeep, courseRead)
 import Component.MessageBox as MessageBox exposing (Type(..))
+import Component.Misc exposing (user_link)
+import Component.Modal as Modal
 import Component.MultiTask as MultiTask exposing (Msg(..))
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 import Http exposing (Error(..))
 import Page.CourseListPage exposing (empty_to_nothing)
 import Task
-import Util exposing (httpErrorToString)
-import Uuid
+import Util exposing (get_id_str, httpErrorToString, user_full_name)
 
 
 type State
@@ -23,17 +25,19 @@ type State
 
 type Msg
     = MsgFetch (MultiTask.Msg Http.Error FetchResult)
+    | MsgClickMembers
+    | MsgCloseMembers
 
 
 type FetchResult
     = ResCourse CourseDeep
-    | ResActivities (List Activity)
-    | ResEnrollments (List CourseEnrollmentRead)
 
 
 type alias Model =
     { state : State
     , token : String
+    , roles : List String
+    , show_modal : Bool
     }
 
 
@@ -43,46 +47,27 @@ showFetchResult fetchResult =
         ResCourse courseRead ->
             courseRead.title
 
-        ResActivities activities ->
-            "Активностей: " ++ (String.fromInt <| List.length activities)
-
-        ResEnrollments _ ->
-            "OK"
-
 
 taskCourse token cid =
     Task.map ResCourse <| task <| withToken (Just token) <| courseGetDeep cid
 
 
-taskActivities token cid =
-    Task.map ResActivities <| task <| withQuery [ ( "course", Just cid ) ] <| withToken (Just token) <| activityList
-
-
-taskEnrollments token cid =
-    Task.map ResEnrollments <| task <| withQuery [ ( "course", Just cid ) ] <| withToken (Just token) <| courseEnrollmentList
-
-
-init : String -> String -> ( Model, Cmd Msg )
-init token id =
+init : String -> String -> List String -> ( Model, Cmd Msg )
+init token course_id roles =
     let
         ( m, c ) =
             MultiTask.init
-                [ ( taskCourse token id, "Получаем данные о курсе" )
-
-                --, ( taskActivities token id, "Получаем активности" )
-                --, ( taskEnrollments token id, "Получаем записи на курс" )
+                [ ( taskCourse token course_id, "Получаем данные о курсе" )
                 ]
 
         -- TODO
     in
-    ( { state = Fetching m, token = token }, Cmd.map MsgFetch c )
+    ( { state = Fetching m, token = token, roles = roles, show_modal = False }, Cmd.map MsgFetch c )
 
 
 collectFetchResults : List (Result e FetchResult) -> Maybe CourseDeep
 collectFetchResults fetchResults =
     case fetchResults of
-        --[ Ok (ResCourse crs), Ok (ResActivities act), Ok (ResEnrollments enr) ] ->
-        --    Just ( crs, act, enr )
         [ Ok (ResCourse crs) ] ->
             Just crs
 
@@ -100,7 +85,7 @@ update msg model =
             in
             case msg_ of
                 TaskFinishedAll results ->
-                    case collectFetchResults (Debug.log "results" results) of
+                    case collectFetchResults results of
                         Just c_ ->
                             ( { model | state = FetchDone c_ }, Cmd.none )
 
@@ -109,6 +94,12 @@ update msg model =
 
                 _ ->
                     ( { model | state = Fetching m }, Cmd.map MsgFetch c )
+
+        ( MsgClickMembers, _ ) ->
+            ( { model | show_modal = True }, Cmd.none )
+
+        ( MsgCloseMembers, _ ) ->
+            ( { model | show_modal = False }, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -119,8 +110,8 @@ viewActivity activity =
     div [ class "text container segment ui" ] [ h2 [] [ text activity.title ] ]
 
 
-viewCourse : CourseDeep -> Html Msg
-viewCourse courseRead =
+viewCourse : CourseDeep -> Model -> Html Msg
+viewCourse courseRead model =
     let
         breadcrumbs =
             div [ class "ui large breadcrumb" ]
@@ -142,11 +133,11 @@ viewCourse courseRead =
 
                 cover_img =
                     Maybe.withDefault default_cover_url <|
-                        Maybe.map (\f -> Maybe.withDefault default_cover_url <| Maybe.map Uuid.toString f.id) courseRead.cover
+                        Maybe.map (\f -> "/api/file/" ++ get_id_str f ++ "/download") courseRead.cover
 
                 logo_img =
                     Maybe.withDefault default_logo_url <|
-                        Maybe.map (\f -> Maybe.withDefault default_cover_url <| Maybe.map Uuid.toString f.id) courseRead.logo
+                        Maybe.map (\f -> "/api/file/" ++ get_id_str f ++ "/download") courseRead.logo
 
                 for_class =
                     let
@@ -190,29 +181,35 @@ viewCourse courseRead =
                 teacher =
                     case List.head <| List.filter (\e -> e.role == CourseEnrollmentReadRoleT) courseRead.enrollments of
                         Just t ->
-                            let
-                                full_name =
-                                    Maybe.withDefault "" t.person.firstName
-                                        ++ " "
-                                        ++ Maybe.withDefault "" t.person.lastName
-
-                                name =
-                                    case t.person.id of
-                                        Just id ->
-                                            a [ href ("/user/" ++ Uuid.toString id) ] [ text full_name ]
-
-                                        Nothing ->
-                                            text full_name
-                            in
                             span [ style "white-space" "nowrap" ]
                                 [ i [ class "user icon", style "color" "#679" ] []
                                 , text
                                     "Преподаватель: "
-                                , name
+                                , a [ href <| "/profile/" ++ get_id_str t.person ] [ text <| user_full_name t.person ]
                                 ]
 
                         Nothing ->
                             text ""
+
+                buttons =
+                    List.filterMap identity
+                        [ if List.any (\r -> List.member r model.roles) [ "teacher", "staff", "admin" ] then
+                            Just <|
+                                a [ href <| "/marks/course/" ++ get_id_str courseRead ]
+                                    [ button [ class "ui button" ]
+                                        [ i [ class "chart bar outline icon" ] []
+                                        , text "Оценки"
+                                        ]
+                                    ]
+
+                          else
+                            Nothing
+                        , Just <|
+                            button [ class "ui button", onClick MsgClickMembers ]
+                                [ i [ class "users icon" ] []
+                                , text "Участники"
+                                ]
+                        ]
             in
             div
                 [ style "background" ("linear-gradient( rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8) ), url('" ++ cover_img ++ "')")
@@ -239,7 +236,10 @@ viewCourse courseRead =
                     ]
                 , div [ class "col-sm between-xs row start-xs", style "margin" "1em", style "flex-flow" "column nowrap" ]
                     [ div []
-                        [ h1 [] [ text courseRead.title ]
+                        [ div [ class "row between-xs middle-xs", style "margin-bottom" "0.5em" ]
+                            [ h1 [ class "col", style "margin" "0" ] [ text courseRead.title ]
+                            , div [ class "col" ] buttons
+                            ]
                         , p [ style "max-height" "180px", style "overflow" "hidden", style "margin-left" "2em" ] [ text description ]
                         ]
                     , div [ class "row around-xs", style "margin-top" "2em" ]
@@ -252,9 +252,31 @@ viewCourse courseRead =
 
         activities =
             List.map viewActivity courseRead.activities
+
+        members =
+            let
+                teachers =
+                    List.map .person <| List.filter (\enr -> enr.role == CourseEnrollmentReadRoleT) courseRead.enrollments
+
+                students =
+                    List.map .person <| List.filter (\enr -> enr.role == CourseEnrollmentReadRoleS) courseRead.enrollments
+
+                user_list =
+                    List.map (user_link >> (\el -> div [ style "margin" "1em" ] [ el ]))
+            in
+            div []
+                [ h3 [] [ text "Преподаватели" ]
+                , div [ style "padding-left" "1em" ] <| user_list teachers
+                , h3 [] [ text "Учащиеся" ]
+                , div [ style "padding-left" "1em" ] <| user_list students
+                ]
+
+        modal do_show =
+            Modal.view "members" "Участники" members MsgCloseMembers [ ( "Закрыть", MsgCloseMembers ) ] do_show
     in
     div []
-        [ breadcrumbs
+        [ modal model.show_modal
+        , breadcrumbs
         , header
         , div [ class "col center-xs" ] activities
         ]
@@ -271,7 +293,7 @@ view model =
             div [ class "ui text container" ] [ Html.map MsgFetch fetcher ]
 
         FetchDone courseRead ->
-            viewCourse courseRead
+            viewCourse courseRead model
 
         FetchFailed err ->
             MessageBox.view Error Nothing "Ошибка" ("Не удалось получить данные курса: " ++ err)

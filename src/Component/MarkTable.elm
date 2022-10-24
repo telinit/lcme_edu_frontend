@@ -4,18 +4,22 @@ import Api exposing (ext_task)
 import Api.Data as Data exposing (..)
 import Api.Request.Activity exposing (activityList)
 import Api.Request.Course exposing (courseGetDeep, courseList)
-import Api.Request.Mark exposing (markList)
-import Array as A exposing (Array)
+import Api.Request.Mark exposing (markCreate, markDelete, markList, markPartialUpdate)
+import Browser.Dom exposing (Error(..), focus)
+import Component.Misc exposing (user_link)
 import Component.MultiTask as MultiTask exposing (Msg(..))
 import Dict as D exposing (Dict)
 import Html exposing (..)
-import Html.Attributes exposing (class, href, style)
+import Html.Attributes exposing (autofocus, class, href, id, style, tabindex)
+import Html.Events exposing (on)
 import Http
-import List as L exposing (filterMap)
+import Json.Decode as JD
+import List as L
 import Maybe as M
 import Set
+import Task
 import Time as T exposing (Posix)
-import Util exposing (dictFromTupleListMany, dictGroupBy, get_id, get_id_str, httpErrorToString, index_by, maybeForceJust, monthToInt, posixToDDMMYYYY, user_full_name, zip)
+import Util exposing (dictFromTupleListMany, get_id, get_id_str, httpErrorToString, index_by, posixToDDMMYYYY, user_full_name, zip)
 import Uuid exposing (Uuid)
 
 
@@ -50,6 +54,20 @@ type MarkSlot
     | SlotVirtual IsSelected ActivityID StudentID
 
 
+type Direction
+    = Left
+    | Right
+    | Top
+    | Bottom
+
+
+type MarkCmd
+    = CmdSetMark String
+    | CmdDeleteMark
+    | CmdMove Direction
+    | CmdUnknown String
+
+
 type alias SlotList =
     List MarkSlot
 
@@ -71,7 +89,11 @@ type FetchedData
 
 type Msg
     = MsgFetch (MultiTask.Msg Http.Error FetchedData)
-    | MsgMarkArrowClick
+    | MsgMarkKeyPress MarkSlot Int Int MarkCmd
+    | MsgMarkCreated ( Int, Int ) Mark
+    | MsgMarkUpdated ( Int, Int ) Mark
+    | MsgMarkDeleted ( Int, Int )
+    | MsgNop
 
 
 type State
@@ -89,7 +111,76 @@ type alias Model =
     , state : State
     , token : String
     , student_id : Maybe Uuid
+    , teacher_id : Maybe Uuid
+    , size : ( Int, Int )
     }
+
+
+keyCodeToMarkCmd : String -> MarkCmd
+keyCodeToMarkCmd code =
+    case code of
+        "ArrowLeft" ->
+            CmdMove Left
+
+        "ArrowUp" ->
+            CmdMove Top
+
+        "ArrowRight" ->
+            CmdMove Right
+
+        "ArrowDown" ->
+            CmdMove Bottom
+
+        "KeyA" ->
+            CmdMove Left
+
+        "KeyW" ->
+            CmdMove Top
+
+        "KeyD" ->
+            CmdMove Right
+
+        "KeyS" ->
+            CmdMove Bottom
+
+        "Digit0" ->
+            CmdSetMark "0"
+
+        "Digit1" ->
+            CmdSetMark "1"
+
+        "Digit2" ->
+            CmdSetMark "2"
+
+        "Digit3" ->
+            CmdSetMark "3"
+
+        "Digit4" ->
+            CmdSetMark "4"
+
+        "Digit5" ->
+            CmdSetMark "5"
+
+        "KeyY" ->
+            CmdSetMark "н"
+
+        "KeyP" ->
+            CmdSetMark "зч"
+
+        "BracketLeft" ->
+            CmdSetMark "нз"
+
+        "Minus" ->
+            CmdSetMark "-"
+
+        "Equal" ->
+            CmdSetMark "+"
+
+        "Delete" ->
+            CmdDeleteMark
+
+        _ ->
+            CmdUnknown code
 
 
 showFetchedData : FetchedData -> String
@@ -108,18 +199,90 @@ showFetchedData fetchedData =
             "Активности: " ++ (String.fromInt <| List.length activities)
 
 
-initForStudent : String -> String -> ( Model, Cmd Msg )
+doCreateMark : String -> Uuid -> Uuid -> Uuid -> ( Int, Int ) -> String -> Cmd Msg
+doCreateMark token activity_id student_id teacher_id coords new_mark =
+    let
+        onResult res =
+            case res of
+                Ok r ->
+                    MsgMarkCreated coords r
+
+                Err _ ->
+                    MsgNop
+    in
+    Task.attempt onResult <|
+        ext_task identity token [] <|
+            markCreate
+                { value = new_mark
+                , teacher = teacher_id
+                , student = student_id
+                , activity = activity_id
+                , id = Nothing
+                , comment = Nothing
+                , createdAt = Nothing
+                , updatedAt = Nothing
+                }
+
+
+doUpdateMark : String -> Mark -> ( Int, Int ) -> String -> Cmd Msg
+doUpdateMark token old_mark coords new_mark =
+    let
+        onResult res =
+            case res of
+                Ok r ->
+                    MsgMarkUpdated coords r
+
+                Err _ ->
+                    MsgNop
+    in
+    Task.attempt onResult <|
+        ext_task identity token [] <|
+            markPartialUpdate (get_id_str old_mark)
+                { old_mark | value = new_mark }
+
+
+doDeleteMark : String -> Uuid -> ( Int, Int ) -> Cmd Msg
+doDeleteMark token mark_id coords =
+    let
+        onResult res =
+            case res of
+                Ok r ->
+                    MsgMarkDeleted coords
+
+                Err _ ->
+                    MsgNop
+    in
+    Task.attempt onResult <|
+        ext_task identity token [] <|
+            markDelete <|
+                Uuid.toString mark_id
+
+
+focusFirstCell : Model -> Cmd Msg
+focusFirstCell model =
+    case ( model.rows, model.columns ) of
+        ( [], _ ) ->
+            Cmd.none
+
+        ( _, [] ) ->
+            Cmd.none
+
+        ( _, _ ) ->
+            Task.attempt (\_ -> MsgNop) <| focus "slot-0-0"
+
+
+initForStudent : String -> Uuid -> ( Model, Cmd Msg )
 initForStudent token student_id =
     let
         ( m, c ) =
             MultiTask.init
-                [ ( ext_task FetchedCourseList token [ ( "enrollments__person", student_id ), ( "enrollments__role", "s" ) ] courseList
+                [ ( ext_task FetchedCourseList token [ ( "enrollments__person", Uuid.toString student_id ), ( "enrollments__role", "s" ) ] courseList
                   , "Получение данных о курсах"
                   )
-                , ( ext_task FetchedActivities token [ ( "student", student_id ) ] activityList
+                , ( ext_task FetchedActivities token [ ( "student", Uuid.toString student_id ) ] activityList
                   , "Получение тем занятий"
                   )
-                , ( ext_task FetchedMarks token [ ( "student", student_id ) ] markList
+                , ( ext_task FetchedMarks token [ ( "student", Uuid.toString student_id ) ] markList
                   , "Получение оценок"
                   )
                 ]
@@ -128,24 +291,24 @@ initForStudent token student_id =
       , token = token
       , rows = []
       , columns = []
-
-      --, marks = D.empty
       , cells = []
-      , student_id = Uuid.fromString student_id
+      , student_id = Just student_id
+      , teacher_id = Nothing
+      , size = ( 0, 0 )
       }
     , Cmd.map MsgFetch c
     )
 
 
-initForCourse : String -> String -> ( Model, Cmd Msg )
-initForCourse token course_id =
+initForCourse : String -> Uuid -> Maybe Uuid -> ( Model, Cmd Msg )
+initForCourse token course_id teacher_id =
     let
         ( m, c ) =
             MultiTask.init
-                [ ( ext_task FetchedCourse token [] <| courseGetDeep course_id
+                [ ( ext_task FetchedCourse token [] <| courseGetDeep <| Uuid.toString course_id
                   , "Получение данных о курсе"
                   )
-                , ( ext_task FetchedMarks token [ ( "course", course_id ) ] markList
+                , ( ext_task FetchedMarks token [ ( "course", Uuid.toString course_id ) ] markList
                   , "Получение оценок"
                   )
                 ]
@@ -158,9 +321,64 @@ initForCourse token course_id =
       --, marks = D.empty
       , cells = []
       , student_id = Nothing
+      , teacher_id = teacher_id
+      , size = ( 0, 0 )
       }
     , Cmd.map MsgFetch c
     )
+
+
+updateMark : Model -> ( Int, Int ) -> Maybe Mark -> Model
+updateMark model ( cell_x, cell_y ) mb_mark =
+    let
+        update_slot slot mb_mark_ =
+            case ( slot, mb_mark_ ) of
+                ( SlotMark sel _, Just new_mark ) ->
+                    SlotMark sel new_mark
+
+                ( SlotMark sel old_mark, Nothing ) ->
+                    SlotVirtual sel old_mark.activity old_mark.student
+
+                ( SlotVirtual sel _ _, Just new_mark ) ->
+                    SlotMark sel new_mark
+
+                ( SlotVirtual _ _ _, Nothing ) ->
+                    slot
+
+        update_col : Int -> List MarkSlot -> Maybe Mark -> List MarkSlot
+        update_col x col mb_mark_ =
+            case ( x, col ) of
+                ( 0, slot :: tl ) ->
+                    update_slot slot mb_mark_ :: tl
+
+                ( _, slot :: tl ) ->
+                    slot :: update_col (x - 1) tl mb_mark_
+
+                ( _, [] ) ->
+                    []
+    in
+    { model
+        | cells =
+            L.indexedMap
+                (\y row ->
+                    if y == cell_y then
+                        Tuple.second <|
+                            L.foldl
+                                (\col ( slots_cnt, res ) ->
+                                    let
+                                        new_col =
+                                            update_col cell_x col mb_mark
+                                    in
+                                    ( slots_cnt + L.length new_col, res ++ [ new_col ] )
+                                )
+                                ( 0, [] )
+                                row
+
+                    else
+                        row
+                )
+                model.cells
+    }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -175,9 +393,6 @@ update msg model =
                 --Marks for student
                 ( TaskFinishedAll [ Ok (FetchedCourseList courses), Ok (FetchedActivities acts), Ok (FetchedMarks marks) ], Just student_id ) ->
                     let
-                        blah =
-                            Debug.log "Marks for student" ( ( L.length courses, L.length acts ), ( L.length marks, student_id ) )
-
                         ix_acts =
                             index_by get_id_str acts
 
@@ -210,16 +425,11 @@ update msg model =
                                     )
 
                         marks_ix =
-                            Debug.log "marks_ix" <|
-                                dictFromTupleListMany <|
-                                    L.map (\( mark, x, y ) -> ( ( x, y ), SlotMark False mark )) <|
-                                        L.filterMap mark_coords marks
-                    in
-                    ( { model
-                        | state = Complete
-                        , rows = Debug.log "rows" rows
-                        , columns = Debug.log "columns" columns
-                        , cells =
+                            dictFromTupleListMany <|
+                                L.map (\( mark, x, y ) -> ( ( x, y ), SlotMark False mark )) <|
+                                    L.filterMap mark_coords marks
+
+                        cells =
                             L.map
                                 (\row ->
                                     L.map
@@ -238,6 +448,18 @@ update msg model =
                                         columns
                                 )
                                 rows
+                    in
+                    ( { model
+                        | state = Complete
+                        , rows = rows
+                        , columns = columns
+                        , cells = cells
+                        , size =
+                            ( M.withDefault 0 <|
+                                L.maximum <|
+                                    L.map (\row -> L.sum <| L.map L.length row) cells
+                            , L.length rows
+                            )
                       }
                     , Cmd.map MsgFetch c
                     )
@@ -248,7 +470,16 @@ update msg model =
                             index_by get_id_str course.activities
 
                         rows =
-                            L.map (.person >> User) <| List.sortBy (.person >> user_full_name) course.enrollments
+                            L.filterMap
+                                (\enr ->
+                                    if enr.role == CourseEnrollmentReadRoleS then
+                                        enr.person |> User |> Just
+
+                                    else
+                                        Nothing
+                                )
+                            <|
+                                List.sortBy (.person >> user_full_name) course.enrollments
 
                         columns =
                             L.map Activity <| L.sortBy .order course.activities
@@ -268,15 +499,12 @@ update msg model =
                                     )
 
                         marks_ix =
-                            dictFromTupleListMany <|
-                                L.map (\( a, b, c_ ) -> ( ( b, c_ ), SlotMark False a )) <|
-                                    L.filterMap mark_coords marks
-                    in
-                    ( { model
-                        | state = Complete
-                        , rows = rows
-                        , columns = columns
-                        , cells =
+                            Debug.log "marks_ix" <|
+                                dictFromTupleListMany <|
+                                    L.map (\( a, b, c_ ) -> ( ( b, c_ ), SlotMark False a )) <|
+                                        L.filterMap mark_coords marks
+
+                        cells =
                             L.map
                                 (\row ->
                                     L.map
@@ -284,8 +512,11 @@ update msg model =
                                             case ( row, col ) of
                                                 ( User student, Activity act ) ->
                                                     let
+                                                        coords =
+                                                            Debug.log "coords" <| ( activity_timestamp act, get_id_str student )
+
                                                         mark_slots =
-                                                            M.withDefault [] <| D.get ( activity_timestamp act, get_id_str course ) marks_ix
+                                                            M.withDefault [] <| D.get coords marks_ix
                                                     in
                                                     mark_slots
                                                         ++ L.repeat
@@ -298,6 +529,18 @@ update msg model =
                                         columns
                                 )
                                 rows
+                    in
+                    ( { model
+                        | state = Complete
+                        , rows = rows
+                        , columns = columns
+                        , cells = cells
+                        , size =
+                            ( M.withDefault 0 <|
+                                L.maximum <|
+                                    L.map (\row -> L.sum <| L.map L.length row) cells
+                            , L.length rows
+                            )
                       }
                     , Cmd.map MsgFetch c
                     )
@@ -308,19 +551,116 @@ update msg model =
         ( MsgFetch msg_, _ ) ->
             ( model, Cmd.none )
 
-        ( MsgMarkArrowClick, _ ) ->
+        ( MsgMarkKeyPress mark_slot x y cmd, _ ) ->
+            let
+                onResult res =
+                    case res of
+                        Ok r ->
+                            MsgNop
+
+                        Err e ->
+                            MsgNop
+
+                check_coords ( x_, y_ ) ( w, h ) =
+                    x_ >= 0 && y_ >= 0 && x_ < w && y_ < h
+
+                vec =
+                    case cmd of
+                        CmdMove Left ->
+                            ( -1, 0 )
+
+                        CmdMove Top ->
+                            ( 0, -1 )
+
+                        CmdMove Right ->
+                            ( 1, 0 )
+
+                        CmdMove Bottom ->
+                            ( 0, 1 )
+
+                        _ ->
+                            ( 0, 0 )
+
+                v2add ( a, b ) ( c, d ) =
+                    ( a + c, b + d )
+
+                ( nx, ny ) =
+                    v2add ( x, y ) vec
+            in
+            case cmd of
+                CmdMove _ ->
+                    if check_coords ( nx, ny ) model.size then
+                        ( Debug.log "model" model
+                        , Debug.log "moving" (Task.attempt onResult <| focus <| "slot-" ++ String.fromInt nx ++ "-" ++ String.fromInt ny)
+                        )
+
+                    else
+                        ( Debug.log "model" model, Debug.log "not moving" Cmd.none )
+
+                CmdSetMark new_mark ->
+                    case mark_slot of
+                        SlotMark isSelected mark ->
+                            ( model
+                            , doUpdateMark
+                                model.token
+                                mark
+                                ( x, y )
+                                new_mark
+                            )
+
+                        SlotVirtual isSelected activityID studentID ->
+                            ( model
+                            , Maybe.withDefault Cmd.none <|
+                                Maybe.map
+                                    (\teacher_id ->
+                                        doCreateMark
+                                            model.token
+                                            activityID
+                                            studentID
+                                            teacher_id
+                                            ( x, y )
+                                            new_mark
+                                    )
+                                    model.teacher_id
+                            )
+
+                CmdUnknown _ ->
+                    ( model, Debug.log "none" Cmd.none )
+
+                CmdDeleteMark ->
+                    case mark_slot of
+                        SlotMark isSelected mark ->
+                            ( model
+                            , doDeleteMark
+                                model.token
+                                (get_id mark)
+                                ( x, y )
+                            )
+
+                        SlotVirtual _ _ _ ->
+                            ( model, Cmd.none )
+
+        ( MsgMarkCreated ( x, y ) mark, _ ) ->
+            ( updateMark model ( x, y ) (Just mark), Cmd.none )
+
+        ( MsgMarkUpdated ( x, y ) mark, _ ) ->
+            ( updateMark model ( x, y ) (Just mark), Cmd.none )
+
+        ( MsgMarkDeleted ( x, y ), _ ) ->
+            ( updateMark model ( x, y ) Nothing, Cmd.none )
+
+        ( MsgNop, _ ) ->
             ( model, Cmd.none )
-
-
-
---(x,y) -> Debug.todo <| Debug.toString (x,y)
 
 
 viewColumn : Column -> Html Msg
 viewColumn column =
     case column of
         Activity activity ->
-            viewColumn <| Date activity.date
+            div []
+                [ div [ style "font-weight" "bold" ] [ text <| posixToDDMMYYYY T.utc activity.date ]
+                , div [] [ text <| M.withDefault "" activity.keywords ]
+                ]
 
         Date posix ->
             text <| posixToDDMMYYYY T.utc posix
@@ -330,7 +670,7 @@ viewRow : Row -> Html Msg
 viewRow row =
     case row of
         User user ->
-            a [ href <| "/profile/" ++ get_id_str user ] [ text <| user_full_name user ]
+            div [ style "margin" "0 1em" ] [ user_link user ]
 
         Course course ->
             a [ href <| "/course/" ++ get_id_str course ] [ text course.title ]
@@ -385,16 +725,24 @@ markSelectedColors =
     ( "#7FB3D5", "#1F618D" )
 
 
-viewMarkSlot : MarkSlot -> Html Msg
-viewMarkSlot markSlot =
+viewMarkSlot : Int -> Int -> Int -> MarkSlot -> Html Msg
+viewMarkSlot y x s markSlot =
     let
-        common_style =
+        is_first =
+            y == 0 && (x + s) == 0
+
+        common_attrs =
             [ style "min-width" "40px"
             , style "max-width" "40px"
             , style "min-height" "40px"
             , style "max-height" "40px"
             , style "margin" "5px"
+            , id <| "slot-" ++ String.fromInt (x + s) ++ "-" ++ String.fromInt y
+            , class "mark_slot"
+            , tabindex 1
+            , on "keydown" <| JD.andThen (\k -> JD.succeed <| MsgMarkKeyPress markSlot (x + s) y <| keyCodeToMarkCmd k) <| JD.at [ "code" ] JD.string
             ]
+                ++ [ autofocus is_first ]
     in
     case markSlot of
         SlotMark sel mark ->
@@ -415,29 +763,34 @@ viewMarkSlot markSlot =
                  , class "row center-xs middle-xs"
                  , style "font-weight" "bold"
                  ]
-                    ++ common_style
+                    ++ common_attrs
+                    ++ (if sel then
+                            [ id "slot_selected" ]
+
+                        else
+                            []
+                       )
                 )
                 [ text mark.value ]
 
         SlotVirtual sel _ _ ->
-            let
-                own_style =
-                    if sel then
-                        [ style "background-color" <| Tuple.first markSelectedColors
-                        , style "border" ("1px dashed " ++ Tuple.second markSelectedColors)
-                        ]
+            div
+                ([ class "mark_slot" ]
+                    ++ common_attrs
+                    ++ (if sel then
+                            [ id "slot_selected" ]
 
-                    else
-                        [ style "border" "1px dashed #BFC9CA"
-                        ]
-            in
-            div (own_style ++ common_style) []
+                        else
+                            []
+                       )
+                )
+                []
 
 
-viewTableCell : SlotList -> Html Msg
-viewTableCell slot_list =
+viewTableCell : Int -> Int -> SlotList -> Html Msg
+viewTableCell y x slot_list =
     td []
-        [ div [ class "row center-xs" ] <| L.map viewMarkSlot slot_list
+        [ div [ class "row center-xs" ] <| L.indexedMap (viewMarkSlot y x) slot_list
         ]
 
 
@@ -445,19 +798,27 @@ viewTableHeader : List Column -> Html Msg
 viewTableHeader columns =
     thead []
         [ tr []
-            ((++) [ tr [] [] ] <| L.map (viewColumn >> L.singleton >> td []) columns)
+            ((++) [ tr [] [] ] <| L.map (viewColumn >> L.singleton >> td [ style "text-align" "center" ]) columns)
         ]
 
 
-viewTableRow : ( Row, ColList ) -> Html Msg
-viewTableRow ( row, cols ) =
-    tr [] ([ td [] [ viewRow row ] ] ++ L.map viewTableCell (Debug.log "cols" cols))
+viewTableRow : Int -> ( Row, ColList ) -> Html Msg
+viewTableRow y ( row, cols ) =
+    tr []
+        ([ td [ style "vertical-align" "middle" ] [ viewRow row ] ]
+            ++ (Tuple.second <|
+                    L.foldl
+                        (\col ( x, res ) -> ( x + L.length col, res ++ [ viewTableCell y x col ] ))
+                        ( 0, [] )
+                        cols
+               )
+        )
 
 
 viewTable : List Row -> List Column -> RowList -> Html Msg
 viewTable rows columns cells =
     table [ class "ui collapsing celled striped table" ]
-        ((++) [ viewTableHeader columns ] <| L.map viewTableRow <| zip rows cells)
+        ((++) [ viewTableHeader columns ] <| L.indexedMap viewTableRow <| zip rows cells)
 
 
 view : Model -> Html Msg

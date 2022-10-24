@@ -13,41 +13,48 @@
 
 <body>
     <div id="app" style="width: 100%; height: 100%">
-        <div id="elm-app"></div>
     </div>
 
 
     <script src="/main.js"></script>
     <script>
-      var app = Elm.Main.init({
-        node: document.getElementById("app"),
-        flags: {"token": localStorage.getItem("token") || ""}
-      });
+        var app = Elm.Main.init({
+            node: document.getElementById("app"),
+            flags: {"token": localStorage.getItem("token") || ""}
+        });
 
-      app.ports.setStorage.subscribe(function({key, value}) {
-          localStorage.setItem(key, value)
-          //app.ports.setStorageDone.send({key, value});
-      });
+        if (app.ports.setStorage)
+            app.ports.setStorage.subscribe(function({key, value}) {
+                localStorage.setItem(key, value)
+            });
 
-      //app.ports.getStorage.subscribe(function(key) {
-      //    let value = localStorage.getItem(key);
-      //    app.ports.getStorageDone.send({key, value});
-      //});
+        if (app.ports.showModal)
+            app.ports.showModal.subscribe(function(selector) {
+                $("#modal_context").css("position", "absolute").css("top","0").css("left","0").css("width","100vw").css("height","100vh")
+                $(selector).modal({
+                    "context": "#modal_context",
+                    allowMultiple: false,
+                    //"detachable": false,
+                }).modal('show')
+            })
 
-      app.ports.toggleSidebar.subscribe(function(sidebarSelector) {
-        $(sidebarSelector).sidebar({
-          //context: $('#app'),
-          //transition: 'overlay'
-        }).sidebar('toggle');
-      })
+        if (app.ports.closeModal)
+            app.ports.closeModal.subscribe(function(selector) {
+                $(selector).modal('hide')
+                $("#modal_context .dimmer").remove()
+            })
 
-      app.ports.closeSidebar.subscribe(function(sidebarSelector) {
-        $(sidebarSelector).sidebar({
-          transition: 'overlay'
-        }).sidebar('close');
-      })
+        if (app.ports.removeNodes)
+            app.ports.removeNodes.subscribe(function(selector) {
+                $(selector).remove();
+            })
 
-      //app.run();
+        if (app.ports.scrollIdIntoView)
+            app.ports.scrollIdIntoView.subscribe(function(domId) {
+                document.getElementById(domId).scrollIntoView();
+            });
+
+        //app.run();
     </script>
   </body>
 </html>
