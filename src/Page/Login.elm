@@ -1,7 +1,7 @@
 module Page.Login exposing (..)
 
 import Api exposing (send, task, withToken)
-import Api.Data exposing (Token, User)
+import Api.Data exposing (Token, UserDeep)
 import Api.Request.User exposing (userLogin, userSelf)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -25,7 +25,7 @@ type ModelState
     | CheckingStored
     | LoggingIn
     | ResettingPassword
-    | Success { token : String, user : User }
+    | Success { token : String, user : UserDeep }
 
 
 type alias Model =

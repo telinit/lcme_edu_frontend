@@ -5835,23 +5835,6 @@ var $author$project$Util$either_map = F3(
 		}
 	});
 var $elm$core$String$endsWith = _String_endsWith;
-var $elm$core$Debug$toString = _Debug_toString;
-var $elm$core$Debug$todo = _Debug_todo;
-var $author$project$Util$get_id = function (record) {
-	var _v0 = record.id;
-	if (_v0.$ === 'Just') {
-		var id = _v0.a;
-		return id;
-	} else {
-		return _Debug_todo(
-			'Util',
-			{
-				start: {line: 133, column: 13},
-				end: {line: 133, column: 23}
-			})(
-			'get_id: ' + $elm$core$Debug$toString(record));
-	}
-};
 var $author$project$Page$CourseListPage$FetchedCourses = function (a) {
 	return {$: 'FetchedCourses', a: a};
 };
@@ -7865,6 +7848,92 @@ var $author$project$Page$CoursePage$Fetching = function (a) {
 var $author$project$Page$CoursePage$MsgFetch = function (a) {
 	return {$: 'MsgFetch', a: a};
 };
+var $elm$core$Set$Set_elm_builtin = function (a) {
+	return {$: 'Set_elm_builtin', a: a};
+};
+var $elm$core$Set$empty = $elm$core$Set$Set_elm_builtin($elm$core$Dict$empty);
+var $elm$core$Set$insert = F2(
+	function (key, _v0) {
+		var dict = _v0.a;
+		return $elm$core$Set$Set_elm_builtin(
+			A3($elm$core$Dict$insert, key, _Utils_Tuple0, dict));
+	});
+var $elm$core$Set$fromList = function (list) {
+	return A3($elm$core$List$foldl, $elm$core$Set$insert, $elm$core$Set$empty, list);
+};
+var $elm$core$Dict$foldl = F3(
+	function (func, acc, dict) {
+		foldl:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return acc;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var $temp$func = func,
+					$temp$acc = A3(
+					func,
+					key,
+					value,
+					A3($elm$core$Dict$foldl, func, acc, left)),
+					$temp$dict = right;
+				func = $temp$func;
+				acc = $temp$acc;
+				dict = $temp$dict;
+				continue foldl;
+			}
+		}
+	});
+var $elm$core$Dict$filter = F2(
+	function (isGood, dict) {
+		return A3(
+			$elm$core$Dict$foldl,
+			F3(
+				function (k, v, d) {
+					return A2(isGood, k, v) ? A3($elm$core$Dict$insert, k, v, d) : d;
+				}),
+			$elm$core$Dict$empty,
+			dict);
+	});
+var $elm$core$Dict$member = F2(
+	function (key, dict) {
+		var _v0 = A2($elm$core$Dict$get, key, dict);
+		if (_v0.$ === 'Just') {
+			return true;
+		} else {
+			return false;
+		}
+	});
+var $elm$core$Dict$intersect = F2(
+	function (t1, t2) {
+		return A2(
+			$elm$core$Dict$filter,
+			F2(
+				function (k, _v0) {
+					return A2($elm$core$Dict$member, k, t2);
+				}),
+			t1);
+	});
+var $elm$core$Set$intersect = F2(
+	function (_v0, _v1) {
+		var dict1 = _v0.a;
+		var dict2 = _v1.a;
+		return $elm$core$Set$Set_elm_builtin(
+			A2($elm$core$Dict$intersect, dict1, dict2));
+	});
+var $elm$core$Dict$isEmpty = function (dict) {
+	if (dict.$ === 'RBEmpty_elm_builtin') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$core$Set$isEmpty = function (_v0) {
+	var dict = _v0.a;
+	return $elm$core$Dict$isEmpty(dict);
+};
 var $author$project$Page$CoursePage$ResCourse = function (a) {
 	return {$: 'ResCourse', a: a};
 };
@@ -8114,7 +8183,7 @@ var $author$project$Api$Data$courseEnrollmentReadRoleDecoder = A2(
 		}
 	},
 	$elm$json$Json$Decode$string);
-var $author$project$Api$Data$User = function (id) {
+var $author$project$Api$Data$UserShallow = function (id) {
 	return function (roles) {
 		return function (lastLogin) {
 			return function (isSuperuser) {
@@ -8153,7 +8222,7 @@ var $author$project$Api$Data$User = function (id) {
 		};
 	};
 };
-var $author$project$Api$Data$userDecoder = A4(
+var $author$project$Api$Data$userShallowDecoder = A4(
 	$author$project$Api$Data$maybeDecode,
 	'children',
 	$elm$json$Json$Decode$list($danyx23$elm_uuid$Uuid$decoder),
@@ -8247,7 +8316,7 @@ var $author$project$Api$Data$userDecoder = A4(
 																			'id',
 																			$danyx23$elm_uuid$Uuid$decoder,
 																			$elm$core$Maybe$Nothing,
-																			$elm$json$Json$Decode$succeed($author$project$Api$Data$User))))))))))))))))))));
+																			$elm$json$Json$Decode$succeed($author$project$Api$Data$UserShallow))))))))))))))))))));
 var $author$project$Api$Data$courseEnrollmentReadDecoder = A3(
 	$author$project$Api$Data$decode,
 	'course',
@@ -8274,7 +8343,7 @@ var $author$project$Api$Data$courseEnrollmentReadDecoder = A3(
 					A3(
 						$author$project$Api$Data$decode,
 						'person',
-						$author$project$Api$Data$userDecoder,
+						$author$project$Api$Data$userShallowDecoder,
 						A4(
 							$author$project$Api$Data$maybeDecode,
 							'id',
@@ -8409,7 +8478,7 @@ var $author$project$Page$CoursePage$taskCourse = F2(
 					$author$project$Api$Request$Course$courseGetDeep(cid))));
 	});
 var $author$project$Page$CoursePage$init = F3(
-	function (token, course_id, roles) {
+	function (token, course_id, user) {
 		var _v0 = $author$project$Component$MultiTask$init(
 			_List_fromArray(
 				[
@@ -8422,10 +8491,19 @@ var $author$project$Page$CoursePage$init = F3(
 		return _Utils_Tuple2(
 			{
 				add_activity: {show_form: false, title: ''},
-				roles: roles,
+				is_staff: !$elm$core$Set$isEmpty(
+					A2(
+						$elm$core$Set$intersect,
+						$elm$core$Set$fromList(
+							A2($elm$core$Maybe$withDefault, _List_Nil, user.roles)),
+						$elm$core$Set$fromList(
+							_List_fromArray(
+								['admin', 'staff'])))),
 				show_members: false,
 				state: $author$project$Page$CoursePage$Fetching(m),
-				token: token
+				teaching_here: false,
+				token: token,
+				user: user
 			},
 			A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
 	});
@@ -8480,7 +8558,181 @@ var $elm$time$Time$Zone = F2(
 	});
 var $elm$time$Time$customZone = $elm$time$Time$Zone;
 var $elm$time$Time$now = _Time_now($elm$time$Time$millisToPosix);
-var $author$project$Api$Request$User$userSelf = A7($author$project$Api$request, 'GET', '/user/self/', _List_Nil, _List_Nil, _List_Nil, $elm$core$Maybe$Nothing, $author$project$Api$Data$userDecoder);
+var $author$project$Api$Data$UserDeep = function (id) {
+	return function (roles) {
+		return function (children) {
+			return function (lastLogin) {
+				return function (isSuperuser) {
+					return function (username) {
+						return function (firstName) {
+							return function (lastName) {
+								return function (email) {
+									return function (isStaff) {
+										return function (isActive) {
+											return function (dateJoined) {
+												return function (createdAt) {
+													return function (updatedAt) {
+														return function (middleName) {
+															return function (birthDate) {
+																return function (avatar) {
+																	return function (groups) {
+																		return function (userPermissions) {
+																			return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, dateJoined: dateJoined, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, roles: roles, updatedAt: updatedAt, userPermissions: userPermissions, username: username};
+																		};
+																	};
+																};
+															};
+														};
+													};
+												};
+											};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var $author$project$Api$Data$UserDeepGroupsInner = F3(
+	function (id, name, permissions) {
+		return {id: id, name: name, permissions: permissions};
+	});
+var $author$project$Api$Data$userDeepGroupsInnerDecoder = A4(
+	$author$project$Api$Data$maybeDecode,
+	'permissions',
+	$elm$json$Json$Decode$list($elm$json$Json$Decode$int),
+	$elm$core$Maybe$Nothing,
+	A3(
+		$author$project$Api$Data$decode,
+		'name',
+		$elm$json$Json$Decode$string,
+		A4(
+			$author$project$Api$Data$maybeDecode,
+			'id',
+			$elm$json$Json$Decode$int,
+			$elm$core$Maybe$Nothing,
+			$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeepGroupsInner))));
+var $author$project$Api$Data$UserDeepUserPermissionsInner = F4(
+	function (id, name, codename, contentType) {
+		return {codename: codename, contentType: contentType, id: id, name: name};
+	});
+var $author$project$Api$Data$userDeepUserPermissionsInnerDecoder = A3(
+	$author$project$Api$Data$decode,
+	'content_type',
+	$elm$json$Json$Decode$int,
+	A3(
+		$author$project$Api$Data$decode,
+		'codename',
+		$elm$json$Json$Decode$string,
+		A3(
+			$author$project$Api$Data$decode,
+			'name',
+			$elm$json$Json$Decode$string,
+			A4(
+				$author$project$Api$Data$maybeDecode,
+				'id',
+				$elm$json$Json$Decode$int,
+				$elm$core$Maybe$Nothing,
+				$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeepUserPermissionsInner)))));
+var $author$project$Api$Data$userDeepDecoder = A4(
+	$author$project$Api$Data$maybeDecode,
+	'user_permissions',
+	$elm$json$Json$Decode$list($author$project$Api$Data$userDeepUserPermissionsInnerDecoder),
+	$elm$core$Maybe$Nothing,
+	A4(
+		$author$project$Api$Data$maybeDecode,
+		'groups',
+		$elm$json$Json$Decode$list($author$project$Api$Data$userDeepGroupsInnerDecoder),
+		$elm$core$Maybe$Nothing,
+		A4(
+			$author$project$Api$Data$maybeDecodeNullable,
+			'avatar',
+			$elm$json$Json$Decode$string,
+			$elm$core$Maybe$Nothing,
+			A4(
+				$author$project$Api$Data$maybeDecodeNullable,
+				'birth_date',
+				$author$project$Api$Time$dateDecoder,
+				$elm$core$Maybe$Nothing,
+				A4(
+					$author$project$Api$Data$maybeDecodeNullable,
+					'middle_name',
+					$elm$json$Json$Decode$string,
+					$elm$core$Maybe$Nothing,
+					A4(
+						$author$project$Api$Data$maybeDecode,
+						'updated_at',
+						$author$project$Api$Time$dateTimeDecoder,
+						$elm$core$Maybe$Nothing,
+						A4(
+							$author$project$Api$Data$maybeDecode,
+							'created_at',
+							$author$project$Api$Time$dateTimeDecoder,
+							$elm$core$Maybe$Nothing,
+							A4(
+								$author$project$Api$Data$maybeDecode,
+								'date_joined',
+								$author$project$Api$Time$dateTimeDecoder,
+								$elm$core$Maybe$Nothing,
+								A4(
+									$author$project$Api$Data$maybeDecode,
+									'is_active',
+									$elm$json$Json$Decode$bool,
+									$elm$core$Maybe$Nothing,
+									A4(
+										$author$project$Api$Data$maybeDecode,
+										'is_staff',
+										$elm$json$Json$Decode$bool,
+										$elm$core$Maybe$Nothing,
+										A4(
+											$author$project$Api$Data$maybeDecode,
+											'email',
+											$elm$json$Json$Decode$string,
+											$elm$core$Maybe$Nothing,
+											A4(
+												$author$project$Api$Data$maybeDecode,
+												'last_name',
+												$elm$json$Json$Decode$string,
+												$elm$core$Maybe$Nothing,
+												A4(
+													$author$project$Api$Data$maybeDecode,
+													'first_name',
+													$elm$json$Json$Decode$string,
+													$elm$core$Maybe$Nothing,
+													A3(
+														$author$project$Api$Data$decode,
+														'username',
+														$elm$json$Json$Decode$string,
+														A4(
+															$author$project$Api$Data$maybeDecode,
+															'is_superuser',
+															$elm$json$Json$Decode$bool,
+															$elm$core$Maybe$Nothing,
+															A4(
+																$author$project$Api$Data$maybeDecodeNullable,
+																'last_login',
+																$author$project$Api$Time$dateTimeDecoder,
+																$elm$core$Maybe$Nothing,
+																A3(
+																	$author$project$Api$Data$decode,
+																	'children',
+																	$elm$json$Json$Decode$list($author$project$Api$Data$userShallowDecoder),
+																	A4(
+																		$author$project$Api$Data$maybeDecode,
+																		'roles',
+																		$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+																		$elm$core$Maybe$Nothing,
+																		A4(
+																			$author$project$Api$Data$maybeDecode,
+																			'id',
+																			$danyx23$elm_uuid$Uuid$decoder,
+																			$elm$core$Maybe$Nothing,
+																			$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeep))))))))))))))))))));
+var $author$project$Api$Request$User$userSelf = A7($author$project$Api$request, 'GET', '/user/self/', _List_Nil, _List_Nil, _List_Nil, $elm$core$Maybe$Nothing, $author$project$Api$Data$userDeepDecoder);
 var $author$project$Page$Login$doCheckSession = function (token) {
 	var task_user = A2(
 		$elm$core$Task$mapError,
@@ -8645,9 +8897,13 @@ var $author$project$Page$MarksCourse$init = F3(
 			{course: $elm$core$Maybe$Nothing, table: m, token: token},
 			A2($elm$core$Platform$Cmd$map, $author$project$Page$MarksCourse$MsgTable, c));
 	});
+var $author$project$Page$MarksStudent$MarksTable = function (a) {
+	return {$: 'MarksTable', a: a};
+};
 var $author$project$Page$MarksStudent$MsgTable = function (a) {
 	return {$: 'MsgTable', a: a};
 };
+var $author$project$Page$MarksStudent$StudentSelection = {$: 'StudentSelection'};
 var $author$project$Component$MarkTable$FetchedActivities = function (a) {
 	return {$: 'FetchedActivities', a: a};
 };
@@ -8724,14 +8980,93 @@ var $author$project$Component$MarkTable$initForStudent = F2(
 			},
 			A2($elm$core$Platform$Cmd$map, $author$project$Component$MarkTable$MsgFetch, c));
 	});
-var $author$project$Page$MarksStudent$init = F2(
-	function (token, student_id) {
-		var _v0 = A2($author$project$Component$MarkTable$initForStudent, token, student_id);
-		var m = _v0.a;
-		var c = _v0.b;
-		return _Utils_Tuple2(
-			{table: m, token: token},
-			A2($elm$core$Platform$Cmd$map, $author$project$Page$MarksStudent$MsgTable, c));
+var $elm$core$Debug$log = _Debug_log;
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var $elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			$elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
+	});
+var $author$project$Util$user_has_any_role = F2(
+	function (user, req_roles) {
+		return A2(
+			$elm$core$Maybe$withDefault,
+			false,
+			A2(
+				$elm$core$Maybe$map,
+				function (user_roles) {
+					return A2(
+						$elm$core$List$any,
+						function (role) {
+							return A2($elm$core$List$member, role, user_roles);
+						},
+						req_roles);
+				},
+				user.roles));
+	});
+var $author$project$Page$MarksStudent$init = F3(
+	function (token, user, mb_student_id) {
+		var student_id = function () {
+			var _v2 = _Utils_Tuple2(mb_student_id, user.children);
+			if (_v2.a.$ === 'Just') {
+				return mb_student_id;
+			} else {
+				if (_v2.b.b && (!_v2.b.b.b)) {
+					var _v3 = _v2.a;
+					var _v4 = _v2.b;
+					var child = _v4.a;
+					return child.id;
+				} else {
+					return A2(
+						$author$project$Util$user_has_any_role,
+						user,
+						_List_fromArray(
+							['student'])) ? user.id : $elm$core$Maybe$Nothing;
+				}
+			}
+		}();
+		var _v0 = A2($elm$core$Debug$log, 'student_id', student_id);
+		if (_v0.$ === 'Just') {
+			var id = _v0.a;
+			var _v1 = A2($author$project$Component$MarkTable$initForStudent, token, id);
+			var m = _v1.a;
+			var c = _v1.b;
+			return _Utils_Tuple2(
+				{
+					state: $author$project$Page$MarksStudent$MarksTable(m),
+					token: token,
+					user: user
+				},
+				A2($elm$core$Platform$Cmd$map, $author$project$Page$MarksStudent$MsgTable, c));
+		} else {
+			return _Utils_Tuple2(
+				{state: $author$project$Page$MarksStudent$StudentSelection, token: token, user: user},
+				$elm$core$Platform$Cmd$none);
+		}
 	});
 var $elm$browser$Browser$Navigation$load = _Browser_load;
 var $author$project$Main$UrlCourse = function (a) {
@@ -8741,13 +9076,13 @@ var $author$project$Main$UrlCourseList = {$: 'UrlCourseList'};
 var $author$project$Main$UrlLogin = {$: 'UrlLogin'};
 var $author$project$Main$UrlLogout = {$: 'UrlLogout'};
 var $author$project$Main$UrlMainPage = {$: 'UrlMainPage'};
+var $author$project$Main$UrlMarks = {$: 'UrlMarks'};
 var $author$project$Main$UrlMarksOfCourse = function (a) {
 	return {$: 'UrlMarksOfCourse', a: a};
 };
 var $author$project$Main$UrlMarksOfPerson = function (a) {
 	return {$: 'UrlMarksOfPerson', a: a};
 };
-var $author$project$Main$UrlMarksOwn = {$: 'UrlMarksOwn'};
 var $author$project$Main$UrlMessages = {$: 'UrlMessages'};
 var $author$project$Main$UrlNews = {$: 'UrlNews'};
 var $author$project$Main$UrlNotFound = {$: 'UrlNotFound'};
@@ -9045,7 +9380,7 @@ var $author$project$Main$parse_url = function (url) {
 							$elm$url$Url$Parser$string)),
 						A2(
 						$elm$url$Url$Parser$map,
-						$author$project$Main$UrlMarksOwn,
+						$author$project$Main$UrlMarks,
 						$elm$url$Url$Parser$s('marks')),
 						A2(
 						$elm$url$Url$Parser$map,
@@ -9061,7 +9396,7 @@ var $author$project$Main$parse_url = function (url) {
 							$elm$url$Url$Parser$s('marks'),
 							A2(
 								$elm$url$Url$Parser$slash,
-								$elm$url$Url$Parser$s('user'),
+								$elm$url$Url$Parser$s('student'),
 								$elm$url$Url$Parser$string))),
 						A2(
 						$elm$url$Url$Parser$map,
@@ -9107,6 +9442,7 @@ var $author$project$Main$parse_url = function (url) {
 					])),
 			url));
 };
+var $elm$core$Debug$toString = _Debug_toString;
 var $author$project$Page$CourseListPage$Completed = F2(
 	function (a, b) {
 		return {$: 'Completed', a: a, b: b};
@@ -9771,6 +10107,22 @@ var $author$project$Page$CoursePage$collectFetchResults = function (fetchResults
 		return $elm$core$Maybe$Nothing;
 	}
 };
+var $elm$core$Debug$todo = _Debug_todo;
+var $author$project$Util$get_id = function (record) {
+	var _v0 = record.id;
+	if (_v0.$ === 'Just') {
+		var id = _v0.a;
+		return id;
+	} else {
+		return _Debug_todo(
+			'Util',
+			{
+				start: {line: 133, column: 13},
+				end: {line: 133, column: 23}
+			})(
+			'get_id: ' + $elm$core$Debug$toString(record));
+	}
+};
 var $elm$core$List$maximum = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -9804,7 +10156,13 @@ var $author$project$Page$CoursePage$update = F2(
 									_Utils_update(
 										model,
 										{
-											state: $author$project$Page$CoursePage$FetchDone(c_)
+											state: $author$project$Page$CoursePage$FetchDone(c_),
+											teaching_here: A2(
+												$elm$core$List$any,
+												function (enr) {
+													return _Utils_eq(enr.role, $author$project$Api$Data$CourseEnrollmentReadRoleT) && _Utils_eq(enr.person.id, model.user.id);
+												},
+												c_.enrollments)
 										}),
 									$elm$core$Platform$Cmd$none);
 							} else {
@@ -10182,7 +10540,7 @@ var $author$project$Api$Data$tokenDecoder = A3(
 	A3(
 		$author$project$Api$Data$decode,
 		'user',
-		$author$project$Api$Data$userDecoder,
+		$author$project$Api$Data$userDeepDecoder,
 		$elm$json$Json$Decode$succeed($author$project$Api$Data$Token)));
 var $author$project$Api$Request$User$userLogin = function (data_body) {
 	return A7(
@@ -10523,19 +10881,6 @@ var $author$project$Component$MarkTable$doUpdateMark = F4(
 						{value: new_mark}))));
 	});
 var $elm$browser$Browser$Dom$focus = _Browser_call('focus');
-var $elm$core$Set$Set_elm_builtin = function (a) {
-	return {$: 'Set_elm_builtin', a: a};
-};
-var $elm$core$Set$empty = $elm$core$Set$Set_elm_builtin($elm$core$Dict$empty);
-var $elm$core$Set$insert = F2(
-	function (key, _v0) {
-		var dict = _v0.a;
-		return $elm$core$Set$Set_elm_builtin(
-			A3($elm$core$Dict$insert, key, _Utils_Tuple0, dict));
-	});
-var $elm$core$Set$fromList = function (list) {
-	return A3($elm$core$List$foldl, $elm$core$Set$insert, $elm$core$Set$empty, list);
-};
 var $author$project$Util$index_by = F2(
 	function (key, list) {
 		return $elm$core$Dict$fromList(
@@ -11165,15 +11510,24 @@ var $author$project$Page$MarksCourse$update = F2(
 	});
 var $author$project$Page$MarksStudent$update = F2(
 	function (msg, model) {
-		var msg_ = msg.a;
-		var _v1 = A2($author$project$Component$MarkTable$update, msg_, model.table);
-		var m = _v1.a;
-		var c = _v1.b;
-		return _Utils_Tuple2(
-			_Utils_update(
-				model,
-				{table: m}),
-			A2($elm$core$Platform$Cmd$map, $author$project$Page$MarksStudent$MsgTable, c));
+		var _v0 = _Utils_Tuple2(msg, model.state);
+		if (_v0.b.$ === 'MarksTable') {
+			var msg_ = _v0.a.a;
+			var t = _v0.b.a;
+			var _v1 = A2($author$project$Component$MarkTable$update, msg_, t);
+			var m = _v1.a;
+			var c = _v1.b;
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{
+						state: $author$project$Page$MarksStudent$MarksTable(m)
+					}),
+				A2($elm$core$Platform$Cmd$map, $author$project$Page$MarksStudent$MsgTable, c));
+		} else {
+			var _v2 = _v0.b;
+			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		}
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -11240,6 +11594,7 @@ var $author$project$Main$update = F2(
 										_Utils_update(
 											model,
 											{
+												init_url: '/',
 												layout: $author$project$Main$LayoutNone,
 												page: $author$project$Main$PageBlank,
 												token: $author$project$Util$Left('')
@@ -11296,11 +11651,7 @@ var $author$project$Main$update = F2(
 									if (_v4.b.$ === 'Right') {
 										var id = _v4.a.a;
 										var token = _v4.b.a;
-										var _v11 = A3(
-											$author$project$Page$CoursePage$init,
-											token.key,
-											id,
-											A2($elm$core$Maybe$withDefault, _List_Nil, token.user.roles));
+										var _v11 = A3($author$project$Page$CoursePage$init, token.key, id, token.user);
 										var model_ = _v11.a;
 										var cmd_2 = _v11.b;
 										var _v12 = $author$project$Page$DefaultLayout$init(token.user);
@@ -11348,14 +11699,11 @@ var $author$project$Main$update = F2(
 									} else {
 										break _v4$13;
 									}
-								case 'UrlMarksOwn':
+								case 'UrlMarks':
 									if (_v4.b.$ === 'Right') {
 										var _v16 = _v4.a;
 										var token = _v4.b.a;
-										var _v17 = A2(
-											$author$project$Page$MarksStudent$init,
-											token.key,
-											$author$project$Util$get_id(token.user));
+										var _v17 = A3($author$project$Page$MarksStudent$init, token.key, token.user, $elm$core$Maybe$Nothing);
 										var model_ = _v17.a;
 										var cmd_2 = _v17.b;
 										var _v18 = $author$project$Page$DefaultLayout$init(token.user);
@@ -11381,7 +11729,11 @@ var $author$project$Main$update = F2(
 									if (_v4.b.$ === 'Right') {
 										var id = _v4.a.a;
 										var token = _v4.b.a;
-										var _v19 = A2($author$project$Page$MarksStudent$init, token.key, id);
+										var _v19 = A3(
+											$author$project$Page$MarksStudent$init,
+											token.key,
+											token.user,
+											$elm$core$Maybe$Just(id));
 										var model_ = _v19.a;
 										var cmd_2 = _v19.b;
 										var _v20 = $author$project$Page$DefaultLayout$init(token.user);
@@ -11875,44 +12227,28 @@ var $author$project$Page$DefaultLayout$make_header_pc = F2(
 	});
 var $elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
 var $elm$html$Html$map = $elm$virtual_dom$VirtualDom$map;
-var $elm$core$List$any = F2(
+var $elm$core$List$all = F2(
 	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
-var $elm$core$List$member = F2(
-	function (x, xs) {
-		return A2(
+		return !A2(
 			$elm$core$List$any,
-			function (a) {
-				return _Utils_eq(a, x);
-			},
-			xs);
+			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
+			list);
 	});
-var $author$project$Util$user_has_role = F2(
-	function (user, role) {
+var $author$project$Util$user_has_all_roles = F2(
+	function (user, req_roles) {
 		return A2(
 			$elm$core$Maybe$withDefault,
 			false,
 			A2(
 				$elm$core$Maybe$map,
-				$elm$core$List$member(role),
+				function (user_roles) {
+					return A2(
+						$elm$core$List$all,
+						function (role) {
+							return A2($elm$core$List$member, role, user_roles);
+						},
+						req_roles);
+				},
 				user.roles));
 	});
 var $author$project$Page$DefaultLayout$view = F3(
@@ -11929,12 +12265,18 @@ var $author$project$Page$DefaultLayout$view = F3(
 				[
 					$elm$core$Maybe$Just(
 					{href: '/courses', icon: 'book', label: 'Предметы'}),
-					A2($author$project$Util$user_has_role, model.user, 'student') ? $elm$core$Maybe$Just(
-					{href: '/marks', icon: 'chart bar outline', label: 'Мои оценки'}) : $elm$core$Maybe$Nothing,
-					$elm$core$Maybe$Just(
-					{href: '/messages', icon: 'envelope outline', label: 'Сообщения'}),
-					$elm$core$Maybe$Just(
-					{href: '/admin', icon: 'cog', label: 'Администрирование'})
+					A2(
+					$author$project$Util$user_has_any_role,
+					model.user,
+					_List_fromArray(
+						['parent', 'student'])) ? $elm$core$Maybe$Just(
+					{href: '/marks', icon: 'chart bar outline', label: 'Оценки'}) : $elm$core$Maybe$Nothing,
+					A2(
+					$author$project$Util$user_has_all_roles,
+					model.user,
+					_List_fromArray(
+						['admin'])) ? $elm$core$Maybe$Just(
+					{href: '/admin', icon: 'cog', label: 'Администрирование'}) : $elm$core$Maybe$Nothing
 				]));
 		var sidebar = A2(
 			$elm$html$Html$div,
@@ -12625,39 +12967,43 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $elm$core$String$trim = _String_trim;
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
-var $author$project$Component$Misc$user_link = function (user) {
-	return A2(
-		$elm$html$Html$a,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('row middle-xs'),
-				$elm$html$Html$Attributes$href(
-				'/profile/' + $author$project$Util$get_id_str(user))
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$img,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('ui avatar image'),
-						$elm$html$Html$Attributes$src(
-						A2($elm$core$Maybe$withDefault, '/img/user.png', user.avatar))
-					]),
-				_List_Nil),
-				A2(
-				$elm$html$Html$span,
-				_List_fromArray(
-					[
-						A2($elm$html$Html$Attributes$style, 'margin-left', '0.5em')
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text(
-						$author$project$Util$user_full_name(user))
-					]))
-			]));
-};
+var $author$project$Component$Misc$user_link = F2(
+	function (mb_link, user) {
+		return A2(
+			$elm$html$Html$a,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('row middle-xs'),
+					$elm$html$Html$Attributes$href(
+					A2(
+						$elm$core$Maybe$withDefault,
+						'/profile/' + $author$project$Util$get_id_str(user),
+						mb_link))
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$img,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('ui avatar image'),
+							$elm$html$Html$Attributes$src(
+							A2($elm$core$Maybe$withDefault, '/img/user.png', user.avatar))
+						]),
+					_List_Nil),
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'margin-left', '0.5em')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(
+							$author$project$Util$user_full_name(user))
+						]))
+				]));
+	});
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Component$Modal$view = F6(
 	function (id_, title, body_, msg_close, buttons, do_show) {
@@ -12771,7 +13117,7 @@ var $author$project$Page$CoursePage$viewCourse = F2(
 			var user_list = $elm$core$List$map(
 				A2(
 					$elm$core$Basics$composeR,
-					$author$project$Component$Misc$user_link,
+					$author$project$Component$Misc$user_link($elm$core$Maybe$Nothing),
 					function (el) {
 						return A2(
 							$elm$html$Html$div,
@@ -12985,13 +13331,7 @@ var $author$project$Page$CoursePage$viewCourse = F2(
 				$elm$core$Basics$identity,
 				_List_fromArray(
 					[
-						A2(
-						$elm$core$List$any,
-						function (r) {
-							return A2($elm$core$List$member, r, model.roles);
-						},
-						_List_fromArray(
-							['teacher', 'staff', 'admin'])) ? $elm$core$Maybe$Just(
+						(model.is_staff || model.teaching_here) ? $elm$core$Maybe$Just(
 						A2(
 							$elm$html$Html$a,
 							_List_fromArray(
@@ -13238,7 +13578,7 @@ var $author$project$Page$CoursePage$viewCourse = F2(
 			_List_fromArray(
 				[
 					$elm$html$Html$text('Содержание'),
-					A2(
+					(model.is_staff || model.teaching_here) ? A2(
 					$elm$html$Html$button,
 					_List_fromArray(
 						[
@@ -13255,7 +13595,7 @@ var $author$project$Page$CoursePage$viewCourse = F2(
 								]),
 							_List_Nil),
 							$elm$html$Html$text('Добавить')
-						]))
+						])) : $elm$html$Html$text('')
 				]));
 		var activities = A2($elm$core$List$map, $author$project$Page$CoursePage$viewActivity, courseRead.activities);
 		return A2(
@@ -13740,7 +14080,6 @@ var $author$project$Component$MarkTable$showFetchedData = function (fetchedData)
 				$elm$core$List$length(activities));
 	}
 };
-var $elm$core$Debug$log = _Debug_log;
 var $elm$html$Html$table = _VirtualDom_node('table');
 var $elm$core$List$singleton = function (value) {
 	return _List_fromArray(
@@ -13875,7 +14214,7 @@ var $author$project$Component$MarkTable$viewRow = function (row) {
 				]),
 			_List_fromArray(
 				[
-					$author$project$Component$Misc$user_link(user)
+					A2($author$project$Component$Misc$user_link, $elm$core$Maybe$Nothing, user)
 				]));
 	} else {
 		var course = row.a;
@@ -14349,20 +14688,137 @@ var $author$project$Page$MarksCourse$view = function (model) {
 					]))
 			]));
 };
+var $author$project$Util$user_deep_to_shallow = function (userDeep) {
+	return {
+		avatar: userDeep.avatar,
+		birthDate: userDeep.birthDate,
+		children: $elm$core$Maybe$Just(
+			A2(
+				$elm$core$List$filterMap,
+				function ($) {
+					return $.id;
+				},
+				userDeep.children)),
+		createdAt: userDeep.createdAt,
+		dateJoined: userDeep.dateJoined,
+		email: userDeep.email,
+		firstName: userDeep.firstName,
+		groups: A2(
+			$elm$core$Maybe$map,
+			$elm$core$List$filterMap(
+				function ($) {
+					return $.id;
+				}),
+			userDeep.groups),
+		id: userDeep.id,
+		isActive: userDeep.isActive,
+		isStaff: userDeep.isStaff,
+		isSuperuser: userDeep.isSuperuser,
+		lastLogin: userDeep.lastLogin,
+		lastName: userDeep.lastName,
+		middleName: userDeep.middleName,
+		roles: userDeep.roles,
+		updatedAt: userDeep.updatedAt,
+		userPermissions: A2(
+			$elm$core$Maybe$map,
+			$elm$core$List$filterMap(
+				function ($) {
+					return $.id;
+				}),
+			userDeep.userPermissions),
+		username: userDeep.username
+	};
+};
 var $author$project$Page$MarksStudent$view = function (model) {
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('row center-xs')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$map,
-				$author$project$Page$MarksStudent$MsgTable,
-				$author$project$Component$MarkTable$view(model.table))
-			]));
+	var _v0 = model.state;
+	if (_v0.$ === 'MarksTable') {
+		var t = _v0.a;
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('row center-xs')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$map,
+					$author$project$Page$MarksStudent$MsgTable,
+					$author$project$Component$MarkTable$view(t))
+				]));
+	} else {
+		var self_is_student = A2(
+			$elm$core$List$member,
+			'student',
+			A2($elm$core$Maybe$withDefault, _List_Nil, model.user.roles));
+		var lnk = function (user) {
+			return A2(
+				$author$project$Component$Misc$user_link,
+				$elm$core$Maybe$Just(
+					'/marks/student/' + $author$project$Util$get_id_str(user)),
+				user);
+		};
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('row center-xs')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('col')
+						]),
+					A2(
+						$elm$core$List$filterMap,
+						$elm$core$Basics$identity,
+						_Utils_ap(
+							_List_fromArray(
+								[
+									$elm$core$Maybe$Just(
+									A2(
+										$elm$html$Html$h1,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Выберите учащегося')
+											]))),
+									self_is_student ? $elm$core$Maybe$Just(
+									A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('row'),
+												A2($elm$html$Html$Attributes$style, 'margin', '1em')
+											]),
+										_List_fromArray(
+											[
+												lnk(
+												$author$project$Util$user_deep_to_shallow(model.user))
+											]))) : $elm$core$Maybe$Nothing
+								]),
+							A2(
+								$elm$core$List$map,
+								function (child) {
+									return $elm$core$Maybe$Just(
+										A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('row'),
+													A2($elm$html$Html$Attributes$style, 'margin', '1em')
+												]),
+											_List_fromArray(
+												[
+													lnk(child)
+												])));
+								},
+								model.user.children))))
+				]));
+	}
 };
 var $author$project$Page$NotFound$view = A2(
 	$elm$html$Html$div,

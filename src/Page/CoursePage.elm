@@ -1,7 +1,7 @@
 module Page.CoursePage exposing (..)
 
 import Api exposing (ext_task, task, withQuery, withToken)
-import Api.Data exposing (Activity, CourseDeep, CourseEnrollmentRead, CourseEnrollmentReadRole(..), User)
+import Api.Data exposing (Activity, CourseDeep, CourseEnrollmentRead, CourseEnrollmentReadRole(..), UserDeep)
 import Api.Request.Activity exposing (activityCreate, activityList)
 import Api.Request.Course exposing (courseEnrollmentList, courseGetDeep, courseRead)
 import Component.MessageBox as MessageBox exposing (Type(..))
@@ -13,9 +13,10 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Http exposing (Error(..))
 import Page.CourseListPage exposing (empty_to_nothing)
+import Set
 import Task
 import Time exposing (millisToPosix)
-import Util exposing (get_id, get_id_str, httpErrorToString, user_full_name)
+import Util exposing (get_id, get_id_str, httpErrorToString, isJust, user_full_name)
 
 
 type State
@@ -48,9 +49,11 @@ type alias AddActivityModel =
 type alias Model =
     { state : State
     , token : String
-    , roles : List String
+    , user : UserDeep
     , show_members : Bool
     , add_activity : AddActivityModel
+    , is_staff : Bool
+    , teaching_here : Bool
     }
 
 
@@ -65,8 +68,8 @@ taskCourse token cid =
     Task.map ResCourse <| task <| withToken (Just token) <| courseGetDeep cid
 
 
-init : String -> String -> List String -> ( Model, Cmd Msg )
-init token course_id roles =
+init : String -> String -> UserDeep -> ( Model, Cmd Msg )
+init token course_id user =
     let
         ( m, c ) =
             MultiTask.init
@@ -75,12 +78,14 @@ init token course_id roles =
     in
     ( { state = Fetching m
       , token = token
-      , roles = roles
+      , user = user
       , show_members = False
       , add_activity =
             { show_form = False
             , title = ""
             }
+      , is_staff = not <| Set.isEmpty <| Set.intersect (Set.fromList <| Maybe.withDefault [] user.roles) (Set.fromList [ "admin", "staff" ])
+      , teaching_here = False
       }
     , Cmd.map MsgFetch c
     )
@@ -108,7 +113,17 @@ update msg ({ add_activity } as model) =
                 TaskFinishedAll results ->
                     case collectFetchResults results of
                         Just c_ ->
-                            ( { model | state = FetchDone c_ }, Cmd.none )
+                            ( { model
+                                | state = FetchDone c_
+                                , teaching_here =
+                                    List.any
+                                        (\enr ->
+                                            enr.role == CourseEnrollmentReadRoleT && enr.person.id == model.user.id
+                                        )
+                                        c_.enrollments
+                              }
+                            , Cmd.none
+                            )
 
                         Nothing ->
                             ( { model | state = FetchFailed "Не удалось разобрать результаты запросов" }, Cmd.none )
@@ -249,7 +264,7 @@ viewCourse courseRead model =
 
                 buttons =
                     List.filterMap identity
-                        [ if List.any (\r -> List.member r model.roles) [ "teacher", "staff", "admin" ] then
+                        [ if model.is_staff || model.teaching_here then
                             Just <|
                                 a [ href <| "/marks/course/" ++ get_id_str courseRead ]
                                     [ button [ class "ui button" ]
@@ -318,7 +333,7 @@ viewCourse courseRead model =
                     List.map .person <| List.filter (\enr -> enr.role == CourseEnrollmentReadRoleS) courseRead.enrollments
 
                 user_list =
-                    List.map (user_link >> (\el -> div [ style "margin" "1em" ] [ el ]))
+                    List.map ((user_link Nothing) >> (\el -> div [ style "margin" "1em" ] [ el ]))
             in
             div []
                 [ h3 [] [ text "Преподаватели" ]
@@ -358,10 +373,14 @@ viewCourse courseRead model =
         activities_title =
             h1 [ class "row between-xs" ]
                 [ text "Содержание"
-                , button [ class "ui button green", onClick MsgAddActivity ] [ i [ class "icon plus" ] [], text "Добавить" ]
+                , if model.is_staff || model.teaching_here then
+                    button [ class "ui button green", onClick MsgAddActivity ] [ i [ class "icon plus" ] [], text "Добавить" ]
+
+                  else
+                    text ""
                 ]
     in
-    div [ style "padding-bottom" "3em"]
+    div [ style "padding-bottom" "3em" ]
         [ modal_members model.show_members
         , modal_add_activity model.add_activity.show_form
         , breadcrumbs

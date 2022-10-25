@@ -1,15 +1,15 @@
 module Page.DefaultLayout exposing (..)
 
-import Api.Data exposing (User)
+import Api.Data exposing (UserDeep)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import Util exposing (link_span, user_has_role)
+import Util exposing (link_span, user_has_all_roles, user_has_any_role, user_has_role)
 
 
 type alias Model =
     { show_sidebar : Bool
-    , user : User
+    , user : UserDeep
     }
 
 
@@ -98,13 +98,19 @@ view map_msg model html =
         items =
             List.filterMap identity
                 [ Just { label = "Предметы", href = "/courses", icon = "book" }
-                , if user_has_role model.user "student" then
-                    Just { label = "Мои оценки", href = "/marks", icon = "chart bar outline" }
+
+                , if user_has_any_role model.user ["parent", "student"] then
+                    Just { label = "Оценки", href = "/marks", icon = "chart bar outline" }
 
                   else
                     Nothing
-                , Just { label = "Сообщения", href = "/messages", icon = "envelope outline" }
-                , Just { label = "Администрирование", href = "/admin", icon = "cog" }
+
+                , --, Just { label = "Сообщения", href = "/messages", icon = "envelope outline" }
+                  if user_has_all_roles model.user ["admin"] then
+                    Just { label = "Администрирование", href = "/admin", icon = "cog" }
+
+                  else
+                    Nothing
                 ]
 
         sidebar =
@@ -144,7 +150,7 @@ view map_msg model html =
         ]
 
 
-init : User -> ( Model, Cmd Msg )
+init : UserDeep -> ( Model, Cmd Msg )
 init user =
     ( { user = user, show_sidebar = False }, Cmd.none )
 

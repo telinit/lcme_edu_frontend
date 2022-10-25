@@ -29,7 +29,7 @@ type Column
 
 
 type Row
-    = User Data.User
+    = User Data.UserShallow
     | Course Data.CourseShallow
 
 
@@ -677,7 +677,7 @@ viewRow : Row -> Html Msg
 viewRow row =
     case row of
         User user ->
-            div [ style "margin" "0 1em" ] [ user_link user ]
+            div [ style "margin" "0 1em" ] [ user_link Nothing user  ]
 
         Course course ->
             a [ href <| "/course/" ++ get_id_str course ] [ text course.title ]

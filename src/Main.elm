@@ -68,7 +68,7 @@ type ParsedUrl
     | UrlMainPage
     | UrlCourseList
     | UrlCourse String
-    | UrlMarksOwn
+    | UrlMarks
     | UrlMarksOfPerson Uuid
     | UrlMarksOfCourse Uuid
     | UrlProfileOwn
@@ -99,8 +99,8 @@ parse_url url =
                 , map UrlLogout (s "logout")
                 , map UrlCourseList (s "courses")
                 , map UrlCourse (s "course" </> string)
-                , map UrlMarksOwn (s "marks")
-                , map (Maybe.withDefault UrlNotFound << Maybe.map UrlMarksOfPerson << Uuid.fromString) (s "marks" </> s "user" </> string)
+                , map UrlMarks (s "marks")
+                , map (Maybe.withDefault UrlNotFound << Maybe.map UrlMarksOfPerson << Uuid.fromString) (s "marks" </> s "student" </> string)
                 , map (Maybe.withDefault UrlNotFound << Maybe.map UrlMarksOfCourse << Uuid.fromString) (s "marks" </> s "course" </> string)
                 , map UrlProfileOwn (s "profile")
                 , map (Maybe.withDefault UrlNotFound << Maybe.map UrlProfileOfUser << Uuid.fromString) (s "profile" </> string)
@@ -155,7 +155,7 @@ update msg model =
                             ( { model | page = PageNotFound, layout = LayoutNone }, Cmd.none )
 
                         ( UrlLogout, _ ) ->
-                            ( { model | page = PageBlank, token = Left "", layout = LayoutNone }
+                            ( { model | page = PageBlank, token = Left "", layout = LayoutNone, init_url = "/" }
                             , Cmd.batch
                                 [ Cmd.map MsgLogin <| Login.doSaveToken ""
                                 , Nav.pushUrl model.key "/login"
@@ -182,7 +182,7 @@ update msg model =
                                     DefaultLayout.init token.user
 
                                 ( model_, cmd_2 ) =
-                                    CoursePage.init token.key id <| Maybe.withDefault [] token.user.roles
+                                    CoursePage.init token.key id token.user
                             in
                             ( { model | page = PageCourse model_, layout = LayoutDefault layout_ }
                             , Cmd.batch
@@ -209,13 +209,13 @@ update msg model =
                                 ]
                             )
 
-                        ( UrlMarksOwn, Right token ) ->
+                        ( UrlMarks, Right token ) ->
                             let
                                 ( layout_, cmd_1 ) =
                                     DefaultLayout.init token.user
 
                                 ( model_, cmd_2 ) =
-                                    MarksStudent.init token.key (get_id token.user)
+                                    MarksStudent.init token.key token.user Nothing
                             in
                             ( { model
                                 | page = PageMarksOfStudent model_
@@ -233,7 +233,7 @@ update msg model =
                                     DefaultLayout.init token.user
 
                                 ( model_, cmd_2 ) =
-                                    MarksStudent.init token.key id
+                                    MarksStudent.init token.key token.user (Just id)
                             in
                             ( { model
                                 | page = PageMarksOfStudent model_

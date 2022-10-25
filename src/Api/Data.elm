@@ -39,7 +39,10 @@ module Api.Data exposing
     , Token
     , UnreadObject
     , UnreadObjectType(..)
-    , User
+    , UserDeep
+    , UserDeepGroupsInner
+    , UserDeepUserPermissionsInner
+    , UserShallow
     , activityDecoder
     , activityFinalTypeVariants
     , activityTypeVariants
@@ -71,7 +74,10 @@ module Api.Data exposing
     , encodeSetPassword
     , encodeToken
     , encodeUnreadObject
-    , encodeUser
+    , encodeUserDeep
+    , encodeUserDeepGroupsInner
+    , encodeUserDeepUserPermissionsInner
+    , encodeUserShallow
     , fileDecoder
     , loginDecoder
     , markDecoder
@@ -84,7 +90,10 @@ module Api.Data exposing
     , tokenDecoder
     , unreadObjectDecoder
     , unreadObjectTypeVariants
-    , userDecoder
+    , userDeepDecoder
+    , userDeepGroupsInnerDecoder
+    , userDeepUserPermissionsInnerDecoder
+    , userShallowDecoder
     )
 
 import Api
@@ -185,7 +194,7 @@ type alias CourseDeep =
 
 type alias CourseEnrollmentRead =
     { id : Maybe Uuid
-    , person : User
+    , person : UserShallow
     , createdAt : Maybe Posix
     , updatedAt : Maybe Posix
     , role : CourseEnrollmentReadRole
@@ -366,7 +375,7 @@ type alias SetPassword =
 
 
 type alias Token =
-    { user : User
+    { user : UserDeep
     , key : String
     }
 
@@ -410,7 +419,45 @@ unreadObjectTypeVariants =
     ]
 
 
-type alias User =
+type alias UserDeep =
+    { id : Maybe Uuid
+    , roles : Maybe (List String)
+    , children : List UserShallow
+    , lastLogin : Maybe Posix
+    , isSuperuser : Maybe Bool
+    , username : String
+    , firstName : Maybe String
+    , lastName : Maybe String
+    , email : Maybe String
+    , isStaff : Maybe Bool
+    , isActive : Maybe Bool
+    , dateJoined : Maybe Posix
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
+    , middleName : Maybe String
+    , birthDate : Maybe Posix
+    , avatar : Maybe String
+    , groups : Maybe (List UserDeepGroupsInner)
+    , userPermissions : Maybe (List UserDeepUserPermissionsInner)
+    }
+
+
+type alias UserDeepGroupsInner =
+    { id : Maybe Int
+    , name : String
+    , permissions : Maybe (List Int)
+    }
+
+
+type alias UserDeepUserPermissionsInner =
+    { id : Maybe Int
+    , name : String
+    , codename : String
+    , contentType : Int
+    }
+
+
+type alias UserShallow =
     { id : Maybe Uuid
     , roles : Maybe (List String)
     , lastLogin : Maybe Posix
@@ -583,7 +630,7 @@ encodeCourseEnrollmentReadPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
-            , encode "person" encodeUser model.person
+            , encode "person" encodeUserShallow model.person
             , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "role" encodeCourseEnrollmentReadRole model.role
@@ -995,7 +1042,7 @@ encodeTokenPairs : Token -> List EncodedField
 encodeTokenPairs model =
     let
         pairs =
-            [ encode "user" encodeUser model.user
+            [ encode "user" encodeUserDeep model.user
             , encode "key" Json.Encode.string model.key
             ]
     in
@@ -1067,18 +1114,101 @@ encodeUnreadObjectType =
     Json.Encode.string << stringFromUnreadObjectType
 
 
-encodeUser : User -> Json.Encode.Value
-encodeUser =
-    encodeObject << encodeUserPairs
+encodeUserDeep : UserDeep -> Json.Encode.Value
+encodeUserDeep =
+    encodeObject << encodeUserDeepPairs
 
 
-encodeUserWithTag : ( String, String ) -> User -> Json.Encode.Value
-encodeUserWithTag ( tagField, tag ) model =
-    encodeObject (encodeUserPairs model ++ [ encode tagField Json.Encode.string tag ])
+encodeUserDeepWithTag : ( String, String ) -> UserDeep -> Json.Encode.Value
+encodeUserDeepWithTag ( tagField, tag ) model =
+    encodeObject (encodeUserDeepPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
-encodeUserPairs : User -> List EncodedField
-encodeUserPairs model =
+encodeUserDeepPairs : UserDeep -> List EncodedField
+encodeUserDeepPairs model =
+    let
+        pairs =
+            [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "roles" (Json.Encode.list Json.Encode.string) model.roles
+            , encode "children" (Json.Encode.list encodeUserShallow) model.children
+            , maybeEncodeNullable "last_login" Api.Time.encodeDateTime model.lastLogin
+            , maybeEncode "is_superuser" Json.Encode.bool model.isSuperuser
+            , encode "username" Json.Encode.string model.username
+            , maybeEncode "first_name" Json.Encode.string model.firstName
+            , maybeEncode "last_name" Json.Encode.string model.lastName
+            , maybeEncode "email" Json.Encode.string model.email
+            , maybeEncode "is_staff" Json.Encode.bool model.isStaff
+            , maybeEncode "is_active" Json.Encode.bool model.isActive
+            , maybeEncode "date_joined" Api.Time.encodeDateTime model.dateJoined
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
+            , maybeEncodeNullable "middle_name" Json.Encode.string model.middleName
+            , maybeEncodeNullable "birth_date" Api.Time.encodeDate model.birthDate
+            , maybeEncodeNullable "avatar" Json.Encode.string model.avatar
+            , maybeEncode "groups" (Json.Encode.list encodeUserDeepGroupsInner) model.groups
+            , maybeEncode "user_permissions" (Json.Encode.list encodeUserDeepUserPermissionsInner) model.userPermissions
+            ]
+    in
+    pairs
+
+
+encodeUserDeepGroupsInner : UserDeepGroupsInner -> Json.Encode.Value
+encodeUserDeepGroupsInner =
+    encodeObject << encodeUserDeepGroupsInnerPairs
+
+
+encodeUserDeepGroupsInnerWithTag : ( String, String ) -> UserDeepGroupsInner -> Json.Encode.Value
+encodeUserDeepGroupsInnerWithTag ( tagField, tag ) model =
+    encodeObject (encodeUserDeepGroupsInnerPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeUserDeepGroupsInnerPairs : UserDeepGroupsInner -> List EncodedField
+encodeUserDeepGroupsInnerPairs model =
+    let
+        pairs =
+            [ maybeEncode "id" Json.Encode.int model.id
+            , encode "name" Json.Encode.string model.name
+            , maybeEncode "permissions" (Json.Encode.list Json.Encode.int) model.permissions
+            ]
+    in
+    pairs
+
+
+encodeUserDeepUserPermissionsInner : UserDeepUserPermissionsInner -> Json.Encode.Value
+encodeUserDeepUserPermissionsInner =
+    encodeObject << encodeUserDeepUserPermissionsInnerPairs
+
+
+encodeUserDeepUserPermissionsInnerWithTag : ( String, String ) -> UserDeepUserPermissionsInner -> Json.Encode.Value
+encodeUserDeepUserPermissionsInnerWithTag ( tagField, tag ) model =
+    encodeObject (encodeUserDeepUserPermissionsInnerPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeUserDeepUserPermissionsInnerPairs : UserDeepUserPermissionsInner -> List EncodedField
+encodeUserDeepUserPermissionsInnerPairs model =
+    let
+        pairs =
+            [ maybeEncode "id" Json.Encode.int model.id
+            , encode "name" Json.Encode.string model.name
+            , encode "codename" Json.Encode.string model.codename
+            , encode "content_type" Json.Encode.int model.contentType
+            ]
+    in
+    pairs
+
+
+encodeUserShallow : UserShallow -> Json.Encode.Value
+encodeUserShallow =
+    encodeObject << encodeUserShallowPairs
+
+
+encodeUserShallowWithTag : ( String, String ) -> UserShallow -> Json.Encode.Value
+encodeUserShallowWithTag ( tagField, tag ) model =
+    encodeObject (encodeUserShallowPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeUserShallowPairs : UserShallow -> List EncodedField
+encodeUserShallowPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
@@ -1220,7 +1350,7 @@ courseEnrollmentReadDecoder : Json.Decode.Decoder CourseEnrollmentRead
 courseEnrollmentReadDecoder =
     Json.Decode.succeed CourseEnrollmentRead
         |> maybeDecode "id" Uuid.decoder Nothing
-        |> decode "person" userDecoder
+        |> decode "person" userShallowDecoder
         |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "role" courseEnrollmentReadRoleDecoder
@@ -1426,7 +1556,7 @@ setPasswordDecoder =
 tokenDecoder : Json.Decode.Decoder Token
 tokenDecoder =
     Json.Decode.succeed Token
-        |> decode "user" userDecoder
+        |> decode "user" userDeepDecoder
         |> decode "key" Json.Decode.string
 
 
@@ -1483,9 +1613,50 @@ unreadObjectTypeDecoder =
             )
 
 
-userDecoder : Json.Decode.Decoder User
-userDecoder =
-    Json.Decode.succeed User
+userDeepDecoder : Json.Decode.Decoder UserDeep
+userDeepDecoder =
+    Json.Decode.succeed UserDeep
+        |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "roles" (Json.Decode.list Json.Decode.string) Nothing
+        |> decode "children" (Json.Decode.list userShallowDecoder)
+        |> maybeDecodeNullable "last_login" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "is_superuser" Json.Decode.bool Nothing
+        |> decode "username" Json.Decode.string
+        |> maybeDecode "first_name" Json.Decode.string Nothing
+        |> maybeDecode "last_name" Json.Decode.string Nothing
+        |> maybeDecode "email" Json.Decode.string Nothing
+        |> maybeDecode "is_staff" Json.Decode.bool Nothing
+        |> maybeDecode "is_active" Json.Decode.bool Nothing
+        |> maybeDecode "date_joined" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecodeNullable "middle_name" Json.Decode.string Nothing
+        |> maybeDecodeNullable "birth_date" Api.Time.dateDecoder Nothing
+        |> maybeDecodeNullable "avatar" Json.Decode.string Nothing
+        |> maybeDecode "groups" (Json.Decode.list userDeepGroupsInnerDecoder) Nothing
+        |> maybeDecode "user_permissions" (Json.Decode.list userDeepUserPermissionsInnerDecoder) Nothing
+
+
+userDeepGroupsInnerDecoder : Json.Decode.Decoder UserDeepGroupsInner
+userDeepGroupsInnerDecoder =
+    Json.Decode.succeed UserDeepGroupsInner
+        |> maybeDecode "id" Json.Decode.int Nothing
+        |> decode "name" Json.Decode.string
+        |> maybeDecode "permissions" (Json.Decode.list Json.Decode.int) Nothing
+
+
+userDeepUserPermissionsInnerDecoder : Json.Decode.Decoder UserDeepUserPermissionsInner
+userDeepUserPermissionsInnerDecoder =
+    Json.Decode.succeed UserDeepUserPermissionsInner
+        |> maybeDecode "id" Json.Decode.int Nothing
+        |> decode "name" Json.Decode.string
+        |> decode "codename" Json.Decode.string
+        |> decode "content_type" Json.Decode.int
+
+
+userShallowDecoder : Json.Decode.Decoder UserShallow
+userShallowDecoder =
+    Json.Decode.succeed UserShallow
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecode "roles" (Json.Decode.list Json.Decode.string) Nothing
         |> maybeDecodeNullable "last_login" Api.Time.dateTimeDecoder Nothing

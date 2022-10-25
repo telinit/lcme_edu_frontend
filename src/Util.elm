@@ -1,6 +1,6 @@
 module Util exposing (..)
 
-import Api.Data exposing (User)
+import Api.Data exposing (UserDeep, UserShallow)
 import Array exposing (Array)
 import Dict exposing (Dict)
 import Html exposing (Attribute, span)
@@ -18,7 +18,7 @@ type Either a b
     | Right b
 
 
-user_full_name : User -> String
+user_full_name : UserShallow -> String
 user_full_name user =
     let
         mb =
@@ -228,3 +228,52 @@ posixToDDMMYYYY zone posix =
 
 user_has_role user role =
     Maybe.withDefault False <| Maybe.map (List.member role) user.roles
+
+
+user_has_all_roles user req_roles =
+    Maybe.withDefault False <|
+        Maybe.map
+            (\user_roles ->
+                List.all (\role -> List.member role user_roles) req_roles
+            )
+            user.roles
+
+user_has_any_role user req_roles =
+    Maybe.withDefault False <|
+        Maybe.map
+            (\user_roles ->
+                List.any (\role -> List.member role user_roles) req_roles
+            )
+            user.roles
+
+isJust mb =
+    case mb of
+        Just _ ->
+            True
+
+        _ ->
+            False
+
+
+user_deep_to_shallow : UserDeep -> UserShallow
+user_deep_to_shallow userDeep =
+    { id = userDeep.id
+    , roles = userDeep.roles
+    , lastLogin = userDeep.lastLogin
+    , isSuperuser = userDeep.isSuperuser
+    , username = userDeep.username
+    , firstName = userDeep.firstName
+    , lastName = userDeep.lastName
+    , email = userDeep.email
+    , isStaff = userDeep.isStaff
+    , isActive = userDeep.isActive
+    , dateJoined = userDeep.dateJoined
+    , createdAt = userDeep.createdAt
+    , updatedAt = userDeep.updatedAt
+    , middleName = userDeep.middleName
+    , birthDate = userDeep.birthDate
+    , avatar = userDeep.avatar
+    , groups = Maybe.map (List.filterMap .id) userDeep.groups
+    , userPermissions = Maybe.map (List.filterMap .id) userDeep.userPermissions
+    , children = Just <| List.filterMap .id userDeep.children
+    }

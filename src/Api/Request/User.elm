@@ -35,7 +35,7 @@ import Json.Decode
 import Json.Encode
 
 
-userCreate : Api.Data.User -> Api.Request Api.Data.User
+userCreate : Api.Data.UserShallow -> Api.Request Api.Data.UserShallow
 userCreate data_body =
     Api.request
         "POST"
@@ -43,8 +43,8 @@ userCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeUser data_body))
-        Api.Data.userDecoder
+        (Just (Api.Data.encodeUserShallow data_body))
+        Api.Data.userShallowDecoder
 
 
 userDelete : String -> Api.Request ()
@@ -59,7 +59,7 @@ userDelete id_path =
         (Json.Decode.succeed ())
 
 
-userList : Api.Request (List Api.Data.User)
+userList : Api.Request (List Api.Data.UserShallow)
 userList =
     Api.request
         "GET"
@@ -68,7 +68,7 @@ userList =
         []
         []
         Nothing
-        (Json.Decode.list Api.Data.userDecoder)
+        (Json.Decode.list Api.Data.userShallowDecoder)
 
 
 userLogin : Api.Data.Login -> Api.Request Api.Data.Token
@@ -95,7 +95,7 @@ userLogout =
         (Json.Decode.succeed ())
 
 
-userPartialUpdate : String -> Api.Data.User -> Api.Request Api.Data.User
+userPartialUpdate : String -> Api.Data.UserShallow -> Api.Request Api.Data.UserShallow
 userPartialUpdate id_path data_body =
     Api.request
         "PATCH"
@@ -103,11 +103,11 @@ userPartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeUser data_body))
-        Api.Data.userDecoder
+        (Just (Api.Data.encodeUserShallow data_body))
+        Api.Data.userShallowDecoder
 
 
-userRead : String -> Api.Request Api.Data.User
+userRead : String -> Api.Request Api.Data.UserShallow
 userRead id_path =
     Api.request
         "GET"
@@ -116,10 +116,10 @@ userRead id_path =
         []
         []
         Nothing
-        Api.Data.userDecoder
+        Api.Data.userShallowDecoder
 
 
-userSelf : Api.Request Api.Data.User
+userSelf : Api.Request Api.Data.UserDeep
 userSelf =
     Api.request
         "GET"
@@ -128,7 +128,7 @@ userSelf =
         []
         []
         Nothing
-        Api.Data.userDecoder
+        Api.Data.userDeepDecoder
 
 
 userSetPassword : Api.Data.SetPassword -> Api.Request ()
@@ -143,7 +143,7 @@ userSetPassword data_body =
         (Json.Decode.succeed ())
 
 
-userUpdate : String -> Api.Data.User -> Api.Request Api.Data.User
+userUpdate : String -> Api.Data.UserShallow -> Api.Request Api.Data.UserShallow
 userUpdate id_path data_body =
     Api.request
         "PUT"
@@ -151,5 +151,5 @@ userUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeUser data_body))
-        Api.Data.userDecoder
+        (Just (Api.Data.encodeUserShallow data_body))
+        Api.Data.userShallowDecoder
