@@ -8,13 +8,15 @@ import Page.CourseListPage as CourseListPage
 import Page.CoursePage as CoursePage
 import Page.DefaultLayout as DefaultLayout
 import Page.FatalError as FatalError
+import Page.FrontPage as FrontPage
 import Page.Login as Login
 import Page.MarksCourse as MarksCourse
 import Page.MarksStudent as MarksStudent
 import Page.NotFound as NotFound
+import Page.UserProfile as PageUserProfile
 import Url exposing (Url)
 import Url.Parser exposing ((</>), map, oneOf, parse, s, string, top)
-import Util exposing (Either(..), either_map, get_id, get_id_str)
+import Util exposing (Either(..), either_map)
 import Uuid exposing (Uuid)
 
 
@@ -52,20 +54,21 @@ type Layout
 type Page
     = PageBlank
     | PageLogin Login.Model
-    | PageMain
+    | PageFront FrontPage.Model
     | PageCourseList CourseListPage.Model
     | PageCourse CoursePage.Model
     | PageMarksOfStudent MarksStudent.Model
     | PageMarksOfCourse MarksCourse.Model
+    | PageUserProfile PageUserProfile.Model
     | PageNotFound
-    | PageFatalError String
+    | PageFatalError Page String
 
 
 type ParsedUrl
     = UrlNotFound
     | UrlLogin
     | UrlLogout
-    | UrlMainPage
+    | UrlPageFront
     | UrlCourseList
     | UrlCourse String
     | UrlMarks
@@ -81,11 +84,13 @@ type Msg
     = MsgUrlRequested Browser.UrlRequest
     | MsgUrlChanged Url.Url
     | MsgDefaultLayout DefaultLayout.Msg
-    | MsgLogin Login.Msg
-    | MsgCourseListPage CourseListPage.Msg
-    | MsgCoursePage CoursePage.Msg
+    | MsgPageLogin Login.Msg
+    | MsgPageFront FrontPage.Msg
+    | MsgPageCourseList CourseListPage.Msg
+    | MsgPageCourse CoursePage.Msg
     | MsgPageMarksOfStudent MarksStudent.Msg
     | MsgPageMarksOfCourse MarksCourse.Msg
+    | MsgPageUserProfile PageUserProfile.Msg
     | MsgUnauthorized
 
 
@@ -94,7 +99,7 @@ parse_url url =
     Maybe.withDefault UrlNotFound
         (parse
             (oneOf
-                [ map UrlMainPage top
+                [ map UrlPageFront top
                 , map UrlLogin (s "login")
                 , map UrlLogout (s "logout")
                 , map UrlCourseList (s "courses")
@@ -157,7 +162,7 @@ update msg model =
                         ( UrlLogout, _ ) ->
                             ( { model | page = PageBlank, token = Left "", layout = LayoutNone, init_url = "/" }
                             , Cmd.batch
-                                [ Cmd.map MsgLogin <| Login.doSaveToken ""
+                                [ Cmd.map MsgPageLogin <| Login.doSaveToken ""
                                 , Nav.pushUrl model.key "/login"
                                 ]
                             )
@@ -167,14 +172,22 @@ update msg model =
                                 ( m, c ) =
                                     Login.init <| either_map identity .key token
                             in
-                            ( { model | page = PageLogin m, layout = LayoutNone }, Cmd.map MsgLogin c )
+                            ( { model | page = PageLogin m, layout = LayoutNone }, Cmd.map MsgPageLogin c )
 
-                        ( UrlMainPage, Right token ) ->
+                        ( UrlPageFront, Right token ) ->
                             let
-                                ( layout_, cmd_ ) =
+                                ( layout_, cmd_1 ) =
                                     DefaultLayout.init token.user
+
+                                ( model_, cmd_2 ) =
+                                    FrontPage.init token.key token.user
                             in
-                            ( { model | page = PageMain, layout = LayoutDefault layout_ }, Cmd.map MsgDefaultLayout cmd_ )
+                            ( { model | page = PageFront model_, layout = LayoutDefault layout_ }
+                            , Cmd.batch
+                                [ Cmd.map MsgDefaultLayout cmd_1
+                                , Cmd.map MsgPageFront cmd_2
+                                ]
+                            )
 
                         ( UrlCourse id, Right token ) ->
                             let
@@ -187,7 +200,7 @@ update msg model =
                             ( { model | page = PageCourse model_, layout = LayoutDefault layout_ }
                             , Cmd.batch
                                 [ Cmd.map MsgDefaultLayout cmd_1
-                                , Cmd.map MsgCoursePage cmd_2
+                                , Cmd.map MsgPageCourse cmd_2
                                 ]
                             )
 
@@ -205,7 +218,7 @@ update msg model =
                               }
                             , Cmd.batch
                                 [ Cmd.map MsgDefaultLayout cmd_1
-                                , Cmd.map MsgCourseListPage cmd_2
+                                , Cmd.map MsgPageCourseList cmd_2
                                 ]
                             )
 
@@ -264,10 +277,40 @@ update msg model =
                             )
 
                         ( UrlProfileOwn, Right token ) ->
-                            ( { model | page = PageBlank }, Cmd.none )
+                            let
+                                ( layout_, cmd_1 ) =
+                                    DefaultLayout.init token.user
 
-                        ( UrlProfileOfUser string, Right token ) ->
-                            ( { model | page = PageBlank }, Cmd.none )
+                                ( model_, cmd_2 ) =
+                                    PageUserProfile.init token.key token.user token.user.id
+                            in
+                            ( { model
+                                | page = PageUserProfile model_
+                                , layout = LayoutDefault layout_
+                              }
+                            , Cmd.batch
+                                [ Cmd.map MsgDefaultLayout cmd_1
+                                , Cmd.map MsgPageUserProfile cmd_2
+                                ]
+                            )
+
+                        ( UrlProfileOfUser uid, Right token ) ->
+                            let
+                                ( layout_, cmd_1 ) =
+                                    DefaultLayout.init token.user
+
+                                ( model_, cmd_2 ) =
+                                    PageUserProfile.init token.key token.user (Just uid)
+                            in
+                            ( { model
+                                | page = PageUserProfile model_
+                                , layout = LayoutDefault layout_
+                              }
+                            , Cmd.batch
+                                [ Cmd.map MsgDefaultLayout cmd_1
+                                , Cmd.map MsgPageUserProfile cmd_2
+                                ]
+                            )
 
                         ( UrlMessages, Right token ) ->
                             ( { model | page = PageBlank }, Cmd.none )
@@ -282,14 +325,14 @@ update msg model =
             , Cmd.batch [ cmd ]
             )
 
-        ( MsgLogin ((Login.LoginCompleted token) as msg_), PageLogin model_, _ ) ->
+        ( MsgPageLogin ((Login.LoginCompleted token) as msg_), PageLogin model_, _ ) ->
             let
                 ( m, c ) =
                     Login.update msg_ model_
             in
             ( { model | token = Right token, page = PageLogin m }
             , Cmd.batch
-                [ Cmd.map MsgLogin c
+                [ Cmd.map MsgPageLogin c
                 , Nav.pushUrl model.key
                     (if String.endsWith "/login" model.init_url then
                         "/"
@@ -300,26 +343,26 @@ update msg model =
                 ]
             )
 
-        ( MsgLogin msg_, PageLogin model_, _ ) ->
+        ( MsgPageLogin msg_, PageLogin model_, _ ) ->
             let
                 ( m, c ) =
                     Login.update msg_ model_
             in
-            ( { model | page = PageLogin m }, Cmd.map MsgLogin c )
+            ( { model | page = PageLogin m }, Cmd.map MsgPageLogin c )
 
-        ( MsgCourseListPage msg_, PageCourseList model_, LayoutDefault layout_ ) ->
+        ( MsgPageCourseList msg_, PageCourseList model_, LayoutDefault layout_ ) ->
             let
                 ( model__, cmd_ ) =
                     CourseListPage.update msg_ model_
             in
-            ( { model | page = PageCourseList model__ }, Cmd.map MsgCourseListPage cmd_ )
+            ( { model | page = PageCourseList model__ }, Cmd.map MsgPageCourseList cmd_ )
 
-        ( MsgCoursePage msg_, PageCourse model_, LayoutDefault layout_ ) ->
+        ( MsgPageCourse msg_, PageCourse model_, LayoutDefault layout_ ) ->
             let
                 ( model__, cmd_ ) =
                     CoursePage.update msg_ model_
             in
-            ( { model | page = PageCourse model__ }, Cmd.map MsgCoursePage cmd_ )
+            ( { model | page = PageCourse model__ }, Cmd.map MsgPageCourse cmd_ )
 
         ( MsgPageMarksOfStudent msg_, PageMarksOfStudent model_, LayoutDefault layout_ ) ->
             let
@@ -335,16 +378,30 @@ update msg model =
             in
             ( { model | page = PageMarksOfCourse model__ }, Cmd.map MsgPageMarksOfCourse cmd_ )
 
+        ( MsgPageUserProfile msg_, PageUserProfile model_, LayoutDefault layout_ ) ->
+            let
+                ( model__, cmd_ ) =
+                    PageUserProfile.update msg_ model_
+            in
+            ( { model | page = PageUserProfile model__ }, Cmd.map MsgPageUserProfile cmd_ )
+
         ( MsgUnauthorized, _, _ ) ->
             ( { model | page = PageBlank, token = Left "", layout = LayoutNone }
             , Cmd.batch
-                [ Cmd.map MsgLogin <| Login.doSaveToken ""
+                [ Cmd.map MsgPageLogin <| Login.doSaveToken ""
                 , Nav.pushUrl model.key "/login"
                 ]
             )
 
-        ( x, y, z ) ->
-            ( { model | page = PageFatalError <| Debug.toString ( x, y, z ), layout = LayoutNone }, Cmd.none )
+        ( MsgPageFront msg_, PageFront model_, LayoutDefault layout_ ) ->
+            let
+                ( model__, cmd_ ) =
+                    FrontPage.update msg_ model_
+            in
+            ( { model | page = PageFront model__ }, Cmd.map MsgPageFront cmd_ )
+
+        _ ->
+            ( { model | page = PageFatalError model.page <| Debug.toString ( msg, model ), layout = LayoutNone }, Cmd.none )
 
 
 
@@ -353,8 +410,13 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+subscriptions model =
+    case model.page of
+        PageFront model_ ->
+            Sub.map MsgPageFront <| FrontPage.subscriptions model_
+
+        _ ->
+            Sub.none
 
 
 
@@ -364,17 +426,17 @@ subscriptions _ =
 viewPage : Model -> Html Msg
 viewPage model =
     case model.page of
-        PageLogin m ->
-            Html.map MsgLogin <| Login.view m
+        PageLogin model_ ->
+            Html.map MsgPageLogin <| Login.view model_
 
-        PageMain ->
-            text "MainPage"
+        PageFront model_ ->
+            Html.map MsgPageFront <| FrontPage.view model_
 
         PageCourseList model_ ->
-            Html.map MsgCourseListPage <| CourseListPage.view model_
+            Html.map MsgPageCourseList <| CourseListPage.view model_
 
         PageCourse model_ ->
-            Html.map MsgCoursePage <| CoursePage.view model_
+            Html.map MsgPageCourse <| CoursePage.view model_
 
         PageNotFound ->
             NotFound.view
@@ -388,8 +450,11 @@ viewPage model =
         PageMarksOfCourse model_ ->
             Html.map MsgPageMarksOfCourse <| MarksCourse.view model_
 
-        PageFatalError string ->
+        PageFatalError _ string ->
             FatalError.view string
+
+        PageUserProfile model_ ->
+            Html.map MsgPageUserProfile <| PageUserProfile.view model_
 
 
 viewLayout : Model -> Html Msg -> Html Msg

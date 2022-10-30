@@ -75,7 +75,7 @@ view model =
     in
     div []
         [ breadcrumbs model.course
-        , div [ class "row center-xs" ]
+        , div [ class "row center-xs mt-20" ]
             [ Html.map MsgTable <| MT.view model.table
             ]
         ]

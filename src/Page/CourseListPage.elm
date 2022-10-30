@@ -155,7 +155,7 @@ view : Model -> Html Msg
 view model =
     let
         view_courses cs =
-            [ div [ class "ui link cards" ] (List.map viewCourse cs) ]
+            [ div [ class "ui link cards", style "display" "inline-flex" ] (List.map viewCourse cs) ]
 
         body =
             case model.state of
@@ -188,7 +188,7 @@ view model =
                 Loading m ->
                     [ Html.map MsgFetch <| MT.view (\_ -> "OK") httpErrorToString m ]
     in
-    div [] <|
+    div [class "center-xs"] <|
         [ h1 [] [ text "Доступные предметы" ]
         , viewControls
         ]

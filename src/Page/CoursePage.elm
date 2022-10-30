@@ -16,7 +16,7 @@ import Page.CourseListPage exposing (empty_to_nothing)
 import Set
 import Task
 import Time exposing (millisToPosix)
-import Util exposing (get_id, get_id_str, httpErrorToString, isJust, user_full_name)
+import Util exposing (get_id, get_id_str, httpErrorToString, isJust, task_to_cmd, user_full_name)
 
 
 type State
@@ -32,6 +32,7 @@ type Msg
     | MsgAddActivity
     | MsgAddActivityChangeTitle String
     | MsgAddActivityDoAdd
+    | MsgActivityCreated Activity
     | MsgCloseAddActivity
     | MsgNoop
 
@@ -148,7 +149,7 @@ update msg ({ add_activity } as model) =
 
         ( MsgAddActivityDoAdd, FetchDone course ) ->
             ( { model | add_activity = { add_activity | title = "", show_form = False } }
-            , Task.attempt (\_ -> MsgNoop) <|
+            , task_to_cmd (\_ -> MsgNoop) MsgActivityCreated <|
                 ext_task identity model.token [] <|
                     activityCreate
                         { id = Nothing
@@ -171,6 +172,9 @@ update msg ({ add_activity } as model) =
                         , files = Nothing
                         }
             )
+
+        ( MsgActivityCreated act, FetchDone course ) ->
+            ( { model | state = FetchDone { course | activities = act :: course.activities } }, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -322,7 +326,7 @@ viewCourse courseRead model =
                 ]
 
         activities =
-            List.map viewActivity courseRead.activities
+            List.map viewActivity <| List.sortBy .order courseRead.activities
 
         members =
             let
@@ -333,7 +337,7 @@ viewCourse courseRead model =
                     List.map .person <| List.filter (\enr -> enr.role == CourseEnrollmentReadRoleS) courseRead.enrollments
 
                 user_list =
-                    List.map ((user_link Nothing) >> (\el -> div [ style "margin" "1em" ] [ el ]))
+                    List.map (user_link Nothing >> (\el -> div [ style "margin" "1em" ] [ el ]))
             in
             div []
                 [ h3 [] [ text "Преподаватели" ]
@@ -404,4 +408,4 @@ view model =
             viewCourse courseRead model
 
         FetchFailed err ->
-            MessageBox.view Error Nothing "Ошибка" ("Не удалось получить данные курса: " ++ err)
+            MessageBox.view Error Nothing (text "Ошибка") (text <| "Не удалось получить данные курса: " ++ err)

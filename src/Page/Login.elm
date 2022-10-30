@@ -1,8 +1,8 @@
 module Page.Login exposing (..)
 
-import Api exposing (send, task, withToken)
+import Api exposing (ext_task, send, task, withToken)
 import Api.Data exposing (Token, UserDeep)
-import Api.Request.User exposing (userLogin, userSelf)
+import Api.Request.User exposing (userLogin, userResetPasswordRequest, userSelf)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -45,6 +45,8 @@ type Msg
     | LoginCompleted Token
     | LoginFailed String
     | CheckSessionFailed String
+    | PasswordResetRequestFailed String
+    | PasswordResetRequestSucceded
     | CloseMessage
     | ModelSetUsername String
     | ModelSetPassword String
@@ -109,8 +111,17 @@ doSaveToken token =
 
 
 doPasswordReset : String -> Cmd Msg
-doPasswordReset username =
-    Cmd.none
+doPasswordReset login =
+    let
+        onResult res =
+            case res of
+                Ok _ ->
+                    PasswordResetRequestSucceded
+
+                Err e ->
+                    PasswordResetRequestFailed <| httpErrorToString e
+    in
+    Task.attempt onResult <| task <| userResetPasswordRequest { login = login }
 
 
 init : String -> ( Model, Cmd Msg )
@@ -151,6 +162,25 @@ update msg model =
         ( ModelSetPassword p, _ ) ->
             ( { model | password = p }, Cmd.none )
 
+        ( PasswordResetRequestFailed err, ResettingPassword ) ->
+            ( { model
+                | state = PasswordReset
+                , message = Error <| "Произошла ошибка при запросе смены пароля: " ++ err
+              }
+            , Cmd.none
+            )
+
+        ( PasswordResetRequestSucceded, ResettingPassword ) ->
+            ( { model
+                | state = PasswordReset
+                , message =
+                    Info <|
+                        "Запрос на сброс пароля выполнен успешно. "
+                            ++ "Проверьте вашу электронную почту - на нее должно прийти письмо с дальнейшими инструкциями"
+              }
+            , Cmd.none
+            )
+
         ( _, _ ) ->
             ( model, Cmd.none )
 
@@ -172,7 +202,7 @@ view model =
                 Info s ->
                     div [ class "ui message" ]
                         [ i [ class "close icon", onClick CloseMessage ] []
-                        , div [ class "header" ] [ text "Ошибка входа" ]
+                        , div [ class "header" ] [ ]
                         , p [] [ text s ]
                         ]
 

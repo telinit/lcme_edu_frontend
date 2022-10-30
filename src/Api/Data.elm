@@ -18,6 +18,7 @@ module Api.Data exposing
     ( Activity
     , ActivityFinalType(..)
     , ActivityType(..)
+    , Counters
     , CourseDeep
     , CourseEnrollmentRead
     , CourseEnrollmentReadRole(..)
@@ -35,6 +36,9 @@ module Api.Data exposing
     , MessagePrivate
     , MessageTaskSubmission
     , Organization
+    , ResetPasswordComplete
+    , ResetPasswordRequest
+    , SetEmail
     , SetPassword
     , Token
     , UnreadObject
@@ -46,6 +50,7 @@ module Api.Data exposing
     , activityDecoder
     , activityFinalTypeVariants
     , activityTypeVariants
+    , countersDecoder
     , courseDeepDecoder
     , courseEnrollmentReadDecoder
     , courseEnrollmentReadRoleVariants
@@ -56,6 +61,7 @@ module Api.Data exposing
     , educationDecoder
     , educationSpecializationDecoder
     , encodeActivity
+    , encodeCounters
     , encodeCourseDeep
     , encodeCourseEnrollmentRead
     , encodeCourseEnrollmentWrite
@@ -71,6 +77,9 @@ module Api.Data exposing
     , encodeMessagePrivate
     , encodeMessageTaskSubmission
     , encodeOrganization
+    , encodeResetPasswordComplete
+    , encodeResetPasswordRequest
+    , encodeSetEmail
     , encodeSetPassword
     , encodeToken
     , encodeUnreadObject
@@ -86,6 +95,9 @@ module Api.Data exposing
     , messagePrivateDecoder
     , messageTaskSubmissionDecoder
     , organizationDecoder
+    , resetPasswordCompleteDecoder
+    , resetPasswordRequestDecoder
+    , setEmailDecoder
     , setPasswordDecoder
     , tokenDecoder
     , unreadObjectDecoder
@@ -174,6 +186,14 @@ activityFinalTypeVariants =
     , ActivityFinalTypeE
     , ActivityFinalTypeF
     ]
+
+
+type alias Counters =
+    { courses : Int
+    , users : Int
+    , activities : Int
+    , marks : Int
+    }
 
 
 type alias CourseDeep =
@@ -369,6 +389,22 @@ type alias Organization =
     }
 
 
+type alias ResetPasswordComplete =
+    { password : String
+    , token : String
+    }
+
+
+type alias ResetPasswordRequest =
+    { login : String
+    }
+
+
+type alias SetEmail =
+    { email : String
+    }
+
+
 type alias SetPassword =
     { password : String
     }
@@ -422,6 +458,7 @@ unreadObjectTypeVariants =
 type alias UserDeep =
     { id : Maybe Uuid
     , roles : Maybe (List String)
+    , currentClass : Maybe String
     , children : List UserShallow
     , lastLogin : Maybe Posix
     , isSuperuser : Maybe Bool
@@ -460,6 +497,7 @@ type alias UserDeepUserPermissionsInner =
 type alias UserShallow =
     { id : Maybe Uuid
     , roles : Maybe (List String)
+    , currentClass : Maybe String
     , lastLogin : Maybe Posix
     , isSuperuser : Maybe Bool
     , username : String
@@ -582,6 +620,29 @@ stringFromActivityFinalType model =
 encodeActivityFinalType : ActivityFinalType -> Json.Encode.Value
 encodeActivityFinalType =
     Json.Encode.string << stringFromActivityFinalType
+
+
+encodeCounters : Counters -> Json.Encode.Value
+encodeCounters =
+    encodeObject << encodeCountersPairs
+
+
+encodeCountersWithTag : ( String, String ) -> Counters -> Json.Encode.Value
+encodeCountersWithTag ( tagField, tag ) model =
+    encodeObject (encodeCountersPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeCountersPairs : Counters -> List EncodedField
+encodeCountersPairs model =
+    let
+        pairs =
+            [ encode "courses" Json.Encode.int model.courses
+            , encode "users" Json.Encode.int model.users
+            , encode "activities" Json.Encode.int model.activities
+            , encode "marks" Json.Encode.int model.marks
+            ]
+    in
+    pairs
 
 
 encodeCourseDeep : CourseDeep -> Json.Encode.Value
@@ -1008,6 +1069,67 @@ encodeOrganizationPairs model =
     pairs
 
 
+encodeResetPasswordComplete : ResetPasswordComplete -> Json.Encode.Value
+encodeResetPasswordComplete =
+    encodeObject << encodeResetPasswordCompletePairs
+
+
+encodeResetPasswordCompleteWithTag : ( String, String ) -> ResetPasswordComplete -> Json.Encode.Value
+encodeResetPasswordCompleteWithTag ( tagField, tag ) model =
+    encodeObject (encodeResetPasswordCompletePairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeResetPasswordCompletePairs : ResetPasswordComplete -> List EncodedField
+encodeResetPasswordCompletePairs model =
+    let
+        pairs =
+            [ encode "password" Json.Encode.string model.password
+            , encode "token" Json.Encode.string model.token
+            ]
+    in
+    pairs
+
+
+encodeResetPasswordRequest : ResetPasswordRequest -> Json.Encode.Value
+encodeResetPasswordRequest =
+    encodeObject << encodeResetPasswordRequestPairs
+
+
+encodeResetPasswordRequestWithTag : ( String, String ) -> ResetPasswordRequest -> Json.Encode.Value
+encodeResetPasswordRequestWithTag ( tagField, tag ) model =
+    encodeObject (encodeResetPasswordRequestPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeResetPasswordRequestPairs : ResetPasswordRequest -> List EncodedField
+encodeResetPasswordRequestPairs model =
+    let
+        pairs =
+            [ encode "login" Json.Encode.string model.login
+            ]
+    in
+    pairs
+
+
+encodeSetEmail : SetEmail -> Json.Encode.Value
+encodeSetEmail =
+    encodeObject << encodeSetEmailPairs
+
+
+encodeSetEmailWithTag : ( String, String ) -> SetEmail -> Json.Encode.Value
+encodeSetEmailWithTag ( tagField, tag ) model =
+    encodeObject (encodeSetEmailPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeSetEmailPairs : SetEmail -> List EncodedField
+encodeSetEmailPairs model =
+    let
+        pairs =
+            [ encode "email" Json.Encode.string model.email
+            ]
+    in
+    pairs
+
+
 encodeSetPassword : SetPassword -> Json.Encode.Value
 encodeSetPassword =
     encodeObject << encodeSetPasswordPairs
@@ -1130,6 +1252,7 @@ encodeUserDeepPairs model =
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
             , maybeEncode "roles" (Json.Encode.list Json.Encode.string) model.roles
+            , maybeEncode "current_class" Json.Encode.string model.currentClass
             , encode "children" (Json.Encode.list encodeUserShallow) model.children
             , maybeEncodeNullable "last_login" Api.Time.encodeDateTime model.lastLogin
             , maybeEncode "is_superuser" Json.Encode.bool model.isSuperuser
@@ -1213,6 +1336,7 @@ encodeUserShallowPairs model =
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
             , maybeEncode "roles" (Json.Encode.list Json.Encode.string) model.roles
+            , maybeEncode "current_class" Json.Encode.string model.currentClass
             , maybeEncodeNullable "last_login" Api.Time.encodeDateTime model.lastLogin
             , maybeEncode "is_superuser" Json.Encode.bool model.isSuperuser
             , encode "username" Json.Encode.string model.username
@@ -1327,6 +1451,15 @@ activityFinalTypeDecoder =
                     other ->
                         Json.Decode.fail <| "Unknown type: " ++ other
             )
+
+
+countersDecoder : Json.Decode.Decoder Counters
+countersDecoder =
+    Json.Decode.succeed Counters
+        |> decode "courses" Json.Decode.int
+        |> decode "users" Json.Decode.int
+        |> decode "activities" Json.Decode.int
+        |> decode "marks" Json.Decode.int
 
 
 courseDeepDecoder : Json.Decode.Decoder CourseDeep
@@ -1547,6 +1680,25 @@ organizationDecoder =
         |> maybeDecodeNullable "name_short" Json.Decode.string Nothing
 
 
+resetPasswordCompleteDecoder : Json.Decode.Decoder ResetPasswordComplete
+resetPasswordCompleteDecoder =
+    Json.Decode.succeed ResetPasswordComplete
+        |> decode "password" Json.Decode.string
+        |> decode "token" Json.Decode.string
+
+
+resetPasswordRequestDecoder : Json.Decode.Decoder ResetPasswordRequest
+resetPasswordRequestDecoder =
+    Json.Decode.succeed ResetPasswordRequest
+        |> decode "login" Json.Decode.string
+
+
+setEmailDecoder : Json.Decode.Decoder SetEmail
+setEmailDecoder =
+    Json.Decode.succeed SetEmail
+        |> decode "email" Json.Decode.string
+
+
 setPasswordDecoder : Json.Decode.Decoder SetPassword
 setPasswordDecoder =
     Json.Decode.succeed SetPassword
@@ -1618,6 +1770,7 @@ userDeepDecoder =
     Json.Decode.succeed UserDeep
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecode "roles" (Json.Decode.list Json.Decode.string) Nothing
+        |> maybeDecode "current_class" Json.Decode.string Nothing
         |> decode "children" (Json.Decode.list userShallowDecoder)
         |> maybeDecodeNullable "last_login" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "is_superuser" Json.Decode.bool Nothing
@@ -1659,6 +1812,7 @@ userShallowDecoder =
     Json.Decode.succeed UserShallow
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecode "roles" (Json.Decode.list Json.Decode.string) Nothing
+        |> maybeDecode "current_class" Json.Decode.string Nothing
         |> maybeDecodeNullable "last_login" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "is_superuser" Json.Decode.bool Nothing
         |> decode "username" Json.Decode.string

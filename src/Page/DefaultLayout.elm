@@ -39,10 +39,10 @@ logo classes =
         ]
 
 
-right_menu profile =
+right_menu profile is_mobile =
     [ div [ class "right menu" ]
-        [ div [ class "item center aligned raw" ]
-            [ a [ href "/profile", style "margin-right" "10px" ]
+        [ div [ class "item raw center-xs" ]
+            [ a [ href "/profile", class <| "mr-10" ++ if is_mobile then " mt-15 mb-15" else "", style "display" "block" ]
                 [ i [ class "user icon large" ] []
 
                 --, img [ src profile.avatar ] []
@@ -68,7 +68,7 @@ menu items =
 make_header_pc : { name : String, avatar : String } -> List { href : String, label : String, icon : String } -> Html msg
 make_header_pc profile items =
     div [ class "ui menu computer only grid" ]
-        ([ logo "four wide column ui" ] ++ menu items ++ right_menu profile)
+        ([ logo "four wide column ui" ] ++ menu items ++ right_menu profile False)
 
 
 header_mobile =
@@ -137,7 +137,7 @@ view map_msg model html =
 
                     --, style "animation" "3s linear 1s scalex-animate"
                     ]
-                    ([ div [ class "item" ] [] ] ++ menu items ++ right_menu profile)
+                    ([ div [ class "item" ] [] ] ++ menu items ++ right_menu profile True)
                 ]
     in
     div [ id "modal_context" ]

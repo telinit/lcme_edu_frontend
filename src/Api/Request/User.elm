@@ -17,12 +17,16 @@
 module Api.Request.User exposing
     ( userCreate
     , userDelete
+    , userGetDeep
     , userList
     , userLogin
     , userLogout
     , userPartialUpdate
     , userRead
+    , userResetPasswordComplete
+    , userResetPasswordRequest
     , userSelf
+    , userSetEmail
     , userSetPassword
     , userUpdate
     )
@@ -57,6 +61,18 @@ userDelete id_path =
         []
         Nothing
         (Json.Decode.succeed ())
+
+
+userGetDeep : String -> Api.Request Api.Data.UserDeep
+userGetDeep id_path =
+    Api.request
+        "GET"
+        "/user/{id}/deep/"
+        [ ( "id", identity id_path ) ]
+        []
+        []
+        Nothing
+        Api.Data.userDeepDecoder
 
 
 userList : Api.Request (List Api.Data.UserShallow)
@@ -119,6 +135,30 @@ userRead id_path =
         Api.Data.userShallowDecoder
 
 
+userResetPasswordComplete : Api.Data.ResetPasswordComplete -> Api.Request ()
+userResetPasswordComplete data_body =
+    Api.request
+        "POST"
+        "/user/reset_password_complete/"
+        []
+        []
+        []
+        (Just (Api.Data.encodeResetPasswordComplete data_body))
+        (Json.Decode.succeed ())
+
+
+userResetPasswordRequest : Api.Data.ResetPasswordRequest -> Api.Request ()
+userResetPasswordRequest data_body =
+    Api.request
+        "POST"
+        "/user/reset_password_request/"
+        []
+        []
+        []
+        (Just (Api.Data.encodeResetPasswordRequest data_body))
+        (Json.Decode.succeed ())
+
+
 userSelf : Api.Request Api.Data.UserDeep
 userSelf =
     Api.request
@@ -129,6 +169,18 @@ userSelf =
         []
         Nothing
         Api.Data.userDeepDecoder
+
+
+userSetEmail : Api.Data.SetEmail -> Api.Request ()
+userSetEmail data_body =
+    Api.request
+        "POST"
+        "/user/set_email/"
+        []
+        []
+        []
+        (Just (Api.Data.encodeSetEmail data_body))
+        (Json.Decode.succeed ())
 
 
 userSetPassword : Api.Data.SetPassword -> Api.Request ()

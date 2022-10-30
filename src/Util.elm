@@ -276,4 +276,5 @@ user_deep_to_shallow userDeep =
     , groups = Maybe.map (List.filterMap .id) userDeep.groups
     , userPermissions = Maybe.map (List.filterMap .id) userDeep.userPermissions
     , children = Just <| List.filterMap .id userDeep.children
+    , currentClass = userDeep.currentClass
     }
