@@ -55,6 +55,12 @@
                 document.getElementById(domId).scrollIntoView();
             });
 
+        if (app.ports.initDropdown)
+            app.ports.initDropdown.subscribe(function(selector) {
+                $(selector).dropdown();
+            });
+
+
         //app.run();
     </script>
   </body>

@@ -5743,59 +5743,52 @@ var $author$project$Main$init = F3(
 					])));
 	});
 var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$Main$MsgPageCourse = function (a) {
+	return {$: 'MsgPageCourse', a: a};
+};
 var $author$project$Main$MsgPageFront = function (a) {
 	return {$: 'MsgPageFront', a: a};
 };
 var $elm$core$Platform$Sub$map = _Platform_map;
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$Page$FrontPage$MsgCurrentTime = function (a) {
-	return {$: 'MsgCurrentTime', a: a};
-};
-var $elm$time$Time$Every = F2(
+var $author$project$Page$CoursePage$MsgActivity = F2(
 	function (a, b) {
-		return {$: 'Every', a: a, b: b};
+		return {$: 'MsgActivity', a: a, b: b};
 	});
-var $elm$time$Time$State = F2(
-	function (taggers, processes) {
-		return {processes: processes, taggers: taggers};
+var $author$project$Component$Activity$MsgFinTypeSelect = function (a) {
+	return {$: 'MsgFinTypeSelect', a: a};
+};
+var $author$project$Component$Select$MsgCloseMenu = {$: 'MsgCloseMenu'};
+var $elm$browser$Browser$Events$Document = {$: 'Document'};
+var $elm$browser$Browser$Events$MySub = F3(
+	function (a, b, c) {
+		return {$: 'MySub', a: a, b: b, c: c};
+	});
+var $elm$browser$Browser$Events$State = F2(
+	function (subs, pids) {
+		return {pids: pids, subs: subs};
 	});
 var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
-var $elm$time$Time$init = $elm$core$Task$succeed(
-	A2($elm$time$Time$State, $elm$core$Dict$empty, $elm$core$Dict$empty));
-var $elm$core$Basics$compare = _Utils_compare;
-var $elm$core$Dict$get = F2(
-	function (targetKey, dict) {
-		get:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
-				switch (_v1.$) {
-					case 'LT':
-						var $temp$targetKey = targetKey,
-							$temp$dict = left;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-					case 'EQ':
-						return $elm$core$Maybe$Just(value);
-					default:
-						var $temp$targetKey = targetKey,
-							$temp$dict = right;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-				}
-			}
-		}
-	});
+var $elm$browser$Browser$Events$init = $elm$core$Task$succeed(
+	A2($elm$browser$Browser$Events$State, _List_Nil, $elm$core$Dict$empty));
+var $elm$browser$Browser$Events$nodeToKey = function (node) {
+	if (node.$ === 'Document') {
+		return 'd_';
+	} else {
+		return 'w_';
+	}
+};
+var $elm$browser$Browser$Events$addKey = function (sub) {
+	var node = sub.a;
+	var name = sub.b;
+	return _Utils_Tuple2(
+		_Utils_ap(
+			$elm$browser$Browser$Events$nodeToKey(node),
+			name),
+		sub);
+};
 var $elm$core$Dict$Black = {$: 'Black'};
 var $elm$core$Dict$RBNode_elm_builtin = F5(
 	function (a, b, c, d, e) {
@@ -5856,6 +5849,7 @@ var $elm$core$Dict$balance = F5(
 			}
 		}
 	});
+var $elm$core$Basics$compare = _Utils_compare;
 var $elm$core$Dict$insertHelp = F3(
 	function (key, value, dict) {
 		if (dict.$ === 'RBEmpty_elm_builtin') {
@@ -5904,27 +5898,18 @@ var $elm$core$Dict$insert = F3(
 			return x;
 		}
 	});
-var $elm$time$Time$addMySub = F2(
-	function (_v0, state) {
-		var interval = _v0.a;
-		var tagger = _v0.b;
-		var _v1 = A2($elm$core$Dict$get, interval, state);
-		if (_v1.$ === 'Nothing') {
-			return A3(
-				$elm$core$Dict$insert,
-				interval,
-				_List_fromArray(
-					[tagger]),
-				state);
-		} else {
-			var taggers = _v1.a;
-			return A3(
-				$elm$core$Dict$insert,
-				interval,
-				A2($elm$core$List$cons, tagger, taggers),
-				state);
-		}
-	});
+var $elm$core$Dict$fromList = function (assocs) {
+	return A3(
+		$elm$core$List$foldl,
+		F2(
+			function (_v0, dict) {
+				var key = _v0.a;
+				var value = _v0.b;
+				return A3($elm$core$Dict$insert, key, value, dict);
+			}),
+		$elm$core$Dict$empty,
+		assocs);
+};
 var $elm$core$Process$kill = _Scheduler_kill;
 var $elm$core$Dict$foldl = F3(
 	function (func, acc, dict) {
@@ -6012,7 +5997,271 @@ var $elm$core$Dict$merge = F6(
 			intermediateResult,
 			leftovers);
 	});
+var $elm$browser$Browser$Events$Event = F2(
+	function (key, event) {
+		return {event: event, key: key};
+	});
 var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
+var $elm$browser$Browser$Events$spawn = F3(
+	function (router, key, _v0) {
+		var node = _v0.a;
+		var name = _v0.b;
+		var actualNode = function () {
+			if (node.$ === 'Document') {
+				return _Browser_doc;
+			} else {
+				return _Browser_window;
+			}
+		}();
+		return A2(
+			$elm$core$Task$map,
+			function (value) {
+				return _Utils_Tuple2(key, value);
+			},
+			A3(
+				_Browser_on,
+				actualNode,
+				name,
+				function (event) {
+					return A2(
+						$elm$core$Platform$sendToSelf,
+						router,
+						A2($elm$browser$Browser$Events$Event, key, event));
+				}));
+	});
+var $elm$core$Dict$union = F2(
+	function (t1, t2) {
+		return A3($elm$core$Dict$foldl, $elm$core$Dict$insert, t2, t1);
+	});
+var $elm$browser$Browser$Events$onEffects = F3(
+	function (router, subs, state) {
+		var stepRight = F3(
+			function (key, sub, _v6) {
+				var deads = _v6.a;
+				var lives = _v6.b;
+				var news = _v6.c;
+				return _Utils_Tuple3(
+					deads,
+					lives,
+					A2(
+						$elm$core$List$cons,
+						A3($elm$browser$Browser$Events$spawn, router, key, sub),
+						news));
+			});
+		var stepLeft = F3(
+			function (_v4, pid, _v5) {
+				var deads = _v5.a;
+				var lives = _v5.b;
+				var news = _v5.c;
+				return _Utils_Tuple3(
+					A2($elm$core$List$cons, pid, deads),
+					lives,
+					news);
+			});
+		var stepBoth = F4(
+			function (key, pid, _v2, _v3) {
+				var deads = _v3.a;
+				var lives = _v3.b;
+				var news = _v3.c;
+				return _Utils_Tuple3(
+					deads,
+					A3($elm$core$Dict$insert, key, pid, lives),
+					news);
+			});
+		var newSubs = A2($elm$core$List$map, $elm$browser$Browser$Events$addKey, subs);
+		var _v0 = A6(
+			$elm$core$Dict$merge,
+			stepLeft,
+			stepBoth,
+			stepRight,
+			state.pids,
+			$elm$core$Dict$fromList(newSubs),
+			_Utils_Tuple3(_List_Nil, $elm$core$Dict$empty, _List_Nil));
+		var deadPids = _v0.a;
+		var livePids = _v0.b;
+		var makeNewPids = _v0.c;
+		return A2(
+			$elm$core$Task$andThen,
+			function (pids) {
+				return $elm$core$Task$succeed(
+					A2(
+						$elm$browser$Browser$Events$State,
+						newSubs,
+						A2(
+							$elm$core$Dict$union,
+							livePids,
+							$elm$core$Dict$fromList(pids))));
+			},
+			A2(
+				$elm$core$Task$andThen,
+				function (_v1) {
+					return $elm$core$Task$sequence(makeNewPids);
+				},
+				$elm$core$Task$sequence(
+					A2($elm$core$List$map, $elm$core$Process$kill, deadPids))));
+	});
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (_v0.$ === 'Just') {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
+var $elm$browser$Browser$Events$onSelfMsg = F3(
+	function (router, _v0, state) {
+		var key = _v0.key;
+		var event = _v0.event;
+		var toMessage = function (_v2) {
+			var subKey = _v2.a;
+			var _v3 = _v2.b;
+			var node = _v3.a;
+			var name = _v3.b;
+			var decoder = _v3.c;
+			return _Utils_eq(subKey, key) ? A2(_Browser_decodeEvent, decoder, event) : $elm$core$Maybe$Nothing;
+		};
+		var messages = A2($elm$core$List$filterMap, toMessage, state.subs);
+		return A2(
+			$elm$core$Task$andThen,
+			function (_v1) {
+				return $elm$core$Task$succeed(state);
+			},
+			$elm$core$Task$sequence(
+				A2(
+					$elm$core$List$map,
+					$elm$core$Platform$sendToApp(router),
+					messages)));
+	});
+var $elm$browser$Browser$Events$subMap = F2(
+	function (func, _v0) {
+		var node = _v0.a;
+		var name = _v0.b;
+		var decoder = _v0.c;
+		return A3(
+			$elm$browser$Browser$Events$MySub,
+			node,
+			name,
+			A2($elm$json$Json$Decode$map, func, decoder));
+	});
+_Platform_effectManagers['Browser.Events'] = _Platform_createManager($elm$browser$Browser$Events$init, $elm$browser$Browser$Events$onEffects, $elm$browser$Browser$Events$onSelfMsg, 0, $elm$browser$Browser$Events$subMap);
+var $elm$browser$Browser$Events$subscription = _Platform_leaf('Browser.Events');
+var $elm$browser$Browser$Events$on = F3(
+	function (node, name, decoder) {
+		return $elm$browser$Browser$Events$subscription(
+			A3($elm$browser$Browser$Events$MySub, node, name, decoder));
+	});
+var $elm$browser$Browser$Events$onMouseUp = A2($elm$browser$Browser$Events$on, $elm$browser$Browser$Events$Document, 'mouseup');
+var $author$project$Component$Select$subscriptions = function (model) {
+	return model.active ? $elm$browser$Browser$Events$onMouseUp(
+		$elm$json$Json$Decode$succeed($author$project$Component$Select$MsgCloseMenu)) : $elm$core$Platform$Sub$none;
+};
+var $author$project$Component$Activity$subscriptions = function (model) {
+	var _v0 = model.state;
+	if (_v0.$ === 'StateWithFinActivity') {
+		var sel = _v0.b;
+		return A2(
+			$elm$core$Platform$Sub$map,
+			$author$project$Component$Activity$MsgFinTypeSelect,
+			$author$project$Component$Select$subscriptions(sel));
+	} else {
+		return $elm$core$Platform$Sub$none;
+	}
+};
+var $author$project$Page$CoursePage$subscriptions = function (model) {
+	var _v0 = model.state;
+	if (_v0.$ === 'FetchDone') {
+		var id_comps = _v0.b;
+		return $elm$core$Platform$Sub$batch(
+			A2(
+				$elm$core$List$map,
+				function (_v1) {
+					var k = _v1.a;
+					var v = _v1.b;
+					return A2(
+						$elm$core$Platform$Sub$map,
+						$author$project$Page$CoursePage$MsgActivity(k),
+						$author$project$Component$Activity$subscriptions(v));
+				},
+				id_comps));
+	} else {
+		return $elm$core$Platform$Sub$none;
+	}
+};
+var $author$project$Page$FrontPage$MsgCurrentTime = function (a) {
+	return {$: 'MsgCurrentTime', a: a};
+};
+var $elm$time$Time$Every = F2(
+	function (a, b) {
+		return {$: 'Every', a: a, b: b};
+	});
+var $elm$time$Time$State = F2(
+	function (taggers, processes) {
+		return {processes: processes, taggers: taggers};
+	});
+var $elm$time$Time$init = $elm$core$Task$succeed(
+	A2($elm$time$Time$State, $elm$core$Dict$empty, $elm$core$Dict$empty));
+var $elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
+				switch (_v1.$) {
+					case 'LT':
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 'EQ':
+						return $elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
+var $elm$time$Time$addMySub = F2(
+	function (_v0, state) {
+		var interval = _v0.a;
+		var tagger = _v0.b;
+		var _v1 = A2($elm$core$Dict$get, interval, state);
+		if (_v1.$ === 'Nothing') {
+			return A3(
+				$elm$core$Dict$insert,
+				interval,
+				_List_fromArray(
+					[tagger]),
+				state);
+		} else {
+			var taggers = _v1.a;
+			return A3(
+				$elm$core$Dict$insert,
+				interval,
+				A2($elm$core$List$cons, tagger, taggers),
+				state);
+		}
+	});
 var $elm$time$Time$Name = function (a) {
 	return {$: 'Name', a: a};
 };
@@ -6172,14 +6421,21 @@ var $author$project$Page$FrontPage$subscriptions = function (_v0) {
 };
 var $author$project$Main$subscriptions = function (model) {
 	var _v0 = model.page;
-	if (_v0.$ === 'PageFront') {
-		var model_ = _v0.a;
-		return A2(
-			$elm$core$Platform$Sub$map,
-			$author$project$Main$MsgPageFront,
-			$author$project$Page$FrontPage$subscriptions(model_));
-	} else {
-		return $elm$core$Platform$Sub$none;
+	switch (_v0.$) {
+		case 'PageFront':
+			var model_ = _v0.a;
+			return A2(
+				$elm$core$Platform$Sub$map,
+				$author$project$Main$MsgPageFront,
+				$author$project$Page$FrontPage$subscriptions(model_));
+		case 'PageCourse':
+			var model_ = _v0.a;
+			return A2(
+				$elm$core$Platform$Sub$map,
+				$author$project$Main$MsgPageCourse,
+				$author$project$Page$CoursePage$subscriptions(model_));
+		default:
+			return $elm$core$Platform$Sub$none;
 	}
 };
 var $author$project$Main$LayoutDefault = function (a) {
@@ -6187,9 +6443,6 @@ var $author$project$Main$LayoutDefault = function (a) {
 };
 var $author$project$Main$MsgDefaultLayout = function (a) {
 	return {$: 'MsgDefaultLayout', a: a};
-};
-var $author$project$Main$MsgPageCourse = function (a) {
-	return {$: 'MsgPageCourse', a: a};
 };
 var $author$project$Main$MsgPageCourseList = function (a) {
 	return {$: 'MsgPageCourseList', a: a};
@@ -6294,14 +6547,16 @@ var $author$project$Page$CourseListPage$MsgFetch = function (a) {
 var $author$project$Api$Data$CourseShallow = function (id) {
 	return function (createdAt) {
 		return function (updatedAt) {
-			return function (title) {
-				return function (description) {
-					return function (forClass) {
-						return function (forGroup) {
-							return function (forSpecialization) {
-								return function (logo) {
-									return function (cover) {
-										return {cover: cover, createdAt: createdAt, description: description, forClass: forClass, forGroup: forGroup, forSpecialization: forSpecialization, id: id, logo: logo, title: title, updatedAt: updatedAt};
+			return function (type_) {
+				return function (title) {
+					return function (description) {
+						return function (forClass) {
+							return function (forGroup) {
+								return function (forSpecialization) {
+									return function (logo) {
+										return function (cover) {
+											return {cover: cover, createdAt: createdAt, description: description, forClass: forClass, forGroup: forGroup, forSpecialization: forSpecialization, id: id, logo: logo, title: title, type_: type_, updatedAt: updatedAt};
+										};
 									};
 								};
 							};
@@ -6312,7 +6567,32 @@ var $author$project$Api$Data$CourseShallow = function (id) {
 		};
 	};
 };
+var $author$project$Api$Data$CourseShallowTypeCLB = {$: 'CourseShallowTypeCLB'};
+var $author$project$Api$Data$CourseShallowTypeEDU = {$: 'CourseShallowTypeEDU'};
+var $author$project$Api$Data$CourseShallowTypeELE = {$: 'CourseShallowTypeELE'};
+var $author$project$Api$Data$CourseShallowTypeGEN = {$: 'CourseShallowTypeGEN'};
+var $author$project$Api$Data$CourseShallowTypeSEM = {$: 'CourseShallowTypeSEM'};
 var $elm$json$Json$Decode$fail = _Json_fail;
+var $author$project$Api$Data$courseShallowTypeDecoder = A2(
+	$elm$json$Json$Decode$andThen,
+	function (value) {
+		switch (value) {
+			case 'GEN':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallowTypeGEN);
+			case 'EDU':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallowTypeEDU);
+			case 'SEM':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallowTypeSEM);
+			case 'CLB':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallowTypeCLB);
+			case 'ELE':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallowTypeELE);
+			default:
+				var other = value;
+				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
+		}
+	},
+	$elm$json$Json$Decode$string);
 var $elm$parser$Parser$Advanced$Bad = F2(
 	function (a, b) {
 		return {$: 'Bad', a: a, b: b};
@@ -7220,20 +7500,25 @@ var $author$project$Api$Data$courseShallowDecoder = A4(
 							$elm$json$Json$Decode$string,
 							A4(
 								$author$project$Api$Data$maybeDecode,
-								'updated_at',
-								$author$project$Api$Time$dateTimeDecoder,
+								'type',
+								$author$project$Api$Data$courseShallowTypeDecoder,
 								$elm$core$Maybe$Nothing,
 								A4(
 									$author$project$Api$Data$maybeDecode,
-									'created_at',
+									'updated_at',
 									$author$project$Api$Time$dateTimeDecoder,
 									$elm$core$Maybe$Nothing,
 									A4(
 										$author$project$Api$Data$maybeDecode,
-										'id',
-										$danyx23$elm_uuid$Uuid$decoder,
+										'created_at',
+										$author$project$Api$Time$dateTimeDecoder,
 										$elm$core$Maybe$Nothing,
-										$elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallow)))))))))));
+										A4(
+											$author$project$Api$Data$maybeDecode,
+											'id',
+											$danyx23$elm_uuid$Uuid$decoder,
+											$elm$core$Maybe$Nothing,
+											$elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallow))))))))))));
 var $elm$json$Json$Decode$list = _Json_decodeList;
 var $author$project$Api$Request = function (a) {
 	return {$: 'Request', a: a};
@@ -7638,24 +7923,6 @@ var $elm$core$Dict$update = F3(
 		}
 	});
 var $elm$http$Http$emptyBody = _Http_emptyBody;
-var $elm$core$List$maybeCons = F3(
-	function (f, mx, xs) {
-		var _v0 = f(mx);
-		if (_v0.$ === 'Just') {
-			var x = _v0.a;
-			return A2($elm$core$List$cons, x, xs);
-		} else {
-			return xs;
-		}
-	});
-var $elm$core$List$filterMap = F2(
-	function (f, xs) {
-		return A3(
-			$elm$core$List$foldr,
-			$elm$core$List$maybeCons(f),
-			_List_Nil,
-			xs);
-	});
 var $elm$http$Http$Header = F2(
 	function (a, b) {
 		return {$: 'Header', a: a, b: b};
@@ -8133,6 +8400,7 @@ var $author$project$Page$CourseListPage$init = function (token) {
 		},
 		A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFetch, c));
 };
+var $author$project$Page$CoursePage$EditOff = {$: 'EditOff'};
 var $author$project$Page$CoursePage$Fetching = function (a) {
 	return {$: 'Fetching', a: a};
 };
@@ -8211,11 +8479,13 @@ var $author$project$Api$Data$CourseDeep = function (id) {
 					return function (enrollments) {
 						return function (createdAt) {
 							return function (updatedAt) {
-								return function (title) {
-									return function (description) {
-										return function (forClass) {
-											return function (forGroup) {
-												return {activities: activities, cover: cover, createdAt: createdAt, description: description, enrollments: enrollments, forClass: forClass, forGroup: forGroup, forSpecialization: forSpecialization, id: id, logo: logo, title: title, updatedAt: updatedAt};
+								return function (type_) {
+									return function (title) {
+										return function (description) {
+											return function (forClass) {
+												return function (forGroup) {
+													return {activities: activities, cover: cover, createdAt: createdAt, description: description, enrollments: enrollments, forClass: forClass, forGroup: forGroup, forSpecialization: forSpecialization, id: id, logo: logo, title: title, type_: type_, updatedAt: updatedAt};
+												};
 											};
 										};
 									};
@@ -8236,17 +8506,23 @@ var $author$project$Api$Data$Activity = function (id) {
 					return function (keywords) {
 						return function (isHidden) {
 							return function (marksLimit) {
-								return function (order) {
-									return function (date) {
-										return function (group) {
-											return function (body) {
-												return function (dueDate) {
-													return function (link) {
-														return function (embed) {
-															return function (finalType) {
-																return function (course) {
-																	return function (files) {
-																		return {body: body, course: course, createdAt: createdAt, date: date, dueDate: dueDate, embed: embed, files: files, finalType: finalType, group: group, id: id, isHidden: isHidden, keywords: keywords, link: link, marksLimit: marksLimit, order: order, title: title, type_: type_, updatedAt: updatedAt};
+								return function (hours) {
+									return function (fgosComplient) {
+										return function (order) {
+											return function (date) {
+												return function (group) {
+													return function (scientificTopic) {
+														return function (body) {
+															return function (dueDate) {
+																return function (link) {
+																	return function (embed) {
+																		return function (finalType) {
+																			return function (course) {
+																				return function (files) {
+																					return {body: body, course: course, createdAt: createdAt, date: date, dueDate: dueDate, embed: embed, fgosComplient: fgosComplient, files: files, finalType: finalType, group: group, hours: hours, id: id, isHidden: isHidden, keywords: keywords, link: link, marksLimit: marksLimit, order: order, scientificTopic: scientificTopic, title: title, type_: type_, updatedAt: updatedAt};
+																				};
+																			};
+																		};
 																	};
 																};
 															};
@@ -8302,20 +8578,20 @@ var $author$project$Api$Data$activityFinalTypeDecoder = A2(
 		}
 	},
 	$elm$json$Json$Decode$string);
-var $author$project$Api$Data$ActivityTypeART = {$: 'ActivityTypeART'};
 var $author$project$Api$Data$ActivityTypeFIN = {$: 'ActivityTypeFIN'};
 var $author$project$Api$Data$ActivityTypeGEN = {$: 'ActivityTypeGEN'};
 var $author$project$Api$Data$ActivityTypeLNK = {$: 'ActivityTypeLNK'};
 var $author$project$Api$Data$ActivityTypeMED = {$: 'ActivityTypeMED'};
 var $author$project$Api$Data$ActivityTypeTSK = {$: 'ActivityTypeTSK'};
+var $author$project$Api$Data$ActivityTypeTXT = {$: 'ActivityTypeTXT'};
 var $author$project$Api$Data$activityTypeDecoder = A2(
 	$elm$json$Json$Decode$andThen,
 	function (value) {
 		switch (value) {
 			case 'GEN':
 				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeGEN);
-			case 'ART':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeART);
+			case 'TXT':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeTXT);
 			case 'TSK':
 				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeTSK);
 			case 'LNK':
@@ -8378,57 +8654,97 @@ var $author$project$Api$Data$activityDecoder = A4(
 							$elm$core$Maybe$Nothing,
 							A4(
 								$author$project$Api$Data$maybeDecodeNullable,
-								'group',
+								'scientific_topic',
 								$elm$json$Json$Decode$string,
 								$elm$core$Maybe$Nothing,
-								A3(
-									$author$project$Api$Data$decode,
-									'date',
-									$author$project$Api$Time$dateDecoder,
+								A4(
+									$author$project$Api$Data$maybeDecodeNullable,
+									'group',
+									$elm$json$Json$Decode$string,
+									$elm$core$Maybe$Nothing,
 									A3(
 										$author$project$Api$Data$decode,
-										'order',
-										$elm$json$Json$Decode$int,
-										A4(
-											$author$project$Api$Data$maybeDecode,
-											'marks_limit',
+										'date',
+										$author$project$Api$Time$dateDecoder,
+										A3(
+											$author$project$Api$Data$decode,
+											'order',
 											$elm$json$Json$Decode$int,
-											$elm$core$Maybe$Nothing,
 											A4(
 												$author$project$Api$Data$maybeDecode,
-												'is_hidden',
+												'fgos_complient',
 												$elm$json$Json$Decode$bool,
 												$elm$core$Maybe$Nothing,
 												A4(
 													$author$project$Api$Data$maybeDecode,
-													'keywords',
-													$elm$json$Json$Decode$string,
+													'hours',
+													$elm$json$Json$Decode$int,
 													$elm$core$Maybe$Nothing,
-													A3(
-														$author$project$Api$Data$decode,
-														'title',
-														$elm$json$Json$Decode$string,
+													A4(
+														$author$project$Api$Data$maybeDecode,
+														'marks_limit',
+														$elm$json$Json$Decode$int,
+														$elm$core$Maybe$Nothing,
 														A4(
 															$author$project$Api$Data$maybeDecode,
-															'type',
-															$author$project$Api$Data$activityTypeDecoder,
+															'is_hidden',
+															$elm$json$Json$Decode$bool,
 															$elm$core$Maybe$Nothing,
 															A4(
 																$author$project$Api$Data$maybeDecode,
-																'updated_at',
-																$author$project$Api$Time$dateTimeDecoder,
+																'keywords',
+																$elm$json$Json$Decode$string,
 																$elm$core$Maybe$Nothing,
-																A4(
-																	$author$project$Api$Data$maybeDecode,
-																	'created_at',
-																	$author$project$Api$Time$dateTimeDecoder,
-																	$elm$core$Maybe$Nothing,
+																A3(
+																	$author$project$Api$Data$decode,
+																	'title',
+																	$elm$json$Json$Decode$string,
 																	A4(
 																		$author$project$Api$Data$maybeDecode,
-																		'id',
-																		$danyx23$elm_uuid$Uuid$decoder,
+																		'type',
+																		$author$project$Api$Data$activityTypeDecoder,
 																		$elm$core$Maybe$Nothing,
-																		$elm$json$Json$Decode$succeed($author$project$Api$Data$Activity)))))))))))))))))));
+																		A4(
+																			$author$project$Api$Data$maybeDecode,
+																			'updated_at',
+																			$author$project$Api$Time$dateTimeDecoder,
+																			$elm$core$Maybe$Nothing,
+																			A4(
+																				$author$project$Api$Data$maybeDecode,
+																				'created_at',
+																				$author$project$Api$Time$dateTimeDecoder,
+																				$elm$core$Maybe$Nothing,
+																				A4(
+																					$author$project$Api$Data$maybeDecode,
+																					'id',
+																					$danyx23$elm_uuid$Uuid$decoder,
+																					$elm$core$Maybe$Nothing,
+																					$elm$json$Json$Decode$succeed($author$project$Api$Data$Activity))))))))))))))))))))));
+var $author$project$Api$Data$CourseDeepTypeCLB = {$: 'CourseDeepTypeCLB'};
+var $author$project$Api$Data$CourseDeepTypeEDU = {$: 'CourseDeepTypeEDU'};
+var $author$project$Api$Data$CourseDeepTypeELE = {$: 'CourseDeepTypeELE'};
+var $author$project$Api$Data$CourseDeepTypeGEN = {$: 'CourseDeepTypeGEN'};
+var $author$project$Api$Data$CourseDeepTypeSEM = {$: 'CourseDeepTypeSEM'};
+var $author$project$Api$Data$courseDeepTypeDecoder = A2(
+	$elm$json$Json$Decode$andThen,
+	function (value) {
+		switch (value) {
+			case 'GEN':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseDeepTypeGEN);
+			case 'EDU':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseDeepTypeEDU);
+			case 'SEM':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseDeepTypeSEM);
+			case 'CLB':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseDeepTypeCLB);
+			case 'ELE':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseDeepTypeELE);
+			default:
+				var other = value;
+				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
+		}
+	},
+	$elm$json$Json$Decode$string);
 var $author$project$Api$Data$CourseEnrollmentRead = F7(
 	function (id, person, createdAt, updatedAt, role, finishedOn, course) {
 		return {course: course, createdAt: createdAt, finishedOn: finishedOn, id: id, person: person, role: role, updatedAt: updatedAt};
@@ -8689,40 +9005,45 @@ var $author$project$Api$Data$courseDeepDecoder = A4(
 				$elm$json$Json$Decode$string,
 				A4(
 					$author$project$Api$Data$maybeDecode,
-					'updated_at',
-					$author$project$Api$Time$dateTimeDecoder,
+					'type',
+					$author$project$Api$Data$courseDeepTypeDecoder,
 					$elm$core$Maybe$Nothing,
 					A4(
 						$author$project$Api$Data$maybeDecode,
-						'created_at',
+						'updated_at',
 						$author$project$Api$Time$dateTimeDecoder,
 						$elm$core$Maybe$Nothing,
-						A3(
-							$author$project$Api$Data$decode,
-							'enrollments',
-							$elm$json$Json$Decode$list($author$project$Api$Data$courseEnrollmentReadDecoder),
+						A4(
+							$author$project$Api$Data$maybeDecode,
+							'created_at',
+							$author$project$Api$Time$dateTimeDecoder,
+							$elm$core$Maybe$Nothing,
 							A3(
 								$author$project$Api$Data$decode,
-								'activities',
-								$elm$json$Json$Decode$list($author$project$Api$Data$activityDecoder),
+								'enrollments',
+								$elm$json$Json$Decode$list($author$project$Api$Data$courseEnrollmentReadDecoder),
 								A3(
-									$author$project$Api$Data$decodeNullable,
-									'cover',
-									$author$project$Api$Data$fileDecoder,
+									$author$project$Api$Data$decode,
+									'activities',
+									$elm$json$Json$Decode$list($author$project$Api$Data$activityDecoder),
 									A3(
 										$author$project$Api$Data$decodeNullable,
-										'logo',
+										'cover',
 										$author$project$Api$Data$fileDecoder,
 										A3(
 											$author$project$Api$Data$decodeNullable,
-											'for_specialization',
-											$author$project$Api$Data$educationSpecializationDecoder,
-											A4(
-												$author$project$Api$Data$maybeDecode,
-												'id',
-												$danyx23$elm_uuid$Uuid$decoder,
-												$elm$core$Maybe$Nothing,
-												$elm$json$Json$Decode$succeed($author$project$Api$Data$CourseDeep)))))))))))));
+											'logo',
+											$author$project$Api$Data$fileDecoder,
+											A3(
+												$author$project$Api$Data$decodeNullable,
+												'for_specialization',
+												$author$project$Api$Data$educationSpecializationDecoder,
+												A4(
+													$author$project$Api$Data$maybeDecode,
+													'id',
+													$danyx23$elm_uuid$Uuid$decoder,
+													$elm$core$Maybe$Nothing,
+													$elm$json$Json$Decode$succeed($author$project$Api$Data$CourseDeep))))))))))))));
 var $author$project$Api$Request$Course$courseGetDeep = function (id_path) {
 	return A7(
 		$author$project$Api$request,
@@ -8763,7 +9084,8 @@ var $author$project$Page$CoursePage$init = F3(
 		var c = _v0.b;
 		return _Utils_Tuple2(
 			{
-				add_activity: {show_form: false, title: ''},
+				activity_component_pk: 0,
+				edit_mode: $author$project$Page$CoursePage$EditOff,
 				is_staff: !$elm$core$Set$isEmpty(
 					A2(
 						$elm$core$Set$intersect,
@@ -9131,8 +9453,8 @@ var $author$project$Component$MarkTable$MsgFetch = function (a) {
 	return {$: 'MsgFetch', a: a};
 };
 var $author$project$Api$Data$Mark = F8(
-	function (id, createdAt, updatedAt, value, comment, teacher, student, activity) {
-		return {activity: activity, comment: comment, createdAt: createdAt, id: id, student: student, teacher: teacher, updatedAt: updatedAt, value: value};
+	function (id, createdAt, updatedAt, value, comment, author, student, activity) {
+		return {activity: activity, author: author, comment: comment, createdAt: createdAt, id: id, student: student, updatedAt: updatedAt, value: value};
 	});
 var $author$project$Api$Data$markDecoder = A3(
 	$author$project$Api$Data$decode,
@@ -9144,7 +9466,7 @@ var $author$project$Api$Data$markDecoder = A3(
 		$danyx23$elm_uuid$Uuid$decoder,
 		A3(
 			$author$project$Api$Data$decode,
-			'teacher',
+			'author',
 			$danyx23$elm_uuid$Uuid$decoder,
 			A4(
 				$author$project$Api$Data$maybeDecode,
@@ -9319,7 +9641,6 @@ var $author$project$Component$MarkTable$initForStudent = F2(
 			},
 			A2($elm$core$Platform$Cmd$map, $author$project$Component$MarkTable$MsgFetch, c));
 	});
-var $elm$core$Debug$log = _Debug_log;
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
@@ -9388,9 +9709,8 @@ var $author$project$Page$MarksStudent$init = F3(
 				}
 			}
 		}();
-		var _v0 = A2($elm$core$Debug$log, 'student_id', student_id);
-		if (_v0.$ === 'Just') {
-			var id = _v0.a;
+		if (student_id.$ === 'Just') {
+			var id = student_id.a;
 			var _v1 = A2($author$project$Component$MarkTable$initForStudent, token, id);
 			var m = _v1.a;
 			var c = _v1.b;
@@ -9430,8 +9750,8 @@ var $author$project$Util$get_id = function (record) {
 		return _Debug_todo(
 			'Util',
 			{
-				start: {line: 133, column: 13},
-				end: {line: 133, column: 23}
+				start: {line: 134, column: 13},
+				end: {line: 134, column: 23}
 			})(
 			'get_id: ' + $elm$core$Debug$toString(record));
 	}
@@ -9873,18 +10193,6 @@ var $author$project$Page$CourseListPage$Completed = F2(
 var $author$project$Page$CourseListPage$Error = function (a) {
 	return {$: 'Error', a: a};
 };
-var $elm$core$Dict$fromList = function (assocs) {
-	return A3(
-		$elm$core$List$foldl,
-		F2(
-			function (_v0, dict) {
-				var key = _v0.a;
-				var value = _v0.b;
-				return A3($elm$core$Dict$insert, key, value, dict);
-			}),
-		$elm$core$Dict$empty,
-		assocs);
-};
 var $author$project$Component$MultiTask$Complete = function (a) {
 	return {$: 'Complete', a: a};
 };
@@ -10141,17 +10449,201 @@ var $author$project$Page$CourseListPage$update = F2(
 			}
 		}
 	});
-var $author$project$Page$CoursePage$FetchDone = function (a) {
-	return {$: 'FetchDone', a: a};
-};
+var $author$project$Page$CoursePage$AddFin = {$: 'AddFin'};
+var $author$project$Page$CoursePage$AddGen = {$: 'AddGen'};
+var $author$project$Page$CoursePage$AddNone = {$: 'AddNone'};
+var $author$project$Page$CoursePage$EditOn = F2(
+	function (a, b) {
+		return {$: 'EditOn', a: a, b: b};
+	});
+var $author$project$Page$CoursePage$FetchDone = F2(
+	function (a, b) {
+		return {$: 'FetchDone', a: a, b: b};
+	});
 var $author$project$Page$CoursePage$FetchFailed = function (a) {
 	return {$: 'FetchFailed', a: a};
 };
-var $author$project$Page$CoursePage$MsgActivityCreated = function (a) {
-	return {$: 'MsgActivityCreated', a: a};
+var $author$project$Page$CoursePage$MsgCourseSaveError = function (a) {
+	return {$: 'MsgCourseSaveError', a: a};
 };
-var $author$project$Page$CoursePage$MsgNoop = {$: 'MsgNoop'};
-var $elm$json$Json$Encode$bool = _Json_wrap;
+var $author$project$Page$CoursePage$MsgCourseSaved = {$: 'MsgCourseSaved'};
+var $author$project$Page$CoursePage$MsgOnClickAddBefore = F2(
+	function (a, b) {
+		return {$: 'MsgOnClickAddBefore', a: a, b: b};
+	});
+var $author$project$Component$Activity$getOrder = function (model) {
+	var _v0 = model.state;
+	switch (_v0.$) {
+		case 'StateLoading':
+			return -1;
+		case 'StateWithGenActivity':
+			var activity = _v0.a;
+			return activity.order;
+		case 'StateCreatingNew':
+			return -1;
+		case 'StateError':
+			return -1;
+		default:
+			var activity = _v0.a;
+			return activity.order;
+	}
+};
+var $author$project$Component$Activity$StateWithFinActivity = F2(
+	function (a, b) {
+		return {$: 'StateWithFinActivity', a: a, b: b};
+	});
+var $author$project$Component$Activity$StateWithGenActivity = function (a) {
+	return {$: 'StateWithGenActivity', a: a};
+};
+var $author$project$Component$Activity$setOrder = F2(
+	function (ord, model) {
+		var new_state = function () {
+			var _v0 = model.state;
+			switch (_v0.$) {
+				case 'StateWithGenActivity':
+					var activity = _v0.a;
+					return $author$project$Component$Activity$StateWithGenActivity(
+						_Utils_update(
+							activity,
+							{order: ord}));
+				case 'StateWithFinActivity':
+					var activity = _v0.a;
+					var model_ = _v0.b;
+					return A2(
+						$author$project$Component$Activity$StateWithFinActivity,
+						_Utils_update(
+							activity,
+							{order: ord}),
+						model_);
+				default:
+					return model.state;
+			}
+		}();
+		return _Utils_update(
+			model,
+			{state: new_state});
+	});
+var $author$project$Page$CoursePage$activityMoveDown = F2(
+	function (id, acts) {
+		if (acts.b && acts.b.b) {
+			var x = acts.a;
+			var k1 = x.a;
+			var v1 = x.b;
+			var _v1 = acts.b;
+			var y = _v1.a;
+			var k2 = y.a;
+			var v2 = y.b;
+			var tl = _v1.b;
+			return _Utils_eq(k1, id) ? A2(
+				$elm$core$List$cons,
+				_Utils_Tuple2(
+					k2,
+					A2(
+						$author$project$Component$Activity$setOrder,
+						$author$project$Component$Activity$getOrder(v2) - 1,
+						v2)),
+				A2(
+					$elm$core$List$cons,
+					_Utils_Tuple2(
+						k1,
+						A2(
+							$author$project$Component$Activity$setOrder,
+							$author$project$Component$Activity$getOrder(v1) + 1,
+							v1)),
+					tl)) : A2(
+				$elm$core$List$cons,
+				x,
+				A2(
+					$author$project$Page$CoursePage$activityMoveDown,
+					id,
+					A2($elm$core$List$cons, y, tl)));
+		} else {
+			return acts;
+		}
+	});
+var $author$project$Page$CoursePage$activityMoveUp = F2(
+	function (id, acts) {
+		if (acts.b && acts.b.b) {
+			var x = acts.a;
+			var k1 = x.a;
+			var v1 = x.b;
+			var _v1 = acts.b;
+			var y = _v1.a;
+			var k2 = y.a;
+			var v2 = y.b;
+			var tl = _v1.b;
+			return _Utils_eq(k2, id) ? A2(
+				$elm$core$List$cons,
+				_Utils_Tuple2(
+					k2,
+					A2(
+						$author$project$Component$Activity$setOrder,
+						$author$project$Component$Activity$getOrder(v2) - 1,
+						v2)),
+				A2(
+					$elm$core$List$cons,
+					_Utils_Tuple2(
+						k1,
+						A2(
+							$author$project$Component$Activity$setOrder,
+							$author$project$Component$Activity$getOrder(v1) + 1,
+							v1)),
+					tl)) : A2(
+				$elm$core$List$cons,
+				x,
+				A2(
+					$author$project$Page$CoursePage$activityMoveUp,
+					id,
+					A2($elm$core$List$cons, y, tl)));
+		} else {
+			return acts;
+		}
+	});
+var $author$project$Util$assoc_update = F3(
+	function (k, v, list) {
+		if (list.b) {
+			var _v1 = list.a;
+			var k_ = _v1.a;
+			var v_ = _v1.b;
+			var tl = list.b;
+			return _Utils_eq(k_, k) ? A2(
+				$elm$core$List$cons,
+				_Utils_Tuple2(k, v),
+				tl) : A2(
+				$elm$core$List$cons,
+				_Utils_Tuple2(k_, v_),
+				A3($author$project$Util$assoc_update, k, v, tl));
+		} else {
+			return _List_fromArray(
+				[
+					_Utils_Tuple2(k, v)
+				]);
+		}
+	});
+var $author$project$Page$CoursePage$collectFetchResults = function (fetchResults) {
+	if ((fetchResults.b && (fetchResults.a.$ === 'Ok')) && (!fetchResults.b.b)) {
+		var crs = fetchResults.a.a.a;
+		return $elm$core$Maybe$Just(crs);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$json$Json$Encode$dict = F3(
+	function (toKey, toValue, dictionary) {
+		return _Json_wrap(
+			A3(
+				$elm$core$Dict$foldl,
+				F3(
+					function (key, value, obj) {
+						return A3(
+							_Json_addField,
+							toKey(key),
+							toValue(value),
+							obj);
+					}),
+				_Json_emptyObject(_Utils_Tuple0),
+				dictionary));
+	});
 var $author$project$Api$Data$encode = F3(
 	function (key, encoder, value) {
 		return $elm$core$Maybe$Just(
@@ -10159,6 +10651,7 @@ var $author$project$Api$Data$encode = F3(
 				key,
 				encoder(value)));
 	});
+var $elm$json$Json$Encode$bool = _Json_wrap;
 var $danyx23$elm_uuid$Uuid$encode = A2($elm$core$Basics$composeR, $danyx23$elm_uuid$Uuid$toString, $elm$json$Json$Encode$string);
 var $author$project$Api$Data$stringFromActivityFinalType = function (model) {
 	switch (model.$) {
@@ -10187,8 +10680,8 @@ var $author$project$Api$Data$stringFromActivityType = function (model) {
 	switch (model.$) {
 		case 'ActivityTypeGEN':
 			return 'GEN';
-		case 'ActivityTypeART':
-			return 'ART';
+		case 'ActivityTypeTXT':
+			return 'TXT';
 		case 'ActivityTypeTSK':
 			return 'TSK';
 		case 'ActivityTypeLNK':
@@ -10486,9 +10979,12 @@ var $author$project$Api$Data$encodeActivityPairs = function (model) {
 			A3($author$project$Api$Data$maybeEncode, 'keywords', $elm$json$Json$Encode$string, model.keywords),
 			A3($author$project$Api$Data$maybeEncode, 'is_hidden', $elm$json$Json$Encode$bool, model.isHidden),
 			A3($author$project$Api$Data$maybeEncode, 'marks_limit', $elm$json$Json$Encode$int, model.marksLimit),
+			A3($author$project$Api$Data$maybeEncode, 'hours', $elm$json$Json$Encode$int, model.hours),
+			A3($author$project$Api$Data$maybeEncode, 'fgos_complient', $elm$json$Json$Encode$bool, model.fgosComplient),
 			A3($author$project$Api$Data$encode, 'order', $elm$json$Json$Encode$int, model.order),
 			A3($author$project$Api$Data$encode, 'date', $author$project$Api$Time$encodeDate, model.date),
 			A3($author$project$Api$Data$maybeEncodeNullable, 'group', $elm$json$Json$Encode$string, model.group),
+			A3($author$project$Api$Data$maybeEncodeNullable, 'scientific_topic', $elm$json$Json$Encode$string, model.scientificTopic),
 			A3($author$project$Api$Data$maybeEncode, 'body', $elm$json$Json$Encode$string, model.body),
 			A3($author$project$Api$Data$maybeEncodeNullable, 'due_date', $author$project$Api$Time$encodeDateTime, model.dueDate),
 			A3($author$project$Api$Data$maybeEncodeNullable, 'link', $elm$json$Json$Encode$string, model.link),
@@ -10508,41 +11004,561 @@ var $author$project$Api$Data$encodeObject = A2(
 	$elm$json$Json$Encode$object,
 	$elm$core$List$filterMap($elm$core$Basics$identity));
 var $author$project$Api$Data$encodeActivity = A2($elm$core$Basics$composeL, $author$project$Api$Data$encodeObject, $author$project$Api$Data$encodeActivityPairs);
-var $author$project$Api$Request$Activity$activityCreate = function (data_body) {
-	return A7(
-		$author$project$Api$request,
-		'POST',
-		'/activity/',
-		_List_Nil,
-		_List_Nil,
-		_List_Nil,
-		$elm$core$Maybe$Just(
-			$author$project$Api$Data$encodeActivity(data_body)),
-		$author$project$Api$Data$activityDecoder);
+var $author$project$Api$Data$encodeBulkSetActivitiesPairs = function (model) {
+	var pairs = _List_fromArray(
+		[
+			A3(
+			$author$project$Api$Data$encode,
+			'create',
+			$elm$json$Json$Encode$list($author$project$Api$Data$encodeActivity),
+			model.create),
+			A3(
+			$author$project$Api$Data$encode,
+			'update',
+			A2($elm$json$Json$Encode$dict, $elm$core$Basics$identity, $author$project$Api$Data$encodeActivity),
+			model.update)
+		]);
+	return pairs;
 };
-var $author$project$Page$CoursePage$collectFetchResults = function (fetchResults) {
-	if ((fetchResults.b && (fetchResults.a.$ === 'Ok')) && (!fetchResults.b.b)) {
-		var crs = fetchResults.a.a.a;
-		return $elm$core$Maybe$Just(crs);
+var $author$project$Api$Data$encodeBulkSetActivities = A2($elm$core$Basics$composeL, $author$project$Api$Data$encodeObject, $author$project$Api$Data$encodeBulkSetActivitiesPairs);
+var $author$project$Api$Request$Course$courseBulkSetActivities = F2(
+	function (id_path, data_body) {
+		return A7(
+			$author$project$Api$request,
+			'POST',
+			'/course/{id}/bulk_set_activities/',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'id',
+					$elm$core$Basics$identity(id_path))
+				]),
+			_List_Nil,
+			_List_Nil,
+			$elm$core$Maybe$Just(
+				$author$project$Api$Data$encodeBulkSetActivities(data_body)),
+			$elm$json$Json$Decode$succeed(_Utils_Tuple0));
+	});
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $author$project$Component$Activity$ControlsUpDown = F2(
+	function (a, b) {
+		return {$: 'ControlsUpDown', a: a, b: b};
+	});
+var $author$project$Component$Activity$setUpDownControls = F3(
+	function (up, down, model) {
+		return _Utils_update(
+			model,
+			{
+				up_down: A2($author$project$Component$Activity$ControlsUpDown, up, down)
+			});
+	});
+var $author$project$Page$CoursePage$fixOrder = function (model) {
+	var fixOrder_ = F2(
+		function (j, l) {
+			var up = !(!j);
+			var down = function () {
+				if (l.b && (!l.b.b)) {
+					return false;
+				} else {
+					return true;
+				}
+			}();
+			if (!l.b) {
+				return _List_Nil;
+			} else {
+				var _v1 = l.a;
+				var k = _v1.a;
+				var v = _v1.b;
+				var tl = l.b;
+				return A2(
+					$elm$core$List$cons,
+					_Utils_Tuple2(
+						k,
+						A3(
+							$author$project$Component$Activity$setUpDownControls,
+							up,
+							down,
+							A2($author$project$Component$Activity$setOrder, j + 1, v))),
+					A2(fixOrder_, j + 1, tl));
+			}
+		});
+	var _v3 = model.state;
+	if (_v3.$ === 'FetchDone') {
+		var c = _v3.a;
+		var acts = _v3.b;
+		return _Utils_update(
+			model,
+			{
+				state: A2(
+					$author$project$Page$CoursePage$FetchDone,
+					c,
+					A2(fixOrder_, 0, acts))
+			});
 	} else {
-		return $elm$core$Maybe$Nothing;
+		return model;
 	}
 };
-var $elm$core$List$maximum = function (list) {
+var $author$project$Component$Activity$getActivity = function (model) {
+	var _v0 = model.state;
+	switch (_v0.$) {
+		case 'StateWithGenActivity':
+			var activity = _v0.a;
+			return $elm$core$Maybe$Just(activity);
+		case 'StateWithFinActivity':
+			var activity = _v0.a;
+			return $elm$core$Maybe$Just(activity);
+		default:
+			return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
 		var xs = list.b;
-		return $elm$core$Maybe$Just(
-			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
+		return $elm$core$Maybe$Just(x);
 	} else {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $author$project$Page$CoursePage$update = F2(
+var $author$project$Component$Select$doSelect = F2(
+	function (key, model) {
+		return _Utils_update(
+			model,
+			{
+				selected: A2(
+					$elm$core$Maybe$map,
+					function (_v0) {
+						return key;
+					},
+					A2($elm$core$Dict$get, key, model.items))
+			});
+	});
+var $author$project$Component$Select$init = F3(
+	function (placeholder, fluid, items) {
+		return _Utils_Tuple2(
+			{active: false, fluid: fluid, items: items, placeholder: placeholder, selected: $elm$core$Maybe$Nothing},
+			$elm$core$Platform$Cmd$none);
+	});
+var $author$project$Component$Activity$init_from_activity = F2(
+	function (token, act) {
+		var _v0 = act.type_;
+		if ((_v0.$ === 'Just') && (_v0.a.$ === 'ActivityTypeFIN')) {
+			var _v1 = _v0.a;
+			var _v2 = A3(
+				$author$project$Component$Select$init,
+				'Тип итогового контроля',
+				true,
+				$elm$core$Dict$fromList(
+					_List_fromArray(
+						[
+							_Utils_Tuple2('Q1', '1 четверть'),
+							_Utils_Tuple2('Q2', '2 четверть'),
+							_Utils_Tuple2('Q3', '3 четверть'),
+							_Utils_Tuple2('Q4', '4 четверть'),
+							_Utils_Tuple2('H1', '1 полугодие'),
+							_Utils_Tuple2('H2', '2 полугодие'),
+							_Utils_Tuple2('Y', 'Годовая'),
+							_Utils_Tuple2('E', 'Экзамен'),
+							_Utils_Tuple2('F', 'Итоговая')
+						])));
+			var m = _v2.a;
+			var c = _v2.b;
+			return _Utils_Tuple2(
+				{
+					editable: false,
+					state: A2(
+						$author$project$Component$Activity$StateWithFinActivity,
+						act,
+						A2(
+							$author$project$Component$Select$doSelect,
+							A2(
+								$elm$core$Maybe$withDefault,
+								'',
+								A2($elm$core$Maybe$map, $author$project$Api$Data$stringFromActivityFinalType, act.finalType)),
+							m)),
+					token: token,
+					up_down: A2($author$project$Component$Activity$ControlsUpDown, false, false)
+				},
+				A2($elm$core$Platform$Cmd$map, $author$project$Component$Activity$MsgFinTypeSelect, c));
+		} else {
+			return _Utils_Tuple2(
+				{
+					editable: false,
+					state: $author$project$Component$Activity$StateWithGenActivity(act),
+					token: token,
+					up_down: A2($author$project$Component$Activity$ControlsUpDown, false, false)
+				},
+				$elm$core$Platform$Cmd$none);
+		}
+	});
+var $author$project$Util$list_insert_at = F3(
+	function (i, x, l) {
+		var _v0 = _Utils_Tuple2(i, l);
+		_v0$0:
+		while (true) {
+			if (_v0.b.b) {
+				if (!_v0.a) {
+					break _v0$0;
+				} else {
+					var _v1 = _v0.b;
+					var hd = _v1.a;
+					var tl = _v1.b;
+					return A2(
+						$elm$core$List$cons,
+						hd,
+						A3($author$project$Util$list_insert_at, i - 1, x, tl));
+				}
+			} else {
+				if (!_v0.a) {
+					break _v0$0;
+				} else {
+					return A2($elm$core$List$cons, x, l);
+				}
+			}
+		}
+		return A2($elm$core$List$cons, x, l);
+	});
+var $author$project$Util$maybeFilter = F2(
+	function (pred, maybe) {
+		if (maybe.$ === 'Just') {
+			var a = maybe.a;
+			return pred(a) ? $elm$core$Maybe$Just(a) : $elm$core$Maybe$Nothing;
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
+};
+var $author$project$Component$Activity$setEditable = F2(
+	function (editable, model) {
+		return _Utils_update(
+			model,
+			{editable: editable});
+	});
+var $author$project$Page$CoursePage$setModified = F2(
+	function (mod, model) {
+		var _v0 = model.edit_mode;
+		if (_v0.$ === 'EditOff') {
+			return model;
+		} else {
+			var addMode = _v0.a;
+			var isModified = _v0.b;
+			return _Utils_update(
+				model,
+				{
+					edit_mode: A2($author$project$Page$CoursePage$EditOn, addMode, mod)
+				});
+		}
+	});
+var $elm$core$List$sortBy = _List_sortBy;
+var $elm$core$List$unzip = function (pairs) {
+	var step = F2(
+		function (_v0, _v1) {
+			var x = _v0.a;
+			var y = _v0.b;
+			var xs = _v1.a;
+			var ys = _v1.b;
+			return _Utils_Tuple2(
+				A2($elm$core$List$cons, x, xs),
+				A2($elm$core$List$cons, y, ys));
+		});
+	return A3(
+		$elm$core$List$foldr,
+		step,
+		_Utils_Tuple2(_List_Nil, _List_Nil),
+		pairs);
+};
+var $author$project$Util$isoDateToPosix = function (str) {
+	var _v0 = $rtfeldman$elm_iso8601_date_strings$Iso8601$toTime(str + 'T00:00:00.000Z');
+	if (_v0.$ === 'Ok') {
+		var t = _v0.a;
+		return $elm$core$Maybe$Just(t);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Component$Activity$StateError = function (a) {
+	return {$: 'StateError', a: a};
+};
+var $author$project$Component$Activity$setError = F2(
+	function (err, model) {
+		return _Utils_update(
+			model,
+			{
+				state: $author$project$Component$Activity$StateError(err)
+			});
+	});
+var $elm$core$Debug$log = _Debug_log;
+var $author$project$Component$Select$update = F2(
 	function (msg, model) {
-		var add_activity = model.add_activity;
+		switch (msg.$) {
+			case 'MsgNoop':
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			case 'MsgItemSelected':
+				var key = msg.a;
+				return _Utils_Tuple2(
+					A2(
+						$author$project$Component$Select$doSelect,
+						key,
+						_Utils_update(
+							model,
+							{active: false})),
+					$elm$core$Platform$Cmd$none);
+			case 'MsgToggleMenu':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{active: !model.active}),
+					$elm$core$Platform$Cmd$none);
+			case 'MsgCloseMenu':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{active: false}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var value = msg.a;
+				var _v1 = A2(
+					$elm$core$Debug$log,
+					'value',
+					A2($elm$json$Json$Encode$encode, 4, value));
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		}
+	});
+var $author$project$Component$Activity$update = F2(
+	function (msg, model) {
 		var _v0 = _Utils_Tuple2(msg, model.state);
 		_v0$8:
+		while (true) {
+			switch (_v0.a.$) {
+				case 'MsgFetchCompleted':
+					var act = _v0.a.a;
+					return A2($author$project$Component$Activity$init_from_activity, model.token, act);
+				case 'MsgFetchFailed':
+					var err = _v0.a.a;
+					return _Utils_Tuple2(
+						A2($author$project$Component$Activity$setError, 'Загрузка активности не удалась: ' + err, model),
+						$elm$core$Platform$Cmd$none);
+				case 'MsgMoveUp':
+					var _v1 = _v0.a;
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				case 'MsgMoveDown':
+					var _v2 = _v0.a;
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				case 'MsgNoop':
+					var _v3 = _v0.a;
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				case 'MsgInitUI':
+					var _v4 = _v0.a;
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				case 'MsgFinTypeSelect':
+					if (_v0.b.$ === 'StateWithFinActivity') {
+						var msg_ = _v0.a.a;
+						var _v5 = _v0.b;
+						var act = _v5.a;
+						var s = _v5.b;
+						var _v6 = A2($author$project$Component$Select$update, msg_, s);
+						var m = _v6.a;
+						var c = _v6.b;
+						if (msg_.$ === 'MsgItemSelected') {
+							var k = msg_.a;
+							var res = A2($elm$json$Json$Decode$decodeString, $author$project$Api$Data$activityFinalTypeDecoder, '\"' + (k + '\"'));
+							if (res.$ === 'Ok') {
+								var t = res.a;
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											state: A2(
+												$author$project$Component$Activity$StateWithFinActivity,
+												_Utils_update(
+													act,
+													{
+														finalType: $elm$core$Maybe$Just(t)
+													}),
+												m)
+										}),
+									A2($elm$core$Platform$Cmd$map, $author$project$Component$Activity$MsgFinTypeSelect, c));
+							} else {
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											state: A2($author$project$Component$Activity$StateWithFinActivity, act, m)
+										}),
+									A2($elm$core$Platform$Cmd$map, $author$project$Component$Activity$MsgFinTypeSelect, c));
+							}
+						} else {
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										state: A2($author$project$Component$Activity$StateWithFinActivity, act, m)
+									}),
+								A2($elm$core$Platform$Cmd$map, $author$project$Component$Activity$MsgFinTypeSelect, c));
+						}
+					} else {
+						break _v0$8;
+					}
+				case 'MsgSetField':
+					var _v9 = _v0.a;
+					var f = _v9.a;
+					var v = _v9.b;
+					var state = _v0.b;
+					var new_act = function (act) {
+						switch (f.$) {
+							case 'FieldTitle':
+								return _Utils_update(
+									act,
+									{title: v});
+							case 'FieldKeywords':
+								return _Utils_update(
+									act,
+									{
+										keywords: $elm$core$Maybe$Just(v)
+									});
+							case 'FieldSci':
+								return _Utils_update(
+									act,
+									{
+										scientificTopic: $elm$core$Maybe$Just(v)
+									});
+							case 'FieldGroup':
+								return _Utils_update(
+									act,
+									{
+										group: $elm$core$Maybe$Just(v)
+									});
+							case 'FieldHours':
+								return _Utils_update(
+									act,
+									{
+										hours: $elm$core$String$toInt(v)
+									});
+							case 'FieldLimit':
+								return _Utils_update(
+									act,
+									{
+										marksLimit: $elm$core$String$toInt(v)
+									});
+							case 'FieldFGOS':
+								return _Utils_update(
+									act,
+									{
+										fgosComplient: $elm$core$Maybe$Just(v === '1')
+									});
+							case 'FieldHidden':
+								return _Utils_update(
+									act,
+									{
+										isHidden: $elm$core$Maybe$Just(v === '1')
+									});
+							default:
+								var _v12 = $author$project$Util$isoDateToPosix(v);
+								if (_v12.$ === 'Just') {
+									var d = _v12.a;
+									return _Utils_update(
+										act,
+										{date: d});
+								} else {
+									return act;
+								}
+						}
+					};
+					switch (state.$) {
+						case 'StateWithFinActivity':
+							var act = state.a;
+							var fm = state.b;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										state: A2(
+											$author$project$Component$Activity$StateWithFinActivity,
+											new_act(act),
+											fm)
+									}),
+								$elm$core$Platform$Cmd$none);
+						case 'StateWithGenActivity':
+							var act = state.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										state: $author$project$Component$Activity$StateWithGenActivity(
+											new_act(act))
+									}),
+								$elm$core$Platform$Cmd$none);
+						default:
+							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					}
+				default:
+					break _v0$8;
+			}
+		}
+		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+	});
+var $author$project$Util$zip = $elm$core$List$map2($elm$core$Tuple$pair);
+var $author$project$Page$CoursePage$update = F2(
+	function (msg, model) {
+		var parse_course = function (course) {
+			var activities = A2(
+				$elm$core$List$sortBy,
+				function ($) {
+					return $.order;
+				},
+				course.activities);
+			var _v40 = $elm$core$List$unzip(
+				A2(
+					$elm$core$List$map,
+					$author$project$Component$Activity$init_from_activity(model.token),
+					activities));
+			var ms = _v40.a;
+			var cs = _v40.b;
+			var len = $elm$core$List$length(ms);
+			var id_range = A2($elm$core$List$range, model.activity_component_pk, (model.activity_component_pk + len) - 1);
+			var pairs_id_cmd = A2($author$project$Util$zip, id_range, cs);
+			var pairs_id_comp = A2($author$project$Util$zip, id_range, ms);
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{
+						activity_component_pk: model.activity_component_pk + len,
+						state: A2($author$project$Page$CoursePage$FetchDone, course, pairs_id_comp),
+						teaching_here: A2(
+							$elm$core$List$any,
+							function (enr) {
+								return _Utils_eq(enr.role, $author$project$Api$Data$CourseEnrollmentReadRoleT) && _Utils_eq(enr.person.id, model.user.id);
+							},
+							course.enrollments)
+					}),
+				$elm$core$Platform$Cmd$batch(
+					A2(
+						$elm$core$List$map,
+						function (_v41) {
+							var id = _v41.a;
+							var c_ = _v41.b;
+							return A2(
+								$elm$core$Platform$Cmd$map,
+								$author$project$Page$CoursePage$MsgActivity(id),
+								c_);
+						},
+						pairs_id_cmd)));
+		};
+		var _v0 = _Utils_Tuple2(msg, model.state);
+		_v0$12:
 		while (true) {
 			switch (_v0.a.$) {
 				case 'MsgFetch':
@@ -10556,20 +11572,8 @@ var $author$project$Page$CoursePage$update = F2(
 							var results = msg_.a;
 							var _v3 = $author$project$Page$CoursePage$collectFetchResults(results);
 							if (_v3.$ === 'Just') {
-								var c_ = _v3.a;
-								return _Utils_Tuple2(
-									_Utils_update(
-										model,
-										{
-											state: $author$project$Page$CoursePage$FetchDone(c_),
-											teaching_here: A2(
-												$elm$core$List$any,
-												function (enr) {
-													return _Utils_eq(enr.role, $author$project$Api$Data$CourseEnrollmentReadRoleT) && _Utils_eq(enr.person.id, model.user.id);
-												},
-												c_.enrollments)
-										}),
-									$elm$core$Platform$Cmd$none);
+								var course = _v3.a;
+								return parse_course(course);
 							} else {
 								return _Utils_Tuple2(
 									_Utils_update(
@@ -10589,7 +11593,7 @@ var $author$project$Page$CoursePage$update = F2(
 								A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
 						}
 					} else {
-						break _v0$8;
+						break _v0$12;
 					}
 				case 'MsgClickMembers':
 					var _v4 = _v0.a;
@@ -10605,116 +11609,396 @@ var $author$project$Page$CoursePage$update = F2(
 							model,
 							{show_members: false}),
 						$elm$core$Platform$Cmd$none);
-				case 'MsgAddActivity':
-					var _v6 = _v0.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								add_activity: _Utils_update(
-									add_activity,
-									{show_form: true})
-							}),
-						$elm$core$Platform$Cmd$none);
-				case 'MsgCloseAddActivity':
-					var _v7 = _v0.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								add_activity: _Utils_update(
-									add_activity,
-									{show_form: false})
-							}),
-						$elm$core$Platform$Cmd$none);
-				case 'MsgAddActivityChangeTitle':
-					var t = _v0.a.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								add_activity: _Utils_update(
-									add_activity,
-									{title: t})
-							}),
-						$elm$core$Platform$Cmd$none);
-				case 'MsgAddActivityDoAdd':
+				case 'MsgOnClickEdit':
 					if (_v0.b.$ === 'FetchDone') {
-						var _v8 = _v0.a;
-						var course = _v0.b.a;
+						var _v6 = _v0.a;
+						var _v7 = _v0.b;
+						var c = _v7.a;
+						var acts = _v7.b;
+						var em = function () {
+							var _v9 = model.edit_mode;
+							if (_v9.$ === 'EditOff') {
+								return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddNone, false);
+							} else {
+								var m = _v9.a;
+								return $author$project$Page$CoursePage$EditOff;
+							}
+						}();
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
 								{
-									add_activity: _Utils_update(
-										add_activity,
-										{show_form: false, title: ''})
+									edit_mode: em,
+									state: A2(
+										$author$project$Page$CoursePage$FetchDone,
+										c,
+										A2(
+											$elm$core$List$map,
+											function (_v8) {
+												var k = _v8.a;
+												var v = _v8.b;
+												return _Utils_Tuple2(
+													k,
+													A2(
+														$author$project$Component$Activity$setEditable,
+														!_Utils_eq(em, $author$project$Page$CoursePage$EditOff),
+														v));
+											},
+											acts))
 								}),
+							$elm$core$Platform$Cmd$none);
+					} else {
+						break _v0$12;
+					}
+				case 'MsgActivity':
+					if (_v0.b.$ === 'FetchDone') {
+						var _v10 = _v0.a;
+						var id = _v10.a;
+						var msg_ = _v10.b;
+						var _v11 = _v0.b;
+						var course = _v11.a;
+						var act_components = _v11.b;
+						var _v12 = $elm$core$List$head(
+							A2(
+								$elm$core$List$filter,
+								A2(
+									$elm$core$Basics$composeR,
+									$elm$core$Tuple$first,
+									$elm$core$Basics$eq(id)),
+								act_components));
+						if (_v12.$ === 'Just') {
+							var _v13 = _v12.a;
+							var component = _v13.b;
+							var _v14 = A2($author$project$Component$Activity$update, msg_, component);
+							var m = _v14.a;
+							var c = _v14.b;
+							var _v15 = function () {
+								switch (msg_.$) {
+									case 'MsgMoveUp':
+										return _Utils_Tuple2(
+											$author$project$Page$CoursePage$fixOrder(
+												_Utils_update(
+													model,
+													{
+														state: A2(
+															$author$project$Page$CoursePage$FetchDone,
+															course,
+															A2(
+																$author$project$Page$CoursePage$activityMoveUp,
+																id,
+																A3($author$project$Util$assoc_update, id, m, act_components)))
+													})),
+											A2(
+												$elm$core$Platform$Cmd$map,
+												$author$project$Page$CoursePage$MsgActivity(id),
+												c));
+									case 'MsgMoveDown':
+										return _Utils_Tuple2(
+											$author$project$Page$CoursePage$fixOrder(
+												_Utils_update(
+													model,
+													{
+														state: A2(
+															$author$project$Page$CoursePage$FetchDone,
+															course,
+															A2(
+																$author$project$Page$CoursePage$activityMoveDown,
+																id,
+																A3($author$project$Util$assoc_update, id, m, act_components)))
+													})),
+											A2(
+												$elm$core$Platform$Cmd$map,
+												$author$project$Page$CoursePage$MsgActivity(id),
+												c));
+									case 'MsgOnClickDelete':
+										return _Utils_Tuple2(
+											$author$project$Page$CoursePage$fixOrder(
+												_Utils_update(
+													model,
+													{
+														state: A2(
+															$author$project$Page$CoursePage$FetchDone,
+															course,
+															A2(
+																$elm$core$List$filter,
+																A2(
+																	$elm$core$Basics$composeR,
+																	$elm$core$Tuple$first,
+																	$elm$core$Basics$neq(id)),
+																act_components))
+													})),
+											$elm$core$Platform$Cmd$none);
+									default:
+										return _Utils_Tuple2(
+											_Utils_update(
+												model,
+												{
+													state: A2(
+														$author$project$Page$CoursePage$FetchDone,
+														course,
+														A3($author$project$Util$assoc_update, id, m, act_components))
+												}),
+											A2(
+												$elm$core$Platform$Cmd$map,
+												$author$project$Page$CoursePage$MsgActivity(id),
+												c));
+								}
+							}();
+							var new_model = _v15.a;
+							var cmd = _v15.b;
+							return _Utils_Tuple2(
+								A2($author$project$Page$CoursePage$setModified, true, new_model),
+								cmd);
+						} else {
+							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						}
+					} else {
+						break _v0$12;
+					}
+				case 'MsgOnClickAddGen':
+					var _v17 = _v0.a;
+					var new_mode = function () {
+						var _v18 = model.edit_mode;
+						if (_v18.$ === 'EditOn') {
+							var mod = _v18.b;
+							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddGen, mod);
+						} else {
+							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddGen, false);
+						}
+					}();
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{edit_mode: new_mode}),
+						$elm$core$Platform$Cmd$none);
+				case 'MsgOnClickAddFin':
+					var _v19 = _v0.a;
+					var new_mode = function () {
+						var _v20 = model.edit_mode;
+						if (_v20.$ === 'EditOn') {
+							var mod = _v20.b;
+							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddFin, mod);
+						} else {
+							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddFin, false);
+						}
+					}();
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{edit_mode: new_mode}),
+						$elm$core$Platform$Cmd$none);
+				case 'MsgOnClickAddBefore':
+					if (_v0.a.b.$ === 'Nothing') {
+						var _v21 = _v0.a;
+						var i = _v21.a;
+						var _v22 = _v21.b;
+						return _Utils_Tuple2(
+							model,
+							A2(
+								$elm$core$Task$perform,
+								A2(
+									$elm$core$Basics$composeR,
+									$elm$core$Maybe$Just,
+									$author$project$Page$CoursePage$MsgOnClickAddBefore(i)),
+								$elm$time$Time$now));
+					} else {
+						if (_v0.b.$ === 'FetchDone') {
+							var _v23 = _v0.a;
+							var i = _v23.a;
+							var t = _v23.b.a;
+							var _v24 = _v0.b;
+							var course = _v24.a;
+							var act_components = _v24.b;
+							var act_base = {
+								body: $elm$core$Maybe$Nothing,
+								course: $author$project$Util$get_id(course),
+								createdAt: $elm$core$Maybe$Nothing,
+								date: t,
+								dueDate: $elm$core$Maybe$Nothing,
+								embed: $elm$core$Maybe$Nothing,
+								fgosComplient: $elm$core$Maybe$Just(false),
+								files: $elm$core$Maybe$Nothing,
+								finalType: $elm$core$Maybe$Nothing,
+								group: $elm$core$Maybe$Nothing,
+								hours: $elm$core$Maybe$Just(1),
+								id: $elm$core$Maybe$Nothing,
+								isHidden: $elm$core$Maybe$Just(false),
+								keywords: $elm$core$Maybe$Nothing,
+								link: $elm$core$Maybe$Nothing,
+								marksLimit: $elm$core$Maybe$Just(2),
+								order: i + 1,
+								scientificTopic: $elm$core$Maybe$Nothing,
+								title: '',
+								type_: $elm$core$Maybe$Nothing,
+								updatedAt: $elm$core$Maybe$Nothing
+							};
+							var act = function () {
+								var _v27 = model.edit_mode;
+								_v27$2:
+								while (true) {
+									if (_v27.$ === 'EditOn') {
+										switch (_v27.a.$) {
+											case 'AddGen':
+												var _v28 = _v27.a;
+												return $elm$core$Maybe$Just(
+													_Utils_update(
+														act_base,
+														{
+															type_: $elm$core$Maybe$Just($author$project$Api$Data$ActivityTypeGEN)
+														}));
+											case 'AddFin':
+												var _v29 = _v27.a;
+												return $elm$core$Maybe$Just(
+													_Utils_update(
+														act_base,
+														{
+															type_: $elm$core$Maybe$Just($author$project$Api$Data$ActivityTypeFIN)
+														}));
+											default:
+												break _v27$2;
+										}
+									} else {
+										break _v27$2;
+									}
+								}
+								return $elm$core$Maybe$Nothing;
+							}();
+							if (act.$ === 'Nothing') {
+								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+							} else {
+								var act_ = act.a;
+								var _v26 = A2($author$project$Component$Activity$init_from_activity, model.token, act_);
+								var m = _v26.a;
+								var c = _v26.b;
+								return _Utils_Tuple2(
+									$author$project$Page$CoursePage$fixOrder(
+										A2(
+											$author$project$Page$CoursePage$setModified,
+											true,
+											_Utils_update(
+												model,
+												{
+													activity_component_pk: model.activity_component_pk + 1,
+													state: A2(
+														$author$project$Page$CoursePage$FetchDone,
+														course,
+														A3(
+															$author$project$Util$list_insert_at,
+															i,
+															_Utils_Tuple2(
+																model.activity_component_pk,
+																A2($author$project$Component$Activity$setEditable, true, m)),
+															act_components))
+												}))),
+									A2(
+										$elm$core$Platform$Cmd$map,
+										$author$project$Page$CoursePage$MsgActivity(model.activity_component_pk),
+										c));
+							}
+						} else {
+							break _v0$12;
+						}
+					}
+				case 'MsgOnClickEditCancel':
+					if (_v0.b.$ === 'FetchDone') {
+						var _v30 = _v0.a;
+						var _v31 = _v0.b;
+						var course = _v31.a;
+						var _v32 = parse_course(course);
+						var m = _v32.a;
+						var c = _v32.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								m,
+								{edit_mode: $author$project$Page$CoursePage$EditOff}),
+							c);
+					} else {
+						break _v0$12;
+					}
+				case 'MsgOnClickSave':
+					if (_v0.b.$ === 'FetchDone') {
+						var _v33 = _v0.a;
+						var _v34 = _v0.b;
+						var course = _v34.a;
+						var act_components = _v34.b;
+						var create = A2(
+							$elm$core$List$filterMap,
+							A2(
+								$elm$core$Basics$composeR,
+								$elm$core$Tuple$second,
+								A2(
+									$elm$core$Basics$composeR,
+									$author$project$Component$Activity$getActivity,
+									$author$project$Util$maybeFilter(
+										A2(
+											$elm$core$Basics$composeR,
+											function ($) {
+												return $.id;
+											},
+											$elm$core$Basics$eq($elm$core$Maybe$Nothing))))),
+							act_components);
+						var ac_to_tuple = function (c) {
+							var _v36 = $author$project$Component$Activity$getActivity(c);
+							if (_v36.$ === 'Just') {
+								var act = _v36.a;
+								var _v37 = act.id;
+								if (_v37.$ === 'Just') {
+									var id = _v37.a;
+									return $elm$core$Maybe$Just(
+										_Utils_Tuple2(
+											$danyx23$elm_uuid$Uuid$toString(id),
+											act));
+								} else {
+									return $elm$core$Maybe$Nothing;
+								}
+							} else {
+								return $elm$core$Maybe$Nothing;
+							}
+						};
+						var update_ = $elm$core$Dict$fromList(
+							A2(
+								$elm$core$List$filterMap,
+								A2($elm$core$Basics$composeR, $elm$core$Tuple$second, ac_to_tuple),
+								act_components));
+						return _Utils_Tuple2(
+							model,
 							A3(
 								$author$project$Util$task_to_cmd,
-								function (_v9) {
-									return $author$project$Page$CoursePage$MsgNoop;
+								A2($elm$core$Basics$composeR, $author$project$Util$httpErrorToString, $author$project$Page$CoursePage$MsgCourseSaveError),
+								function (_v35) {
+									return $author$project$Page$CoursePage$MsgCourseSaved;
 								},
-								$author$project$Page$CoursePage$MsgActivityCreated,
 								A4(
 									$author$project$Api$ext_task,
 									$elm$core$Basics$identity,
 									model.token,
 									_List_Nil,
-									$author$project$Api$Request$Activity$activityCreate(
-										{
-											body: $elm$core$Maybe$Nothing,
-											course: $author$project$Util$get_id(course),
-											createdAt: $elm$core$Maybe$Nothing,
-											date: $elm$time$Time$millisToPosix(0),
-											dueDate: $elm$core$Maybe$Nothing,
-											embed: $elm$core$Maybe$Nothing,
-											files: $elm$core$Maybe$Nothing,
-											finalType: $elm$core$Maybe$Nothing,
-											group: $elm$core$Maybe$Nothing,
-											id: $elm$core$Maybe$Nothing,
-											isHidden: $elm$core$Maybe$Just(false),
-											keywords: $elm$core$Maybe$Nothing,
-											link: $elm$core$Maybe$Nothing,
-											marksLimit: $elm$core$Maybe$Just(2),
-											order: 1 + A2(
-												$elm$core$Maybe$withDefault,
-												0,
-												$elm$core$List$maximum(
-													A2(
-														$elm$core$List$map,
-														function ($) {
-															return $.order;
-														},
-														course.activities))),
-											title: add_activity.title,
-											type_: $elm$core$Maybe$Nothing,
-											updatedAt: $elm$core$Maybe$Nothing
-										}))));
+									A2(
+										$author$project$Api$Request$Course$courseBulkSetActivities,
+										A2(
+											$elm$core$Maybe$withDefault,
+											'',
+											A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, course.id)),
+										{create: create, update: update_}))));
 					} else {
-						break _v0$8;
+						break _v0$12;
 					}
-				case 'MsgActivityCreated':
+				case 'MsgCourseSaved':
 					if (_v0.b.$ === 'FetchDone') {
-						var act = _v0.a.a;
-						var course = _v0.b.a;
+						var _v38 = _v0.a;
+						var _v39 = _v0.b;
+						var course = _v39.a;
+						var act_components = _v39.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
-								{
-									state: $author$project$Page$CoursePage$FetchDone(
-										_Utils_update(
-											course,
-											{
-												activities: A2($elm$core$List$cons, act, course.activities)
-											}))
-								}),
+								{edit_mode: $author$project$Page$CoursePage$EditOff}),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$8;
+						break _v0$12;
 					}
 				default:
-					break _v0$8;
+					break _v0$12;
 			}
 		}
 		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -11316,7 +12600,7 @@ var $author$project$Api$Data$encodeMarkPairs = function (model) {
 			A3($author$project$Api$Data$maybeEncode, 'updated_at', $author$project$Api$Time$encodeDateTime, model.updatedAt),
 			A3($author$project$Api$Data$encode, 'value', $elm$json$Json$Encode$string, model.value),
 			A3($author$project$Api$Data$maybeEncode, 'comment', $elm$json$Json$Encode$string, model.comment),
-			A3($author$project$Api$Data$encode, 'teacher', $danyx23$elm_uuid$Uuid$encode, model.teacher),
+			A3($author$project$Api$Data$encode, 'author', $danyx23$elm_uuid$Uuid$encode, model.author),
 			A3($author$project$Api$Data$encode, 'student', $danyx23$elm_uuid$Uuid$encode, model.student),
 			A3($author$project$Api$Data$encode, 'activity', $danyx23$elm_uuid$Uuid$encode, model.activity)
 		]);
@@ -11336,7 +12620,7 @@ var $author$project$Api$Request$Mark$markCreate = function (data_body) {
 		$author$project$Api$Data$markDecoder);
 };
 var $author$project$Component$MarkTable$doCreateMark = F6(
-	function (token, activity_id, student_id, teacher_id, coords, new_mark) {
+	function (token, activity_id, student_id, author_id, coords, new_mark) {
 		var onResult = function (res) {
 			if (res.$ === 'Ok') {
 				var r = res.a;
@@ -11354,7 +12638,7 @@ var $author$project$Component$MarkTable$doCreateMark = F6(
 				token,
 				_List_Nil,
 				$author$project$Api$Request$Mark$markCreate(
-					{activity: activity_id, comment: $elm$core$Maybe$Nothing, createdAt: $elm$core$Maybe$Nothing, id: $elm$core$Maybe$Nothing, student: student_id, teacher: teacher_id, updatedAt: $elm$core$Maybe$Nothing, value: new_mark})));
+					{activity: activity_id, author: author_id, comment: $elm$core$Maybe$Nothing, createdAt: $elm$core$Maybe$Nothing, id: $elm$core$Maybe$Nothing, student: student_id, updatedAt: $elm$core$Maybe$Nothing, value: new_mark})));
 	});
 var $author$project$Component$MarkTable$MsgMarkDeleted = function (a) {
 	return {$: 'MsgMarkDeleted', a: a};
@@ -11457,6 +12741,16 @@ var $author$project$Util$index_by = F2(
 				},
 				list));
 	});
+var $elm$core$List$maximum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
 var $elm$core$List$repeatHelp = F3(
 	function (result, n, value) {
 		repeatHelp:
@@ -11478,13 +12772,8 @@ var $elm$core$List$repeat = F2(
 	function (n, value) {
 		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
 	});
-var $elm$core$List$sortBy = _List_sortBy;
 var $elm$core$List$sum = function (numbers) {
 	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
-};
-var $elm$core$Tuple$second = function (_v0) {
-	var y = _v0.b;
-	return y;
 };
 var $author$project$Component$MarkTable$updateMark = F3(
 	function (model, _v0, mb_mark) {
@@ -11976,13 +13265,13 @@ var $author$project$Component$MarkTable$update = F2(
 									$elm$core$Platform$Cmd$none,
 									A2(
 										$elm$core$Maybe$map,
-										function (teacher_id) {
+										function (author_id) {
 											return A6(
 												$author$project$Component$MarkTable$doCreateMark,
 												model.token,
 												activityID,
 												studentID,
-												teacher_id,
+												author_id,
 												_Utils_Tuple2(x, y),
 												new_mark);
 										},
@@ -13024,7 +14313,8 @@ var $author$project$Page$DefaultLayout$view = F3(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$id('modal_context')
+					$elm$html$Html$Attributes$id('modal_context'),
+					$elm$html$Html$Attributes$class('mr-20')
 				]),
 			_List_fromArray(
 				[
@@ -13602,72 +14892,25 @@ var $author$project$Component$MessageBox$view = F4(
 							[body]))
 					])));
 	});
-var $author$project$Page$CoursePage$MsgAddActivity = {$: 'MsgAddActivity'};
-var $author$project$Page$CoursePage$MsgAddActivityChangeTitle = function (a) {
-	return {$: 'MsgAddActivityChangeTitle', a: a};
-};
-var $author$project$Page$CoursePage$MsgAddActivityDoAdd = {$: 'MsgAddActivityDoAdd'};
 var $author$project$Page$CoursePage$MsgClickMembers = {$: 'MsgClickMembers'};
-var $author$project$Page$CoursePage$MsgCloseAddActivity = {$: 'MsgCloseAddActivity'};
 var $author$project$Page$CoursePage$MsgCloseMembers = {$: 'MsgCloseMembers'};
+var $author$project$Page$CoursePage$MsgOnClickAddFin = {$: 'MsgOnClickAddFin'};
+var $author$project$Page$CoursePage$MsgOnClickAddGen = {$: 'MsgOnClickAddGen'};
+var $author$project$Page$CoursePage$MsgOnClickEdit = {$: 'MsgOnClickEdit'};
+var $author$project$Page$CoursePage$MsgOnClickEditCancel = {$: 'MsgOnClickEditCancel'};
+var $author$project$Page$CoursePage$MsgOnClickSave = {$: 'MsgOnClickSave'};
 var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
-var $elm$html$Html$form = _VirtualDom_node('form');
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm$html$Html$input = _VirtualDom_node('input');
-var $elm$html$Html$label = _VirtualDom_node('label');
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var $elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
+var $elm$html$Html$Attributes$classList = function (classes) {
+	return $elm$html$Html$Attributes$class(
 		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+			$elm$core$String$join,
+			' ',
+			A2(
+				$elm$core$List$map,
+				$elm$core$Tuple$first,
+				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
 };
-var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $elm$core$String$trim = _String_trim;
-var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $author$project$Component$Misc$user_link = F2(
 	function (mb_link, user) {
 		return A2(
@@ -13675,6 +14918,7 @@ var $author$project$Component$Misc$user_link = F2(
 			_List_fromArray(
 				[
 					$elm$html$Html$Attributes$class('row middle-xs'),
+					A2($elm$html$Html$Attributes$style, 'flex-wrap', 'nowrap'),
 					$elm$html$Html$Attributes$href(
 					A2(
 						$elm$core$Maybe$withDefault,
@@ -13705,7 +14949,1480 @@ var $author$project$Component$Misc$user_link = F2(
 						]))
 				]));
 	});
+var $author$project$Util$finalTypeToStr = function (act) {
+	var _v0 = act.finalType;
+	if (_v0.$ === 'Just') {
+		var f = _v0.a;
+		switch (f.$) {
+			case 'ActivityFinalTypeQ1':
+				return '1 четверть';
+			case 'ActivityFinalTypeQ2':
+				return '2 четверть';
+			case 'ActivityFinalTypeQ3':
+				return '3 четверть';
+			case 'ActivityFinalTypeQ4':
+				return '4 четверть';
+			case 'ActivityFinalTypeH1':
+				return '1 полугодие';
+			case 'ActivityFinalTypeH2':
+				return '2 полугодие';
+			case 'ActivityFinalTypeY':
+				return 'Годовая оценка';
+			case 'ActivityFinalTypeE':
+				return 'Экзамен';
+			default:
+				return 'Итоговая оценка';
+		}
+	} else {
+		return '';
+	}
+};
+var $author$project$Util$monthToInt = function (month) {
+	switch (month.$) {
+		case 'Jan':
+			return 1;
+		case 'Feb':
+			return 2;
+		case 'Mar':
+			return 3;
+		case 'Apr':
+			return 4;
+		case 'May':
+			return 5;
+		case 'Jun':
+			return 6;
+		case 'Jul':
+			return 7;
+		case 'Aug':
+			return 8;
+		case 'Sep':
+			return 9;
+		case 'Oct':
+			return 10;
+		case 'Nov':
+			return 11;
+		default:
+			return 12;
+	}
+};
+var $author$project$Util$posixToDDMMYYYY = F2(
+	function (zone, posix) {
+		var yyyy = A3(
+			$elm$core$String$padLeft,
+			4,
+			_Utils_chr('0'),
+			$elm$core$String$fromInt(
+				A2($elm$time$Time$toYear, zone, posix)));
+		var mm = A3(
+			$elm$core$String$padLeft,
+			2,
+			_Utils_chr('0'),
+			$elm$core$String$fromInt(
+				$author$project$Util$monthToInt(
+					A2($elm$time$Time$toMonth, zone, posix))));
+		var dd = A3(
+			$elm$core$String$padLeft,
+			2,
+			_Utils_chr('0'),
+			$elm$core$String$fromInt(
+				A2($elm$time$Time$toDay, zone, posix)));
+		return dd + ('.' + (mm + ('.' + yyyy)));
+	});
+var $elm$html$Html$strong = _VirtualDom_node('strong');
+var $author$project$Component$Activity$view_read = function (model) {
+	var view_with_label = F4(
+		function (label, bg, fg, body) {
+			return A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('row mb-10'),
+						A2($elm$html$Html$Attributes$style, 'max-width', '100vw')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('text container segment ui'),
+								A2($elm$html$Html$Attributes$style, 'padding', '10px 15px'),
+								A2($elm$html$Html$Attributes$style, 'background-color', bg)
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('row middle-xs')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('col-xs')
+											]),
+										_Utils_ap(
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('ui top left attached label'),
+															A2($elm$html$Html$Attributes$style, 'background-color', fg)
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(label)
+														]))
+												]),
+											body))
+									]))
+							]))
+					]));
+		});
+	var _v0 = model.state;
+	switch (_v0.$) {
+		case 'StateLoading':
+			return A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('ui message')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('ui active inline loader small'),
+								A2($elm$html$Html$Attributes$style, 'margin-right', '1em')
+							]),
+						_List_Nil),
+						$elm$html$Html$text('Загружаем активность')
+					]));
+		case 'StateWithGenActivity':
+			var activity = _v0.a;
+			return A4(
+				view_with_label,
+				'Тема',
+				'#EEF6FFFF',
+				'#B6C6D5FF',
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$h3,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row start-xs pl-10 pt-10')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(activity.title)
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row between-xs middle-xs'),
+								A2($elm$html$Html$Attributes$style, 'font-size', 'smaller')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('col-xs-12 col-sm-4 start-xs center-sm')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('mr-10 activity-property-label')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$i,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('calendar alternate outline icon'),
+														A2($elm$html$Html$Attributes$style, 'color', 'rgb(102, 119, 153)')
+													]),
+												_List_Nil),
+												$elm$html$Html$text('Дата:')
+											])),
+										$elm$html$Html$text(
+										A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, activity.date))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('col-xs-12 col-sm-4 start-xs center-sm')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('mr-10 activity-property-label')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$i,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('clock outline icon'),
+														A2($elm$html$Html$Attributes$style, 'color', 'rgb(102, 119, 153)')
+													]),
+												_List_Nil),
+												$elm$html$Html$text('Количество часов:')
+											])),
+										$elm$html$Html$text(
+										A2(
+											$elm$core$Maybe$withDefault,
+											'Н/Д',
+											A2($elm$core$Maybe$map, $elm$core$String$fromInt, activity.hours)))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('col-xs-12 col-sm-4 start-xs center-sm')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('mr-10 activity-property-label')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$i,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('chart bar outline icon'),
+														A2($elm$html$Html$Attributes$style, 'color', 'rgb(102, 119, 153)')
+													]),
+												_List_Nil),
+												$elm$html$Html$text('Лимит оценок:')
+											])),
+										$elm$html$Html$text(
+										A2(
+											$elm$core$Maybe$withDefault,
+											'Н/Д',
+											A2($elm$core$Maybe$map, $elm$core$String$fromInt, activity.marksLimit)))
+									]))
+							]))
+					]));
+		case 'StateWithFinActivity':
+			var activity = _v0.a;
+			var s = _v0.b;
+			return A4(
+				view_with_label,
+				'Итоговый контроль',
+				'#FFEFE2FF',
+				'#D9C6C1FF',
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$h3,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row start-xs pl-10 pt-10')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								$author$project$Util$finalTypeToStr(activity))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row between-xs middle-xs'),
+								A2($elm$html$Html$Attributes$style, 'font-size', 'smaller')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('col-xs-12 col-sm-4 start-xs center-sm')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('mr-10 activity-property-label')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$i,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('calendar alternate outline icon'),
+														A2($elm$html$Html$Attributes$style, 'color', 'rgb(102, 119, 153)')
+													]),
+												_List_Nil),
+												$elm$html$Html$text('Дата:')
+											])),
+										$elm$html$Html$text(
+										A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, activity.date))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('col-xs-12 col-sm-4 start-xs center-sm')
+									]),
+								_List_Nil),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('col-xs-12 col-sm-4 start-xs center-sm')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('mr-10 activity-property-label')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$i,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('chart bar outline icon'),
+														A2($elm$html$Html$Attributes$style, 'color', 'rgb(102, 119, 153)')
+													]),
+												_List_Nil),
+												$elm$html$Html$text('Лимит оценок: ')
+											])),
+										$elm$html$Html$text(
+										A2(
+											$elm$core$Maybe$withDefault,
+											'Н/Д',
+											A2($elm$core$Maybe$map, $elm$core$String$fromInt, activity.marksLimit)))
+									]))
+							]))
+					]));
+		case 'StateError':
+			var err = _v0.a;
+			return A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('ui text container negative message')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('header')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Ошибка')
+							])),
+						A2(
+						$elm$html$Html$p,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(err)
+							]))
+					]));
+		default:
+			return $elm$html$Html$text('');
+	}
+};
+var $author$project$Component$Activity$FieldDate = {$: 'FieldDate'};
+var $author$project$Component$Activity$FieldFGOS = {$: 'FieldFGOS'};
+var $author$project$Component$Activity$FieldGroup = {$: 'FieldGroup'};
+var $author$project$Component$Activity$FieldHidden = {$: 'FieldHidden'};
+var $author$project$Component$Activity$FieldHours = {$: 'FieldHours'};
+var $author$project$Component$Activity$FieldKeywords = {$: 'FieldKeywords'};
+var $author$project$Component$Activity$FieldLimit = {$: 'FieldLimit'};
+var $author$project$Component$Activity$FieldSci = {$: 'FieldSci'};
+var $author$project$Component$Activity$FieldTitle = {$: 'FieldTitle'};
+var $author$project$Component$Activity$MsgMoveDown = {$: 'MsgMoveDown'};
+var $author$project$Component$Activity$MsgMoveUp = {$: 'MsgMoveUp'};
+var $author$project$Component$Activity$MsgOnClickDelete = {$: 'MsgOnClickDelete'};
+var $author$project$Component$Activity$MsgSetField = F2(
+	function (a, b) {
+		return {$: 'MsgSetField', a: a, b: b};
+	});
+var $elm$virtual_dom$VirtualDom$attribute = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_attribute,
+			_VirtualDom_noOnOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlUri(value));
+	});
+var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
+var $elm$html$Html$input = _VirtualDom_node('input');
+var $elm$html$Html$label = _VirtualDom_node('label');
+var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$html$Html$Events$targetChecked = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'checked']),
+	$elm$json$Json$Decode$bool);
+var $elm$html$Html$Events$onCheck = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'change',
+		A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetChecked));
+};
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
+var $author$project$Util$posixToISODate = A2(
+	$elm$core$Basics$composeL,
+	A2(
+		$elm$core$Basics$composeL,
+		$elm$core$List$head,
+		$elm$core$String$split('T')),
+	$rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime);
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$Component$Select$MsgItemSelected = function (a) {
+	return {$: 'MsgItemSelected', a: a};
+};
+var $author$project$Component$Select$MsgToggleMenu = {$: 'MsgToggleMenu'};
+var $author$project$Component$Select$view = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('ui selection dropdown'),
+				$elm$html$Html$Attributes$classList(
+				_List_fromArray(
+					[
+						_Utils_Tuple2('active', model.active),
+						_Utils_Tuple2('visible', model.active),
+						_Utils_Tuple2('fluid', model.fluid)
+					]))
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'position', 'absolute'),
+						A2($elm$html$Html$Attributes$style, 'left', '0'),
+						A2($elm$html$Html$Attributes$style, 'right', '0'),
+						A2($elm$html$Html$Attributes$style, 'top', '0'),
+						A2($elm$html$Html$Attributes$style, 'bottom', '0'),
+						$elm$html$Html$Events$onClick($author$project$Component$Select$MsgToggleMenu)
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$i,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('dropdown icon'),
+						$elm$html$Html$Events$onClick($author$project$Component$Select$MsgToggleMenu)
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('text'),
+						$elm$html$Html$Attributes$classList(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'default',
+								_Utils_eq(model.selected, $elm$core$Maybe$Nothing))
+							]))
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						A2(
+							$elm$core$Maybe$withDefault,
+							model.placeholder,
+							A2(
+								$elm$core$Maybe$map,
+								function (k) {
+									return A2(
+										$elm$core$Maybe$withDefault,
+										model.placeholder,
+										A2($elm$core$Dict$get, k, model.items));
+								},
+								model.selected)))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('menu'),
+						$elm$html$Html$Attributes$classList(
+						_List_fromArray(
+							[
+								_Utils_Tuple2('active', model.active),
+								_Utils_Tuple2('visible', model.active)
+							])),
+						A2(
+						$elm$html$Html$Attributes$style,
+						'display',
+						model.active ? 'block' : 'none')
+					]),
+				A2(
+					$elm$core$List$map,
+					function (_v0) {
+						var k = _v0.a;
+						var v = _v0.b;
+						return A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('item'),
+									$elm$html$Html$Events$onClick(
+									$author$project$Component$Select$MsgItemSelected(k))
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(v)
+								]));
+					},
+					$elm$core$Dict$toList(model.items)))
+			]));
+};
+var $author$project$Component$Activity$view_write = function (model) {
+	var view_with_label = F4(
+		function (label, bg, fg, body) {
+			var _v1 = model.up_down;
+			var u = _v1.a;
+			var d = _v1.b;
+			return A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('row mb-10'),
+						A2($elm$html$Html$Attributes$style, 'max-width', '100vw')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('text container segment ui form'),
+								A2($elm$html$Html$Attributes$style, 'padding', '10px 15px'),
+								A2($elm$html$Html$Attributes$style, 'background-color', bg)
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('row middle-xs')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('col-xs')
+											]),
+										_Utils_ap(
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('ui top left attached label'),
+															A2($elm$html$Html$Attributes$style, 'background-color', fg)
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(label)
+														]))
+												]),
+											body)),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('col ml-10')
+											]),
+										A2(
+											$elm$core$List$filterMap,
+											$elm$core$Basics$identity,
+											_List_fromArray(
+												[
+													u ? $elm$core$Maybe$Just(
+													A2(
+														$elm$html$Html$div,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('row mb-10')
+															]),
+														_List_fromArray(
+															[
+																A2(
+																$elm$html$Html$button,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('ui button'),
+																		A2($elm$html$Html$Attributes$style, 'background-color', fg),
+																		$elm$html$Html$Events$onClick($author$project$Component$Activity$MsgMoveUp)
+																	]),
+																_List_fromArray(
+																	[
+																		A2(
+																		$elm$html$Html$i,
+																		_List_fromArray(
+																			[
+																				$elm$html$Html$Attributes$class('angle up icon'),
+																				A2($elm$html$Html$Attributes$style, 'margin', '0')
+																			]),
+																		_List_Nil)
+																	]))
+															]))) : $elm$core$Maybe$Nothing,
+													d ? $elm$core$Maybe$Just(
+													A2(
+														$elm$html$Html$div,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('row')
+															]),
+														_List_fromArray(
+															[
+																A2(
+																$elm$html$Html$button,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('ui button'),
+																		A2($elm$html$Html$Attributes$style, 'background-color', fg),
+																		$elm$html$Html$Events$onClick($author$project$Component$Activity$MsgMoveDown)
+																	]),
+																_List_fromArray(
+																	[
+																		A2(
+																		$elm$html$Html$i,
+																		_List_fromArray(
+																			[
+																				$elm$html$Html$Attributes$class('angle down icon'),
+																				A2($elm$html$Html$Attributes$style, 'margin', '0')
+																			]),
+																		_List_Nil)
+																	]))
+															]))) : $elm$core$Maybe$Nothing
+												])))
+									]))
+							]))
+					]));
+		});
+	var _v0 = model.state;
+	switch (_v0.$) {
+		case 'StateLoading':
+			return A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('ui message')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('ui active inline loader small'),
+								A2($elm$html$Html$Attributes$style, 'margin-right', '1em')
+							]),
+						_List_Nil),
+						$elm$html$Html$text('Загружаем активность')
+					]));
+		case 'StateWithGenActivity':
+			var activity = _v0.a;
+			return A4(
+				view_with_label,
+				'Тема',
+				'#EEF6FFFF',
+				'#B6C6D5FF',
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row mt-10')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Название')
+											])),
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$placeholder('Основное название темы'),
+												$elm$html$Html$Attributes$type_('text'),
+												$elm$html$Html$Attributes$value(activity.title),
+												$elm$html$Html$Events$onInput(
+												$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldTitle))
+											]),
+										_List_Nil)
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row mt-10')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Метки')
+											])),
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$placeholder('Отображаются наверху таблицы'),
+												$elm$html$Html$Attributes$type_('text'),
+												$elm$html$Html$Attributes$value(
+												A2($elm$core$Maybe$withDefault, '', activity.keywords)),
+												$elm$html$Html$Events$onInput(
+												$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldKeywords))
+											]),
+										_List_Nil)
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row mt-10')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Научный раздел')
+											])),
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$placeholder(''),
+												$elm$html$Html$Attributes$type_('text'),
+												$elm$html$Html$Attributes$value(
+												A2($elm$core$Maybe$withDefault, '', activity.scientificTopic)),
+												$elm$html$Html$Events$onInput(
+												$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldSci))
+											]),
+										_List_Nil)
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Группа')
+											])),
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$placeholder('Для объединения в разделы'),
+												$elm$html$Html$Attributes$type_('text'),
+												$elm$html$Html$Attributes$value(
+												A2($elm$core$Maybe$withDefault, '', activity.group)),
+												$elm$html$Html$Events$onInput(
+												$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldGroup))
+											]),
+										_List_Nil)
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row mt-10')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Количество часов')
+											])),
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$placeholder(''),
+												$elm$html$Html$Attributes$type_('number'),
+												$elm$html$Html$Attributes$min('0'),
+												$elm$html$Html$Attributes$value(
+												$elm$core$String$fromInt(
+													A2($elm$core$Maybe$withDefault, 1, activity.hours))),
+												$elm$html$Html$Events$onInput(
+												$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldHours))
+											]),
+										_List_Nil)
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Лимит оценок')
+											])),
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$placeholder(''),
+												$elm$html$Html$Attributes$type_('number'),
+												$elm$html$Html$Attributes$min('0'),
+												$elm$html$Html$Attributes$value(
+												$elm$core$String$fromInt(
+													A2($elm$core$Maybe$withDefault, 1, activity.marksLimit))),
+												$elm$html$Html$Events$onInput(
+												$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldLimit))
+											]),
+										_List_Nil)
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row mt-10')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Соответствие ФГОС')
+											])),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('ui checkbox ml-20'),
+												A2($elm$html$Html$Attributes$style, 'scale', '1.25')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$input,
+												_List_fromArray(
+													[
+														A2($elm$html$Html$Attributes$attribute, 'tabindex', '0'),
+														$elm$html$Html$Attributes$type_('checkbox'),
+														$elm$html$Html$Attributes$checked(
+														A2($elm$core$Maybe$withDefault, false, activity.fgosComplient)),
+														$elm$html$Html$Events$onCheck(
+														function (c) {
+															return A2(
+																$author$project$Component$Activity$MsgSetField,
+																$author$project$Component$Activity$FieldFGOS,
+																c ? '1' : '0');
+														})
+													]),
+												_List_Nil),
+												A2(
+												$elm$html$Html$label,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Соответствует')
+													]))
+											]))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Видимость для учащихся')
+											])),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('ui checkbox ml-15'),
+												A2($elm$html$Html$Attributes$style, 'scale', '1.25')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$input,
+												_List_fromArray(
+													[
+														A2($elm$html$Html$Attributes$attribute, 'tabindex', '0'),
+														$elm$html$Html$Attributes$type_('checkbox'),
+														$elm$html$Html$Attributes$checked(
+														A2($elm$core$Maybe$withDefault, false, activity.isHidden)),
+														$elm$html$Html$Events$onCheck(
+														function (c) {
+															return A2(
+																$author$project$Component$Activity$MsgSetField,
+																$author$project$Component$Activity$FieldHidden,
+																c ? '1' : '0');
+														})
+													]),
+												_List_Nil),
+												A2(
+												$elm$html$Html$label,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Скрыта')
+													]))
+											]))
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row mt-10')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Дата проведения')
+											])),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('ui input')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$input,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$placeholder(''),
+														$elm$html$Html$Attributes$type_('date'),
+														$elm$html$Html$Attributes$value(
+														A2(
+															$elm$core$Maybe$withDefault,
+															'',
+															$author$project$Util$posixToISODate(activity.date))),
+														$elm$html$Html$Events$onInput(
+														$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldDate))
+													]),
+												_List_Nil)
+											]))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-3')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Номер в списке')
+											])),
+										A2(
+										$elm$html$Html$h1,
+										_List_fromArray(
+											[
+												A2($elm$html$Html$Attributes$style, 'margin', '10px 0 0 10px')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text(
+												$elm$core$String$fromInt(activity.order))
+											]))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-3')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('row middle-xs end-md center-xs'),
+												A2($elm$html$Html$Attributes$style, 'height', '100%')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$button,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('ui button red'),
+														A2($elm$html$Html$Attributes$style, 'position', 'relative'),
+														A2($elm$html$Html$Attributes$style, 'top', '5px'),
+														$elm$html$Html$Events$onClick($author$project$Component$Activity$MsgOnClickDelete)
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$i,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('icon trash')
+															]),
+														_List_Nil),
+														$elm$html$Html$text('Удалить')
+													]))
+											]))
+									]))
+							]))
+					]));
+		case 'StateWithFinActivity':
+			var activity = _v0.a;
+			var s = _v0.b;
+			return A4(
+				view_with_label,
+				'Итоговый контроль',
+				'#FFEFE2FF',
+				'#D9C6C1FF',
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row mt-10')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Тип контроля')
+											])),
+										A2(
+										$elm$html$Html$map,
+										$author$project$Component$Activity$MsgFinTypeSelect,
+										$author$project$Component$Select$view(s))
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row mt-10')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Лимит оценок')
+											])),
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$placeholder(''),
+												$elm$html$Html$Attributes$type_('number'),
+												$elm$html$Html$Attributes$min('0'),
+												$elm$html$Html$Attributes$value(
+												$elm$core$String$fromInt(
+													A2($elm$core$Maybe$withDefault, 1, activity.marksLimit)))
+											]),
+										_List_Nil)
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Видимость для учащихся')
+											])),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('row middle-xs ml-10'),
+												A2($elm$html$Html$Attributes$style, 'height', '43px')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('ui checkbox'),
+														A2($elm$html$Html$Attributes$style, 'scale', '1.25')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$input,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$attribute, 'tabindex', '0'),
+																$elm$html$Html$Attributes$type_('checkbox'),
+																$elm$html$Html$Attributes$checked(
+																A2($elm$core$Maybe$withDefault, false, activity.isHidden))
+															]),
+														_List_Nil),
+														A2(
+														$elm$html$Html$label,
+														_List_Nil,
+														_List_fromArray(
+															[
+																$elm$html$Html$text('Скрыт')
+															]))
+													]))
+											]))
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row mt-10')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Дата выставления')
+											])),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('ui input')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$input,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$placeholder(''),
+														$elm$html$Html$Attributes$type_('date'),
+														$elm$html$Html$Attributes$value(
+														A2(
+															$elm$core$Maybe$withDefault,
+															'',
+															$author$project$Util$posixToISODate(activity.date)))
+													]),
+												_List_Nil)
+											]))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-3')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$label,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Номер в списке')
+											])),
+										A2(
+										$elm$html$Html$h1,
+										_List_fromArray(
+											[
+												A2($elm$html$Html$Attributes$style, 'margin', '10px 0 0 10px')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text(
+												$elm$core$String$fromInt(activity.order))
+											]))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-3')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('row middle-xs end-md center-xs'),
+												A2($elm$html$Html$Attributes$style, 'height', '100%')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$button,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('ui button red'),
+														A2($elm$html$Html$Attributes$style, 'position', 'relative'),
+														A2($elm$html$Html$Attributes$style, 'top', '5px'),
+														$elm$html$Html$Events$onClick($author$project$Component$Activity$MsgOnClickDelete)
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$i,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('icon trash')
+															]),
+														_List_Nil),
+														$elm$html$Html$text('Удалить')
+													]))
+											]))
+									]))
+							]))
+					]));
+		case 'StateError':
+			var err = _v0.a;
+			return A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('ui text container negative message')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('header')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Ошибка')
+							])),
+						A2(
+						$elm$html$Html$p,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(err)
+							]))
+					]));
+		default:
+			return $elm$html$Html$text('');
+	}
+};
+var $author$project$Component$Activity$view = function (model) {
+	return model.editable ? $author$project$Component$Activity$view_write(model) : $author$project$Component$Activity$view_read(model);
+};
 var $author$project$Component$Modal$view = F6(
 	function (id_, title, body_, msg_close, buttons, do_show) {
 		return do_show ? A2(
@@ -13794,26 +16511,8 @@ var $author$project$Component$Modal$view = F6(
 						]))
 				])) : $elm$html$Html$text('');
 	});
-var $author$project$Page$CoursePage$viewActivity = function (activity) {
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('text container segment ui')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$h2,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text(activity.title)
-					]))
-			]));
-};
-var $author$project$Page$CoursePage$viewCourse = F2(
-	function (courseRead, model) {
+var $author$project$Page$CoursePage$viewCourse = F3(
+	function (courseRead, components_activity, model) {
 		var members = function () {
 			var user_list = $elm$core$List$map(
 				A2(
@@ -13901,19 +16600,20 @@ var $author$project$Page$CoursePage$viewCourse = F2(
 		};
 		var header = function () {
 			var teacher = function () {
-				var _v3 = $elm$core$List$head(
+				var _v11 = $elm$core$List$head(
 					A2(
 						$elm$core$List$filter,
 						function (e) {
 							return _Utils_eq(e.role, $author$project$Api$Data$CourseEnrollmentReadRoleT);
 						},
 						courseRead.enrollments));
-				if (_v3.$ === 'Just') {
-					var t = _v3.a;
+				if (_v11.$ === 'Just') {
+					var t = _v11.a;
 					return A2(
 						$elm$html$Html$span,
 						_List_fromArray(
 							[
+								$elm$html$Html$Attributes$class('ml-10'),
 								A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap')
 							]),
 						_List_fromArray(
@@ -13945,9 +16645,9 @@ var $author$project$Page$CoursePage$viewCourse = F2(
 				}
 			}();
 			var for_group = function () {
-				var _v2 = $author$project$Page$CourseListPage$empty_to_nothing(courseRead.forGroup);
-				if (_v2.$ === 'Just') {
-					var g = _v2.a;
+				var _v10 = $author$project$Page$CourseListPage$empty_to_nothing(courseRead.forGroup);
+				if (_v10.$ === 'Just') {
+					var g = _v10.a;
 					return A2(
 						$elm$html$Html$span,
 						_List_fromArray(
@@ -13977,11 +16677,11 @@ var $author$project$Page$CoursePage$viewCourse = F2(
 						A2($elm$html$Html$Attributes$style, 'color', '#679'),
 						A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap')
 					]);
-				var _v0 = _Utils_Tuple2(courseRead.forClass, courseRead.forSpecialization);
-				if (_v0.a.$ === 'Just') {
-					if (_v0.b.$ === 'Just') {
-						var cls = _v0.a.a;
-						var spec = _v0.b.a;
+				var _v8 = _Utils_Tuple2(courseRead.forClass, courseRead.forSpecialization);
+				if (_v8.a.$ === 'Just') {
+					if (_v8.b.$ === 'Just') {
+						var cls = _v8.a.a;
+						var spec = _v8.b.a;
 						return A2(
 							$elm$html$Html$span,
 							_List_Nil,
@@ -13991,8 +16691,8 @@ var $author$project$Page$CoursePage$viewCourse = F2(
 									$elm$html$Html$text(cls + (' класс (' + (spec.name + ' направление)')))
 								]));
 					} else {
-						var cls = _v0.a.a;
-						var _v1 = _v0.b;
+						var cls = _v8.a.a;
+						var _v9 = _v8.b;
 						return A2(
 							$elm$html$Html$span,
 							_List_Nil,
@@ -14027,26 +16727,23 @@ var $author$project$Page$CoursePage$viewCourse = F2(
 						return '/api/file/' + ($author$project$Util$get_id_str(f) + '/download');
 					},
 					courseRead.cover));
-			var buttons = A2(
-				$elm$core$List$filterMap,
-				$elm$core$Basics$identity,
-				_List_fromArray(
-					[
-						(model.is_staff || model.teaching_here) ? $elm$core$Maybe$Just(
-						A2(
-							$elm$html$Html$a,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$href(
-									'/marks/course/' + $author$project$Util$get_id_str(courseRead))
-								]),
-							_List_fromArray(
+			var buttons = function () {
+				var _v5 = _Utils_Tuple2(model.is_staff || model.teaching_here, model.edit_mode);
+				_v5$0:
+				while (true) {
+					if (_v5.b.$ === 'EditOff') {
+						if (!_v5.a) {
+							break _v5$0;
+						} else {
+							var _v6 = _v5.b;
+							return _List_fromArray(
 								[
 									A2(
 									$elm$html$Html$button,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$class('ui button')
+											$elm$html$Html$Attributes$class('ui button yellow'),
+											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickEdit)
 										]),
 									_List_fromArray(
 										[
@@ -14054,32 +16751,68 @@ var $author$project$Page$CoursePage$viewCourse = F2(
 											$elm$html$Html$i,
 											_List_fromArray(
 												[
-													$elm$html$Html$Attributes$class('chart bar outline icon')
+													$elm$html$Html$Attributes$class('icon edit outline')
 												]),
 											_List_Nil),
-											$elm$html$Html$text('Оценки')
+											$elm$html$Html$text('Редактировать')
 										]))
-								]))) : $elm$core$Maybe$Nothing,
-						$elm$core$Maybe$Just(
-						A2(
-							$elm$html$Html$button,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('ui button'),
-									$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgClickMembers)
-								]),
-							_List_fromArray(
+								]);
+						}
+					} else {
+						if (!_v5.a) {
+							break _v5$0;
+						} else {
+							var _v7 = _v5.b;
+							var mod = _v7.b;
+							return _List_fromArray(
 								[
 									A2(
-									$elm$html$Html$i,
+									$elm$html$Html$button,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$class('users icon')
+											$elm$html$Html$Attributes$class('ui button'),
+											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickEditCancel)
 										]),
-									_List_Nil),
-									$elm$html$Html$text('Участники')
-								])))
-					]));
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$i,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('icon close')
+												]),
+											_List_Nil),
+											$elm$html$Html$text('Отмена')
+										])),
+									A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('ui primary button'),
+											$elm$html$Html$Attributes$classList(
+											_List_fromArray(
+												[
+													_Utils_Tuple2('disabled', !mod)
+												])),
+											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickSave)
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$i,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('icon save outline')
+												]),
+											_List_Nil),
+											$elm$html$Html$text('Сохранить')
+										]))
+								]);
+						}
+					}
+				}
+				return _List_Nil;
+			}();
 			return A2(
 				$elm$html$Html$div,
 				_List_fromArray(
@@ -14221,55 +16954,101 @@ var $author$project$Page$CoursePage$viewCourse = F2(
 							$elm$html$Html$text(courseRead.title)
 						]))
 				]));
-		var add_activity_form = A2(
-			$elm$html$Html$form,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('ui form')
-				]),
-			_List_fromArray(
-				[
-					A2(
+		var add_activity_placeholder = function (i) {
+			var base = function (txt) {
+				return A2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('field')
+							$elm$html$Html$Attributes$class('row center-xs m-10')
 						]),
 					_List_fromArray(
 						[
 							A2(
-							$elm$html$Html$label,
-							_List_Nil,
+							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$text('Название темы')
-								])),
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Events$onInput($author$project$Page$CoursePage$MsgAddActivityChangeTitle),
-									$elm$html$Html$Attributes$placeholder('Название темы'),
-									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Attributes$value(model.add_activity.title)
+									$elm$html$Html$Attributes$class('ui text container p-5'),
+									A2($elm$html$Html$Attributes$style, 'border', '1px dashed #AAA'),
+									A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
+									$elm$html$Html$Events$onClick(
+									A2($author$project$Page$CoursePage$MsgOnClickAddBefore, i, $elm$core$Maybe$Nothing))
 								]),
-							_List_Nil)
-						]))
-				]));
-		var modal_add_activity = function (do_show) {
-			return A6(
-				$author$project$Component$Modal$view,
-				'members',
-				'Добавить активность',
-				add_activity_form,
-				$author$project$Page$CoursePage$MsgCloseAddActivity,
-				_List_fromArray(
-					[
-						_Utils_Tuple2('Закрыть', $author$project$Page$CoursePage$MsgCloseAddActivity),
-						_Utils_Tuple2('Добавить', $author$project$Page$CoursePage$MsgAddActivityDoAdd)
-					]),
-				do_show);
+							_List_fromArray(
+								[
+									$elm$html$Html$text(txt)
+								]))
+						]));
+			};
+			var _v2 = model.edit_mode;
+			_v2$2:
+			while (true) {
+				if (_v2.$ === 'EditOn') {
+					switch (_v2.a.$) {
+						case 'AddGen':
+							var _v3 = _v2.a;
+							return base('Добавить тему здесь');
+						case 'AddFin':
+							var _v4 = _v2.a;
+							return base('Добавить контроль здесь');
+						default:
+							break _v2$2;
+					}
+				} else {
+					break _v2$2;
+				}
+			}
+			return $elm$html$Html$text('');
 		};
+		var add_activity_bar = (!_Utils_eq(model.edit_mode, $author$project$Page$CoursePage$EditOff)) ? A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('ui text container segment mr-10'),
+					A2($elm$html$Html$Attributes$style, 'background-color', '#EEE'),
+					A2($elm$html$Html$Attributes$style, 'position', 'sticky'),
+					A2($elm$html$Html$Attributes$style, 'top', '0'),
+					A2($elm$html$Html$Attributes$style, 'z-index', '10')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$button,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('ui button green'),
+							$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickAddGen)
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$i,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('plus icon')
+								]),
+							_List_Nil),
+							$elm$html$Html$text('Добавить тему')
+						])),
+					A2(
+					$elm$html$Html$button,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('ui button green'),
+							$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickAddFin)
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$i,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('plus icon')
+								]),
+							_List_Nil),
+							$elm$html$Html$text('Добавить контроль')
+						]))
+				])) : $elm$html$Html$text('');
 		var activities_title = A2(
 			$elm$html$Html$h1,
 			_List_fromArray(
@@ -14279,34 +17058,91 @@ var $author$project$Page$CoursePage$viewCourse = F2(
 			_List_fromArray(
 				[
 					$elm$html$Html$text('Содержание'),
-					(model.is_staff || model.teaching_here) ? A2(
-					$elm$html$Html$button,
+					A2(
+					$elm$html$Html$div,
+					_List_Nil,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('ui button green'),
-							$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgAddActivity)
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$i,
+							(model.is_staff || model.teaching_here) ? A2(
+							$elm$html$Html$a,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('icon plus')
+									$elm$html$Html$Attributes$href(
+									'/marks/course/' + $author$project$Util$get_id_str(courseRead))
 								]),
-							_List_Nil),
-							$elm$html$Html$text('Добавить')
-						])) : $elm$html$Html$text('')
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('ui button')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$i,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('chart bar outline icon')
+												]),
+											_List_Nil),
+											$elm$html$Html$text('Оценки')
+										]))
+								])) : $elm$html$Html$text(''),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('ui button'),
+									$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgClickMembers)
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$i,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('users icon')
+										]),
+									_List_Nil),
+									$elm$html$Html$text('Участники')
+								]))
+						]))
 				]));
-		var activities = A2(
-			$elm$core$List$map,
-			$author$project$Page$CoursePage$viewActivity,
-			A2(
-				$elm$core$List$sortBy,
-				function ($) {
-					return $.order;
-				},
-				courseRead.activities));
+		var activities = function () {
+			var l = components_activity;
+			if (!l.b) {
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$h3,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Нет активностей для отображения')
+							]))
+					]);
+			} else {
+				return $elm$core$List$concat(
+					A2(
+						$elm$core$List$indexedMap,
+						F2(
+							function (i, _v1) {
+								var id = _v1.a;
+								var comp = _v1.b;
+								return _List_fromArray(
+									[
+										A2(
+										$elm$html$Html$map,
+										$author$project$Page$CoursePage$MsgActivity(id),
+										$author$project$Component$Activity$view(comp)),
+										add_activity_placeholder(i + 1)
+									]);
+							}),
+						l));
+			}
+		}();
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -14316,10 +17152,11 @@ var $author$project$Page$CoursePage$viewCourse = F2(
 			_List_fromArray(
 				[
 					modal_members(model.show_members),
-					modal_add_activity(model.add_activity.show_form),
 					breadcrumbs,
 					header,
 					activities_title,
+					add_activity_bar,
+					add_activity_placeholder(0),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -14347,7 +17184,8 @@ var $author$project$Page$CoursePage$view = function (model) {
 					]));
 		case 'FetchDone':
 			var courseRead = _v0.a;
-			return A2($author$project$Page$CoursePage$viewCourse, courseRead, model);
+			var components_activity = _v0.b;
+			return A3($author$project$Page$CoursePage$viewCourse, courseRead, components_activity, model);
 		default:
 			var err = _v0.a;
 			return A4(
@@ -14414,7 +17252,6 @@ var $author$project$Page$FrontPage$greetTOD = function (timeOfDay) {
 			return 'Доброй ночи';
 	}
 };
-var $elm$html$Html$strong = _VirtualDom_node('strong');
 var $author$project$Component$Stats$view = function (model) {
 	var _v0 = model.state;
 	switch (_v0.$) {
@@ -14754,6 +17591,7 @@ var $author$project$Page$Login$ModelSetUsername = function (a) {
 	return {$: 'ModelSetUsername', a: a};
 };
 var $author$project$Page$Login$ShowPasswordReset = {$: 'ShowPasswordReset'};
+var $elm$html$Html$form = _VirtualDom_node('form');
 var $elm$html$Html$Events$alwaysPreventDefault = function (msg) {
 	return _Utils_Tuple2(msg, true);
 };
@@ -14775,16 +17613,6 @@ var $elm$html$Html$Events$onSubmit = function (msg) {
 			$elm$json$Json$Decode$map,
 			$elm$html$Html$Events$alwaysPreventDefault,
 			$elm$json$Json$Decode$succeed(msg)));
-};
-var $elm$html$Html$Attributes$classList = function (classes) {
-	return $elm$html$Html$Attributes$class(
-		A2(
-			$elm$core$String$join,
-			' ',
-			A2(
-				$elm$core$List$map,
-				$elm$core$Tuple$first,
-				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
 };
 var $author$project$Page$Login$viewField = F5(
 	function (field_type, value_, placeholder_, icon, on_input) {
@@ -15148,92 +17976,67 @@ var $author$project$Component$MarkTable$showFetchedData = function (fetchedData)
 	}
 };
 var $elm$html$Html$table = _VirtualDom_node('table');
-var $elm$core$List$singleton = function (value) {
-	return _List_fromArray(
-		[value]);
-};
 var $elm$html$Html$td = _VirtualDom_node('td');
 var $elm$html$Html$thead = _VirtualDom_node('thead');
 var $elm$html$Html$tr = _VirtualDom_node('tr');
-var $author$project$Util$monthToInt = function (month) {
-	switch (month.$) {
-		case 'Jan':
-			return 1;
-		case 'Feb':
-			return 2;
-		case 'Mar':
-			return 3;
-		case 'Apr':
-			return 4;
-		case 'May':
-			return 5;
-		case 'Jun':
-			return 6;
-		case 'Jul':
-			return 7;
-		case 'Aug':
-			return 8;
-		case 'Sep':
-			return 9;
-		case 'Oct':
-			return 10;
-		case 'Nov':
-			return 11;
-		default:
-			return 12;
-	}
-};
-var $author$project$Util$posixToDDMMYYYY = F2(
-	function (zone, posix) {
-		var yyyy = A3(
-			$elm$core$String$padLeft,
-			4,
-			_Utils_chr('0'),
-			$elm$core$String$fromInt(
-				A2($elm$time$Time$toYear, zone, posix)));
-		var mm = A3(
-			$elm$core$String$padLeft,
-			2,
-			_Utils_chr('0'),
-			$elm$core$String$fromInt(
-				$author$project$Util$monthToInt(
-					A2($elm$time$Time$toMonth, zone, posix))));
-		var dd = A3(
-			$elm$core$String$padLeft,
-			2,
-			_Utils_chr('0'),
-			$elm$core$String$fromInt(
-				A2($elm$time$Time$toDay, zone, posix)));
-		return dd + ('.' + (mm + ('.' + yyyy)));
-	});
 var $author$project$Component$MarkTable$viewColumn = function (column) {
 	if (column.$ === 'Activity') {
 		var activity = column.a;
-		return A2(
-			$elm$html$Html$div,
-			_List_Nil,
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text(
-							A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, activity.date))
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_Nil,
-					_List_fromArray(
-						[
-							$elm$html$Html$text(
-							A2($elm$core$Maybe$withDefault, '', activity.keywords))
-						]))
-				]));
+		var _v1 = activity.type_;
+		if ((_v1.$ === 'Just') && (_v1.a.$ === 'ActivityTypeFIN')) {
+			var _v2 = _v1.a;
+			return A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, activity.date))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								$author$project$Util$finalTypeToStr(activity))
+							]))
+					]));
+		} else {
+			return A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, activity.date))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								A2($elm$core$Maybe$withDefault, '', activity.keywords))
+							]))
+					]));
+		}
 	} else {
 		var posix = column.a;
 		return $elm$html$Html$text(
@@ -15241,6 +18044,23 @@ var $author$project$Component$MarkTable$viewColumn = function (column) {
 	}
 };
 var $author$project$Component$MarkTable$viewTableHeader = function (columns) {
+	var td_attrs = function (col) {
+		if (col.$ === 'Activity') {
+			var act = col.a;
+			var _v1 = act.type_;
+			if ((_v1.$ === 'Just') && (_v1.a.$ === 'ActivityTypeFIN')) {
+				var _v2 = _v1.a;
+				return _List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'background-color', '#FFEFE2FF')
+					]);
+			} else {
+				return _List_Nil;
+			}
+		} else {
+			return _List_Nil;
+		}
+	};
 	return A2(
 		$elm$html$Html$thead,
 		_List_Nil,
@@ -15256,17 +18076,22 @@ var $author$project$Component$MarkTable$viewTableHeader = function (columns) {
 						]),
 					A2(
 						$elm$core$List$map,
-						A2(
-							$elm$core$Basics$composeR,
-							$author$project$Component$MarkTable$viewColumn,
-							A2(
-								$elm$core$Basics$composeR,
-								$elm$core$List$singleton,
-								$elm$html$Html$td(
+						function (col) {
+							return A2(
+								$elm$html$Html$td,
+								_Utils_ap(
 									_List_fromArray(
 										[
-											A2($elm$html$Html$Attributes$style, 'text-align', 'center')
-										])))),
+											A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+											A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
+											A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap')
+										]),
+									td_attrs(col)),
+								_List_fromArray(
+									[
+										$author$project$Component$MarkTable$viewColumn(col)
+									]));
+						},
 						columns)))
 			]));
 };
@@ -15301,13 +18126,6 @@ var $author$project$Component$MarkTable$viewRow = function (row) {
 var $author$project$Component$MarkTable$MsgMarkKeyPress = F4(
 	function (a, b, c, d) {
 		return {$: 'MsgMarkKeyPress', a: a, b: b, c: c, d: d};
-	});
-var $elm$html$Html$Attributes$boolProperty = F2(
-	function (key, bool) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$bool(bool));
 	});
 var $elm$html$Html$Attributes$autofocus = $elm$html$Html$Attributes$boolProperty('autofocus');
 var $author$project$Component$MarkTable$Bottom = {$: 'Bottom'};
@@ -15509,14 +18327,22 @@ var $author$project$Component$MarkTable$viewTableCell = F3(
 	function (y, x, slot_list) {
 		return A2(
 			$elm$html$Html$td,
-			_List_Nil,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap')
+				]),
 			_List_fromArray(
 				[
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('row center-xs')
+							$elm$html$Html$Attributes$class('row center-xs'),
+							A2(
+							$elm$html$Html$Attributes$style,
+							'min-width',
+							$elm$core$String$fromInt(
+								$elm$core$List$length(slot_list) * 50) + 'px')
 						]),
 					A2(
 						$elm$core$List$indexedMap,
@@ -15538,7 +18364,8 @@ var $author$project$Component$MarkTable$viewTableRow = F2(
 						$elm$html$Html$td,
 						_List_fromArray(
 							[
-								A2($elm$html$Html$Attributes$style, 'vertical-align', 'middle')
+								A2($elm$html$Html$Attributes$style, 'vertical-align', 'middle'),
+								A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap')
 							]),
 						_List_fromArray(
 							[
@@ -15563,46 +18390,16 @@ var $author$project$Component$MarkTable$viewTableRow = F2(
 					_Utils_Tuple2(0, _List_Nil),
 					cols).b));
 	});
-var $author$project$Util$zip = $elm$core$List$map2($elm$core$Tuple$pair);
 var $author$project$Component$MarkTable$viewTable = F3(
 	function (rows, columns, cells) {
-		var scell = function (c) {
-			if (c.$ === 'SlotVirtual') {
-				return '_';
-			} else {
-				var m = c.b;
-				return m.value;
-			}
-		};
-		var _v0 = A2(
-			$elm$core$Debug$log,
-			A2(
-				$elm$core$String$join,
-				'\n',
-				A2(
-					$elm$core$List$map,
-					function (row) {
-						return A2(
-							$elm$core$String$join,
-							'  ',
-							A2(
-								$elm$core$List$map,
-								A2(
-									$elm$core$Basics$composeR,
-									scell,
-									A2(
-										$elm$core$String$padLeft,
-										2,
-										_Utils_chr(' '))),
-								$elm$core$List$concat(row)));
-					},
-					cells)),
-			_Utils_Tuple0);
 		return A2(
 			$elm$html$Html$table,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('ui collapsing celled striped table')
+					$elm$html$Html$Attributes$class('ui celled striped unstackable table'),
+					A2($elm$html$Html$Attributes$style, 'max-width', '100vw'),
+					A2($elm$html$Html$Attributes$style, 'display', 'block'),
+					A2($elm$html$Html$Attributes$style, 'overflow-x', 'scroll')
 				]),
 			_Utils_ap(
 				_List_fromArray(
@@ -15744,14 +18541,26 @@ var $author$project$Page$MarksCourse$view = function (model) {
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('row center-xs mt-20')
+						$elm$html$Html$Attributes$class('row center-xs mt-20'),
+						A2($elm$html$Html$Attributes$style, 'position', 'absolute'),
+						A2($elm$html$Html$Attributes$style, 'left', '0'),
+						A2($elm$html$Html$Attributes$style, 'right', '0')
 					]),
 				_List_fromArray(
 					[
 						A2(
-						$elm$html$Html$map,
-						$author$project$Page$MarksCourse$MsgTable,
-						$author$project$Component$MarkTable$view(model.table))
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('col')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$map,
+								$author$project$Page$MarksCourse$MsgTable,
+								$author$project$Component$MarkTable$view(model.table))
+							]))
 					]))
 			]));
 };
@@ -15928,6 +18737,10 @@ var $author$project$Page$NotFound$view = A2(
 		]));
 var $author$project$Page$UserProfile$MsgChangeEmail = {$: 'MsgChangeEmail'};
 var $author$project$Page$UserProfile$MsgChangePassword = {$: 'MsgChangePassword'};
+var $elm$core$List$singleton = function (value) {
+	return _List_fromArray(
+		[value]);
+};
 var $elm$html$Html$tbody = _VirtualDom_node('tbody');
 var $author$project$Page$UserProfile$viewEducation = function (model) {
 	return $elm$html$Html$text('Edu');

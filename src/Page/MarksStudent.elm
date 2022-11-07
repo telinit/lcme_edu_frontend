@@ -43,7 +43,7 @@ init token user mb_student_id =
                     else
                         Nothing
     in
-    case Debug.log "student_id" student_id of
+    case student_id of
         Just id ->
             let
                 ( m, c ) =

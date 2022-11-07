@@ -42,7 +42,18 @@ logo classes =
 right_menu profile is_mobile =
     [ div [ class "right menu" ]
         [ div [ class "item raw center-xs" ]
-            [ a [ href "/profile", class <| "mr-10" ++ if is_mobile then " mt-15 mb-15" else "", style "display" "block" ]
+            [ a
+                [ href "/profile"
+                , class <|
+                    "mr-10"
+                        ++ (if is_mobile then
+                                " mt-15 mb-15"
+
+                            else
+                                ""
+                           )
+                , style "display" "block"
+                ]
                 [ i [ class "user icon large" ] []
 
                 --, img [ src profile.avatar ] []
@@ -98,15 +109,13 @@ view map_msg model html =
         items =
             List.filterMap identity
                 [ Just { label = "Предметы", href = "/courses", icon = "book" }
-
-                , if user_has_any_role model.user ["parent", "student"] then
+                , if user_has_any_role model.user [ "parent", "student" ] then
                     Just { label = "Оценки", href = "/marks", icon = "chart bar outline" }
 
                   else
                     Nothing
-
                 , --, Just { label = "Сообщения", href = "/messages", icon = "envelope outline" }
-                  if user_has_all_roles model.user ["admin"] then
+                  if user_has_all_roles model.user [ "admin" ] then
                     Just { label = "Администрирование", href = "/admin", icon = "cog" }
 
                   else
@@ -140,8 +149,11 @@ view map_msg model html =
                     ([ div [ class "item" ] [] ] ++ menu items ++ right_menu profile True)
                 ]
     in
-    div [ id "modal_context" ]
-        [ div [ class "ui container", id "main_container" ]
+    div [ id "modal_context", class "mr-20" ]
+        [ div
+            [ class "ui container"
+            , id "main_container"
+            ]
             [ Html.map map_msg <| make_header_pc profile items
             , Html.map map_msg <| header_mobile
             , Html.map map_msg <| sidebar

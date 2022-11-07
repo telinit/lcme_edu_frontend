@@ -126,7 +126,14 @@ doPasswordReset login =
 
 init : String -> ( Model, Cmd Msg )
 init token =
-    ( { username = "", password = "", message = None, state = CheckingStored, token = token }, doCheckSession token )
+    ( { username = ""
+      , password = ""
+      , message = None
+      , state = CheckingStored
+      , token = token
+      }
+    , doCheckSession token
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -202,7 +209,7 @@ view model =
                 Info s ->
                     div [ class "ui message" ]
                         [ i [ class "close icon", onClick CloseMessage ] []
-                        , div [ class "header" ] [ ]
+                        , div [ class "header" ] []
                         , p [] [ text s ]
                         ]
 

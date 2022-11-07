@@ -7,6 +7,7 @@ import Html exposing (Attribute, span)
 import Html.Attributes exposing (style)
 import Html.Events exposing (custom, preventDefaultOn, stopPropagationOn)
 import Http
+import Iso8601 exposing (fromTime, toTime)
 import Json.Decode as JD
 import Task
 import Time exposing (Month(..))
@@ -226,6 +227,21 @@ posixToDDMMYYYY zone posix =
     dd ++ "." ++ mm ++ "." ++ yyyy
 
 
+posixToISODate : Time.Posix -> Maybe String
+posixToISODate =
+    List.head << String.split "T" << fromTime
+
+
+isoDateToPosix : String -> Maybe Time.Posix
+isoDateToPosix str =
+    case toTime <| str ++ "T00:00:00.000Z" of
+        Ok t ->
+            Just t
+
+        Err _ ->
+            Nothing
+
+
 user_has_role user role =
     Maybe.withDefault False <| Maybe.map (List.member role) user.roles
 
@@ -238,6 +254,7 @@ user_has_all_roles user req_roles =
             )
             user.roles
 
+
 user_has_any_role user req_roles =
     Maybe.withDefault False <|
         Maybe.map
@@ -245,6 +262,7 @@ user_has_any_role user req_roles =
                 List.any (\role -> List.member role user_roles) req_roles
             )
             user.roles
+
 
 isJust mb =
     case mb of
@@ -278,3 +296,83 @@ user_deep_to_shallow userDeep =
     , children = Just <| List.filterMap .id userDeep.children
     , currentClass = userDeep.currentClass
     }
+
+
+finalTypeToStr act =
+    case act.finalType of
+        Just f ->
+            case f of
+                Api.Data.ActivityFinalTypeQ1 ->
+                    "1 четверть"
+
+                Api.Data.ActivityFinalTypeQ2 ->
+                    "2 четверть"
+
+                Api.Data.ActivityFinalTypeQ3 ->
+                    "3 четверть"
+
+                Api.Data.ActivityFinalTypeQ4 ->
+                    "4 четверть"
+
+                Api.Data.ActivityFinalTypeH1 ->
+                    "1 полугодие"
+
+                Api.Data.ActivityFinalTypeH2 ->
+                    "2 полугодие"
+
+                Api.Data.ActivityFinalTypeY ->
+                    "Годовая оценка"
+
+                Api.Data.ActivityFinalTypeE ->
+                    "Экзамен"
+
+                Api.Data.ActivityFinalTypeF ->
+                    "Итоговая оценка"
+
+        Nothing ->
+            ""
+
+
+maybeFilter : (a -> Bool) -> Maybe a -> Maybe a
+maybeFilter pred maybe =
+    case maybe of
+        Just a ->
+            if pred a then
+                Just a
+
+            else
+                Nothing
+
+        Nothing ->
+            Nothing
+
+
+log_decoder : String -> JD.Decoder a -> JD.Decoder a
+log_decoder prompt decoder =
+    JD.andThen (\res -> Debug.log prompt <| JD.succeed res) decoder
+
+
+assoc_update : k -> v -> List ( k, v ) -> List ( k, v )
+assoc_update k v list =
+    case list of
+        ( k_, v_ ) :: tl ->
+            if k_ == k then
+                ( k, v ) :: tl
+
+            else
+                ( k_, v_ ) :: assoc_update k v tl
+
+        [] ->
+            [ ( k, v ) ]
+
+
+list_insert_at i x l =
+    case ( i, l ) of
+        ( 0, _ ) ->
+            x :: l
+
+        ( _, hd :: tl ) ->
+            hd :: list_insert_at (i - 1) x tl
+
+        ( _, [] ) ->
+            x :: l

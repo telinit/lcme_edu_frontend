@@ -415,6 +415,9 @@ subscriptions model =
         PageFront model_ ->
             Sub.map MsgPageFront <| FrontPage.subscriptions model_
 
+        PageCourse model_ ->
+            Sub.map MsgPageCourse <| CoursePage.subscriptions model_
+
         _ ->
             Sub.none
 

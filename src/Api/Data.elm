@@ -18,13 +18,16 @@ module Api.Data exposing
     ( Activity
     , ActivityFinalType(..)
     , ActivityType(..)
+    , BulkSetActivities
     , Counters
     , CourseDeep
+    , CourseDeepType(..)
     , CourseEnrollmentRead
     , CourseEnrollmentReadRole(..)
     , CourseEnrollmentWrite
     , CourseEnrollmentWriteRole(..)
     , CourseShallow
+    , CourseShallowType(..)
     , Department
     , Education
     , EducationSpecialization
@@ -48,19 +51,24 @@ module Api.Data exposing
     , UserDeepUserPermissionsInner
     , UserShallow
     , activityDecoder
+    , activityFinalTypeDecoder
     , activityFinalTypeVariants
     , activityTypeVariants
+    , bulkSetActivitiesDecoder
     , countersDecoder
     , courseDeepDecoder
+    , courseDeepTypeVariants
     , courseEnrollmentReadDecoder
     , courseEnrollmentReadRoleVariants
     , courseEnrollmentWriteDecoder
     , courseEnrollmentWriteRoleVariants
     , courseShallowDecoder
+    , courseShallowTypeVariants
     , departmentDecoder
     , educationDecoder
     , educationSpecializationDecoder
     , encodeActivity
+    , encodeBulkSetActivities
     , encodeCounters
     , encodeCourseDeep
     , encodeCourseEnrollmentRead
@@ -99,6 +107,7 @@ module Api.Data exposing
     , resetPasswordRequestDecoder
     , setEmailDecoder
     , setPasswordDecoder
+    , stringFromActivityFinalType
     , tokenDecoder
     , unreadObjectDecoder
     , unreadObjectTypeVariants
@@ -129,9 +138,12 @@ type alias Activity =
     , keywords : Maybe String
     , isHidden : Maybe Bool
     , marksLimit : Maybe Int
+    , hours : Maybe Int
+    , fgosComplient : Maybe Bool
     , order : Int
     , date : Posix
     , group : Maybe String
+    , scientificTopic : Maybe String
     , body : Maybe String
     , dueDate : Maybe Posix
     , link : Maybe String
@@ -144,7 +156,7 @@ type alias Activity =
 
 type ActivityType
     = ActivityTypeGEN
-    | ActivityTypeART
+    | ActivityTypeTXT
     | ActivityTypeTSK
     | ActivityTypeLNK
     | ActivityTypeMED
@@ -154,7 +166,7 @@ type ActivityType
 activityTypeVariants : List ActivityType
 activityTypeVariants =
     [ ActivityTypeGEN
-    , ActivityTypeART
+    , ActivityTypeTXT
     , ActivityTypeTSK
     , ActivityTypeLNK
     , ActivityTypeMED
@@ -188,6 +200,12 @@ activityFinalTypeVariants =
     ]
 
 
+type alias BulkSetActivities =
+    { create : List Activity
+    , update : Dict.Dict String Activity
+    }
+
+
 type alias Counters =
     { courses : Int
     , users : Int
@@ -205,11 +223,30 @@ type alias CourseDeep =
     , enrollments : List CourseEnrollmentRead
     , createdAt : Maybe Posix
     , updatedAt : Maybe Posix
+    , type_ : Maybe CourseDeepType
     , title : String
     , description : String
     , forClass : Maybe String
     , forGroup : Maybe String
     }
+
+
+type CourseDeepType
+    = CourseDeepTypeGEN
+    | CourseDeepTypeEDU
+    | CourseDeepTypeSEM
+    | CourseDeepTypeCLB
+    | CourseDeepTypeELE
+
+
+courseDeepTypeVariants : List CourseDeepType
+courseDeepTypeVariants =
+    [ CourseDeepTypeGEN
+    , CourseDeepTypeEDU
+    , CourseDeepTypeSEM
+    , CourseDeepTypeCLB
+    , CourseDeepTypeELE
+    ]
 
 
 type alias CourseEnrollmentRead =
@@ -262,6 +299,7 @@ type alias CourseShallow =
     { id : Maybe Uuid
     , createdAt : Maybe Posix
     , updatedAt : Maybe Posix
+    , type_ : Maybe CourseShallowType
     , title : String
     , description : String
     , forClass : Maybe String
@@ -270,6 +308,24 @@ type alias CourseShallow =
     , logo : Maybe Uuid
     , cover : Maybe Uuid
     }
+
+
+type CourseShallowType
+    = CourseShallowTypeGEN
+    | CourseShallowTypeEDU
+    | CourseShallowTypeSEM
+    | CourseShallowTypeCLB
+    | CourseShallowTypeELE
+
+
+courseShallowTypeVariants : List CourseShallowType
+courseShallowTypeVariants =
+    [ CourseShallowTypeGEN
+    , CourseShallowTypeEDU
+    , CourseShallowTypeSEM
+    , CourseShallowTypeCLB
+    , CourseShallowTypeELE
+    ]
 
 
 type alias Department =
@@ -327,7 +383,7 @@ type alias Mark =
     , updatedAt : Maybe Posix
     , value : String
     , comment : Maybe String
-    , teacher : Uuid
+    , author : Uuid
     , student : Uuid
     , activity : Uuid
     }
@@ -544,9 +600,12 @@ encodeActivityPairs model =
             , maybeEncode "keywords" Json.Encode.string model.keywords
             , maybeEncode "is_hidden" Json.Encode.bool model.isHidden
             , maybeEncode "marks_limit" Json.Encode.int model.marksLimit
+            , maybeEncode "hours" Json.Encode.int model.hours
+            , maybeEncode "fgos_complient" Json.Encode.bool model.fgosComplient
             , encode "order" Json.Encode.int model.order
             , encode "date" Api.Time.encodeDate model.date
             , maybeEncodeNullable "group" Json.Encode.string model.group
+            , maybeEncodeNullable "scientific_topic" Json.Encode.string model.scientificTopic
             , maybeEncode "body" Json.Encode.string model.body
             , maybeEncodeNullable "due_date" Api.Time.encodeDateTime model.dueDate
             , maybeEncodeNullable "link" Json.Encode.string model.link
@@ -565,8 +624,8 @@ stringFromActivityType model =
         ActivityTypeGEN ->
             "GEN"
 
-        ActivityTypeART ->
-            "ART"
+        ActivityTypeTXT ->
+            "TXT"
 
         ActivityTypeTSK ->
             "TSK"
@@ -622,6 +681,27 @@ encodeActivityFinalType =
     Json.Encode.string << stringFromActivityFinalType
 
 
+encodeBulkSetActivities : BulkSetActivities -> Json.Encode.Value
+encodeBulkSetActivities =
+    encodeObject << encodeBulkSetActivitiesPairs
+
+
+encodeBulkSetActivitiesWithTag : ( String, String ) -> BulkSetActivities -> Json.Encode.Value
+encodeBulkSetActivitiesWithTag ( tagField, tag ) model =
+    encodeObject (encodeBulkSetActivitiesPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeBulkSetActivitiesPairs : BulkSetActivities -> List EncodedField
+encodeBulkSetActivitiesPairs model =
+    let
+        pairs =
+            [ encode "create" (Json.Encode.list encodeActivity) model.create
+            , encode "update" (Json.Encode.dict identity encodeActivity) model.update
+            ]
+    in
+    pairs
+
+
 encodeCounters : Counters -> Json.Encode.Value
 encodeCounters =
     encodeObject << encodeCountersPairs
@@ -667,6 +747,7 @@ encodeCourseDeepPairs model =
             , encode "enrollments" (Json.Encode.list encodeCourseEnrollmentRead) model.enrollments
             , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
+            , maybeEncode "type" encodeCourseDeepType model.type_
             , encode "title" Json.Encode.string model.title
             , encode "description" Json.Encode.string model.description
             , maybeEncode "for_class" Json.Encode.string model.forClass
@@ -674,6 +755,30 @@ encodeCourseDeepPairs model =
             ]
     in
     pairs
+
+
+stringFromCourseDeepType : CourseDeepType -> String
+stringFromCourseDeepType model =
+    case model of
+        CourseDeepTypeGEN ->
+            "GEN"
+
+        CourseDeepTypeEDU ->
+            "EDU"
+
+        CourseDeepTypeSEM ->
+            "SEM"
+
+        CourseDeepTypeCLB ->
+            "CLB"
+
+        CourseDeepTypeELE ->
+            "ELE"
+
+
+encodeCourseDeepType : CourseDeepType -> Json.Encode.Value
+encodeCourseDeepType =
+    Json.Encode.string << stringFromCourseDeepType
 
 
 encodeCourseEnrollmentRead : CourseEnrollmentRead -> Json.Encode.Value
@@ -775,6 +880,7 @@ encodeCourseShallowPairs model =
             [ maybeEncode "id" Uuid.encode model.id
             , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
+            , maybeEncode "type" encodeCourseShallowType model.type_
             , encode "title" Json.Encode.string model.title
             , encode "description" Json.Encode.string model.description
             , maybeEncode "for_class" Json.Encode.string model.forClass
@@ -785,6 +891,30 @@ encodeCourseShallowPairs model =
             ]
     in
     pairs
+
+
+stringFromCourseShallowType : CourseShallowType -> String
+stringFromCourseShallowType model =
+    case model of
+        CourseShallowTypeGEN ->
+            "GEN"
+
+        CourseShallowTypeEDU ->
+            "EDU"
+
+        CourseShallowTypeSEM ->
+            "SEM"
+
+        CourseShallowTypeCLB ->
+            "CLB"
+
+        CourseShallowTypeELE ->
+            "ELE"
+
+
+encodeCourseShallowType : CourseShallowType -> Json.Encode.Value
+encodeCourseShallowType =
+    Json.Encode.string << stringFromCourseShallowType
 
 
 encodeDepartment : Department -> Json.Encode.Value
@@ -930,7 +1060,7 @@ encodeMarkPairs model =
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "value" Json.Encode.string model.value
             , maybeEncode "comment" Json.Encode.string model.comment
-            , encode "teacher" Uuid.encode model.teacher
+            , encode "author" Uuid.encode model.author
             , encode "student" Uuid.encode model.student
             , encode "activity" Uuid.encode model.activity
             ]
@@ -1374,9 +1504,12 @@ activityDecoder =
         |> maybeDecode "keywords" Json.Decode.string Nothing
         |> maybeDecode "is_hidden" Json.Decode.bool Nothing
         |> maybeDecode "marks_limit" Json.Decode.int Nothing
+        |> maybeDecode "hours" Json.Decode.int Nothing
+        |> maybeDecode "fgos_complient" Json.Decode.bool Nothing
         |> decode "order" Json.Decode.int
         |> decode "date" Api.Time.dateDecoder
         |> maybeDecodeNullable "group" Json.Decode.string Nothing
+        |> maybeDecodeNullable "scientific_topic" Json.Decode.string Nothing
         |> maybeDecode "body" Json.Decode.string Nothing
         |> maybeDecodeNullable "due_date" Api.Time.dateTimeDecoder Nothing
         |> maybeDecodeNullable "link" Json.Decode.string Nothing
@@ -1395,8 +1528,8 @@ activityTypeDecoder =
                     "GEN" ->
                         Json.Decode.succeed ActivityTypeGEN
 
-                    "ART" ->
-                        Json.Decode.succeed ActivityTypeART
+                    "TXT" ->
+                        Json.Decode.succeed ActivityTypeTXT
 
                     "TSK" ->
                         Json.Decode.succeed ActivityTypeTSK
@@ -1453,6 +1586,13 @@ activityFinalTypeDecoder =
             )
 
 
+bulkSetActivitiesDecoder : Json.Decode.Decoder BulkSetActivities
+bulkSetActivitiesDecoder =
+    Json.Decode.succeed BulkSetActivities
+        |> decode "create" (Json.Decode.list activityDecoder)
+        |> decode "update" (Json.Decode.dict activityDecoder)
+
+
 countersDecoder : Json.Decode.Decoder Counters
 countersDecoder =
     Json.Decode.succeed Counters
@@ -1473,10 +1613,37 @@ courseDeepDecoder =
         |> decode "enrollments" (Json.Decode.list courseEnrollmentReadDecoder)
         |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "type" courseDeepTypeDecoder Nothing
         |> decode "title" Json.Decode.string
         |> decode "description" Json.Decode.string
         |> maybeDecode "for_class" Json.Decode.string Nothing
         |> maybeDecodeNullable "for_group" Json.Decode.string Nothing
+
+
+courseDeepTypeDecoder : Json.Decode.Decoder CourseDeepType
+courseDeepTypeDecoder =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\value ->
+                case value of
+                    "GEN" ->
+                        Json.Decode.succeed CourseDeepTypeGEN
+
+                    "EDU" ->
+                        Json.Decode.succeed CourseDeepTypeEDU
+
+                    "SEM" ->
+                        Json.Decode.succeed CourseDeepTypeSEM
+
+                    "CLB" ->
+                        Json.Decode.succeed CourseDeepTypeCLB
+
+                    "ELE" ->
+                        Json.Decode.succeed CourseDeepTypeELE
+
+                    other ->
+                        Json.Decode.fail <| "Unknown type: " ++ other
+            )
 
 
 courseEnrollmentReadDecoder : Json.Decode.Decoder CourseEnrollmentRead
@@ -1543,6 +1710,7 @@ courseShallowDecoder =
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "type" courseShallowTypeDecoder Nothing
         |> decode "title" Json.Decode.string
         |> decode "description" Json.Decode.string
         |> maybeDecode "for_class" Json.Decode.string Nothing
@@ -1550,6 +1718,32 @@ courseShallowDecoder =
         |> maybeDecodeNullable "for_specialization" Uuid.decoder Nothing
         |> maybeDecodeNullable "logo" Uuid.decoder Nothing
         |> maybeDecodeNullable "cover" Uuid.decoder Nothing
+
+
+courseShallowTypeDecoder : Json.Decode.Decoder CourseShallowType
+courseShallowTypeDecoder =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\value ->
+                case value of
+                    "GEN" ->
+                        Json.Decode.succeed CourseShallowTypeGEN
+
+                    "EDU" ->
+                        Json.Decode.succeed CourseShallowTypeEDU
+
+                    "SEM" ->
+                        Json.Decode.succeed CourseShallowTypeSEM
+
+                    "CLB" ->
+                        Json.Decode.succeed CourseShallowTypeCLB
+
+                    "ELE" ->
+                        Json.Decode.succeed CourseShallowTypeELE
+
+                    other ->
+                        Json.Decode.fail <| "Unknown type: " ++ other
+            )
 
 
 departmentDecoder : Json.Decode.Decoder Department
@@ -1614,7 +1808,7 @@ markDecoder =
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "value" Json.Decode.string
         |> maybeDecode "comment" Json.Decode.string Nothing
-        |> decode "teacher" Uuid.decoder
+        |> decode "author" Uuid.decoder
         |> decode "student" Uuid.decoder
         |> decode "activity" Uuid.decoder
 

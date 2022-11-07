@@ -19,7 +19,7 @@ import Maybe as M
 import Set
 import Task
 import Time as T exposing (Posix, millisToPosix)
-import Util exposing (dictFromTupleListMany, get_id, get_id_str, httpErrorToString, index_by, posixToDDMMYYYY, user_full_name, zip)
+import Util exposing (dictFromTupleListMany, finalTypeToStr, get_id, get_id_str, httpErrorToString, index_by, posixToDDMMYYYY, user_full_name, zip)
 import Uuid exposing (Uuid)
 
 
@@ -200,7 +200,7 @@ showFetchedData fetchedData =
 
 
 doCreateMark : String -> Uuid -> Uuid -> Uuid -> ( Int, Int ) -> String -> Cmd Msg
-doCreateMark token activity_id student_id teacher_id coords new_mark =
+doCreateMark token activity_id student_id author_id coords new_mark =
     let
         onResult res =
             case res of
@@ -214,7 +214,7 @@ doCreateMark token activity_id student_id teacher_id coords new_mark =
         ext_task identity token [] <|
             markCreate
                 { value = new_mark
-                , teacher = teacher_id
+                , author = author_id
                 , student = student_id
                 , activity = activity_id
                 , id = Nothing
@@ -619,12 +619,12 @@ update msg model =
                             ( model
                             , Maybe.withDefault Cmd.none <|
                                 Maybe.map
-                                    (\teacher_id ->
+                                    (\author_id ->
                                         doCreateMark
                                             model.token
                                             activityID
                                             studentID
-                                            teacher_id
+                                            author_id
                                             ( x, y )
                                             new_mark
                                     )
@@ -664,10 +664,18 @@ viewColumn : Column -> Html Msg
 viewColumn column =
     case column of
         Activity activity ->
-            div []
-                [ div [ style "font-weight" "bold" ] [ text <| posixToDDMMYYYY T.utc activity.date ]
-                , div [] [ text <| M.withDefault "" activity.keywords ]
-                ]
+            case activity.type_ of
+                Just ActivityTypeFIN ->
+                    div []
+                        [ div [ style "font-weight" "bold" ] [ text <| posixToDDMMYYYY T.utc activity.date ]
+                        , div [] [ text <| finalTypeToStr activity ]
+                        ]
+
+                _ ->
+                    div []
+                        [ div [ style "font-weight" "bold" ] [ text <| posixToDDMMYYYY T.utc activity.date ]
+                        , div [] [ text <| Maybe.withDefault "" activity.keywords ]
+                        ]
 
         Date posix ->
             text <| posixToDDMMYYYY T.utc posix
@@ -677,7 +685,7 @@ viewRow : Row -> Html Msg
 viewRow row =
     case row of
         User user ->
-            div [ style "margin" "0 1em" ] [ user_link Nothing user  ]
+            div [ style "margin" "0 1em" ] [ user_link Nothing user ]
 
         Course course ->
             a [ href <| "/course/" ++ get_id_str course ] [ text course.title ]
@@ -747,7 +755,15 @@ viewMarkSlot y x s markSlot =
             , id <| "slot-" ++ String.fromInt (x + s) ++ "-" ++ String.fromInt y
             , class "mark_slot"
             , tabindex 1
-            , on "keydown" <| JD.andThen (\k -> JD.succeed <| MsgMarkKeyPress markSlot (x + s) y <| keyCodeToMarkCmd k) <| JD.at [ "code" ] JD.string
+            , on "keydown" <|
+                JD.andThen
+                    (\k ->
+                        JD.succeed <|
+                            MsgMarkKeyPress markSlot (x + s) y <|
+                                keyCodeToMarkCmd k
+                    )
+                <|
+                    JD.at [ "code" ] JD.string
             ]
                 ++ [ autofocus is_first ]
     in
@@ -796,23 +812,62 @@ viewMarkSlot y x s markSlot =
 
 viewTableCell : Int -> Int -> SlotList -> Html Msg
 viewTableCell y x slot_list =
-    td []
-        [ div [ class "row center-xs" ] <| L.indexedMap (viewMarkSlot y x) slot_list
+    td
+        [ style "white-space" "nowrap"
+        ]
+        [ div
+            [ class "row center-xs"
+            , style "min-width" (String.fromInt (List.length slot_list * 50) ++ "px") -- TODO: change with something better
+            ]
+          <|
+            L.indexedMap (viewMarkSlot y x) slot_list
         ]
 
 
 viewTableHeader : List Column -> Html Msg
 viewTableHeader columns =
+    let
+        td_attrs col =
+            case col of
+                Activity act ->
+                    case act.type_ of
+                        Just ActivityTypeFIN ->
+                            [ style "background-color" "#FFEFE2FF" ]
+
+                        _ ->
+                            []
+
+                Date _ ->
+                    []
+    in
     thead []
         [ tr []
-            ((++) [ tr [] [] ] <| L.map (viewColumn >> L.singleton >> td [ style "text-align" "center" ]) columns)
+            ((++) [ tr [] [] ] <|
+                L.map
+                    (\col ->
+                        td
+                            ([ style "text-align" "center"
+                             , style "vertical-align" "top"
+                             , style "white-space" "nowrap"
+                             ]
+                                ++ td_attrs col
+                            )
+                            [ viewColumn col ]
+                    )
+                    columns
+            )
         ]
 
 
 viewTableRow : Int -> ( Row, ColList ) -> Html Msg
 viewTableRow y ( row, cols ) =
     tr []
-        ([ td [ style "vertical-align" "middle" ] [ viewRow row ] ]
+        ([ td
+            [ style "vertical-align" "middle"
+            , style "white-space" "nowrap"
+            ]
+            [ viewRow row ]
+         ]
             ++ (Tuple.second <|
                     L.foldl
                         (\col ( x, res ) -> ( x + L.length col, res ++ [ viewTableCell y x col ] ))
@@ -824,17 +879,12 @@ viewTableRow y ( row, cols ) =
 
 viewTable : List Row -> List Column -> RowList -> Html Msg
 viewTable rows columns cells =
-    let
-        scell c =
-            case c of
-                SlotVirtual _ _ _ ->
-                    "_"
-                SlotMark _ m ->
-                    m.value
-
-        _ = Debug.log (String.join "\n" <| L.map (\row -> String.join "  " <| L.map (scell >> String.padLeft 2 ' ') <| L.concat row) cells) ()
-    in
-    table [ class "ui collapsing celled striped table" ]
+    table
+        [ class "ui celled striped unstackable table"
+        , style "max-width" "100vw"
+        , style "display" "block"
+        , style "overflow-x" "scroll"
+        ]
         ((++) [ viewTableHeader columns ] <| L.indexedMap viewTableRow <| zip rows cells)
 
 
