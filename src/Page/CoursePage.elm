@@ -1,9 +1,17 @@
 module Page.CoursePage exposing (..)
 
 import Api exposing (ext_task, task, withToken)
-import Api.Data exposing (Activity, ActivityType(..), CourseDeep, CourseEnrollmentRead, CourseEnrollmentReadRole(..), UserDeep)
+import Api.Data
+    exposing
+        ( Activity
+        , ActivityType(..)
+        , CourseDeep
+        , CourseEnrollmentRead
+        , CourseEnrollmentReadRole(..)
+        , UserDeep
+        )
 import Api.Request.Course exposing (courseBulkSetActivities, courseGetDeep, courseRead)
-import Component.Activity as CA exposing (Msg(..), getOrder, setEditable, setOrder)
+import Component.Activity as CA exposing (Msg(..), getOrder, setOrder)
 import Component.MessageBox as MessageBox exposing (Type(..))
 import Component.Misc exposing (user_link)
 import Component.Modal as Modal
@@ -67,6 +75,7 @@ type alias Model =
     , user : UserDeep
     , show_members : Bool
     , edit_mode : EditMode
+    , save_error : Maybe String
     , is_staff : Bool
     , teaching_here : Bool
     , activity_component_pk : Int
@@ -97,6 +106,7 @@ init token course_id user =
       , user = user
       , show_members = False
       , edit_mode = EditOff
+      , save_error = Nothing
       , is_staff =
             not <|
                 Set.isEmpty <|
@@ -199,6 +209,28 @@ setModified mod model =
             { model | edit_mode = EditOn addMode mod }
 
 
+setEditMode : Bool -> Model -> Model
+setEditMode edt model =
+    let
+        new_state =
+            case model.state of
+                FetchDone courseDeep acts ->
+                    FetchDone courseDeep <| List.map (\( k, v ) -> ( k, CA.setEditable edt v )) acts
+
+                _ ->
+                    model.state
+    in
+    { model
+        | state = new_state
+        , edit_mode =
+            if edt then
+                EditOn AddNone False
+
+            else
+                EditOff
+    }
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
@@ -260,22 +292,12 @@ update msg model =
         ( MsgCloseMembers, _ ) ->
             ( { model | show_members = False }, Cmd.none )
 
-        ( MsgOnClickEdit, FetchDone c acts ) ->
-            let
-                em =
-                    case model.edit_mode of
-                        EditOff ->
-                            EditOn AddNone False
-
-                        EditOn m _ ->
-                            EditOff
-            in
-            ( { model
-                | edit_mode = em
-                , state =
-                    FetchDone c <|
-                        List.map (\( k, v ) -> ( k, CA.setEditable (em /= EditOff) v )) acts
-              }
+        ( MsgOnClickEdit, FetchDone _ _ ) ->
+            ( fixOrder <|
+                setEditMode True
+                    { model
+                        | edit_mode = EditOn AddNone False
+                    }
             , Cmd.none
             )
 
@@ -434,7 +456,7 @@ update msg model =
                 ( m, c ) =
                     parse_course course
             in
-            ( { m | edit_mode = EditOff }, c )
+            ( setEditMode False m, c )
 
         ( MsgOnClickSave, FetchDone course act_components ) ->
             let
@@ -478,8 +500,17 @@ update msg model =
                     )
             )
 
+        ( MsgCourseSaveError e, FetchDone course act_components ) ->
+            ( { model | save_error = Just e }, Cmd.none )
+
         ( MsgCourseSaved, FetchDone course act_components ) ->
-            ( { model | edit_mode = EditOff }, Cmd.none )
+            let
+                ( m, c ) =
+                    init model.token (Maybe.withDefault "" <| Maybe.map Uuid.toString course.id) model.user
+            in
+            ( setEditMode False m
+            , c
+            )
 
         -- TODO: update course?
         ( _, _ ) ->
@@ -592,6 +623,21 @@ viewCourse courseRead components_activity model =
                                 , onClick MsgOnClickSave
                                 ]
                                 [ i [ class "icon save outline" ] [], text "Сохранить" ]
+                            , Maybe.withDefault (text "") <|
+                                Maybe.map
+                                    (\err ->
+                                        div
+                                            [ class "ui popup error bottom center transition visible"
+                                            , style "position" "relative"
+                                            , style "display" "block"
+                                            ]
+                                            [ div [ class "header" ]
+                                                [ text "Ошибка при сохранении" ]
+                                            , div [ class "" ]
+                                                [ text err ]
+                                            ]
+                                    )
+                                    model.save_error
                             ]
             in
             div
@@ -649,13 +695,14 @@ viewCourse courseRead components_activity model =
                     , style "top" "0"
                     , style "z-index" "10"
                     ]
-                    [ button [ class "ui button green", onClick MsgOnClickAddGen ]
+                    [ span [] [ text "Добавить: " ]
+                    , button [ class "ui button green", onClick MsgOnClickAddGen ]
                         [ i [ class "plus icon" ] []
-                        , text "Добавить тему"
+                        , text "Тема"
                         ]
                     , button [ class "ui button green", onClick MsgOnClickAddFin ]
                         [ i [ class "plus icon" ] []
-                        , text "Добавить контроль"
+                        , text "Контроль"
                         ]
                     ]
 

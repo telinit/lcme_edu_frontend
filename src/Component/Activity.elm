@@ -247,7 +247,15 @@ update msg model =
                     in
                     case res of
                         Ok t ->
-                            ( { model | state = StateWithFinActivity { act | finalType = Just t } m }
+                            ( { model
+                                | state =
+                                    StateWithFinActivity
+                                        { act
+                                            | finalType = Just t
+                                            , title = finalTypeToStr {finalType = Just t}
+                                        }
+                                        m
+                              }
                             , Cmd.map MsgFinTypeSelect c
                             )
 
@@ -365,17 +373,7 @@ view_read model =
                                     String.fromInt
                                     activity.hours
                         ]
-                    , div [ class "col-xs-12 col-sm-4 start-xs center-sm" ]
-                        [ strong [ class "mr-10 activity-property-label" ]
-                            [ i [ class "chart bar outline icon", style "color" "rgb(102, 119, 153)" ] []
-                            , text "Лимит оценок:"
-                            ]
-                        , text <|
-                            Maybe.withDefault "Н/Д" <|
-                                Maybe.map
-                                    String.fromInt
-                                    activity.marksLimit
-                        ]
+                    , div [ class "col-xs-12 col-sm-4 start-xs center-sm" ] []
                     ]
                 ]
 

@@ -31,6 +31,7 @@ module Api.Data exposing
     , Department
     , Education
     , EducationSpecialization
+    , ErrorMessage
     , File
     , Login
     , Mark
@@ -77,6 +78,7 @@ module Api.Data exposing
     , encodeDepartment
     , encodeEducation
     , encodeEducationSpecialization
+    , encodeErrorMessage
     , encodeFile
     , encodeLogin
     , encodeMark
@@ -95,6 +97,7 @@ module Api.Data exposing
     , encodeUserDeepGroupsInner
     , encodeUserDeepUserPermissionsInner
     , encodeUserShallow
+    , errorMessageDecoder
     , fileDecoder
     , loginDecoder
     , markDecoder
@@ -356,6 +359,12 @@ type alias EducationSpecialization =
     , updatedAt : Maybe Posix
     , name : String
     , department : Uuid
+    }
+
+
+type alias ErrorMessage =
+    { code : Int
+    , message : String
     }
 
 
@@ -988,6 +997,27 @@ encodeEducationSpecializationPairs model =
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "name" Json.Encode.string model.name
             , encode "department" Uuid.encode model.department
+            ]
+    in
+    pairs
+
+
+encodeErrorMessage : ErrorMessage -> Json.Encode.Value
+encodeErrorMessage =
+    encodeObject << encodeErrorMessagePairs
+
+
+encodeErrorMessageWithTag : ( String, String ) -> ErrorMessage -> Json.Encode.Value
+encodeErrorMessageWithTag ( tagField, tag ) model =
+    encodeObject (encodeErrorMessagePairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeErrorMessagePairs : ErrorMessage -> List EncodedField
+encodeErrorMessagePairs model =
+    let
+        pairs =
+            [ encode "code" Json.Encode.int model.code
+            , encode "message" Json.Encode.string model.message
             ]
     in
     pairs
@@ -1778,6 +1808,13 @@ educationSpecializationDecoder =
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "name" Json.Decode.string
         |> decode "department" Uuid.decoder
+
+
+errorMessageDecoder : Json.Decode.Decoder ErrorMessage
+errorMessageDecoder =
+    Json.Decode.succeed ErrorMessage
+        |> decode "code" Json.Decode.int
+        |> decode "message" Json.Decode.string
 
 
 fileDecoder : Json.Decode.Decoder File
