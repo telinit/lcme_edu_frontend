@@ -8046,13 +8046,22 @@ var $author$project$Api$Request$Course$courseList = A7(
 	$elm$core$Maybe$Nothing,
 	$elm$json$Json$Decode$list($author$project$Api$Data$courseShallowDecoder));
 var $author$project$Api$Data$EducationSpecialization = F5(
-	function (id, createdAt, updatedAt, name, department) {
+	function (id, department, createdAt, updatedAt, name) {
 		return {createdAt: createdAt, department: department, id: id, name: name, updatedAt: updatedAt};
 	});
-var $author$project$Api$Data$educationSpecializationDecoder = A3(
-	$author$project$Api$Data$decode,
-	'department',
-	$danyx23$elm_uuid$Uuid$decoder,
+var $author$project$Api$Data$Department = F5(
+	function (id, organization, createdAt, updatedAt, name) {
+		return {createdAt: createdAt, id: id, name: name, organization: organization, updatedAt: updatedAt};
+	});
+var $author$project$Api$Data$Organization = F5(
+	function (id, createdAt, updatedAt, name, nameShort) {
+		return {createdAt: createdAt, id: id, name: name, nameShort: nameShort, updatedAt: updatedAt};
+	});
+var $author$project$Api$Data$organizationDecoder = A4(
+	$author$project$Api$Data$maybeDecodeNullable,
+	'name_short',
+	$elm$json$Json$Decode$string,
+	$elm$core$Maybe$Nothing,
 	A3(
 		$author$project$Api$Data$decode,
 		'name',
@@ -8067,6 +8076,54 @@ var $author$project$Api$Data$educationSpecializationDecoder = A3(
 				'created_at',
 				$author$project$Api$Time$dateTimeDecoder,
 				$elm$core$Maybe$Nothing,
+				A4(
+					$author$project$Api$Data$maybeDecode,
+					'id',
+					$danyx23$elm_uuid$Uuid$decoder,
+					$elm$core$Maybe$Nothing,
+					$elm$json$Json$Decode$succeed($author$project$Api$Data$Organization))))));
+var $author$project$Api$Data$departmentDecoder = A3(
+	$author$project$Api$Data$decode,
+	'name',
+	$elm$json$Json$Decode$string,
+	A4(
+		$author$project$Api$Data$maybeDecode,
+		'updated_at',
+		$author$project$Api$Time$dateTimeDecoder,
+		$elm$core$Maybe$Nothing,
+		A4(
+			$author$project$Api$Data$maybeDecode,
+			'created_at',
+			$author$project$Api$Time$dateTimeDecoder,
+			$elm$core$Maybe$Nothing,
+			A3(
+				$author$project$Api$Data$decode,
+				'organization',
+				$author$project$Api$Data$organizationDecoder,
+				A4(
+					$author$project$Api$Data$maybeDecode,
+					'id',
+					$danyx23$elm_uuid$Uuid$decoder,
+					$elm$core$Maybe$Nothing,
+					$elm$json$Json$Decode$succeed($author$project$Api$Data$Department))))));
+var $author$project$Api$Data$educationSpecializationDecoder = A3(
+	$author$project$Api$Data$decode,
+	'name',
+	$elm$json$Json$Decode$string,
+	A4(
+		$author$project$Api$Data$maybeDecode,
+		'updated_at',
+		$author$project$Api$Time$dateTimeDecoder,
+		$elm$core$Maybe$Nothing,
+		A4(
+			$author$project$Api$Data$maybeDecode,
+			'created_at',
+			$author$project$Api$Time$dateTimeDecoder,
+			$elm$core$Maybe$Nothing,
+			A3(
+				$author$project$Api$Data$decode,
+				'department',
+				$author$project$Api$Data$departmentDecoder,
 				A4(
 					$author$project$Api$Data$maybeDecode,
 					'id',
@@ -8783,10 +8840,8 @@ var $author$project$Api$Data$UserShallow = function (id) {
 															return function (birthDate) {
 																return function (avatar) {
 																	return function (groups) {
-																		return function (userPermissions) {
-																			return function (children) {
-																				return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, dateJoined: dateJoined, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, roles: roles, updatedAt: updatedAt, userPermissions: userPermissions, username: username};
-																			};
+																		return function (children) {
+																			return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, dateJoined: dateJoined, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, roles: roles, updatedAt: updatedAt, username: username};
 																		};
 																	};
 																};
@@ -8813,99 +8868,94 @@ var $author$project$Api$Data$userShallowDecoder = A4(
 	$elm$core$Maybe$Nothing,
 	A4(
 		$author$project$Api$Data$maybeDecode,
-		'user_permissions',
+		'groups',
 		$elm$json$Json$Decode$list($elm$json$Json$Decode$int),
 		$elm$core$Maybe$Nothing,
 		A4(
-			$author$project$Api$Data$maybeDecode,
-			'groups',
-			$elm$json$Json$Decode$list($elm$json$Json$Decode$int),
+			$author$project$Api$Data$maybeDecodeNullable,
+			'avatar',
+			$elm$json$Json$Decode$string,
 			$elm$core$Maybe$Nothing,
 			A4(
 				$author$project$Api$Data$maybeDecodeNullable,
-				'avatar',
-				$elm$json$Json$Decode$string,
+				'birth_date',
+				$author$project$Api$Time$dateDecoder,
 				$elm$core$Maybe$Nothing,
 				A4(
 					$author$project$Api$Data$maybeDecodeNullable,
-					'birth_date',
-					$author$project$Api$Time$dateDecoder,
+					'middle_name',
+					$elm$json$Json$Decode$string,
 					$elm$core$Maybe$Nothing,
 					A4(
-						$author$project$Api$Data$maybeDecodeNullable,
-						'middle_name',
-						$elm$json$Json$Decode$string,
+						$author$project$Api$Data$maybeDecode,
+						'updated_at',
+						$author$project$Api$Time$dateTimeDecoder,
 						$elm$core$Maybe$Nothing,
 						A4(
 							$author$project$Api$Data$maybeDecode,
-							'updated_at',
+							'created_at',
 							$author$project$Api$Time$dateTimeDecoder,
 							$elm$core$Maybe$Nothing,
 							A4(
 								$author$project$Api$Data$maybeDecode,
-								'created_at',
+								'date_joined',
 								$author$project$Api$Time$dateTimeDecoder,
 								$elm$core$Maybe$Nothing,
 								A4(
 									$author$project$Api$Data$maybeDecode,
-									'date_joined',
-									$author$project$Api$Time$dateTimeDecoder,
+									'is_active',
+									$elm$json$Json$Decode$bool,
 									$elm$core$Maybe$Nothing,
 									A4(
 										$author$project$Api$Data$maybeDecode,
-										'is_active',
+										'is_staff',
 										$elm$json$Json$Decode$bool,
 										$elm$core$Maybe$Nothing,
 										A4(
 											$author$project$Api$Data$maybeDecode,
-											'is_staff',
-											$elm$json$Json$Decode$bool,
+											'email',
+											$elm$json$Json$Decode$string,
 											$elm$core$Maybe$Nothing,
 											A4(
 												$author$project$Api$Data$maybeDecode,
-												'email',
+												'last_name',
 												$elm$json$Json$Decode$string,
 												$elm$core$Maybe$Nothing,
 												A4(
 													$author$project$Api$Data$maybeDecode,
-													'last_name',
+													'first_name',
 													$elm$json$Json$Decode$string,
 													$elm$core$Maybe$Nothing,
-													A4(
-														$author$project$Api$Data$maybeDecode,
-														'first_name',
+													A3(
+														$author$project$Api$Data$decode,
+														'username',
 														$elm$json$Json$Decode$string,
-														$elm$core$Maybe$Nothing,
-														A3(
-															$author$project$Api$Data$decode,
-															'username',
-															$elm$json$Json$Decode$string,
+														A4(
+															$author$project$Api$Data$maybeDecode,
+															'is_superuser',
+															$elm$json$Json$Decode$bool,
+															$elm$core$Maybe$Nothing,
 															A4(
-																$author$project$Api$Data$maybeDecode,
-																'is_superuser',
-																$elm$json$Json$Decode$bool,
+																$author$project$Api$Data$maybeDecodeNullable,
+																'last_login',
+																$author$project$Api$Time$dateTimeDecoder,
 																$elm$core$Maybe$Nothing,
 																A4(
-																	$author$project$Api$Data$maybeDecodeNullable,
-																	'last_login',
-																	$author$project$Api$Time$dateTimeDecoder,
+																	$author$project$Api$Data$maybeDecode,
+																	'current_class',
+																	$elm$json$Json$Decode$string,
 																	$elm$core$Maybe$Nothing,
 																	A4(
 																		$author$project$Api$Data$maybeDecode,
-																		'current_class',
-																		$elm$json$Json$Decode$string,
+																		'roles',
+																		$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
 																		$elm$core$Maybe$Nothing,
 																		A4(
 																			$author$project$Api$Data$maybeDecode,
-																			'roles',
-																			$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+																			'id',
+																			$danyx23$elm_uuid$Uuid$decoder,
 																			$elm$core$Maybe$Nothing,
-																			A4(
-																				$author$project$Api$Data$maybeDecode,
-																				'id',
-																				$danyx23$elm_uuid$Uuid$decoder,
-																				$elm$core$Maybe$Nothing,
-																				$elm$json$Json$Decode$succeed($author$project$Api$Data$UserShallow)))))))))))))))))))));
+																			$elm$json$Json$Decode$succeed($author$project$Api$Data$UserShallow))))))))))))))))))));
 var $author$project$Api$Data$courseEnrollmentReadDecoder = A3(
 	$author$project$Api$Data$decode,
 	'course',
@@ -9094,6 +9144,7 @@ var $author$project$Page$CoursePage$init = F3(
 						$elm$core$Set$fromList(
 							_List_fromArray(
 								['admin', 'staff'])))),
+				save_error: $elm$core$Maybe$Nothing,
 				show_members: false,
 				state: $author$project$Page$CoursePage$Fetching(m),
 				teaching_here: false,
@@ -9216,23 +9267,25 @@ var $author$project$Api$Data$UserDeep = function (id) {
 	return function (roles) {
 		return function (currentClass) {
 			return function (children) {
-				return function (lastLogin) {
-					return function (isSuperuser) {
-						return function (username) {
-							return function (firstName) {
-								return function (lastName) {
-									return function (email) {
-										return function (isStaff) {
-											return function (isActive) {
-												return function (dateJoined) {
-													return function (createdAt) {
-														return function (updatedAt) {
-															return function (middleName) {
-																return function (birthDate) {
-																	return function (avatar) {
-																		return function (groups) {
-																			return function (userPermissions) {
-																				return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, dateJoined: dateJoined, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, roles: roles, updatedAt: updatedAt, userPermissions: userPermissions, username: username};
+				return function (parents) {
+					return function (education) {
+						return function (lastLogin) {
+							return function (isSuperuser) {
+								return function (username) {
+									return function (firstName) {
+										return function (lastName) {
+											return function (email) {
+												return function (isStaff) {
+													return function (isActive) {
+														return function (dateJoined) {
+															return function (createdAt) {
+																return function (updatedAt) {
+																	return function (middleName) {
+																		return function (birthDate) {
+																			return function (avatar) {
+																				return function (groups) {
+																					return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, dateJoined: dateJoined, education: education, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, parents: parents, roles: roles, updatedAt: updatedAt, username: username};
+																				};
 																			};
 																		};
 																	};
@@ -9253,6 +9306,52 @@ var $author$project$Api$Data$UserDeep = function (id) {
 		};
 	};
 };
+var $author$project$Api$Data$EducationShallow = F9(
+	function (id, specialization, createdAt, updatedAt, started, finished, startingClass, finishingClass, student) {
+		return {createdAt: createdAt, finished: finished, finishingClass: finishingClass, id: id, specialization: specialization, started: started, startingClass: startingClass, student: student, updatedAt: updatedAt};
+	});
+var $author$project$Api$Data$educationShallowDecoder = A3(
+	$author$project$Api$Data$decode,
+	'student',
+	$danyx23$elm_uuid$Uuid$decoder,
+	A4(
+		$author$project$Api$Data$maybeDecodeNullable,
+		'finishing_class',
+		$elm$json$Json$Decode$string,
+		$elm$core$Maybe$Nothing,
+		A3(
+			$author$project$Api$Data$decode,
+			'starting_class',
+			$elm$json$Json$Decode$string,
+			A4(
+				$author$project$Api$Data$maybeDecodeNullable,
+				'finished',
+				$author$project$Api$Time$dateDecoder,
+				$elm$core$Maybe$Nothing,
+				A3(
+					$author$project$Api$Data$decode,
+					'started',
+					$author$project$Api$Time$dateDecoder,
+					A4(
+						$author$project$Api$Data$maybeDecode,
+						'updated_at',
+						$author$project$Api$Time$dateTimeDecoder,
+						$elm$core$Maybe$Nothing,
+						A4(
+							$author$project$Api$Data$maybeDecode,
+							'created_at',
+							$author$project$Api$Time$dateTimeDecoder,
+							$elm$core$Maybe$Nothing,
+							A3(
+								$author$project$Api$Data$decodeNullable,
+								'specialization',
+								$author$project$Api$Data$educationSpecializationDecoder,
+								A4(
+									$author$project$Api$Data$maybeDecode,
+									'id',
+									$danyx23$elm_uuid$Uuid$decoder,
+									$elm$core$Maybe$Nothing,
+									$elm$json$Json$Decode$succeed($author$project$Api$Data$EducationShallow))))))))));
 var $author$project$Api$Data$UserDeepGroupsInner = F3(
 	function (id, name, permissions) {
 		return {id: id, name: name, permissions: permissions};
@@ -9272,127 +9371,108 @@ var $author$project$Api$Data$userDeepGroupsInnerDecoder = A4(
 			$elm$json$Json$Decode$int,
 			$elm$core$Maybe$Nothing,
 			$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeepGroupsInner))));
-var $author$project$Api$Data$UserDeepUserPermissionsInner = F4(
-	function (id, name, codename, contentType) {
-		return {codename: codename, contentType: contentType, id: id, name: name};
-	});
-var $author$project$Api$Data$userDeepUserPermissionsInnerDecoder = A3(
-	$author$project$Api$Data$decode,
-	'content_type',
-	$elm$json$Json$Decode$int,
-	A3(
-		$author$project$Api$Data$decode,
-		'codename',
-		$elm$json$Json$Decode$string,
-		A3(
-			$author$project$Api$Data$decode,
-			'name',
-			$elm$json$Json$Decode$string,
-			A4(
-				$author$project$Api$Data$maybeDecode,
-				'id',
-				$elm$json$Json$Decode$int,
-				$elm$core$Maybe$Nothing,
-				$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeepUserPermissionsInner)))));
 var $author$project$Api$Data$userDeepDecoder = A4(
 	$author$project$Api$Data$maybeDecode,
-	'user_permissions',
-	$elm$json$Json$Decode$list($author$project$Api$Data$userDeepUserPermissionsInnerDecoder),
+	'groups',
+	$elm$json$Json$Decode$list($author$project$Api$Data$userDeepGroupsInnerDecoder),
 	$elm$core$Maybe$Nothing,
 	A4(
-		$author$project$Api$Data$maybeDecode,
-		'groups',
-		$elm$json$Json$Decode$list($author$project$Api$Data$userDeepGroupsInnerDecoder),
+		$author$project$Api$Data$maybeDecodeNullable,
+		'avatar',
+		$elm$json$Json$Decode$string,
 		$elm$core$Maybe$Nothing,
 		A4(
 			$author$project$Api$Data$maybeDecodeNullable,
-			'avatar',
-			$elm$json$Json$Decode$string,
+			'birth_date',
+			$author$project$Api$Time$dateDecoder,
 			$elm$core$Maybe$Nothing,
 			A4(
 				$author$project$Api$Data$maybeDecodeNullable,
-				'birth_date',
-				$author$project$Api$Time$dateDecoder,
+				'middle_name',
+				$elm$json$Json$Decode$string,
 				$elm$core$Maybe$Nothing,
 				A4(
-					$author$project$Api$Data$maybeDecodeNullable,
-					'middle_name',
-					$elm$json$Json$Decode$string,
+					$author$project$Api$Data$maybeDecode,
+					'updated_at',
+					$author$project$Api$Time$dateTimeDecoder,
 					$elm$core$Maybe$Nothing,
 					A4(
 						$author$project$Api$Data$maybeDecode,
-						'updated_at',
+						'created_at',
 						$author$project$Api$Time$dateTimeDecoder,
 						$elm$core$Maybe$Nothing,
 						A4(
 							$author$project$Api$Data$maybeDecode,
-							'created_at',
+							'date_joined',
 							$author$project$Api$Time$dateTimeDecoder,
 							$elm$core$Maybe$Nothing,
 							A4(
 								$author$project$Api$Data$maybeDecode,
-								'date_joined',
-								$author$project$Api$Time$dateTimeDecoder,
+								'is_active',
+								$elm$json$Json$Decode$bool,
 								$elm$core$Maybe$Nothing,
 								A4(
 									$author$project$Api$Data$maybeDecode,
-									'is_active',
+									'is_staff',
 									$elm$json$Json$Decode$bool,
 									$elm$core$Maybe$Nothing,
 									A4(
 										$author$project$Api$Data$maybeDecode,
-										'is_staff',
-										$elm$json$Json$Decode$bool,
+										'email',
+										$elm$json$Json$Decode$string,
 										$elm$core$Maybe$Nothing,
 										A4(
 											$author$project$Api$Data$maybeDecode,
-											'email',
+											'last_name',
 											$elm$json$Json$Decode$string,
 											$elm$core$Maybe$Nothing,
 											A4(
 												$author$project$Api$Data$maybeDecode,
-												'last_name',
+												'first_name',
 												$elm$json$Json$Decode$string,
 												$elm$core$Maybe$Nothing,
-												A4(
-													$author$project$Api$Data$maybeDecode,
-													'first_name',
+												A3(
+													$author$project$Api$Data$decode,
+													'username',
 													$elm$json$Json$Decode$string,
-													$elm$core$Maybe$Nothing,
-													A3(
-														$author$project$Api$Data$decode,
-														'username',
-														$elm$json$Json$Decode$string,
+													A4(
+														$author$project$Api$Data$maybeDecode,
+														'is_superuser',
+														$elm$json$Json$Decode$bool,
+														$elm$core$Maybe$Nothing,
 														A4(
-															$author$project$Api$Data$maybeDecode,
-															'is_superuser',
-															$elm$json$Json$Decode$bool,
+															$author$project$Api$Data$maybeDecodeNullable,
+															'last_login',
+															$author$project$Api$Time$dateTimeDecoder,
 															$elm$core$Maybe$Nothing,
-															A4(
-																$author$project$Api$Data$maybeDecodeNullable,
-																'last_login',
-																$author$project$Api$Time$dateTimeDecoder,
-																$elm$core$Maybe$Nothing,
+															A3(
+																$author$project$Api$Data$decode,
+																'education',
+																$elm$json$Json$Decode$list($author$project$Api$Data$educationShallowDecoder),
 																A3(
 																	$author$project$Api$Data$decode,
-																	'children',
+																	'parents',
 																	$elm$json$Json$Decode$list($author$project$Api$Data$userShallowDecoder),
-																	A4(
-																		$author$project$Api$Data$maybeDecode,
-																		'current_class',
-																		$elm$json$Json$Decode$string,
-																		$elm$core$Maybe$Nothing,
+																	A3(
+																		$author$project$Api$Data$decode,
+																		'children',
+																		$elm$json$Json$Decode$list($author$project$Api$Data$userShallowDecoder),
 																		A4(
 																			$author$project$Api$Data$maybeDecode,
-																			'roles',
-																			$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+																			'current_class',
+																			$elm$json$Json$Decode$string,
 																			$elm$core$Maybe$Nothing,
 																			A4(
 																				$author$project$Api$Data$maybeDecode,
-																				'id',
-																				$danyx23$elm_uuid$Uuid$decoder,
+																				'roles',
+																				$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
 																				$elm$core$Maybe$Nothing,
-																				$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeep)))))))))))))))))))));
+																				A4(
+																					$author$project$Api$Data$maybeDecode,
+																					'id',
+																					$danyx23$elm_uuid$Uuid$decoder,
+																					$elm$core$Maybe$Nothing,
+																					$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeep))))))))))))))))))))));
 var $author$project$Api$Request$User$userSelf = A7($author$project$Api$request, 'GET', '/user/self/', _List_Nil, _List_Nil, _List_Nil, $elm$core$Maybe$Nothing, $author$project$Api$Data$userDeepDecoder);
 var $author$project$Page$Login$doCheckSession = function (token) {
 	var task_user = A2(
@@ -9727,14 +9807,18 @@ var $author$project$Page$MarksStudent$init = F3(
 				$elm$core$Platform$Cmd$none);
 		}
 	});
-var $author$project$Page$UserProfile$Complete = function (a) {
-	return {$: 'Complete', a: a};
-};
-var $author$project$Page$UserProfile$Loading = function (a) {
-	return {$: 'Loading', a: a};
-};
 var $author$project$Page$UserProfile$MsgTask = function (a) {
 	return {$: 'MsgTask', a: a};
+};
+var $author$project$Page$UserProfile$SettingStateShow = function (a) {
+	return {$: 'SettingStateShow', a: a};
+};
+var $author$project$Page$UserProfile$SettingStateUnset = {$: 'SettingStateUnset'};
+var $author$project$Page$UserProfile$StateComplete = function (a) {
+	return {$: 'StateComplete', a: a};
+};
+var $author$project$Page$UserProfile$StateLoading = function (a) {
+	return {$: 'StateLoading', a: a};
 };
 var $author$project$Page$UserProfile$TaskResultUser = function (a) {
 	return {$: 'TaskResultUser', a: a};
@@ -9773,9 +9857,9 @@ var $author$project$Api$Request$User$userGetDeep = function (id_path) {
 		$author$project$Api$Data$userDeepDecoder);
 };
 var $author$project$Page$UserProfile$init = F3(
-	function (token, user, mb_profile_id) {
-		if (mb_profile_id.$ === 'Just') {
-			var uid = mb_profile_id.a;
+	function (token, current_user, profile_id) {
+		if (profile_id.$ === 'Just') {
+			var uid = profile_id.a;
 			var _v1 = $author$project$Component$MultiTask$init(
 				_List_fromArray(
 					[
@@ -9793,21 +9877,26 @@ var $author$project$Page$UserProfile$init = F3(
 			var c = _v1.b;
 			return _Utils_Tuple2(
 				{
-					changing_email: false,
-					changing_password: false,
-					for_uid: uid,
-					state: $author$project$Page$UserProfile$Loading(m),
-					token: token
+					current_user: current_user,
+					state: $author$project$Page$UserProfile$StateLoading(m),
+					state_email: $author$project$Page$UserProfile$SettingStateUnset,
+					state_password: $author$project$Page$UserProfile$SettingStateUnset,
+					token: token,
+					user_id: uid
 				},
 				A2($elm$core$Platform$Cmd$map, $author$project$Page$UserProfile$MsgTask, c));
 		} else {
 			return _Utils_Tuple2(
 				{
-					changing_email: false,
-					changing_password: false,
-					for_uid: $author$project$Util$get_id(user),
-					state: $author$project$Page$UserProfile$Complete(user),
-					token: token
+					current_user: current_user,
+					state: $author$project$Page$UserProfile$StateComplete(current_user),
+					state_email: A2(
+						$elm$core$Maybe$withDefault,
+						$author$project$Page$UserProfile$SettingStateUnset,
+						A2($elm$core$Maybe$map, $author$project$Page$UserProfile$SettingStateShow, current_user.email)),
+					state_password: $author$project$Page$UserProfile$SettingStateShow(''),
+					token: token,
+					user_id: $author$project$Util$get_id(current_user)
 				},
 				$elm$core$Platform$Cmd$none);
 		}
@@ -11247,6 +11336,37 @@ var $author$project$Component$Activity$setEditable = F2(
 			model,
 			{editable: editable});
 	});
+var $author$project$Page$CoursePage$setEditMode = F2(
+	function (edt, model) {
+		var new_state = function () {
+			var _v0 = model.state;
+			if (_v0.$ === 'FetchDone') {
+				var courseDeep = _v0.a;
+				var acts = _v0.b;
+				return A2(
+					$author$project$Page$CoursePage$FetchDone,
+					courseDeep,
+					A2(
+						$elm$core$List$map,
+						function (_v1) {
+							var k = _v1.a;
+							var v = _v1.b;
+							return _Utils_Tuple2(
+								k,
+								A2($author$project$Component$Activity$setEditable, edt, v));
+						},
+						acts));
+			} else {
+				return model.state;
+			}
+		}();
+		return _Utils_update(
+			model,
+			{
+				edit_mode: edt ? A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddNone, false) : $author$project$Page$CoursePage$EditOff,
+				state: new_state
+			});
+	});
 var $author$project$Page$CoursePage$setModified = F2(
 	function (mod, model) {
 		var _v0 = model.edit_mode;
@@ -11279,6 +11399,34 @@ var $elm$core$List$unzip = function (pairs) {
 		step,
 		_Utils_Tuple2(_List_Nil, _List_Nil),
 		pairs);
+};
+var $author$project$Util$finalTypeToStr = function (act) {
+	var _v0 = act.finalType;
+	if (_v0.$ === 'Just') {
+		var f = _v0.a;
+		switch (f.$) {
+			case 'ActivityFinalTypeQ1':
+				return '1 четверть';
+			case 'ActivityFinalTypeQ2':
+				return '2 четверть';
+			case 'ActivityFinalTypeQ3':
+				return '3 четверть';
+			case 'ActivityFinalTypeQ4':
+				return '4 четверть';
+			case 'ActivityFinalTypeH1':
+				return '1 полугодие';
+			case 'ActivityFinalTypeH2':
+				return '2 полугодие';
+			case 'ActivityFinalTypeY':
+				return 'Годовая оценка';
+			case 'ActivityFinalTypeE':
+				return 'Экзамен';
+			default:
+				return 'Итоговая оценка';
+		}
+	} else {
+		return '';
+	}
 };
 var $author$project$Util$isoDateToPosix = function (str) {
 	var _v0 = $rtfeldman$elm_iso8601_date_strings$Iso8601$toTime(str + 'T00:00:00.000Z');
@@ -11386,7 +11534,11 @@ var $author$project$Component$Activity$update = F2(
 												_Utils_update(
 													act,
 													{
-														finalType: $elm$core$Maybe$Just(t)
+														finalType: $elm$core$Maybe$Just(t),
+														title: $author$project$Util$finalTypeToStr(
+															{
+																finalType: $elm$core$Maybe$Just(t)
+															})
 													}),
 												m)
 										}),
@@ -11558,7 +11710,7 @@ var $author$project$Page$CoursePage$update = F2(
 						pairs_id_cmd)));
 		};
 		var _v0 = _Utils_Tuple2(msg, model.state);
-		_v0$12:
+		_v0$13:
 		while (true) {
 			switch (_v0.a.$) {
 				case 'MsgFetch':
@@ -11593,7 +11745,7 @@ var $author$project$Page$CoursePage$update = F2(
 								A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
 						}
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 				case 'MsgClickMembers':
 					var _v4 = _v0.a;
@@ -11613,52 +11765,29 @@ var $author$project$Page$CoursePage$update = F2(
 					if (_v0.b.$ === 'FetchDone') {
 						var _v6 = _v0.a;
 						var _v7 = _v0.b;
-						var c = _v7.a;
-						var acts = _v7.b;
-						var em = function () {
-							var _v9 = model.edit_mode;
-							if (_v9.$ === 'EditOff') {
-								return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddNone, false);
-							} else {
-								var m = _v9.a;
-								return $author$project$Page$CoursePage$EditOff;
-							}
-						}();
 						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									edit_mode: em,
-									state: A2(
-										$author$project$Page$CoursePage$FetchDone,
-										c,
-										A2(
-											$elm$core$List$map,
-											function (_v8) {
-												var k = _v8.a;
-												var v = _v8.b;
-												return _Utils_Tuple2(
-													k,
-													A2(
-														$author$project$Component$Activity$setEditable,
-														!_Utils_eq(em, $author$project$Page$CoursePage$EditOff),
-														v));
-											},
-											acts))
-								}),
+							$author$project$Page$CoursePage$fixOrder(
+								A2(
+									$author$project$Page$CoursePage$setEditMode,
+									true,
+									_Utils_update(
+										model,
+										{
+											edit_mode: A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddNone, false)
+										}))),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 				case 'MsgActivity':
 					if (_v0.b.$ === 'FetchDone') {
-						var _v10 = _v0.a;
-						var id = _v10.a;
-						var msg_ = _v10.b;
-						var _v11 = _v0.b;
-						var course = _v11.a;
-						var act_components = _v11.b;
-						var _v12 = $elm$core$List$head(
+						var _v8 = _v0.a;
+						var id = _v8.a;
+						var msg_ = _v8.b;
+						var _v9 = _v0.b;
+						var course = _v9.a;
+						var act_components = _v9.b;
+						var _v10 = $elm$core$List$head(
 							A2(
 								$elm$core$List$filter,
 								A2(
@@ -11666,13 +11795,13 @@ var $author$project$Page$CoursePage$update = F2(
 									$elm$core$Tuple$first,
 									$elm$core$Basics$eq(id)),
 								act_components));
-						if (_v12.$ === 'Just') {
-							var _v13 = _v12.a;
-							var component = _v13.b;
-							var _v14 = A2($author$project$Component$Activity$update, msg_, component);
-							var m = _v14.a;
-							var c = _v14.b;
-							var _v15 = function () {
+						if (_v10.$ === 'Just') {
+							var _v11 = _v10.a;
+							var component = _v11.b;
+							var _v12 = A2($author$project$Component$Activity$update, msg_, component);
+							var m = _v12.a;
+							var c = _v12.b;
+							var _v13 = function () {
 								switch (msg_.$) {
 									case 'MsgMoveUp':
 										return _Utils_Tuple2(
@@ -11744,8 +11873,8 @@ var $author$project$Page$CoursePage$update = F2(
 												c));
 								}
 							}();
-							var new_model = _v15.a;
-							var cmd = _v15.b;
+							var new_model = _v13.a;
+							var cmd = _v13.b;
 							return _Utils_Tuple2(
 								A2($author$project$Page$CoursePage$setModified, true, new_model),
 								cmd);
@@ -11753,14 +11882,14 @@ var $author$project$Page$CoursePage$update = F2(
 							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 				case 'MsgOnClickAddGen':
-					var _v17 = _v0.a;
+					var _v15 = _v0.a;
 					var new_mode = function () {
-						var _v18 = model.edit_mode;
-						if (_v18.$ === 'EditOn') {
-							var mod = _v18.b;
+						var _v16 = model.edit_mode;
+						if (_v16.$ === 'EditOn') {
+							var mod = _v16.b;
 							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddGen, mod);
 						} else {
 							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddGen, false);
@@ -11772,11 +11901,11 @@ var $author$project$Page$CoursePage$update = F2(
 							{edit_mode: new_mode}),
 						$elm$core$Platform$Cmd$none);
 				case 'MsgOnClickAddFin':
-					var _v19 = _v0.a;
+					var _v17 = _v0.a;
 					var new_mode = function () {
-						var _v20 = model.edit_mode;
-						if (_v20.$ === 'EditOn') {
-							var mod = _v20.b;
+						var _v18 = model.edit_mode;
+						if (_v18.$ === 'EditOn') {
+							var mod = _v18.b;
 							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddFin, mod);
 						} else {
 							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddFin, false);
@@ -11789,9 +11918,9 @@ var $author$project$Page$CoursePage$update = F2(
 						$elm$core$Platform$Cmd$none);
 				case 'MsgOnClickAddBefore':
 					if (_v0.a.b.$ === 'Nothing') {
-						var _v21 = _v0.a;
-						var i = _v21.a;
-						var _v22 = _v21.b;
+						var _v19 = _v0.a;
+						var i = _v19.a;
+						var _v20 = _v19.b;
 						return _Utils_Tuple2(
 							model,
 							A2(
@@ -11803,12 +11932,12 @@ var $author$project$Page$CoursePage$update = F2(
 								$elm$time$Time$now));
 					} else {
 						if (_v0.b.$ === 'FetchDone') {
-							var _v23 = _v0.a;
-							var i = _v23.a;
-							var t = _v23.b.a;
-							var _v24 = _v0.b;
-							var course = _v24.a;
-							var act_components = _v24.b;
+							var _v21 = _v0.a;
+							var i = _v21.a;
+							var t = _v21.b.a;
+							var _v22 = _v0.b;
+							var course = _v22.a;
+							var act_components = _v22.b;
 							var act_base = {
 								body: $elm$core$Maybe$Nothing,
 								course: $author$project$Util$get_id(course),
@@ -11833,13 +11962,13 @@ var $author$project$Page$CoursePage$update = F2(
 								updatedAt: $elm$core$Maybe$Nothing
 							};
 							var act = function () {
-								var _v27 = model.edit_mode;
-								_v27$2:
+								var _v25 = model.edit_mode;
+								_v25$2:
 								while (true) {
-									if (_v27.$ === 'EditOn') {
-										switch (_v27.a.$) {
+									if (_v25.$ === 'EditOn') {
+										switch (_v25.a.$) {
 											case 'AddGen':
-												var _v28 = _v27.a;
+												var _v26 = _v25.a;
 												return $elm$core$Maybe$Just(
 													_Utils_update(
 														act_base,
@@ -11847,7 +11976,7 @@ var $author$project$Page$CoursePage$update = F2(
 															type_: $elm$core$Maybe$Just($author$project$Api$Data$ActivityTypeGEN)
 														}));
 											case 'AddFin':
-												var _v29 = _v27.a;
+												var _v27 = _v25.a;
 												return $elm$core$Maybe$Just(
 													_Utils_update(
 														act_base,
@@ -11855,10 +11984,10 @@ var $author$project$Page$CoursePage$update = F2(
 															type_: $elm$core$Maybe$Just($author$project$Api$Data$ActivityTypeFIN)
 														}));
 											default:
-												break _v27$2;
+												break _v25$2;
 										}
 									} else {
-										break _v27$2;
+										break _v25$2;
 									}
 								}
 								return $elm$core$Maybe$Nothing;
@@ -11867,9 +11996,9 @@ var $author$project$Page$CoursePage$update = F2(
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 							} else {
 								var act_ = act.a;
-								var _v26 = A2($author$project$Component$Activity$init_from_activity, model.token, act_);
-								var m = _v26.a;
-								var c = _v26.b;
+								var _v24 = A2($author$project$Component$Activity$init_from_activity, model.token, act_);
+								var m = _v24.a;
+								var c = _v24.b;
 								return _Utils_Tuple2(
 									$author$project$Page$CoursePage$fixOrder(
 										A2(
@@ -11896,31 +12025,29 @@ var $author$project$Page$CoursePage$update = F2(
 										c));
 							}
 						} else {
-							break _v0$12;
+							break _v0$13;
 						}
 					}
 				case 'MsgOnClickEditCancel':
 					if (_v0.b.$ === 'FetchDone') {
-						var _v30 = _v0.a;
-						var _v31 = _v0.b;
-						var course = _v31.a;
-						var _v32 = parse_course(course);
-						var m = _v32.a;
-						var c = _v32.b;
+						var _v28 = _v0.a;
+						var _v29 = _v0.b;
+						var course = _v29.a;
+						var _v30 = parse_course(course);
+						var m = _v30.a;
+						var c = _v30.b;
 						return _Utils_Tuple2(
-							_Utils_update(
-								m,
-								{edit_mode: $author$project$Page$CoursePage$EditOff}),
+							A2($author$project$Page$CoursePage$setEditMode, false, m),
 							c);
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 				case 'MsgOnClickSave':
 					if (_v0.b.$ === 'FetchDone') {
-						var _v33 = _v0.a;
-						var _v34 = _v0.b;
-						var course = _v34.a;
-						var act_components = _v34.b;
+						var _v31 = _v0.a;
+						var _v32 = _v0.b;
+						var course = _v32.a;
+						var act_components = _v32.b;
 						var create = A2(
 							$elm$core$List$filterMap,
 							A2(
@@ -11938,12 +12065,12 @@ var $author$project$Page$CoursePage$update = F2(
 											$elm$core$Basics$eq($elm$core$Maybe$Nothing))))),
 							act_components);
 						var ac_to_tuple = function (c) {
-							var _v36 = $author$project$Component$Activity$getActivity(c);
-							if (_v36.$ === 'Just') {
-								var act = _v36.a;
-								var _v37 = act.id;
-								if (_v37.$ === 'Just') {
-									var id = _v37.a;
+							var _v34 = $author$project$Component$Activity$getActivity(c);
+							if (_v34.$ === 'Just') {
+								var act = _v34.a;
+								var _v35 = act.id;
+								if (_v35.$ === 'Just') {
+									var id = _v35.a;
 									return $elm$core$Maybe$Just(
 										_Utils_Tuple2(
 											$danyx23$elm_uuid$Uuid$toString(id),
@@ -11965,7 +12092,7 @@ var $author$project$Page$CoursePage$update = F2(
 							A3(
 								$author$project$Util$task_to_cmd,
 								A2($elm$core$Basics$composeR, $author$project$Util$httpErrorToString, $author$project$Page$CoursePage$MsgCourseSaveError),
-								function (_v35) {
+								function (_v33) {
 									return $author$project$Page$CoursePage$MsgCourseSaved;
 								},
 								A4(
@@ -11981,24 +12108,46 @@ var $author$project$Page$CoursePage$update = F2(
 											A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, course.id)),
 										{create: create, update: update_}))));
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
-				case 'MsgCourseSaved':
+				case 'MsgCourseSaveError':
 					if (_v0.b.$ === 'FetchDone') {
-						var _v38 = _v0.a;
-						var _v39 = _v0.b;
-						var course = _v39.a;
-						var act_components = _v39.b;
+						var e = _v0.a.a;
+						var _v36 = _v0.b;
+						var course = _v36.a;
+						var act_components = _v36.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
-								{edit_mode: $author$project$Page$CoursePage$EditOff}),
+								{
+									save_error: $elm$core$Maybe$Just(e)
+								}),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 				default:
-					break _v0$12;
+					if (_v0.b.$ === 'FetchDone') {
+						var _v37 = _v0.a;
+						var _v38 = _v0.b;
+						var course = _v38.a;
+						var act_components = _v38.b;
+						var _v39 = A3(
+							$author$project$Page$CoursePage$init,
+							model.token,
+							A2(
+								$elm$core$Maybe$withDefault,
+								'',
+								A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, course.id)),
+							model.user);
+						var m = _v39.a;
+						var c = _v39.b;
+						return _Utils_Tuple2(
+							A2($author$project$Page$CoursePage$setEditMode, false, m),
+							c);
+					} else {
+						break _v0$13;
+					}
 			}
 		}
 		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -13382,26 +13531,137 @@ var $author$project$Page$MarksStudent$update = F2(
 			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
+var $author$project$Page$UserProfile$SettingStateChangeDone = {$: 'SettingStateChangeDone'};
+var $author$project$Page$UserProfile$SettingStateChangeError = function (a) {
+	return {$: 'SettingStateChangeError', a: a};
+};
+var $author$project$Page$UserProfile$SettingStateChangePrompt = function (a) {
+	return {$: 'SettingStateChangePrompt', a: a};
+};
+var $author$project$Page$UserProfile$SettingStateChanging = function (a) {
+	return {$: 'SettingStateChanging', a: a};
+};
+var $author$project$Page$UserProfile$MsgChangeEmailDone = function (a) {
+	return {$: 'MsgChangeEmailDone', a: a};
+};
+var $author$project$Api$Data$encodeSetEmailPairs = function (model) {
+	var pairs = _List_fromArray(
+		[
+			A3($author$project$Api$Data$encode, 'email', $elm$json$Json$Encode$string, model.email)
+		]);
+	return pairs;
+};
+var $author$project$Api$Data$encodeSetEmail = A2($elm$core$Basics$composeL, $author$project$Api$Data$encodeObject, $author$project$Api$Data$encodeSetEmailPairs);
+var $author$project$Api$Request$User$userSetEmail = F2(
+	function (id_path, data_body) {
+		return A7(
+			$author$project$Api$request,
+			'POST',
+			'/user/{id}/set_email/',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'id',
+					$elm$core$Basics$identity(id_path))
+				]),
+			_List_Nil,
+			_List_Nil,
+			$elm$core$Maybe$Just(
+				$author$project$Api$Data$encodeSetEmail(data_body)),
+			$elm$json$Json$Decode$succeed(_Utils_Tuple0));
+	});
+var $author$project$Page$UserProfile$doChangeEmail = F3(
+	function (token, user_id, email) {
+		return A2(
+			$elm$core$Task$attempt,
+			$author$project$Page$UserProfile$MsgChangeEmailDone,
+			A2(
+				$elm$core$Task$mapError,
+				$author$project$Util$httpErrorToString,
+				A4(
+					$author$project$Api$ext_task,
+					$elm$core$Basics$identity,
+					token,
+					_List_Nil,
+					A2(
+						$author$project$Api$Request$User$userSetEmail,
+						user_id,
+						{email: email}))));
+	});
+var $author$project$Page$UserProfile$MsgChangePasswordDone = function (a) {
+	return {$: 'MsgChangePasswordDone', a: a};
+};
+var $author$project$Api$Data$encodeSetPasswordPairs = function (model) {
+	var pairs = _List_fromArray(
+		[
+			A3($author$project$Api$Data$encode, 'password', $elm$json$Json$Encode$string, model.password)
+		]);
+	return pairs;
+};
+var $author$project$Api$Data$encodeSetPassword = A2($elm$core$Basics$composeL, $author$project$Api$Data$encodeObject, $author$project$Api$Data$encodeSetPasswordPairs);
+var $author$project$Api$Request$User$userSetPassword = F2(
+	function (id_path, data_body) {
+		return A7(
+			$author$project$Api$request,
+			'POST',
+			'/user/{id}/set_password/',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'id',
+					$elm$core$Basics$identity(id_path))
+				]),
+			_List_Nil,
+			_List_Nil,
+			$elm$core$Maybe$Just(
+				$author$project$Api$Data$encodeSetPassword(data_body)),
+			$elm$json$Json$Decode$succeed(_Utils_Tuple0));
+	});
+var $author$project$Page$UserProfile$doChangePassword = F3(
+	function (token, user_id, password) {
+		return A2(
+			$elm$core$Task$attempt,
+			$author$project$Page$UserProfile$MsgChangePasswordDone,
+			A2(
+				$elm$core$Task$mapError,
+				$author$project$Util$httpErrorToString,
+				A4(
+					$author$project$Api$ext_task,
+					$elm$core$Basics$identity,
+					token,
+					_List_Nil,
+					A2(
+						$author$project$Api$Request$User$userSetPassword,
+						user_id,
+						{password: password}))));
+	});
 var $author$project$Page$UserProfile$update = F2(
 	function (msg, model) {
-		var _v0 = _Utils_Tuple2(msg, model.state);
-		_v0$3:
+		var _v0 = A2(
+			$elm$core$Debug$log,
+			'update',
+			_Utils_Tuple2(msg, model.state));
+		var _v1 = _Utils_Tuple2(msg, model.state);
+		_v1$7:
 		while (true) {
-			if (_v0.b.$ === 'Loading') {
-				if (_v0.a.$ === 'MsgTask') {
-					var msg_ = _v0.a.a;
-					var model_ = _v0.b.a;
-					var _v1 = A2($author$project$Component$MultiTask$update, msg_, model_);
-					var m = _v1.a;
-					var c = _v1.b;
+			if (_v1.b.$ === 'StateLoading') {
+				if (_v1.a.$ === 'MsgTask') {
+					var msg_ = _v1.a.a;
+					var model_ = _v1.b.a;
+					var _v2 = A2($author$project$Component$MultiTask$update, msg_, model_);
+					var m = _v2.a;
+					var c = _v2.b;
 					if ((((msg_.$ === 'TaskFinishedAll') && msg_.a.b) && (msg_.a.a.$ === 'Ok')) && (!msg_.a.b.b)) {
-						var _v3 = msg_.a;
-						var user = _v3.a.a.a;
+						var _v4 = msg_.a;
+						var user = _v4.a.a.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
 								{
-									state: $author$project$Page$UserProfile$Complete(user)
+									state: $author$project$Page$UserProfile$StateComplete(user),
+									state_email: $author$project$Page$UserProfile$SettingStateShow(
+										A2($elm$core$Maybe$withDefault, '', user.email)),
+									state_password: $author$project$Page$UserProfile$SettingStateShow('')
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Page$UserProfile$MsgTask, c));
 					} else {
@@ -13409,33 +13669,145 @@ var $author$project$Page$UserProfile$update = F2(
 							_Utils_update(
 								model,
 								{
-									state: $author$project$Page$UserProfile$Loading(m)
+									state: $author$project$Page$UserProfile$StateLoading(m)
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Page$UserProfile$MsgTask, c));
 					}
 				} else {
-					break _v0$3;
+					break _v1$7;
 				}
 			} else {
-				switch (_v0.a.$) {
+				switch (_v1.a.$) {
 					case 'MsgChangeEmail':
-						var _v4 = _v0.a;
-						var model_ = _v0.b.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{changing_email: true}),
-							$elm$core$Platform$Cmd$none);
+						var _v5 = _v1.a;
+						var user = _v1.b.a;
+						var _v6 = model.state_email;
+						switch (_v6.$) {
+							case 'SettingStateShow':
+								var old = _v6.a;
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											state_email: $author$project$Page$UserProfile$SettingStateChangePrompt(old)
+										}),
+									$elm$core$Platform$Cmd$none);
+							case 'SettingStateChangePrompt':
+								var old = _v6.a;
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											state_email: $author$project$Page$UserProfile$SettingStateChanging(old)
+										}),
+									A3(
+										$author$project$Page$UserProfile$doChangeEmail,
+										model.token,
+										$danyx23$elm_uuid$Uuid$toString(model.user_id),
+										old));
+							default:
+								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						}
 					case 'MsgChangePassword':
-						var _v5 = _v0.a;
-						var model_ = _v0.b.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{changing_password: true}),
-							$elm$core$Platform$Cmd$none);
+						var _v7 = _v1.a;
+						var user = _v1.b.a;
+						var _v8 = model.state_password;
+						switch (_v8.$) {
+							case 'SettingStateShow':
+								var old = _v8.a;
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											state_password: $author$project$Page$UserProfile$SettingStateChangePrompt(old)
+										}),
+									$elm$core$Platform$Cmd$none);
+							case 'SettingStateChangePrompt':
+								var old = _v8.a;
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											state_password: $author$project$Page$UserProfile$SettingStateChanging(old)
+										}),
+									A3(
+										$author$project$Page$UserProfile$doChangePassword,
+										model.token,
+										$danyx23$elm_uuid$Uuid$toString(model.user_id),
+										old));
+							default:
+								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						}
+					case 'MsgNewEmailValue':
+						var val = _v1.a.a;
+						var user = _v1.b.a;
+						var _v9 = model.state_email;
+						if (_v9.$ === 'SettingStateChangePrompt') {
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										state_email: $author$project$Page$UserProfile$SettingStateChangePrompt(val)
+									}),
+								$elm$core$Platform$Cmd$none);
+						} else {
+							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						}
+					case 'MsgNewPasswordValue':
+						var val = _v1.a.a;
+						var user = _v1.b.a;
+						var _v10 = model.state_password;
+						if (_v10.$ === 'SettingStateChangePrompt') {
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										state_password: $author$project$Page$UserProfile$SettingStateChangePrompt(val)
+									}),
+								$elm$core$Platform$Cmd$none);
+						} else {
+							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						}
+					case 'MsgChangeEmailDone':
+						var res = _v1.a.a;
+						var user = _v1.b.a;
+						if (res.$ === 'Ok') {
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{state_email: $author$project$Page$UserProfile$SettingStateChangeDone}),
+								$elm$core$Platform$Cmd$none);
+						} else {
+							var e = res.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										state_email: $author$project$Page$UserProfile$SettingStateChangeError(e)
+									}),
+								$elm$core$Platform$Cmd$none);
+						}
+					case 'MsgChangePasswordDone':
+						var res = _v1.a.a;
+						var user = _v1.b.a;
+						if (res.$ === 'Ok') {
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{state_password: $author$project$Page$UserProfile$SettingStateChangeDone}),
+								$elm$core$Platform$Cmd$none);
+						} else {
+							var e = res.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										state_password: $author$project$Page$UserProfile$SettingStateChangeError(e)
+									}),
+								$elm$core$Platform$Cmd$none);
+						}
 					default:
-						break _v0$3;
+						break _v1$7;
 				}
 			}
 		}
@@ -14949,34 +15321,6 @@ var $author$project$Component$Misc$user_link = F2(
 						]))
 				]));
 	});
-var $author$project$Util$finalTypeToStr = function (act) {
-	var _v0 = act.finalType;
-	if (_v0.$ === 'Just') {
-		var f = _v0.a;
-		switch (f.$) {
-			case 'ActivityFinalTypeQ1':
-				return '1 четверть';
-			case 'ActivityFinalTypeQ2':
-				return '2 четверть';
-			case 'ActivityFinalTypeQ3':
-				return '3 четверть';
-			case 'ActivityFinalTypeQ4':
-				return '4 четверть';
-			case 'ActivityFinalTypeH1':
-				return '1 полугодие';
-			case 'ActivityFinalTypeH2':
-				return '2 полугодие';
-			case 'ActivityFinalTypeY':
-				return 'Годовая оценка';
-			case 'ActivityFinalTypeE':
-				return 'Экзамен';
-			default:
-				return 'Итоговая оценка';
-		}
-	} else {
-		return '';
-	}
-};
 var $author$project$Util$monthToInt = function (month) {
 	switch (month.$) {
 		case 'Jan':
@@ -15201,32 +15545,7 @@ var $author$project$Component$Activity$view_read = function (model) {
 									[
 										$elm$html$Html$Attributes$class('col-xs-12 col-sm-4 start-xs center-sm')
 									]),
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$strong,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('mr-10 activity-property-label')
-											]),
-										_List_fromArray(
-											[
-												A2(
-												$elm$html$Html$i,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$class('chart bar outline icon'),
-														A2($elm$html$Html$Attributes$style, 'color', 'rgb(102, 119, 153)')
-													]),
-												_List_Nil),
-												$elm$html$Html$text('Лимит оценок:')
-											])),
-										$elm$html$Html$text(
-										A2(
-											$elm$core$Maybe$withDefault,
-											'Н/Д',
-											A2($elm$core$Maybe$map, $elm$core$String$fromInt, activity.marksLimit)))
-									]))
+								_List_Nil)
 							]))
 					]));
 		case 'StateWithFinActivity':
@@ -16806,7 +17125,46 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 												]),
 											_List_Nil),
 											$elm$html$Html$text('Сохранить')
-										]))
+										])),
+									A2(
+									$elm$core$Maybe$withDefault,
+									$elm$html$Html$text(''),
+									A2(
+										$elm$core$Maybe$map,
+										function (err) {
+											return A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('ui popup error bottom center transition visible'),
+														A2($elm$html$Html$Attributes$style, 'position', 'relative'),
+														A2($elm$html$Html$Attributes$style, 'display', 'block')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$div,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('header')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('Ошибка при сохранении')
+															])),
+														A2(
+														$elm$html$Html$div,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text(err)
+															]))
+													]));
+										},
+										model.save_error))
 								]);
 						}
 					}
@@ -17013,6 +17371,13 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 			_List_fromArray(
 				[
 					A2(
+					$elm$html$Html$span,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Добавить: ')
+						])),
+					A2(
 					$elm$html$Html$button,
 					_List_fromArray(
 						[
@@ -17028,7 +17393,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 									$elm$html$Html$Attributes$class('plus icon')
 								]),
 							_List_Nil),
-							$elm$html$Html$text('Добавить тему')
+							$elm$html$Html$text('Тема')
 						])),
 					A2(
 					$elm$html$Html$button,
@@ -17046,7 +17411,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 									$elm$html$Html$Attributes$class('plus icon')
 								]),
 							_List_Nil),
-							$elm$html$Html$text('Добавить контроль')
+							$elm$html$Html$text('Контроль')
 						]))
 				])) : $elm$html$Html$text('');
 		var activities_title = A2(
@@ -18596,13 +18961,6 @@ var $author$project$Util$user_deep_to_shallow = function (userDeep) {
 		middleName: userDeep.middleName,
 		roles: userDeep.roles,
 		updatedAt: userDeep.updatedAt,
-		userPermissions: A2(
-			$elm$core$Maybe$map,
-			$elm$core$List$filterMap(
-				function ($) {
-					return $.id;
-				}),
-			userDeep.userPermissions),
 		username: userDeep.username
 	};
 };
@@ -18735,109 +19093,713 @@ var $author$project$Page$NotFound$view = A2(
 						]))
 				]))
 		]));
-var $author$project$Page$UserProfile$MsgChangeEmail = {$: 'MsgChangeEmail'};
-var $author$project$Page$UserProfile$MsgChangePassword = {$: 'MsgChangePassword'};
-var $elm$core$List$singleton = function (value) {
-	return _List_fromArray(
-		[value]);
+var $elm$html$Html$Attributes$height = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'height',
+		$elm$core$String$fromInt(n));
 };
 var $elm$html$Html$tbody = _VirtualDom_node('tbody');
-var $author$project$Page$UserProfile$viewEducation = function (model) {
-	return $elm$html$Html$text('Edu');
+var $author$project$Util$posixToFullDate = F2(
+	function (zone, posix) {
+		var yyyy = A3(
+			$elm$core$String$padLeft,
+			4,
+			_Utils_chr('0'),
+			$elm$core$String$fromInt(
+				A2($elm$time$Time$toYear, zone, posix)));
+		var mm = function () {
+			var _v0 = $author$project$Util$monthToInt(
+				A2($elm$time$Time$toMonth, zone, posix));
+			switch (_v0) {
+				case 1:
+					return 'января';
+				case 2:
+					return 'февраля';
+				case 3:
+					return 'марта';
+				case 4:
+					return 'апреля';
+				case 5:
+					return 'мая';
+				case 6:
+					return 'июня';
+				case 7:
+					return 'июля';
+				case 8:
+					return 'августа';
+				case 9:
+					return 'сентября';
+				case 10:
+					return 'октября';
+				case 11:
+					return 'ноября';
+				case 12:
+					return 'декабря';
+				default:
+					return '';
+			}
+		}();
+		var dd = $elm$core$String$fromInt(
+			A2($elm$time$Time$toDay, zone, posix));
+		return dd + (' ' + (mm + (' ' + yyyy)));
+	});
+var $author$project$Page$UserProfile$viewEducation = function (edu) {
+	var start = A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'font-size', '8pt'),
+						A2($elm$html$Html$Attributes$style, 'color', '#555')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Начало:')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('ml-10'),
+						A2($elm$html$Html$Attributes$style, 'font-size', '14pt')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						A2($author$project$Util$posixToFullDate, $elm$time$Time$utc, edu.started))
+					]))
+			]));
+	var finish = A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'font-size', '8pt'),
+						A2($elm$html$Html$Attributes$style, 'color', '#555')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Конец:')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('ml-10'),
+						A2($elm$html$Html$Attributes$style, 'font-size', '14pt')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						A2(
+							$elm$core$Maybe$withDefault,
+							'По настоящее время',
+							A2(
+								$elm$core$Maybe$map,
+								$author$project$Util$posixToFullDate($elm$time$Time$utc),
+								edu.finished)))
+					]))
+			]));
+	var dep = function () {
+		var view_spec = F4(
+			function (s, i_, c, o) {
+				return A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'color', c),
+							A2($elm$html$Html$Attributes$style, 'font-size', 'large'),
+							A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap'),
+							$elm$html$Html$Attributes$class('row center-xs')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class(''),
+									A2($elm$html$Html$Attributes$style, 'font-size', 'xx-large')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$i,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class(i_ + ' icon'),
+											A2($elm$html$Html$Attributes$style, 'position', 'relative'),
+											A2($elm$html$Html$Attributes$style, 'top', '0px')
+										]),
+									_List_Nil)
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class(' start-xs')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(s)
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('ml-10'),
+											A2($elm$html$Html$Attributes$style, 'color', 'initial')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text(o)
+										]))
+								]))
+						]));
+			});
+		var _v0 = edu.specialization;
+		if (_v0.$ === 'Just') {
+			var spec = _v0.a;
+			var _v1 = _Utils_Tuple3(spec.name, spec.department.name, spec.department.organization.nameShort);
+			_v1$5:
+			while (true) {
+				if (_v1.c.$ === 'Just') {
+					if (_v1.c.a === 'ЛНМО') {
+						switch (_v1.a) {
+							case 'Математическое':
+								return A4(view_spec, 'Математическое направление', 'qrcode', '#2185d0', 'ЛНМО');
+							case 'Биологическое':
+								return A4(view_spec, 'Биологическое направление', 'leaf', '#21ba45', 'ЛНМО');
+							case 'Инженерное':
+								return A4(view_spec, 'Инженерное направление', 'cogs', '#db2828', 'ЛНМО');
+							case 'Гуманитарное':
+								return A4(view_spec, 'Гуманитарное направление', 'users', '#fbbd08', 'ЛНМО');
+							case 'Академическое':
+								return A4(view_spec, 'Академическое направление', 'book', '#00b5ad', 'ЛНМО');
+							default:
+								break _v1$5;
+						}
+					} else {
+						break _v1$5;
+					}
+				} else {
+					var s = _v1.a;
+					var _v2 = _v1.c;
+					return A4(view_spec, s, 'question', 'black', 'Неизвестная организация');
+				}
+			}
+			var s = _v1.a;
+			var o = _v1.c.a;
+			return A4(view_spec, s, 'question', 'black', o);
+		} else {
+			return A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$i,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('question icon')
+							]),
+						_List_Nil),
+						$elm$html$Html$text('Направление неизвестно')
+					]));
+		}
+	}();
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('row middle-xs center-xs between-md start-md ui segment')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('col-xs-12 col-md middle-xs mt-10')
+					]),
+				_List_fromArray(
+					[dep])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('col-xs-12 col-md mt-10 mb-10 ml-100')
+					]),
+				_List_fromArray(
+					[start])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('col-xs-12 col-md')
+					]),
+				_List_fromArray(
+					[finish]))
+			]));
+};
+var $author$project$Page$UserProfile$MsgChangeEmail = {$: 'MsgChangeEmail'};
+var $author$project$Page$UserProfile$MsgNewEmailValue = function (a) {
+	return {$: 'MsgNewEmailValue', a: a};
+};
+var $author$project$Page$UserProfile$viewEmailRow = function (model) {
+	var v = function () {
+		var _v0 = _Utils_Tuple2(model.state_email, model.state);
+		if (_v0.b.$ === 'StateComplete') {
+			switch (_v0.a.$) {
+				case 'SettingStateUnset':
+					var _v1 = _v0.a;
+					var user = _v0.b.a;
+					return _List_Nil;
+				case 'SettingStateShow':
+					var s = _v0.a.a;
+					var user = _v0.b.a;
+					return _List_fromArray(
+						[
+							$elm$html$Html$text(s),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('col-xs-12 p-0')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$author$project$Util$link_span,
+									_List_fromArray(
+										[
+											$elm$html$Html$Events$onClick($author$project$Page$UserProfile$MsgChangeEmail)
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$i,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('edit outline icon'),
+													A2($elm$html$Html$Attributes$style, 'color', 'rgb(65, 131, 196)')
+												]),
+											_List_Nil),
+											$elm$html$Html$text('Изменить')
+										]))
+								]))
+						]);
+				case 'SettingStateChangePrompt':
+					var s = _v0.a.a;
+					var user = _v0.b.a;
+					return _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('ui input mr-10')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$input,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$placeholder('Новый адрес'),
+											$elm$html$Html$Attributes$type_('text'),
+											$elm$html$Html$Attributes$value(s),
+											$elm$html$Html$Events$onInput($author$project$Page$UserProfile$MsgNewEmailValue)
+										]),
+									_List_Nil)
+								])),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('ui button'),
+									$elm$html$Html$Events$onClick($author$project$Page$UserProfile$MsgChangeEmail)
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$i,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('check icon'),
+											A2($elm$html$Html$Attributes$style, 'color', 'green')
+										]),
+									_List_Nil),
+									$elm$html$Html$text('Применить')
+								]))
+						]);
+				case 'SettingStateChanging':
+					var s = _v0.a.a;
+					var user = _v0.b.a;
+					return _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('ui disabled input mr-10')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$input,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$placeholder('Новый адрес'),
+											$elm$html$Html$Attributes$type_('text'),
+											$elm$html$Html$Attributes$value(s)
+										]),
+									_List_Nil)
+								])),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('ui disabled button'),
+									$elm$html$Html$Events$onClick($author$project$Page$UserProfile$MsgChangeEmail)
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('ui active inline loader small')
+										]),
+									_List_Nil),
+									A2(
+									$elm$html$Html$span,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('pl-10')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Применить')
+										]))
+								]))
+						]);
+				case 'SettingStateChangeError':
+					var err = _v0.a.a;
+					var user = _v0.b.a;
+					return _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$h3,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$i,
+									_List_fromArray(
+										[
+											A2($elm$html$Html$Attributes$style, 'color', 'rgb(219, 40, 40)'),
+											$elm$html$Html$Attributes$class('check icon')
+										]),
+									_List_Nil),
+									$elm$html$Html$text('Ошибка: ' + err)
+								]))
+						]);
+				default:
+					var _v2 = _v0.a;
+					var user = _v0.b.a;
+					return _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$h3,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$i,
+									_List_fromArray(
+										[
+											A2($elm$html$Html$Attributes$style, 'color', 'rgb(33, 186, 69)'),
+											$elm$html$Html$Attributes$class('check icon')
+										]),
+									_List_Nil),
+									$elm$html$Html$text('Email изменен.')
+								]))
+						]);
+			}
+		} else {
+			return _List_Nil;
+		}
+	}();
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('ml-15 row between-xs'),
+				A2($elm$html$Html$Attributes$style, 'text-align', 'left')
+			]),
+		v);
+};
+var $author$project$Page$UserProfile$MsgChangePassword = {$: 'MsgChangePassword'};
+var $author$project$Page$UserProfile$MsgNewPasswordValue = function (a) {
+	return {$: 'MsgNewPasswordValue', a: a};
+};
+var $author$project$Page$UserProfile$viewPassword = function (model) {
+	var v = function () {
+		var _v0 = _Utils_Tuple2(model.state_password, model.state);
+		if (_v0.b.$ === 'StateComplete') {
+			switch (_v0.a.$) {
+				case 'SettingStateUnset':
+					var _v1 = _v0.a;
+					var user = _v0.b.a;
+					return _List_Nil;
+				case 'SettingStateShow':
+					var s = _v0.a.a;
+					var user = _v0.b.a;
+					return _List_fromArray(
+						[
+							$elm$html$Html$text(s),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('col-xs-12 p-0')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$author$project$Util$link_span,
+									_List_fromArray(
+										[
+											$elm$html$Html$Events$onClick($author$project$Page$UserProfile$MsgChangePassword)
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$i,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('edit outline icon'),
+													A2($elm$html$Html$Attributes$style, 'color', 'rgb(65, 131, 196)')
+												]),
+											_List_Nil),
+											$elm$html$Html$text('Изменить')
+										]))
+								]))
+						]);
+				case 'SettingStateChangePrompt':
+					var s = _v0.a.a;
+					var user = _v0.b.a;
+					return _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('ui input mr-10')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$input,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$placeholder('Новый пароль'),
+											$elm$html$Html$Attributes$type_('password'),
+											$elm$html$Html$Attributes$value(s),
+											$elm$html$Html$Events$onInput($author$project$Page$UserProfile$MsgNewPasswordValue)
+										]),
+									_List_Nil)
+								])),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('ui button'),
+									$elm$html$Html$Events$onClick($author$project$Page$UserProfile$MsgChangePassword)
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$i,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('check icon'),
+											A2($elm$html$Html$Attributes$style, 'color', 'green')
+										]),
+									_List_Nil),
+									$elm$html$Html$text('Применить')
+								]))
+						]);
+				case 'SettingStateChanging':
+					var s = _v0.a.a;
+					var user = _v0.b.a;
+					return _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('ui disabled input mr-10')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$input,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$placeholder('Новый пароль'),
+											$elm$html$Html$Attributes$type_('password'),
+											$elm$html$Html$Attributes$value(s)
+										]),
+									_List_Nil)
+								])),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('ui disabled button'),
+									$elm$html$Html$Events$onClick($author$project$Page$UserProfile$MsgChangePassword)
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('ui active inline loader small')
+										]),
+									_List_Nil),
+									A2(
+									$elm$html$Html$span,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('pl-10')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Применить')
+										]))
+								]))
+						]);
+				case 'SettingStateChangeError':
+					var err = _v0.a.a;
+					var user = _v0.b.a;
+					return _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$h3,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$i,
+									_List_fromArray(
+										[
+											A2($elm$html$Html$Attributes$style, 'color', 'rgb(219, 40, 40)'),
+											$elm$html$Html$Attributes$class('check icon')
+										]),
+									_List_Nil),
+									$elm$html$Html$text('Ошибка: ' + err)
+								]))
+						]);
+				default:
+					var _v2 = _v0.a;
+					var user = _v0.b.a;
+					return _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$h3,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$i,
+									_List_fromArray(
+										[
+											A2($elm$html$Html$Attributes$style, 'color', 'rgb(33, 186, 69)'),
+											$elm$html$Html$Attributes$class('check icon')
+										]),
+									_List_Nil),
+									$elm$html$Html$text('Пароль изменен.')
+								]))
+						]);
+			}
+		} else {
+			return _List_Nil;
+		}
+	}();
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('ml-15 row between-xs'),
+				A2($elm$html$Html$Attributes$style, 'text-align', 'left')
+			]),
+		v);
 };
 var $author$project$Page$UserProfile$viewRole = function (role) {
-	switch (role) {
-		case 'admin':
-			return A2(
-				$elm$html$Html$span,
+	var _v0 = function () {
+		switch (role) {
+			case 'admin':
+				return _Utils_Tuple3('#C00', 'superpowers', 'Администратор');
+			case 'staff':
+				return _Utils_Tuple3('#EC7F00FF', 'user', 'Сотрудник ЛНМО');
+			case 'teacher':
+				return _Utils_Tuple3('#5569EEFF', 'user', 'Преподаватель');
+			case 'student':
+				return _Utils_Tuple3('', 'user', 'Учащийся');
+			case 'parent':
+				return _Utils_Tuple3('', 'user', 'Родитель');
+			default:
+				return _Utils_Tuple3('', '', '');
+		}
+	}();
+	var color = _v0.a;
+	var icon = _v0.b;
+	var label = _v0.c;
+	return A2(
+		$elm$html$Html$span,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('mr-10'),
+				A2($elm$html$Html$Attributes$style, 'color', color)
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$i,
 				_List_fromArray(
 					[
-						A2($elm$html$Html$Attributes$style, 'color', '#C00')
+						$elm$html$Html$Attributes$class('icon ' + (icon + ' mr-10'))
 					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$i,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('icon superpowers mr-10')
-							]),
-						_List_Nil),
-						$elm$html$Html$text('Администратор')
-					]));
-		case 'staff':
-			return A2(
-				$elm$html$Html$span,
-				_List_fromArray(
-					[
-						A2($elm$html$Html$Attributes$style, 'color', '#EC7F00FF')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$i,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('icon user mr-10')
-							]),
-						_List_Nil),
-						$elm$html$Html$text('Сотрудник ЛНМО')
-					]));
-		case 'teacher':
-			return A2(
-				$elm$html$Html$span,
-				_List_fromArray(
-					[
-						A2($elm$html$Html$Attributes$style, 'color', '#5569EEFF')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$i,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('icon user mr-10')
-							]),
-						_List_Nil),
-						$elm$html$Html$text('Преподаватель')
-					]));
-		case 'student':
-			return A2(
-				$elm$html$Html$span,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$i,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('icon user mr-10')
-							]),
-						_List_Nil),
-						$elm$html$Html$text('Учащийся')
-					]));
-		case 'parent':
-			return A2(
-				$elm$html$Html$span,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$i,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('icon user mr-10')
-							]),
-						_List_Nil),
-						$elm$html$Html$text('Родитель')
-					]));
-		default:
-			return $elm$html$Html$text('');
-	}
+				_List_Nil),
+				$elm$html$Html$text(label)
+			]));
+};
+var $elm$html$Html$Attributes$width = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'width',
+		$elm$core$String$fromInt(n));
 };
 var $author$project$Page$UserProfile$view = function (model) {
 	var _v0 = model.state;
-	if (_v0.$ === 'Loading') {
+	if (_v0.$ === 'StateLoading') {
 		var model_ = _v0.a;
 		return A2(
 			$elm$html$Html$div,
@@ -18860,189 +19822,63 @@ var $author$project$Page$UserProfile$view = function (model) {
 				]));
 	} else {
 		var user = _v0.a;
-		var show_email = A2(
-			$author$project$Util$user_has_any_role,
-			user,
-			_List_fromArray(
-				['staff', 'admin'])) || _Utils_eq(
-			model.for_uid,
-			$author$project$Util$get_id(user));
-		var show_password = show_email;
 		var roles = A2(
 			$elm$core$Maybe$withDefault,
-			$elm$html$Html$text('(нет)'),
+			$elm$html$Html$text(''),
 			A2(
 				$elm$core$Maybe$map,
 				A2(
 					$elm$core$Basics$composeR,
-					$elm$core$List$map(
-						A2(
-							$elm$core$Basics$composeR,
-							$author$project$Page$UserProfile$viewRole,
-							A2(
-								$elm$core$Basics$composeR,
-								$elm$core$List$singleton,
-								$elm$html$Html$div(
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('row'),
-											A2($elm$html$Html$Attributes$style, 'width', '100%')
-										]))))),
+					$elm$core$List$map($author$project$Page$UserProfile$viewRole),
 					$elm$html$Html$div(_List_Nil)),
 				user.roles));
-		var password_row = A2(
-			$elm$html$Html$div,
+		var is_staff_or_own_page = A2(
+			$author$project$Util$user_has_any_role,
+			model.current_user,
 			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('ml-15 row middle-xs between-xs'),
-					A2($elm$html$Html$Attributes$style, 'text-align', 'left')
-				]),
-			_List_fromArray(
-				[
-					model.changing_password ? A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('ui input mr-10')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$placeholder('Новый пароль'),
-									$elm$html$Html$Attributes$type_('text')
-								]),
-							_List_Nil)
-						])) : A2(
-					$elm$html$Html$span,
-					_List_fromArray(
-						[
-							A2($elm$html$Html$Attributes$style, 'font-size', '16pt')
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text('*****')
-						])),
-					A2(
-					$elm$html$Html$button,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('ui button'),
-							$elm$html$Html$Events$onClick($author$project$Page$UserProfile$MsgChangePassword)
-						]),
-					model.changing_password ? _List_fromArray(
-						[
-							A2(
-							$elm$html$Html$i,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('check icon'),
-									A2($elm$html$Html$Attributes$style, 'color', 'green')
-								]),
-							_List_Nil),
-							$elm$html$Html$text('Применить')
-						]) : _List_fromArray(
-						[
-							A2(
-							$elm$html$Html$i,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('edit outline icon'),
-									A2($elm$html$Html$Attributes$style, 'color', 'rgb(65, 131, 196)')
-								]),
-							_List_Nil),
-							$elm$html$Html$text('Изменить')
-						]))
-				]));
+				['staff', 'admin'])) || _Utils_eq(model.current_user.id, user.id);
+		var show_children = is_staff_or_own_page || A2(
+			$elm$core$List$any,
+			$elm$core$Basics$eq(model.current_user.id),
+			A2(
+				$elm$core$List$map,
+				function ($) {
+					return $.id;
+				},
+				user.parents));
+		var show_email = is_staff_or_own_page;
+		var show_parents = is_staff_or_own_page || A2(
+			$elm$core$List$any,
+			$elm$core$Basics$eq(model.current_user.id),
+			A2(
+				$elm$core$List$map,
+				function ($) {
+					return $.id;
+				},
+				user.children));
+		var show_password = is_staff_or_own_page;
 		var fio = $author$project$Util$user_full_name(
 			$author$project$Util$user_deep_to_shallow(user));
-		var email_row = A2(
+		var education = A2(
+			$elm$core$List$map,
+			$author$project$Page$UserProfile$viewEducation,
+			A2(
+				$elm$core$List$sortBy,
+				A2(
+					$elm$core$Basics$composeR,
+					function ($) {
+						return $.started;
+					},
+					$elm$time$Time$posixToMillis),
+				user.education));
+		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('ml-15 row between-xs'),
-					A2($elm$html$Html$Attributes$style, 'text-align', 'left')
+					$elm$html$Html$Attributes$class('ml-10 mr-10')
 				]),
 			_List_fromArray(
 				[
-					model.changing_email ? A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('ui input mr-10')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$input,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$placeholder('Новый адрес'),
-									$elm$html$Html$Attributes$type_('text')
-								]),
-							_List_Nil)
-						])) : A2(
-					$elm$html$Html$span,
-					_List_Nil,
-					_List_fromArray(
-						[
-							$elm$html$Html$text(
-							A2($elm$core$Maybe$withDefault, '', user.email))
-						])),
-					A2(
-					$elm$html$Html$button,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('ui button'),
-							$elm$html$Html$Events$onClick($author$project$Page$UserProfile$MsgChangeEmail)
-						]),
-					model.changing_email ? _List_fromArray(
-						[
-							A2(
-							$elm$html$Html$i,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('check icon'),
-									A2($elm$html$Html$Attributes$style, 'color', 'green')
-								]),
-							_List_Nil),
-							$elm$html$Html$text('Применить')
-						]) : _List_fromArray(
-						[
-							A2(
-							$elm$html$Html$i,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('edit outline icon'),
-									A2($elm$html$Html$Attributes$style, 'color', 'rgb(65, 131, 196)')
-								]),
-							_List_Nil),
-							$elm$html$Html$text('Изменить')
-						]))
-				]));
-		return A2(
-			$elm$html$Html$div,
-			_List_Nil,
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('row center-xs m-10')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$h1,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Профиль пользователя')
-								]))
-						])),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -19055,8 +19891,7 @@ var $author$project$Page$UserProfile$view = function (model) {
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('col-12-xs col-3-sm m-10'),
-									A2($elm$html$Html$Attributes$style, 'min-height', '200px')
+									$elm$html$Html$Attributes$class('col m-10')
 								]),
 							_List_fromArray(
 								[
@@ -19065,7 +19900,9 @@ var $author$project$Page$UserProfile$view = function (model) {
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$src(
-											A2($elm$core$Maybe$withDefault, '/img/user.png', user.avatar))
+											A2($elm$core$Maybe$withDefault, '/img/user.png', user.avatar)),
+											$elm$html$Html$Attributes$width(300),
+											$elm$html$Html$Attributes$height(300)
 										]),
 									_List_Nil)
 								])),
@@ -19073,20 +19910,31 @@ var $author$project$Page$UserProfile$view = function (model) {
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('col-12-xs col-9-sm m-10')
+									$elm$html$Html$Attributes$class('col-xs-12 col-md-8 m-10')
 								]),
 							_List_fromArray(
 								[
 									A2(
-									$elm$html$Html$h3,
+									$elm$html$Html$h1,
 									_List_Nil,
 									_List_fromArray(
 										[
-											$elm$html$Html$text('Личная информация')
+											$elm$html$Html$text(fio)
 										])),
 									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('ml-20 mb-30')
+										]),
+									_List_fromArray(
+										[roles])),
+									A2(
 									$elm$html$Html$table,
-									_List_Nil,
+									_List_fromArray(
+										[
+											A2($elm$html$Html$Attributes$style, 'font-size', '12pt')
+										]),
 									_List_fromArray(
 										[
 											A2(
@@ -19095,44 +19943,52 @@ var $author$project$Page$UserProfile$view = function (model) {
 											_List_fromArray(
 												[
 													A2(
-													$elm$html$Html$tr,
-													_List_Nil,
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$td,
-															_List_fromArray(
-																[
-																	A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
-																	A2($elm$html$Html$Attributes$style, 'min-width', '80px'),
-																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
-																]),
-															_List_fromArray(
-																[
-																	$elm$html$Html$text('ФИО:')
-																])),
-															A2(
-															$elm$html$Html$td,
-															_List_fromArray(
-																[
-																	A2($elm$html$Html$Attributes$style, 'min-width', '400px'),
-																	A2($elm$html$Html$Attributes$style, 'text-align', 'left')
-																]),
-															_List_fromArray(
-																[
-																	A2(
-																	$elm$html$Html$span,
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$Attributes$class('ml-15')
-																		]),
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$text(fio)
-																		]))
-																]))
-														])),
+													$elm$core$Maybe$withDefault,
+													$elm$html$Html$text(''),
 													A2(
+														$elm$core$Maybe$map,
+														function (cls) {
+															return A2(
+																$elm$html$Html$tr,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		A2(
+																		$elm$html$Html$td,
+																		_List_fromArray(
+																			[
+																				A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
+																				A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
+																				A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
+																				$elm$html$Html$Attributes$class('pb-20')
+																			]),
+																		_List_fromArray(
+																			[
+																				$elm$html$Html$text('Класс:')
+																			])),
+																		A2(
+																		$elm$html$Html$td,
+																		_List_fromArray(
+																			[
+																				A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
+																			]),
+																		_List_fromArray(
+																			[
+																				A2(
+																				$elm$html$Html$span,
+																				_List_fromArray(
+																					[
+																						$elm$html$Html$Attributes$class('ml-10')
+																					]),
+																				_List_fromArray(
+																					[
+																						$elm$html$Html$text(cls)
+																					]))
+																			]))
+																	]));
+														},
+														user.currentClass)),
+													show_parents ? A2(
 													$elm$html$Html$tr,
 													_List_Nil,
 													_List_fromArray(
@@ -19143,29 +19999,43 @@ var $author$project$Page$UserProfile$view = function (model) {
 																[
 																	A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
 																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
-																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
+																	$elm$html$Html$Attributes$class('pb-20')
 																]),
 															_List_fromArray(
 																[
-																	$elm$html$Html$text('Роли:')
+																	$elm$html$Html$text('Родители:')
 																])),
 															A2(
 															$elm$html$Html$td,
-															_List_Nil,
+															_List_fromArray(
+																[
+																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
+																]),
 															_List_fromArray(
 																[
 																	A2(
 																	$elm$html$Html$div,
 																	_List_fromArray(
 																		[
-																			$elm$html$Html$Attributes$class('ml-20'),
-																			A2($elm$html$Html$Attributes$style, 'text-align', 'left')
+																			$elm$html$Html$Attributes$class('ml-15')
 																		]),
-																	_List_fromArray(
-																		[roles]))
+																	_Utils_eq(user.parents, _List_Nil) ? _List_fromArray(
+																		[
+																			A2(
+																			$elm$html$Html$span,
+																			_List_Nil,
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$text('(нет)')
+																				]))
+																		]) : A2(
+																		$elm$core$List$map,
+																		$author$project$Component$Misc$user_link($elm$core$Maybe$Nothing),
+																		user.parents))
 																]))
-														])),
-													show_email ? A2(
+														])) : $elm$html$Html$text(''),
+													show_children ? A2(
 													$elm$html$Html$tr,
 													_List_Nil,
 													_List_fromArray(
@@ -19175,8 +20045,59 @@ var $author$project$Page$UserProfile$view = function (model) {
 															_List_fromArray(
 																[
 																	A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
-																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'middle'),
-																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
+																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
+																	$elm$html$Html$Attributes$class('pb-20')
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text('Дети:')
+																])),
+															A2(
+															$elm$html$Html$td,
+															_List_fromArray(
+																[
+																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
+																]),
+															_List_fromArray(
+																[
+																	A2(
+																	$elm$html$Html$div,
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$Attributes$class('ml-15')
+																		]),
+																	_Utils_eq(user.children, _List_Nil) ? _List_fromArray(
+																		[
+																			A2(
+																			$elm$html$Html$span,
+																			_List_Nil,
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$text('(нет)')
+																				]))
+																		]) : A2(
+																		$elm$core$List$map,
+																		$author$project$Component$Misc$user_link($elm$core$Maybe$Nothing),
+																		user.children))
+																]))
+														])) : $elm$html$Html$text(''),
+													show_email ? A2(
+													$elm$html$Html$tr,
+													_List_fromArray(
+														[
+															A2($elm$html$Html$Attributes$style, 'min-height', '45px')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$td,
+															_List_fromArray(
+																[
+																	A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
+																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
+																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
+																	$elm$html$Html$Attributes$class('pb-20')
 																]),
 															_List_fromArray(
 																[
@@ -19184,13 +20105,21 @@ var $author$project$Page$UserProfile$view = function (model) {
 																])),
 															A2(
 															$elm$html$Html$td,
-															_List_Nil,
 															_List_fromArray(
-																[email_row]))
+																[
+																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
+																]),
+															_List_fromArray(
+																[
+																	$author$project$Page$UserProfile$viewEmailRow(model)
+																]))
 														])) : $elm$html$Html$text(''),
 													show_password ? A2(
 													$elm$html$Html$tr,
-													_List_Nil,
+													_List_fromArray(
+														[
+															A2($elm$html$Html$Attributes$style, 'min-height', '45px')
+														]),
 													_List_fromArray(
 														[
 															A2(
@@ -19198,8 +20127,9 @@ var $author$project$Page$UserProfile$view = function (model) {
 															_List_fromArray(
 																[
 																	A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
-																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'middle'),
-																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
+																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
+																	$elm$html$Html$Attributes$class('pb-20')
 																]),
 															_List_fromArray(
 																[
@@ -19207,9 +20137,14 @@ var $author$project$Page$UserProfile$view = function (model) {
 																])),
 															A2(
 															$elm$html$Html$td,
-															_List_Nil,
 															_List_fromArray(
-																[password_row]))
+																[
+																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
+																]),
+															_List_fromArray(
+																[
+																	$author$project$Page$UserProfile$viewPassword(model)
+																]))
 														])) : $elm$html$Html$text('')
 												]))
 										]))
@@ -19225,7 +20160,10 @@ var $author$project$Page$UserProfile$view = function (model) {
 						[
 							A2(
 							$elm$html$Html$div,
-							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('col-xs-12')
+								]),
 							_List_fromArray(
 								[
 									A2(
@@ -19235,13 +20173,16 @@ var $author$project$Page$UserProfile$view = function (model) {
 										[
 											$elm$html$Html$text('Образование')
 										])),
-									A2(
-									$elm$html$Html$div,
-									_List_Nil,
+									_Utils_eq(user.education, _List_Nil) ? A2(
+									$elm$html$Html$span,
 									_List_fromArray(
 										[
-											$author$project$Page$UserProfile$viewEducation(model)
-										]))
+											$elm$html$Html$Attributes$class('ml-20')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('(Нет данных)')
+										])) : A2($elm$html$Html$div, _List_Nil, education)
 								]))
 						]))
 				]));

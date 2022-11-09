@@ -227,6 +227,58 @@ posixToDDMMYYYY zone posix =
     dd ++ "." ++ mm ++ "." ++ yyyy
 
 
+posixToFullDate zone posix =
+    let
+        dd =
+            String.fromInt <| Time.toDay zone posix
+
+        mm =
+            case monthToInt <| Time.toMonth zone posix of
+                1 ->
+                    "января"
+
+                2 ->
+                    "февраля"
+
+                3 ->
+                    "марта"
+
+                4 ->
+                    "апреля"
+
+                5 ->
+                    "мая"
+
+                6 ->
+                    "июня"
+
+                7 ->
+                    "июля"
+
+                8 ->
+                    "августа"
+
+                9 ->
+                    "сентября"
+
+                10 ->
+                    "октября"
+
+                11 ->
+                    "ноября"
+
+                12 ->
+                    "декабря"
+
+                _ ->
+                    ""
+
+        yyyy =
+            String.padLeft 4 '0' <| String.fromInt <| Time.toYear zone posix
+    in
+    dd ++ " " ++ mm ++ " " ++ yyyy
+
+
 posixToISODate : Time.Posix -> Maybe String
 posixToISODate =
     List.head << String.split "T" << fromTime
@@ -292,7 +344,6 @@ user_deep_to_shallow userDeep =
     , birthDate = userDeep.birthDate
     , avatar = userDeep.avatar
     , groups = Maybe.map (List.filterMap .id) userDeep.groups
-    , userPermissions = Maybe.map (List.filterMap .id) userDeep.userPermissions
     , children = Just <| List.filterMap .id userDeep.children
     , currentClass = userDeep.currentClass
     }

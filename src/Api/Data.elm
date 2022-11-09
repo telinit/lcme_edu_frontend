@@ -29,7 +29,7 @@ module Api.Data exposing
     , CourseShallow
     , CourseShallowType(..)
     , Department
-    , Education
+    , EducationShallow
     , EducationSpecialization
     , ErrorMessage
     , File
@@ -49,7 +49,6 @@ module Api.Data exposing
     , UnreadObjectType(..)
     , UserDeep
     , UserDeepGroupsInner
-    , UserDeepUserPermissionsInner
     , UserShallow
     , activityDecoder
     , activityFinalTypeDecoder
@@ -66,7 +65,7 @@ module Api.Data exposing
     , courseShallowDecoder
     , courseShallowTypeVariants
     , departmentDecoder
-    , educationDecoder
+    , educationShallowDecoder
     , educationSpecializationDecoder
     , encodeActivity
     , encodeBulkSetActivities
@@ -76,7 +75,7 @@ module Api.Data exposing
     , encodeCourseEnrollmentWrite
     , encodeCourseShallow
     , encodeDepartment
-    , encodeEducation
+    , encodeEducationShallow
     , encodeEducationSpecialization
     , encodeErrorMessage
     , encodeFile
@@ -95,7 +94,6 @@ module Api.Data exposing
     , encodeUnreadObject
     , encodeUserDeep
     , encodeUserDeepGroupsInner
-    , encodeUserDeepUserPermissionsInner
     , encodeUserShallow
     , errorMessageDecoder
     , fileDecoder
@@ -116,7 +114,6 @@ module Api.Data exposing
     , unreadObjectTypeVariants
     , userDeepDecoder
     , userDeepGroupsInnerDecoder
-    , userDeepUserPermissionsInnerDecoder
     , userShallowDecoder
     )
 
@@ -333,15 +330,16 @@ courseShallowTypeVariants =
 
 type alias Department =
     { id : Maybe Uuid
+    , organization : Organization
     , createdAt : Maybe Posix
     , updatedAt : Maybe Posix
     , name : String
-    , organization : Uuid
     }
 
 
-type alias Education =
+type alias EducationShallow =
     { id : Maybe Uuid
+    , specialization : Maybe EducationSpecialization
     , createdAt : Maybe Posix
     , updatedAt : Maybe Posix
     , started : Posix
@@ -349,16 +347,15 @@ type alias Education =
     , startingClass : String
     , finishingClass : Maybe String
     , student : Uuid
-    , specialization : Uuid
     }
 
 
 type alias EducationSpecialization =
     { id : Maybe Uuid
+    , department : Department
     , createdAt : Maybe Posix
     , updatedAt : Maybe Posix
     , name : String
-    , department : Uuid
     }
 
 
@@ -525,6 +522,8 @@ type alias UserDeep =
     , roles : Maybe (List String)
     , currentClass : Maybe String
     , children : List UserShallow
+    , parents : List UserShallow
+    , education : List EducationShallow
     , lastLogin : Maybe Posix
     , isSuperuser : Maybe Bool
     , username : String
@@ -540,7 +539,6 @@ type alias UserDeep =
     , birthDate : Maybe Posix
     , avatar : Maybe String
     , groups : Maybe (List UserDeepGroupsInner)
-    , userPermissions : Maybe (List UserDeepUserPermissionsInner)
     }
 
 
@@ -548,14 +546,6 @@ type alias UserDeepGroupsInner =
     { id : Maybe Int
     , name : String
     , permissions : Maybe (List Int)
-    }
-
-
-type alias UserDeepUserPermissionsInner =
-    { id : Maybe Int
-    , name : String
-    , codename : String
-    , contentType : Int
     }
 
 
@@ -578,7 +568,6 @@ type alias UserShallow =
     , birthDate : Maybe Posix
     , avatar : Maybe String
     , groups : Maybe (List Int)
-    , userPermissions : Maybe (List Int)
     , children : Maybe (List Uuid)
     }
 
@@ -941,30 +930,31 @@ encodeDepartmentPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , encode "organization" encodeOrganization model.organization
             , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "name" Json.Encode.string model.name
-            , encode "organization" Uuid.encode model.organization
             ]
     in
     pairs
 
 
-encodeEducation : Education -> Json.Encode.Value
-encodeEducation =
-    encodeObject << encodeEducationPairs
+encodeEducationShallow : EducationShallow -> Json.Encode.Value
+encodeEducationShallow =
+    encodeObject << encodeEducationShallowPairs
 
 
-encodeEducationWithTag : ( String, String ) -> Education -> Json.Encode.Value
-encodeEducationWithTag ( tagField, tag ) model =
-    encodeObject (encodeEducationPairs model ++ [ encode tagField Json.Encode.string tag ])
+encodeEducationShallowWithTag : ( String, String ) -> EducationShallow -> Json.Encode.Value
+encodeEducationShallowWithTag ( tagField, tag ) model =
+    encodeObject (encodeEducationShallowPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
-encodeEducationPairs : Education -> List EncodedField
-encodeEducationPairs model =
+encodeEducationShallowPairs : EducationShallow -> List EncodedField
+encodeEducationShallowPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , encodeNullable "specialization" encodeEducationSpecialization model.specialization
             , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "started" Api.Time.encodeDate model.started
@@ -972,7 +962,6 @@ encodeEducationPairs model =
             , encode "starting_class" Json.Encode.string model.startingClass
             , maybeEncodeNullable "finishing_class" Json.Encode.string model.finishingClass
             , encode "student" Uuid.encode model.student
-            , encode "specialization" Uuid.encode model.specialization
             ]
     in
     pairs
@@ -993,10 +982,10 @@ encodeEducationSpecializationPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
+            , encode "department" encodeDepartment model.department
             , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "name" Json.Encode.string model.name
-            , encode "department" Uuid.encode model.department
             ]
     in
     pairs
@@ -1414,6 +1403,8 @@ encodeUserDeepPairs model =
             , maybeEncode "roles" (Json.Encode.list Json.Encode.string) model.roles
             , maybeEncode "current_class" Json.Encode.string model.currentClass
             , encode "children" (Json.Encode.list encodeUserShallow) model.children
+            , encode "parents" (Json.Encode.list encodeUserShallow) model.parents
+            , encode "education" (Json.Encode.list encodeEducationShallow) model.education
             , maybeEncodeNullable "last_login" Api.Time.encodeDateTime model.lastLogin
             , maybeEncode "is_superuser" Json.Encode.bool model.isSuperuser
             , encode "username" Json.Encode.string model.username
@@ -1429,7 +1420,6 @@ encodeUserDeepPairs model =
             , maybeEncodeNullable "birth_date" Api.Time.encodeDate model.birthDate
             , maybeEncodeNullable "avatar" Json.Encode.string model.avatar
             , maybeEncode "groups" (Json.Encode.list encodeUserDeepGroupsInner) model.groups
-            , maybeEncode "user_permissions" (Json.Encode.list encodeUserDeepUserPermissionsInner) model.userPermissions
             ]
     in
     pairs
@@ -1452,29 +1442,6 @@ encodeUserDeepGroupsInnerPairs model =
             [ maybeEncode "id" Json.Encode.int model.id
             , encode "name" Json.Encode.string model.name
             , maybeEncode "permissions" (Json.Encode.list Json.Encode.int) model.permissions
-            ]
-    in
-    pairs
-
-
-encodeUserDeepUserPermissionsInner : UserDeepUserPermissionsInner -> Json.Encode.Value
-encodeUserDeepUserPermissionsInner =
-    encodeObject << encodeUserDeepUserPermissionsInnerPairs
-
-
-encodeUserDeepUserPermissionsInnerWithTag : ( String, String ) -> UserDeepUserPermissionsInner -> Json.Encode.Value
-encodeUserDeepUserPermissionsInnerWithTag ( tagField, tag ) model =
-    encodeObject (encodeUserDeepUserPermissionsInnerPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeUserDeepUserPermissionsInnerPairs : UserDeepUserPermissionsInner -> List EncodedField
-encodeUserDeepUserPermissionsInnerPairs model =
-    let
-        pairs =
-            [ maybeEncode "id" Json.Encode.int model.id
-            , encode "name" Json.Encode.string model.name
-            , encode "codename" Json.Encode.string model.codename
-            , encode "content_type" Json.Encode.int model.contentType
             ]
     in
     pairs
@@ -1512,7 +1479,6 @@ encodeUserShallowPairs model =
             , maybeEncodeNullable "birth_date" Api.Time.encodeDate model.birthDate
             , maybeEncodeNullable "avatar" Json.Encode.string model.avatar
             , maybeEncode "groups" (Json.Encode.list Json.Encode.int) model.groups
-            , maybeEncode "user_permissions" (Json.Encode.list Json.Encode.int) model.userPermissions
             , maybeEncode "children" (Json.Encode.list Uuid.encode) model.children
             ]
     in
@@ -1780,16 +1746,17 @@ departmentDecoder : Json.Decode.Decoder Department
 departmentDecoder =
     Json.Decode.succeed Department
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> decode "organization" organizationDecoder
         |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "name" Json.Decode.string
-        |> decode "organization" Uuid.decoder
 
 
-educationDecoder : Json.Decode.Decoder Education
-educationDecoder =
-    Json.Decode.succeed Education
+educationShallowDecoder : Json.Decode.Decoder EducationShallow
+educationShallowDecoder =
+    Json.Decode.succeed EducationShallow
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> decodeNullable "specialization" educationSpecializationDecoder
         |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "started" Api.Time.dateDecoder
@@ -1797,17 +1764,16 @@ educationDecoder =
         |> decode "starting_class" Json.Decode.string
         |> maybeDecodeNullable "finishing_class" Json.Decode.string Nothing
         |> decode "student" Uuid.decoder
-        |> decode "specialization" Uuid.decoder
 
 
 educationSpecializationDecoder : Json.Decode.Decoder EducationSpecialization
 educationSpecializationDecoder =
     Json.Decode.succeed EducationSpecialization
         |> maybeDecode "id" Uuid.decoder Nothing
+        |> decode "department" departmentDecoder
         |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "name" Json.Decode.string
-        |> decode "department" Uuid.decoder
 
 
 errorMessageDecoder : Json.Decode.Decoder ErrorMessage
@@ -2003,6 +1969,8 @@ userDeepDecoder =
         |> maybeDecode "roles" (Json.Decode.list Json.Decode.string) Nothing
         |> maybeDecode "current_class" Json.Decode.string Nothing
         |> decode "children" (Json.Decode.list userShallowDecoder)
+        |> decode "parents" (Json.Decode.list userShallowDecoder)
+        |> decode "education" (Json.Decode.list educationShallowDecoder)
         |> maybeDecodeNullable "last_login" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "is_superuser" Json.Decode.bool Nothing
         |> decode "username" Json.Decode.string
@@ -2018,7 +1986,6 @@ userDeepDecoder =
         |> maybeDecodeNullable "birth_date" Api.Time.dateDecoder Nothing
         |> maybeDecodeNullable "avatar" Json.Decode.string Nothing
         |> maybeDecode "groups" (Json.Decode.list userDeepGroupsInnerDecoder) Nothing
-        |> maybeDecode "user_permissions" (Json.Decode.list userDeepUserPermissionsInnerDecoder) Nothing
 
 
 userDeepGroupsInnerDecoder : Json.Decode.Decoder UserDeepGroupsInner
@@ -2027,15 +1994,6 @@ userDeepGroupsInnerDecoder =
         |> maybeDecode "id" Json.Decode.int Nothing
         |> decode "name" Json.Decode.string
         |> maybeDecode "permissions" (Json.Decode.list Json.Decode.int) Nothing
-
-
-userDeepUserPermissionsInnerDecoder : Json.Decode.Decoder UserDeepUserPermissionsInner
-userDeepUserPermissionsInnerDecoder =
-    Json.Decode.succeed UserDeepUserPermissionsInner
-        |> maybeDecode "id" Json.Decode.int Nothing
-        |> decode "name" Json.Decode.string
-        |> decode "codename" Json.Decode.string
-        |> decode "content_type" Json.Decode.int
 
 
 userShallowDecoder : Json.Decode.Decoder UserShallow
@@ -2059,7 +2017,6 @@ userShallowDecoder =
         |> maybeDecodeNullable "birth_date" Api.Time.dateDecoder Nothing
         |> maybeDecodeNullable "avatar" Json.Decode.string Nothing
         |> maybeDecode "groups" (Json.Decode.list Json.Decode.int) Nothing
-        |> maybeDecode "user_permissions" (Json.Decode.list Json.Decode.int) Nothing
         |> maybeDecode "children" (Json.Decode.list Uuid.decoder) Nothing
 
 

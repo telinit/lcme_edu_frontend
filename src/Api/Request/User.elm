@@ -171,24 +171,24 @@ userSelf =
         Api.Data.userDeepDecoder
 
 
-userSetEmail : Api.Data.SetEmail -> Api.Request ()
-userSetEmail data_body =
+userSetEmail : String -> Api.Data.SetEmail -> Api.Request ()
+userSetEmail id_path data_body =
     Api.request
         "POST"
-        "/user/set_email/"
-        []
+        "/user/{id}/set_email/"
+        [ ( "id", identity id_path ) ]
         []
         []
         (Just (Api.Data.encodeSetEmail data_body))
         (Json.Decode.succeed ())
 
 
-userSetPassword : Api.Data.SetPassword -> Api.Request ()
-userSetPassword data_body =
+userSetPassword : String -> Api.Data.SetPassword -> Api.Request ()
+userSetPassword id_path data_body =
     Api.request
         "POST"
-        "/user/set_password/"
-        []
+        "/user/{id}/set_password/"
+        [ ( "id", identity id_path ) ]
         []
         []
         (Just (Api.Data.encodeSetPassword data_body))

@@ -38,7 +38,7 @@ import Json.Encode
 import Uuid exposing (Uuid)
 
 
-educationCreate : Api.Data.Education -> Api.Request Api.Data.Education
+educationCreate : Api.Data.EducationShallow -> Api.Request Api.Data.EducationShallow
 educationCreate data_body =
     Api.request
         "POST"
@@ -46,8 +46,8 @@ educationCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeEducation data_body))
-        Api.Data.educationDecoder
+        (Just (Api.Data.encodeEducationShallow data_body))
+        Api.Data.educationShallowDecoder
 
 
 educationDelete : String -> Api.Request ()
@@ -62,7 +62,7 @@ educationDelete id_path =
         (Json.Decode.succeed ())
 
 
-educationList : Api.Request (List Api.Data.Education)
+educationList : Api.Request (List Api.Data.EducationShallow)
 educationList =
     Api.request
         "GET"
@@ -71,10 +71,10 @@ educationList =
         []
         []
         Nothing
-        (Json.Decode.list Api.Data.educationDecoder)
+        (Json.Decode.list Api.Data.educationShallowDecoder)
 
 
-educationPartialUpdate : String -> Api.Data.Education -> Api.Request Api.Data.Education
+educationPartialUpdate : String -> Api.Data.EducationShallow -> Api.Request Api.Data.EducationShallow
 educationPartialUpdate id_path data_body =
     Api.request
         "PATCH"
@@ -82,11 +82,11 @@ educationPartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeEducation data_body))
-        Api.Data.educationDecoder
+        (Just (Api.Data.encodeEducationShallow data_body))
+        Api.Data.educationShallowDecoder
 
 
-educationRead : String -> Api.Request Api.Data.Education
+educationRead : String -> Api.Request Api.Data.EducationShallow
 educationRead id_path =
     Api.request
         "GET"
@@ -95,7 +95,7 @@ educationRead id_path =
         []
         []
         Nothing
-        Api.Data.educationDecoder
+        Api.Data.educationShallowDecoder
 
 
 educationSpecializationCreate : Api.Data.EducationSpecialization -> Api.Request Api.Data.EducationSpecialization
@@ -170,7 +170,7 @@ educationSpecializationUpdate id_path data_body =
         Api.Data.educationSpecializationDecoder
 
 
-educationUpdate : String -> Api.Data.Education -> Api.Request Api.Data.Education
+educationUpdate : String -> Api.Data.EducationShallow -> Api.Request Api.Data.EducationShallow
 educationUpdate id_path data_body =
     Api.request
         "PUT"
@@ -178,5 +178,5 @@ educationUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeEducation data_body))
-        Api.Data.educationDecoder
+        (Just (Api.Data.encodeEducationShallow data_body))
+        Api.Data.educationShallowDecoder
