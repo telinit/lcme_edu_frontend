@@ -1,15 +1,7 @@
 module Page.CoursePage exposing (..)
 
 import Api exposing (ext_task, task, withToken)
-import Api.Data
-    exposing
-        ( Activity
-        , ActivityType(..)
-        , CourseDeep
-        , CourseEnrollmentRead
-        , CourseEnrollmentReadRole(..)
-        , UserDeep
-        )
+import Api.Data exposing (Activity, ActivityContentType(..), CourseDeep, CourseEnrollmentRead, CourseEnrollmentReadRole(..), UserDeep)
 import Api.Request.Course exposing (courseBulkSetActivities, courseGetDeep, courseRead)
 import Component.Activity as CA exposing (Msg(..), getOrder, setOrder)
 import Component.MessageBox as MessageBox exposing (Type(..))
@@ -394,8 +386,9 @@ update msg model =
                     { id = Nothing
                     , createdAt = Nothing
                     , updatedAt = Nothing
-                    , type_ = Nothing
+                    , contentType = Nothing
                     , title = ""
+                    , lessonType = Nothing
                     , keywords = Nothing
                     , isHidden = Just False
                     , marksLimit = Just 2
@@ -412,16 +405,17 @@ update msg model =
                     , finalType = Nothing
                     , course = get_id course
                     , files = Nothing
+                    , linkedActivity = Nothing
                     }
 
                 act =
                     case model.edit_mode of
                         EditOn AddGen _ ->
                             Just
-                                { act_base | type_ = Just ActivityTypeGEN }
+                                { act_base | contentType = Just ActivityContentTypeGEN }
 
                         EditOn AddFin _ ->
-                            Just { act_base | type_ = Just ActivityTypeFIN }
+                            Just { act_base | contentType = Just ActivityContentTypeFIN }
 
                         _ ->
                             Nothing
@@ -759,10 +753,12 @@ viewCourse courseRead components_activity model =
         members =
             let
                 teachers =
-                    List.map .person <| List.filter (\enr -> enr.role == CourseEnrollmentReadRoleT) courseRead.enrollments
+                    List.map .person <|
+                        List.filter (\enr -> enr.role == CourseEnrollmentReadRoleT) courseRead.enrollments
 
                 students =
-                    List.map .person <| List.filter (\enr -> enr.role == CourseEnrollmentReadRoleS) courseRead.enrollments
+                    List.map .person <|
+                        List.filter (\enr -> enr.role == CourseEnrollmentReadRoleS) courseRead.enrollments
 
                 user_list =
                     List.map (user_link Nothing >> (\el -> div [ style "margin" "1em" ] [ el ]))

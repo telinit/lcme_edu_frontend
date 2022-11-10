@@ -17,6 +17,7 @@
 module Api.Request.Activity exposing
     ( activityCreate
     , activityDelete
+    , activityImportForCourse
     , activityList
     , activityPartialUpdate
     , activityRead
@@ -52,6 +53,18 @@ activityDelete id_path =
         []
         []
         Nothing
+        (Json.Decode.succeed ())
+
+
+activityImportForCourse : Api.Data.ImportForCourse -> Api.Request ()
+activityImportForCourse data_body =
+    Api.request
+        "POST"
+        "/activity/import_for_course/"
+        []
+        []
+        []
+        (Just (Api.Data.encodeImportForCourse data_body))
         (Json.Decode.succeed ())
 
 

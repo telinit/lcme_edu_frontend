@@ -8558,25 +8558,29 @@ var $author$project$Api$Data$CourseDeep = function (id) {
 var $author$project$Api$Data$Activity = function (id) {
 	return function (createdAt) {
 		return function (updatedAt) {
-			return function (type_) {
+			return function (contentType) {
 				return function (title) {
 					return function (keywords) {
-						return function (isHidden) {
-							return function (marksLimit) {
-								return function (hours) {
-									return function (fgosComplient) {
-										return function (order) {
-											return function (date) {
-												return function (group) {
-													return function (scientificTopic) {
-														return function (body) {
-															return function (dueDate) {
-																return function (link) {
-																	return function (embed) {
-																		return function (finalType) {
-																			return function (course) {
-																				return function (files) {
-																					return {body: body, course: course, createdAt: createdAt, date: date, dueDate: dueDate, embed: embed, fgosComplient: fgosComplient, files: files, finalType: finalType, group: group, hours: hours, id: id, isHidden: isHidden, keywords: keywords, link: link, marksLimit: marksLimit, order: order, scientificTopic: scientificTopic, title: title, type_: type_, updatedAt: updatedAt};
+						return function (lessonType) {
+							return function (isHidden) {
+								return function (marksLimit) {
+									return function (hours) {
+										return function (fgosComplient) {
+											return function (order) {
+												return function (date) {
+													return function (group) {
+														return function (scientificTopic) {
+															return function (body) {
+																return function (dueDate) {
+																	return function (link) {
+																		return function (embed) {
+																			return function (finalType) {
+																				return function (course) {
+																					return function (linkedActivity) {
+																						return function (files) {
+																							return {body: body, contentType: contentType, course: course, createdAt: createdAt, date: date, dueDate: dueDate, embed: embed, fgosComplient: fgosComplient, files: files, finalType: finalType, group: group, hours: hours, id: id, isHidden: isHidden, keywords: keywords, lessonType: lessonType, link: link, linkedActivity: linkedActivity, marksLimit: marksLimit, order: order, scientificTopic: scientificTopic, title: title, updatedAt: updatedAt};
+																						};
+																					};
 																				};
 																			};
 																		};
@@ -8598,6 +8602,34 @@ var $author$project$Api$Data$Activity = function (id) {
 		};
 	};
 };
+var $author$project$Api$Data$ActivityContentTypeFIN = {$: 'ActivityContentTypeFIN'};
+var $author$project$Api$Data$ActivityContentTypeGEN = {$: 'ActivityContentTypeGEN'};
+var $author$project$Api$Data$ActivityContentTypeLNK = {$: 'ActivityContentTypeLNK'};
+var $author$project$Api$Data$ActivityContentTypeMED = {$: 'ActivityContentTypeMED'};
+var $author$project$Api$Data$ActivityContentTypeTSK = {$: 'ActivityContentTypeTSK'};
+var $author$project$Api$Data$ActivityContentTypeTXT = {$: 'ActivityContentTypeTXT'};
+var $author$project$Api$Data$activityContentTypeDecoder = A2(
+	$elm$json$Json$Decode$andThen,
+	function (value) {
+		switch (value) {
+			case 'GEN':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeGEN);
+			case 'TXT':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeTXT);
+			case 'TSK':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeTSK);
+			case 'LNK':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeLNK);
+			case 'MED':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeMED);
+			case 'FIN':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeFIN);
+			default:
+				var other = value;
+				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
+		}
+	},
+	$elm$json$Json$Decode$string);
 var $author$project$Api$Data$ActivityFinalTypeE = {$: 'ActivityFinalTypeE'};
 var $author$project$Api$Data$ActivityFinalTypeF = {$: 'ActivityFinalTypeF'};
 var $author$project$Api$Data$ActivityFinalTypeH1 = {$: 'ActivityFinalTypeH1'};
@@ -8635,34 +8667,6 @@ var $author$project$Api$Data$activityFinalTypeDecoder = A2(
 		}
 	},
 	$elm$json$Json$Decode$string);
-var $author$project$Api$Data$ActivityTypeFIN = {$: 'ActivityTypeFIN'};
-var $author$project$Api$Data$ActivityTypeGEN = {$: 'ActivityTypeGEN'};
-var $author$project$Api$Data$ActivityTypeLNK = {$: 'ActivityTypeLNK'};
-var $author$project$Api$Data$ActivityTypeMED = {$: 'ActivityTypeMED'};
-var $author$project$Api$Data$ActivityTypeTSK = {$: 'ActivityTypeTSK'};
-var $author$project$Api$Data$ActivityTypeTXT = {$: 'ActivityTypeTXT'};
-var $author$project$Api$Data$activityTypeDecoder = A2(
-	$elm$json$Json$Decode$andThen,
-	function (value) {
-		switch (value) {
-			case 'GEN':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeGEN);
-			case 'TXT':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeTXT);
-			case 'TSK':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeTSK);
-			case 'LNK':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeLNK);
-			case 'MED':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeMED);
-			case 'FIN':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityTypeFIN);
-			default:
-				var other = value;
-				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
-		}
-	},
-	$elm$json$Json$Decode$string);
 var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $author$project$Api$Time$decodeDateIsoString = function (str) {
 	var _v0 = $rtfeldman$elm_iso8601_date_strings$Iso8601$toTime(str + 'T00:00:00.000Z');
@@ -8680,103 +8684,113 @@ var $author$project$Api$Data$activityDecoder = A4(
 	'files',
 	$elm$json$Json$Decode$list($danyx23$elm_uuid$Uuid$decoder),
 	$elm$core$Maybe$Nothing,
-	A3(
-		$author$project$Api$Data$decode,
-		'course',
+	A4(
+		$author$project$Api$Data$maybeDecodeNullable,
+		'linked_activity',
 		$danyx23$elm_uuid$Uuid$decoder,
-		A4(
-			$author$project$Api$Data$maybeDecodeNullable,
-			'final_type',
-			$author$project$Api$Data$activityFinalTypeDecoder,
-			$elm$core$Maybe$Nothing,
+		$elm$core$Maybe$Nothing,
+		A3(
+			$author$project$Api$Data$decode,
+			'course',
+			$danyx23$elm_uuid$Uuid$decoder,
 			A4(
-				$author$project$Api$Data$maybeDecode,
-				'embed',
-				$elm$json$Json$Decode$bool,
+				$author$project$Api$Data$maybeDecodeNullable,
+				'final_type',
+				$author$project$Api$Data$activityFinalTypeDecoder,
 				$elm$core$Maybe$Nothing,
 				A4(
-					$author$project$Api$Data$maybeDecodeNullable,
-					'link',
-					$elm$json$Json$Decode$string,
+					$author$project$Api$Data$maybeDecode,
+					'embed',
+					$elm$json$Json$Decode$bool,
 					$elm$core$Maybe$Nothing,
 					A4(
 						$author$project$Api$Data$maybeDecodeNullable,
-						'due_date',
-						$author$project$Api$Time$dateTimeDecoder,
+						'link',
+						$elm$json$Json$Decode$string,
 						$elm$core$Maybe$Nothing,
 						A4(
-							$author$project$Api$Data$maybeDecode,
-							'body',
-							$elm$json$Json$Decode$string,
+							$author$project$Api$Data$maybeDecodeNullable,
+							'due_date',
+							$author$project$Api$Time$dateTimeDecoder,
 							$elm$core$Maybe$Nothing,
 							A4(
-								$author$project$Api$Data$maybeDecodeNullable,
-								'scientific_topic',
+								$author$project$Api$Data$maybeDecode,
+								'body',
 								$elm$json$Json$Decode$string,
 								$elm$core$Maybe$Nothing,
 								A4(
 									$author$project$Api$Data$maybeDecodeNullable,
-									'group',
+									'scientific_topic',
 									$elm$json$Json$Decode$string,
 									$elm$core$Maybe$Nothing,
-									A3(
-										$author$project$Api$Data$decode,
-										'date',
-										$author$project$Api$Time$dateDecoder,
+									A4(
+										$author$project$Api$Data$maybeDecodeNullable,
+										'group',
+										$elm$json$Json$Decode$string,
+										$elm$core$Maybe$Nothing,
 										A3(
 											$author$project$Api$Data$decode,
-											'order',
-											$elm$json$Json$Decode$int,
-											A4(
-												$author$project$Api$Data$maybeDecode,
-												'fgos_complient',
-												$elm$json$Json$Decode$bool,
-												$elm$core$Maybe$Nothing,
+											'date',
+											$author$project$Api$Time$dateDecoder,
+											A3(
+												$author$project$Api$Data$decode,
+												'order',
+												$elm$json$Json$Decode$int,
 												A4(
 													$author$project$Api$Data$maybeDecode,
-													'hours',
-													$elm$json$Json$Decode$int,
+													'fgos_complient',
+													$elm$json$Json$Decode$bool,
 													$elm$core$Maybe$Nothing,
 													A4(
 														$author$project$Api$Data$maybeDecode,
-														'marks_limit',
+														'hours',
 														$elm$json$Json$Decode$int,
 														$elm$core$Maybe$Nothing,
 														A4(
 															$author$project$Api$Data$maybeDecode,
-															'is_hidden',
-															$elm$json$Json$Decode$bool,
+															'marks_limit',
+															$elm$json$Json$Decode$int,
 															$elm$core$Maybe$Nothing,
 															A4(
 																$author$project$Api$Data$maybeDecode,
-																'keywords',
-																$elm$json$Json$Decode$string,
+																'is_hidden',
+																$elm$json$Json$Decode$bool,
 																$elm$core$Maybe$Nothing,
-																A3(
-																	$author$project$Api$Data$decode,
-																	'title',
+																A4(
+																	$author$project$Api$Data$maybeDecode,
+																	'lesson_type',
 																	$elm$json$Json$Decode$string,
+																	$elm$core$Maybe$Nothing,
 																	A4(
 																		$author$project$Api$Data$maybeDecode,
-																		'type',
-																		$author$project$Api$Data$activityTypeDecoder,
+																		'keywords',
+																		$elm$json$Json$Decode$string,
 																		$elm$core$Maybe$Nothing,
-																		A4(
-																			$author$project$Api$Data$maybeDecode,
-																			'updated_at',
-																			$author$project$Api$Time$dateTimeDecoder,
-																			$elm$core$Maybe$Nothing,
+																		A3(
+																			$author$project$Api$Data$decode,
+																			'title',
+																			$elm$json$Json$Decode$string,
 																			A4(
 																				$author$project$Api$Data$maybeDecode,
-																				'created_at',
-																				$author$project$Api$Time$dateTimeDecoder,
+																				'content_type',
+																				$author$project$Api$Data$activityContentTypeDecoder,
 																				$elm$core$Maybe$Nothing,
 																				A4(
 																					$author$project$Api$Data$maybeDecode,
-																					'id',
-																					$danyx23$elm_uuid$Uuid$decoder,
+																					'updated_at',
+																					$author$project$Api$Time$dateTimeDecoder,
 																					$elm$core$Maybe$Nothing,
-																					$elm$json$Json$Decode$succeed($author$project$Api$Data$Activity))))))))))))))))))))));
+																					A4(
+																						$author$project$Api$Data$maybeDecode,
+																						'created_at',
+																						$author$project$Api$Time$dateTimeDecoder,
+																						$elm$core$Maybe$Nothing,
+																						A4(
+																							$author$project$Api$Data$maybeDecode,
+																							'id',
+																							$danyx23$elm_uuid$Uuid$decoder,
+																							$elm$core$Maybe$Nothing,
+																							$elm$json$Json$Decode$succeed($author$project$Api$Data$Activity))))))))))))))))))))))));
 var $author$project$Api$Data$CourseDeepTypeCLB = {$: 'CourseDeepTypeCLB'};
 var $author$project$Api$Data$CourseDeepTypeEDU = {$: 'CourseDeepTypeEDU'};
 var $author$project$Api$Data$CourseDeepTypeELE = {$: 'CourseDeepTypeELE'};
@@ -10742,6 +10756,23 @@ var $author$project$Api$Data$encode = F3(
 	});
 var $elm$json$Json$Encode$bool = _Json_wrap;
 var $danyx23$elm_uuid$Uuid$encode = A2($elm$core$Basics$composeR, $danyx23$elm_uuid$Uuid$toString, $elm$json$Json$Encode$string);
+var $author$project$Api$Data$stringFromActivityContentType = function (model) {
+	switch (model.$) {
+		case 'ActivityContentTypeGEN':
+			return 'GEN';
+		case 'ActivityContentTypeTXT':
+			return 'TXT';
+		case 'ActivityContentTypeTSK':
+			return 'TSK';
+		case 'ActivityContentTypeLNK':
+			return 'LNK';
+		case 'ActivityContentTypeMED':
+			return 'MED';
+		default:
+			return 'FIN';
+	}
+};
+var $author$project$Api$Data$encodeActivityContentType = A2($elm$core$Basics$composeL, $elm$json$Json$Encode$string, $author$project$Api$Data$stringFromActivityContentType);
 var $author$project$Api$Data$stringFromActivityFinalType = function (model) {
 	switch (model.$) {
 		case 'ActivityFinalTypeQ1':
@@ -10765,23 +10796,6 @@ var $author$project$Api$Data$stringFromActivityFinalType = function (model) {
 	}
 };
 var $author$project$Api$Data$encodeActivityFinalType = A2($elm$core$Basics$composeL, $elm$json$Json$Encode$string, $author$project$Api$Data$stringFromActivityFinalType);
-var $author$project$Api$Data$stringFromActivityType = function (model) {
-	switch (model.$) {
-		case 'ActivityTypeGEN':
-			return 'GEN';
-		case 'ActivityTypeTXT':
-			return 'TXT';
-		case 'ActivityTypeTSK':
-			return 'TSK';
-		case 'ActivityTypeLNK':
-			return 'LNK';
-		case 'ActivityTypeMED':
-			return 'MED';
-		default:
-			return 'FIN';
-	}
-};
-var $author$project$Api$Data$encodeActivityType = A2($elm$core$Basics$composeL, $elm$json$Json$Encode$string, $author$project$Api$Data$stringFromActivityType);
 var $rtfeldman$elm_iso8601_date_strings$Iso8601$fromMonth = function (month) {
 	switch (month.$) {
 		case 'Jan':
@@ -11063,9 +11077,10 @@ var $author$project$Api$Data$encodeActivityPairs = function (model) {
 			A3($author$project$Api$Data$maybeEncode, 'id', $danyx23$elm_uuid$Uuid$encode, model.id),
 			A3($author$project$Api$Data$maybeEncode, 'created_at', $author$project$Api$Time$encodeDateTime, model.createdAt),
 			A3($author$project$Api$Data$maybeEncode, 'updated_at', $author$project$Api$Time$encodeDateTime, model.updatedAt),
-			A3($author$project$Api$Data$maybeEncode, 'type', $author$project$Api$Data$encodeActivityType, model.type_),
+			A3($author$project$Api$Data$maybeEncode, 'content_type', $author$project$Api$Data$encodeActivityContentType, model.contentType),
 			A3($author$project$Api$Data$encode, 'title', $elm$json$Json$Encode$string, model.title),
 			A3($author$project$Api$Data$maybeEncode, 'keywords', $elm$json$Json$Encode$string, model.keywords),
+			A3($author$project$Api$Data$maybeEncode, 'lesson_type', $elm$json$Json$Encode$string, model.lessonType),
 			A3($author$project$Api$Data$maybeEncode, 'is_hidden', $elm$json$Json$Encode$bool, model.isHidden),
 			A3($author$project$Api$Data$maybeEncode, 'marks_limit', $elm$json$Json$Encode$int, model.marksLimit),
 			A3($author$project$Api$Data$maybeEncode, 'hours', $elm$json$Json$Encode$int, model.hours),
@@ -11080,6 +11095,7 @@ var $author$project$Api$Data$encodeActivityPairs = function (model) {
 			A3($author$project$Api$Data$maybeEncode, 'embed', $elm$json$Json$Encode$bool, model.embed),
 			A3($author$project$Api$Data$maybeEncodeNullable, 'final_type', $author$project$Api$Data$encodeActivityFinalType, model.finalType),
 			A3($author$project$Api$Data$encode, 'course', $danyx23$elm_uuid$Uuid$encode, model.course),
+			A3($author$project$Api$Data$maybeEncodeNullable, 'linked_activity', $danyx23$elm_uuid$Uuid$encode, model.linkedActivity),
 			A3(
 			$author$project$Api$Data$maybeEncode,
 			'files',
@@ -11240,8 +11256,8 @@ var $author$project$Component$Select$init = F3(
 	});
 var $author$project$Component$Activity$init_from_activity = F2(
 	function (token, act) {
-		var _v0 = act.type_;
-		if ((_v0.$ === 'Just') && (_v0.a.$ === 'ActivityTypeFIN')) {
+		var _v0 = act.contentType;
+		if ((_v0.$ === 'Just') && (_v0.a.$ === 'ActivityContentTypeFIN')) {
 			var _v1 = _v0.a;
 			var _v2 = A3(
 				$author$project$Component$Select$init,
@@ -11940,6 +11956,7 @@ var $author$project$Page$CoursePage$update = F2(
 							var act_components = _v22.b;
 							var act_base = {
 								body: $elm$core$Maybe$Nothing,
+								contentType: $elm$core$Maybe$Nothing,
 								course: $author$project$Util$get_id(course),
 								createdAt: $elm$core$Maybe$Nothing,
 								date: t,
@@ -11953,12 +11970,13 @@ var $author$project$Page$CoursePage$update = F2(
 								id: $elm$core$Maybe$Nothing,
 								isHidden: $elm$core$Maybe$Just(false),
 								keywords: $elm$core$Maybe$Nothing,
+								lessonType: $elm$core$Maybe$Nothing,
 								link: $elm$core$Maybe$Nothing,
+								linkedActivity: $elm$core$Maybe$Nothing,
 								marksLimit: $elm$core$Maybe$Just(2),
 								order: i + 1,
 								scientificTopic: $elm$core$Maybe$Nothing,
 								title: '',
-								type_: $elm$core$Maybe$Nothing,
 								updatedAt: $elm$core$Maybe$Nothing
 							};
 							var act = function () {
@@ -11973,7 +11991,7 @@ var $author$project$Page$CoursePage$update = F2(
 													_Utils_update(
 														act_base,
 														{
-															type_: $elm$core$Maybe$Just($author$project$Api$Data$ActivityTypeGEN)
+															contentType: $elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeGEN)
 														}));
 											case 'AddFin':
 												var _v27 = _v25.a;
@@ -11981,7 +11999,7 @@ var $author$project$Page$CoursePage$update = F2(
 													_Utils_update(
 														act_base,
 														{
-															type_: $elm$core$Maybe$Just($author$project$Api$Data$ActivityTypeFIN)
+															contentType: $elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeFIN)
 														}));
 											default:
 												break _v25$2;
@@ -14943,6 +14961,7 @@ var $author$project$Page$CourseListPage$courseImg = function (mb) {
 			_List_Nil);
 	}
 };
+var $elm$core$String$trim = _String_trim;
 var $author$project$Page$CourseListPage$viewCourse = function (course) {
 	return A2(
 		$elm$html$Html$a,
@@ -15001,31 +15020,37 @@ var $author$project$Page$CourseListPage$viewCourse = function (course) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('description')
+								$elm$html$Html$Attributes$class('description'),
+								A2($elm$html$Html$Attributes$style, 'max-height', '300px'),
+								A2($elm$html$Html$Attributes$style, 'overflow', 'hidden')
 							]),
-						_List_Nil)
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								$elm$core$String$trim(course.description))
+							]))
 					])),
 				A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('extra content')
+						$elm$html$Html$Attributes$class('extra content row around-xs')
 					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$span,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('')
-							]),
-						A2(
-							$elm$core$Maybe$withDefault,
-							_List_Nil,
+				A2(
+					$elm$core$List$filterMap,
+					$elm$core$Basics$identity,
+					_List_fromArray(
+						[
 							A2(
-								$elm$core$Maybe$map,
-								function (c) {
-									return _List_fromArray(
+							$elm$core$Maybe$map,
+							function (c) {
+								return A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('col-xs')
+										]),
+									_List_fromArray(
 										[
 											A2(
 											$elm$html$Html$i,
@@ -15035,22 +15060,19 @@ var $author$project$Page$CourseListPage$viewCourse = function (course) {
 												]),
 											_List_Nil),
 											$elm$html$Html$text(c + ' класс')
-										]);
-								},
-								course.forClass))),
-						A2(
-						$elm$html$Html$span,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('right floated')
-							]),
-						A2(
-							$elm$core$Maybe$withDefault,
-							_List_Nil,
+										]));
+							},
+							course.forClass),
 							A2(
-								$elm$core$Maybe$map,
-								function (g) {
-									return _List_fromArray(
+							$elm$core$Maybe$map,
+							function (g) {
+								return A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('col-xs')
+										]),
+									_List_fromArray(
 										[
 											A2(
 											$elm$html$Html$i,
@@ -15060,10 +15082,10 @@ var $author$project$Page$CourseListPage$viewCourse = function (course) {
 												]),
 											_List_Nil),
 											$elm$html$Html$text(g)
-										]);
-								},
-								$author$project$Page$CourseListPage$empty_to_nothing(course.forGroup))))
-					]))
+										]));
+							},
+							$author$project$Page$CourseListPage$empty_to_nothing(course.forGroup))
+						])))
 			]));
 };
 var $author$project$Page$CourseListPage$view = function (model) {
@@ -15282,7 +15304,6 @@ var $elm$html$Html$Attributes$classList = function (classes) {
 				$elm$core$Tuple$first,
 				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
 };
-var $elm$core$String$trim = _String_trim;
 var $author$project$Component$Misc$user_link = F2(
 	function (mb_link, user) {
 		return A2(
@@ -17928,7 +17949,13 @@ var $author$project$Page$FrontPage$view = function (model) {
 						_List_fromArray(
 							[
 								email_is_empty ? email_banner : $elm$html$Html$text(''),
-								A2($elm$html$Html$p, _List_Nil, _List_Nil)
+								A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Приветствуем вас на образовательном портале ЛНМО. Для перехода к интересующим вас разделам, воспользуйтесь меню сверху.')
+									]))
 							])),
 						A2(
 						$elm$html$Html$div,
@@ -18347,8 +18374,8 @@ var $elm$html$Html$tr = _VirtualDom_node('tr');
 var $author$project$Component$MarkTable$viewColumn = function (column) {
 	if (column.$ === 'Activity') {
 		var activity = column.a;
-		var _v1 = activity.type_;
-		if ((_v1.$ === 'Just') && (_v1.a.$ === 'ActivityTypeFIN')) {
+		var _v1 = activity.contentType;
+		if ((_v1.$ === 'Just') && (_v1.a.$ === 'ActivityContentTypeFIN')) {
 			var _v2 = _v1.a;
 			return A2(
 				$elm$html$Html$div,
@@ -18412,8 +18439,8 @@ var $author$project$Component$MarkTable$viewTableHeader = function (columns) {
 	var td_attrs = function (col) {
 		if (col.$ === 'Activity') {
 			var act = col.a;
-			var _v1 = act.type_;
-			if ((_v1.$ === 'Just') && (_v1.a.$ === 'ActivityTypeFIN')) {
+			var _v1 = act.contentType;
+			if ((_v1.$ === 'Just') && (_v1.a.$ === 'ActivityContentTypeFIN')) {
 				var _v2 = _v1.a;
 				return _List_fromArray(
 					[

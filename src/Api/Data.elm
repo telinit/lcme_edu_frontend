@@ -16,8 +16,8 @@
 
 module Api.Data exposing
     ( Activity
+    , ActivityContentType(..)
     , ActivityFinalType(..)
-    , ActivityType(..)
     , BulkSetActivities
     , Counters
     , CourseDeep
@@ -33,6 +33,7 @@ module Api.Data exposing
     , EducationSpecialization
     , ErrorMessage
     , File
+    , ImportForCourse
     , Login
     , Mark
     , Message
@@ -50,10 +51,10 @@ module Api.Data exposing
     , UserDeep
     , UserDeepGroupsInner
     , UserShallow
+    , activityContentTypeVariants
     , activityDecoder
     , activityFinalTypeDecoder
     , activityFinalTypeVariants
-    , activityTypeVariants
     , bulkSetActivitiesDecoder
     , countersDecoder
     , courseDeepDecoder
@@ -79,6 +80,7 @@ module Api.Data exposing
     , encodeEducationSpecialization
     , encodeErrorMessage
     , encodeFile
+    , encodeImportForCourse
     , encodeLogin
     , encodeMark
     , encodeMessage
@@ -97,6 +99,7 @@ module Api.Data exposing
     , encodeUserShallow
     , errorMessageDecoder
     , fileDecoder
+    , importForCourseDecoder
     , loginDecoder
     , markDecoder
     , messageDecoder
@@ -133,9 +136,10 @@ type alias Activity =
     { id : Maybe Uuid
     , createdAt : Maybe Posix
     , updatedAt : Maybe Posix
-    , type_ : Maybe ActivityType
+    , contentType : Maybe ActivityContentType
     , title : String
     , keywords : Maybe String
+    , lessonType : Maybe String
     , isHidden : Maybe Bool
     , marksLimit : Maybe Int
     , hours : Maybe Int
@@ -150,27 +154,28 @@ type alias Activity =
     , embed : Maybe Bool
     , finalType : Maybe ActivityFinalType
     , course : Uuid
+    , linkedActivity : Maybe Uuid
     , files : Maybe (List Uuid)
     }
 
 
-type ActivityType
-    = ActivityTypeGEN
-    | ActivityTypeTXT
-    | ActivityTypeTSK
-    | ActivityTypeLNK
-    | ActivityTypeMED
-    | ActivityTypeFIN
+type ActivityContentType
+    = ActivityContentTypeGEN
+    | ActivityContentTypeTXT
+    | ActivityContentTypeTSK
+    | ActivityContentTypeLNK
+    | ActivityContentTypeMED
+    | ActivityContentTypeFIN
 
 
-activityTypeVariants : List ActivityType
-activityTypeVariants =
-    [ ActivityTypeGEN
-    , ActivityTypeTXT
-    , ActivityTypeTSK
-    , ActivityTypeLNK
-    , ActivityTypeMED
-    , ActivityTypeFIN
+activityContentTypeVariants : List ActivityContentType
+activityContentTypeVariants =
+    [ ActivityContentTypeGEN
+    , ActivityContentTypeTXT
+    , ActivityContentTypeTSK
+    , ActivityContentTypeLNK
+    , ActivityContentTypeMED
+    , ActivityContentTypeFIN
     ]
 
 
@@ -374,6 +379,11 @@ type alias File =
     , hash : String
     , size : Int
     , mimeType : String
+    }
+
+
+type alias ImportForCourse =
+    { data : String
     }
 
 
@@ -593,9 +603,10 @@ encodeActivityPairs model =
             [ maybeEncode "id" Uuid.encode model.id
             , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
-            , maybeEncode "type" encodeActivityType model.type_
+            , maybeEncode "content_type" encodeActivityContentType model.contentType
             , encode "title" Json.Encode.string model.title
             , maybeEncode "keywords" Json.Encode.string model.keywords
+            , maybeEncode "lesson_type" Json.Encode.string model.lessonType
             , maybeEncode "is_hidden" Json.Encode.bool model.isHidden
             , maybeEncode "marks_limit" Json.Encode.int model.marksLimit
             , maybeEncode "hours" Json.Encode.int model.hours
@@ -610,37 +621,38 @@ encodeActivityPairs model =
             , maybeEncode "embed" Json.Encode.bool model.embed
             , maybeEncodeNullable "final_type" encodeActivityFinalType model.finalType
             , encode "course" Uuid.encode model.course
+            , maybeEncodeNullable "linked_activity" Uuid.encode model.linkedActivity
             , maybeEncode "files" (Json.Encode.list Uuid.encode) model.files
             ]
     in
     pairs
 
 
-stringFromActivityType : ActivityType -> String
-stringFromActivityType model =
+stringFromActivityContentType : ActivityContentType -> String
+stringFromActivityContentType model =
     case model of
-        ActivityTypeGEN ->
+        ActivityContentTypeGEN ->
             "GEN"
 
-        ActivityTypeTXT ->
+        ActivityContentTypeTXT ->
             "TXT"
 
-        ActivityTypeTSK ->
+        ActivityContentTypeTSK ->
             "TSK"
 
-        ActivityTypeLNK ->
+        ActivityContentTypeLNK ->
             "LNK"
 
-        ActivityTypeMED ->
+        ActivityContentTypeMED ->
             "MED"
 
-        ActivityTypeFIN ->
+        ActivityContentTypeFIN ->
             "FIN"
 
 
-encodeActivityType : ActivityType -> Json.Encode.Value
-encodeActivityType =
-    Json.Encode.string << stringFromActivityType
+encodeActivityContentType : ActivityContentType -> Json.Encode.Value
+encodeActivityContentType =
+    Json.Encode.string << stringFromActivityContentType
 
 
 stringFromActivityFinalType : ActivityFinalType -> String
@@ -1034,6 +1046,26 @@ encodeFilePairs model =
             , encode "hash" Json.Encode.string model.hash
             , encode "size" Json.Encode.int model.size
             , encode "mime_type" Json.Encode.string model.mimeType
+            ]
+    in
+    pairs
+
+
+encodeImportForCourse : ImportForCourse -> Json.Encode.Value
+encodeImportForCourse =
+    encodeObject << encodeImportForCoursePairs
+
+
+encodeImportForCourseWithTag : ( String, String ) -> ImportForCourse -> Json.Encode.Value
+encodeImportForCourseWithTag ( tagField, tag ) model =
+    encodeObject (encodeImportForCoursePairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeImportForCoursePairs : ImportForCourse -> List EncodedField
+encodeImportForCoursePairs model =
+    let
+        pairs =
+            [ encode "data" Json.Encode.string model.data
             ]
     in
     pairs
@@ -1495,9 +1527,10 @@ activityDecoder =
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
-        |> maybeDecode "type" activityTypeDecoder Nothing
+        |> maybeDecode "content_type" activityContentTypeDecoder Nothing
         |> decode "title" Json.Decode.string
         |> maybeDecode "keywords" Json.Decode.string Nothing
+        |> maybeDecode "lesson_type" Json.Decode.string Nothing
         |> maybeDecode "is_hidden" Json.Decode.bool Nothing
         |> maybeDecode "marks_limit" Json.Decode.int Nothing
         |> maybeDecode "hours" Json.Decode.int Nothing
@@ -1512,32 +1545,33 @@ activityDecoder =
         |> maybeDecode "embed" Json.Decode.bool Nothing
         |> maybeDecodeNullable "final_type" activityFinalTypeDecoder Nothing
         |> decode "course" Uuid.decoder
+        |> maybeDecodeNullable "linked_activity" Uuid.decoder Nothing
         |> maybeDecode "files" (Json.Decode.list Uuid.decoder) Nothing
 
 
-activityTypeDecoder : Json.Decode.Decoder ActivityType
-activityTypeDecoder =
+activityContentTypeDecoder : Json.Decode.Decoder ActivityContentType
+activityContentTypeDecoder =
     Json.Decode.string
         |> Json.Decode.andThen
             (\value ->
                 case value of
                     "GEN" ->
-                        Json.Decode.succeed ActivityTypeGEN
+                        Json.Decode.succeed ActivityContentTypeGEN
 
                     "TXT" ->
-                        Json.Decode.succeed ActivityTypeTXT
+                        Json.Decode.succeed ActivityContentTypeTXT
 
                     "TSK" ->
-                        Json.Decode.succeed ActivityTypeTSK
+                        Json.Decode.succeed ActivityContentTypeTSK
 
                     "LNK" ->
-                        Json.Decode.succeed ActivityTypeLNK
+                        Json.Decode.succeed ActivityContentTypeLNK
 
                     "MED" ->
-                        Json.Decode.succeed ActivityTypeMED
+                        Json.Decode.succeed ActivityContentTypeMED
 
                     "FIN" ->
-                        Json.Decode.succeed ActivityTypeFIN
+                        Json.Decode.succeed ActivityContentTypeFIN
 
                     other ->
                         Json.Decode.fail <| "Unknown type: " ++ other
@@ -1794,6 +1828,12 @@ fileDecoder =
         |> decode "hash" Json.Decode.string
         |> decode "size" Json.Decode.int
         |> decode "mime_type" Json.Decode.string
+
+
+importForCourseDecoder : Json.Decode.Decoder ImportForCourse
+importForCourseDecoder =
+    Json.Decode.succeed ImportForCourse
+        |> decode "data" Json.Decode.string
 
 
 loginDecoder : Json.Decode.Decoder Login

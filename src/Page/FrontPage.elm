@@ -147,7 +147,9 @@ view model =
 
                   else
                     text ""
-                , p [] []
+                , p [] [
+                    text "Приветствуем вас на образовательном портале ЛНМО. Для перехода к интересующим вас разделам, воспользуйтесь меню сверху."
+                ]
                 ]
             , div [ class "col-xs-12 col-md-3" ]
                 [ Html.map MsgStats <| Stats.view model.stats

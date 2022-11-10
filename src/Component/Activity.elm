@@ -1,7 +1,7 @@
 module Component.Activity exposing (..)
 
 import Api exposing (task, withToken)
-import Api.Data exposing (Activity, ActivityType(..), activityFinalTypeDecoder, stringFromActivityFinalType)
+import Api.Data exposing (Activity, ActivityContentType(..), activityFinalTypeDecoder, stringFromActivityFinalType)
 import Api.Request.Activity exposing (activityRead)
 import Component.Select as SEL
 import Css exposing (active)
@@ -83,8 +83,8 @@ init_from_id token id =
 
 init_from_activity : String -> Activity -> ( Model, Cmd Msg )
 init_from_activity token act =
-    case act.type_ of
-        Just ActivityTypeFIN ->
+    case act.contentType of
+        Just ActivityContentTypeFIN ->
             let
                 ( m, c ) =
                     SEL.init "Тип итогового контроля" True <|

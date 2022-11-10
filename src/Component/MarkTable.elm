@@ -664,8 +664,8 @@ viewColumn : Column -> Html Msg
 viewColumn column =
     case column of
         Activity activity ->
-            case activity.type_ of
-                Just ActivityTypeFIN ->
+            case activity.contentType of
+                Just ActivityContentTypeFIN ->
                     div []
                         [ div [ style "font-weight" "bold" ] [ text <| posixToDDMMYYYY T.utc activity.date ]
                         , div [] [ text <| finalTypeToStr activity ]
@@ -830,8 +830,8 @@ viewTableHeader columns =
         td_attrs col =
             case col of
                 Activity act ->
-                    case act.type_ of
-                        Just ActivityTypeFIN ->
+                    case act.contentType of
+                        Just ActivityContentTypeFIN ->
                             [ style "background-color" "#FFEFE2FF" ]
 
                         _ ->

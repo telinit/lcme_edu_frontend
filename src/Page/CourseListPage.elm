@@ -140,14 +140,19 @@ viewCourse course =
         , div [ class "content" ]
             [ div [ class "header" ] [ text course.title ]
             , div [ class "meta" ] []
-            , div [ class "description" ] []
+            , div
+                [ class "description"
+                , style "max-height" "300px"
+                , style "overflow" "hidden"
+                ]
+                [ text <| String.trim course.description
+                ]
             ]
-        , div [ class "extra content" ]
-            [ span [ class "" ]
-                (Maybe.withDefault [] <| Maybe.map (\c -> [ i [ class "users icon" ] [], text (c ++ " класс") ]) course.forClass)
-            , span [ class "right floated" ]
-                (Maybe.withDefault [] <| Maybe.map (\g -> [ i [ class "list ol icon" ] [], text g ]) <| empty_to_nothing course.forGroup)
-            ]
+        , div [ class "extra content row around-xs" ] <|
+            List.filterMap identity
+                [ Maybe.map (\c -> div [ class "col-xs" ] [ i [ class "users icon" ] [], text (c ++ " класс") ]) course.forClass
+                , Maybe.map (\g -> div [ class "col-xs" ] [ i [ class "list ol icon" ] [], text g ]) <| empty_to_nothing course.forGroup
+                ]
         ]
 
 
@@ -188,7 +193,7 @@ view model =
                 Loading m ->
                     [ Html.map MsgFetch <| MT.view (\_ -> "OK") httpErrorToString m ]
     in
-    div [class "center-xs"] <|
+    div [ class "center-xs" ] <|
         [ h1 [] [ text "Доступные предметы" ]
         , viewControls
         ]
