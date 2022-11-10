@@ -1,7 +1,7 @@
 module Component.MessageBox exposing (..)
 
 import Html exposing (Html, div, i, p, text)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 
 
@@ -12,8 +12,8 @@ type Type
     | Warning
 
 
-view : Type -> Maybe msg -> Html msg -> Html msg -> Html msg
-view type_ onClose header body =
+view : Type -> Bool -> Maybe msg -> Html msg -> Html msg -> Html msg
+view type_ isLoading onClose header body =
     let
         type_class =
             case type_ of
@@ -21,13 +21,13 @@ view type_ onClose header body =
                     ""
 
                 Success ->
-                    ""
+                    "positive"
 
                 Error ->
-                    ""
+                    "negative"
 
                 Warning ->
-                    ""
+                    "warning"
 
         close_button =
             case onClose of
@@ -37,9 +37,16 @@ view type_ onClose header body =
                 Nothing ->
                     []
     in
-    div [ class ("ui negative message " ++ type_class) ]
+    div [ class ("ui message " ++ type_class) ]
         (close_button
             ++ [ div [ class "header" ] [ header ]
-               , p [] [ body ]
+               , div []
+                    [ if isLoading then
+                        div [ class "ui active inline loader small", style "margin-right" "1em" ] []
+
+                      else
+                        text ""
+                    , body
+                    ]
                ]
         )

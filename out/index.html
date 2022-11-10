@@ -52,7 +52,10 @@
 
         if (app.ports.scrollIdIntoView)
             app.ports.scrollIdIntoView.subscribe(function(domId) {
-                document.getElementById(domId).scrollIntoView();
+                setTimeout(() => {
+                    let el = document.getElementById(domId)
+                    el.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+                }, 100)
             });
 
         if (app.ports.initDropdown)

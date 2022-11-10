@@ -121,6 +121,7 @@ view model =
         email_banner =
             MessageBox.view
                 MessageBox.Warning
+                False
                 Nothing
                 (text "Не указан email")
                 (div []

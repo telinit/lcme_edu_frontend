@@ -11,12 +11,13 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode as JD
 import Page.CourseListPage exposing (empty_to_nothing)
-import Ports exposing (initDropdown)
+import Ports exposing (initDropdown, scrollIdIntoView)
 import Process
+import Random
 import Task
 import Time exposing (utc)
 import Util exposing (finalTypeToStr, httpErrorToString, isoDateToPosix, posixToDDMMYYYY, posixToISODate, task_to_cmd)
-import Uuid exposing (Uuid)
+import Uuid exposing (Uuid, uuidGenerator)
 
 
 type ControlsUpDown
@@ -46,6 +47,7 @@ type Msg
     | MsgMoveDown
     | MsgInitUI
     | MsgNoop
+    | MsgSetInternalID Uuid
 
 
 type State
@@ -61,6 +63,7 @@ type alias Model =
     , token : String
     , editable : Bool
     , up_down : ControlsUpDown
+    , internal_id : Maybe Uuid
     }
 
 
@@ -73,14 +76,32 @@ doFetch token id =
                     Uuid.toString id
 
 
+doGenID =
+    Random.generate MsgSetInternalID uuidGenerator
+
+
 init_creator : String -> ( Model, Cmd Msg )
 init_creator token =
-    ( { state = StateCreatingNew, token = token, editable = False, up_down = ControlsUpDown False False }, Cmd.none )
+    ( { state = StateCreatingNew
+      , token = token
+      , editable = False
+      , up_down = ControlsUpDown False False
+      , internal_id = Nothing
+      }
+    , doGenID
+    )
 
 
 init_from_id : String -> Uuid -> ( Model, Cmd Msg )
 init_from_id token id =
-    ( { state = StateLoading, token = token, editable = False, up_down = ControlsUpDown False False }, doFetch token id )
+    ( { state = StateLoading
+      , token = token
+      , editable = False
+      , up_down = ControlsUpDown False False
+      , internal_id = Nothing
+      }
+    , Cmd.batch [ doFetch token id, doGenID ]
+    )
 
 
 init_from_activity : String -> Activity -> ( Model, Cmd Msg )
@@ -113,8 +134,9 @@ init_from_activity token act =
               , token = token
               , editable = False
               , up_down = ControlsUpDown False False
+              , internal_id = Nothing
               }
-            , Cmd.map MsgFinTypeSelect c
+            , Cmd.batch [ Cmd.map MsgFinTypeSelect c, doGenID ]
             )
 
         _ ->
@@ -122,8 +144,9 @@ init_from_activity token act =
               , token = token
               , editable = False
               , up_down = ControlsUpDown False False
+              , internal_id = Nothing
               }
-            , Cmd.none
+            , doGenID
             )
 
 
@@ -202,6 +225,12 @@ getActivity model =
 setUpDownControls : Bool -> Bool -> Model -> Model
 setUpDownControls up down model =
     { model | up_down = ControlsUpDown up down }
+
+
+doScrollInto : Model -> Cmd any
+doScrollInto model =
+    Maybe.withDefault Cmd.none <|
+        Maybe.map (Uuid.toString >> scrollIdIntoView) model.internal_id
 
 
 subscriptions : Model -> Sub Msg
@@ -320,6 +349,9 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        ( MsgSetInternalID id, _ ) ->
+            ( { model | internal_id = Just id }, Cmd.none )
+
         ( _, _ ) ->
             ( model, Cmd.none )
 
@@ -328,7 +360,10 @@ viewRead : Model -> Html Msg
 viewRead model =
     let
         view_with_label label bg fg body =
-            div [ class "row mb-10", style "max-width" "100vw" ]
+            div
+                ([ class "row mb-10", style "max-width" "100vw" ]
+                    ++ List.map (Uuid.toString >> id) (List.filterMap identity [ model.internal_id ])
+                )
                 [ div
                     [ class "text container segment ui"
                     , style "padding" "10px 15px"
@@ -349,7 +384,10 @@ viewRead model =
     in
     case model.state of
         StateLoading ->
-            div [ class "ui message" ]
+            div
+                ([ class "ui message" ]
+                    ++ List.map (Uuid.toString >> id) (List.filterMap identity [ model.internal_id ])
+                )
                 [ div [ class "ui active inline loader small", style "margin-right" "1em" ] []
                 , text "Загружаем активность"
                 ]
@@ -429,7 +467,10 @@ viewRead model =
                 ]
 
         StateError err ->
-            div [ class "ui text container negative message" ]
+            div
+                ([ class "ui text container negative message" ]
+                    ++ List.map (Uuid.toString >> id) (List.filterMap identity [ model.internal_id ])
+                )
                 [ div [ class "header" ] [ text "Ошибка" ]
                 , p [] [ text err ]
                 ]
@@ -444,7 +485,10 @@ viewWrite model =
         view_with_label label bg fg body =
             case model.up_down of
                 ControlsUpDown u d ->
-                    div [ class "row mb-10", style "max-width" "100vw" ]
+                    div
+                        ([ class "row mb-10", style "max-width" "100vw" ]
+                            ++ List.map (Uuid.toString >> id) (List.filterMap identity [ model.internal_id ])
+                        )
                         [ div
                             [ class "text container segment ui form"
                             , style "padding" "10px 15px"
@@ -500,7 +544,7 @@ viewWrite model =
     in
     case model.state of
         StateLoading ->
-            div [ class "ui message" ]
+            div ([ class "ui message" ] ++ List.map (Uuid.toString >> id) (List.filterMap identity [ model.internal_id ]))
                 [ div [ class "ui active inline loader small", style "margin-right" "1em" ] []
                 , text "Загружаем активность"
                 ]
@@ -690,6 +734,7 @@ viewWrite model =
                             , type_ "number"
                             , Html.Attributes.min "0"
                             , value <| String.fromInt <| Maybe.withDefault 1 activity.marksLimit
+                            , onInput (MsgSetField FieldLimit)
                             ]
                             []
                         ]
@@ -701,6 +746,7 @@ viewWrite model =
                                     [ attribute "tabindex" "0"
                                     , type_ "checkbox"
                                     , checked <| Maybe.withDefault False activity.isHidden
+                                    , onInput (MsgSetField FieldHidden)
                                     ]
                                     []
                                 , label []
@@ -717,6 +763,7 @@ viewWrite model =
                                 [ placeholder ""
                                 , type_ "date"
                                 , value <| Maybe.withDefault "" <| posixToISODate activity.date
+                                , onInput (MsgSetField FieldDate)
                                 ]
                                 []
                             ]
@@ -744,7 +791,7 @@ viewWrite model =
                 ]
 
         StateError err ->
-            div [ class "ui text container negative message" ]
+            div ([ class "ui text container negative message" ] ++ List.map (Uuid.toString >> id) (List.filterMap identity [ model.internal_id ]))
                 [ div [ class "header" ] [ text "Ошибка" ]
                 , p [] [ text err ]
                 ]

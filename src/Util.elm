@@ -427,3 +427,48 @@ list_insert_at i x l =
 
         ( _, [] ) ->
             x :: l
+
+
+fileSizeToISO : Int -> String
+fileSizeToISO size =
+    let
+        tib =
+            toFloat <| 1024 * 1024 * 1024 * 1024
+
+        gib =
+            toFloat <| 1024 * 1024 * 1024
+
+        mib =
+            toFloat <| 1024 * 1024
+
+        kib =
+            toFloat <| 1024
+
+        sizef =
+            toFloat size
+
+        prec digits x =
+            let
+
+                m =
+                    10.0 ^ toFloat digits
+
+                tr =
+                    toFloat <| truncate (x * m)
+            in
+            tr / m
+    in
+    if sizef >= tib then
+        String.fromFloat (prec 2 <| sizef / tib) ++ " ТиБ"
+
+    else if sizef >= gib then
+        String.fromFloat (prec 2 <| sizef / gib) ++ " ГиБ"
+
+    else if sizef >= mib then
+        String.fromFloat (prec 2 <| sizef / mib) ++ " МиБ"
+
+    else if sizef >= kib then
+        String.fromFloat (prec 2 <| sizef / kib) ++ " КиБ"
+
+    else
+        String.fromInt size ++ " байт"

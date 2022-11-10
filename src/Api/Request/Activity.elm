@@ -56,7 +56,7 @@ activityDelete id_path =
         (Json.Decode.succeed ())
 
 
-activityImportForCourse : Api.Data.ImportForCourse -> Api.Request ()
+activityImportForCourse : Api.Data.ImportForCourse -> Api.Request Api.Data.ImportForCourseResult
 activityImportForCourse data_body =
     Api.request
         "POST"
@@ -65,7 +65,7 @@ activityImportForCourse data_body =
         []
         []
         (Just (Api.Data.encodeImportForCourse data_body))
-        (Json.Decode.succeed ())
+        Api.Data.importForCourseResultDecoder
 
 
 activityList : Api.Request (List Api.Data.Activity)

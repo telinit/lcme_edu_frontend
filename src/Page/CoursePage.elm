@@ -1,20 +1,25 @@
 module Page.CoursePage exposing (..)
 
 import Api exposing (ext_task, task, withToken)
-import Api.Data exposing (Activity, ActivityContentType(..), CourseDeep, CourseEnrollmentRead, CourseEnrollmentReadRole(..), UserDeep)
+import Api.Data exposing (Activity, ActivityContentType(..), CourseDeep, CourseEnrollmentRead, CourseEnrollmentReadRole(..), ImportForCourseResult, UserDeep)
+import Api.Request.Activity exposing (activityImportForCourse)
 import Api.Request.Course exposing (courseBulkSetActivities, courseGetDeep, courseRead)
 import Component.Activity as CA exposing (Msg(..), getOrder, setOrder)
+import Component.FileInput as FI
 import Component.MessageBox as MessageBox exposing (Type(..))
 import Component.Misc exposing (user_link)
 import Component.Modal as Modal
 import Component.MultiTask as MultiTask exposing (Msg(..))
 import Dict exposing (Dict)
+import File
+import File.Download
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http exposing (Error(..))
 import Page.CourseListPage exposing (empty_to_nothing)
 import Set
+import String exposing (trim)
 import Task
 import Time exposing (Posix)
 import Util exposing (assoc_update, get_id, get_id_str, httpErrorToString, list_insert_at, maybeFilter, task_to_cmd, user_full_name, zip)
@@ -46,6 +51,8 @@ type Msg
     = MsgFetch (MultiTask.Msg Http.Error FetchResult)
     | MsgClickMembers
     | MsgCloseMembers
+    | MsgCloseActivitiesImport
+    | MsgOnClickImportActivities
     | MsgOnClickEdit
     | MsgOnClickEditCancel
     | MsgOnClickSave
@@ -55,10 +62,21 @@ type Msg
     | MsgCourseSaved
     | MsgCourseSaveError String
     | MsgActivity Int CA.Msg
+    | MsgFileInputImport FI.Msg
+    | MsgOnClickActivitiesImport
+    | MsgActivitiesImportFinished (Result String ImportForCourseResult)
 
 
 type FetchResult
     = ResCourse CourseDeep
+
+
+type ActivityImportState
+    = ActivityImportStateNone
+    | ActivityImportStateFileSelection FI.Model
+    | ActivityImportStateInProgress
+    | ActivityImportStateSuccess String
+    | ActivityImportStateError String
 
 
 type alias Model =
@@ -71,6 +89,7 @@ type alias Model =
     , is_staff : Bool
     , teaching_here : Bool
     , activity_component_pk : Int
+    , activity_import_state : ActivityImportState
     }
 
 
@@ -105,6 +124,7 @@ init token course_id user =
                     Set.intersect (Set.fromList <| Maybe.withDefault [] user.roles) (Set.fromList [ "admin", "staff" ])
       , teaching_here = False
       , activity_component_pk = 0
+      , activity_import_state = ActivityImportStateNone
       }
     , Cmd.map MsgFetch c
     )
@@ -312,7 +332,7 @@ update msg model =
                                                     activityMoveUp id <|
                                                         assoc_update id m act_components
                                         }
-                                    , Cmd.map (MsgActivity id) c
+                                    , Cmd.batch [ Cmd.map (MsgActivity id) c, CA.doScrollInto m ]
                                     )
 
                                 CA.MsgMoveDown ->
@@ -323,7 +343,7 @@ update msg model =
                                                     activityMoveDown id <|
                                                         assoc_update id m act_components
                                         }
-                                    , Cmd.map (MsgActivity id) c
+                                    , Cmd.batch [ Cmd.map (MsgActivity id) c, CA.doScrollInto m ]
                                     )
 
                                 CA.MsgOnClickDelete ->
@@ -507,8 +527,169 @@ update msg model =
             )
 
         -- TODO: update course?
+        ( MsgOnClickImportActivities, _ ) ->
+            let
+                ( m, c ) =
+                    FI.init (Just "Выберите файл с темами") [ "text/csv" ]
+            in
+            ( { model | activity_import_state = ActivityImportStateFileSelection m }, Cmd.map MsgFileInputImport c )
+
+        ( MsgCloseActivitiesImport, _ ) ->
+            ( { model | activity_import_state = ActivityImportStateNone }, Cmd.none )
+
+        ( MsgFileInputImport msg_, _ ) ->
+            case model.activity_import_state of
+                ActivityImportStateFileSelection model_ ->
+                    let
+                        ( m, c ) =
+                            FI.update msg_ model_
+                    in
+                    ( { model | activity_import_state = ActivityImportStateFileSelection m }, Cmd.map MsgFileInputImport c )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        ( MsgOnClickActivitiesImport, FetchDone course _ ) ->
+            case model.activity_import_state of
+                ActivityImportStateFileSelection model_ ->
+                    case ( model_.file, course.id ) of
+                        ( Just file, Just cid ) ->
+                            ( { model
+                                | activity_import_state = ActivityImportStateInProgress
+                              }
+                            , File.toString file
+                                |> Task.andThen
+                                    (\csv ->
+                                        ext_task identity model.token [] <|
+                                            activityImportForCourse { data = csv, courseId = cid }
+                                    )
+                                |> Task.mapError httpErrorToString
+                                |> Task.attempt MsgActivitiesImportFinished
+                            )
+
+                        _ ->
+                            ( model, Cmd.none )
+
+                ActivityImportStateSuccess status ->
+                    ( model, Cmd.none )
+
+                ActivityImportStateError err ->
+                    ( model, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        ( MsgActivitiesImportFinished res, _ ) ->
+            case res of
+                Ok v ->
+                    ( { model
+                        | activity_import_state =
+                            ActivityImportStateSuccess <|
+                                "Записей создано: "
+                                    ++ (String.fromInt <| List.length v.objects)
+                      }
+                    , Cmd.none
+                    )
+
+                Err e ->
+                    ( { model | activity_import_state = ActivityImportStateError e }, Cmd.none )
+
         ( _, _ ) ->
             ( model, Cmd.none )
+
+
+viewActivitiesImport : Model -> Html Msg
+viewActivitiesImport model =
+    let
+        form state =
+            div []
+                [ p []
+                    [ text "Перед началом импорта убедитесь, что ваш файл с темами сохранен в формате "
+                    , strong [] [ text "CSV" ]
+                    , text " и имеет заголовок (первую строку) со следующими полями:"
+                    ]
+                , ul []
+                    [ li [] [ strong [] [ text "Номер" ], text " - ЧИСЛО, номер темы в списке" ]
+                    , li [] [ strong [] [ text "Дата" ], text " - ДАТА(ЧЧ.ММ.ГГГГ), дата проведения урока" ]
+                    , li [] [ strong [] [ text "Тема" ], text " - ТЕКСТ, название темы" ]
+                    , li [] [ strong [] [ text "Ключевое слово" ], text " - ТЕКСТ, краткое название темы (отображается в \"шапке\" таблицы)" ]
+                    , li [] [ strong [] [ text "Раздел" ], text " - ТЕКСТ, название раздела. Для группировки тем" ]
+                    , li [] [ strong [] [ text "ФГОС" ], text " - ЛОГИЧЕСКОЕ(Да, Нет), соответствует ли тема ФГОС" ]
+                    , li [] [ strong [] [ text "Раздел научной дисциплины" ], text " - ТЕКСТ, название наздела научной дисциплины" ]
+                    , li [] [ strong [] [ text "Форма занятия" ], text " - ТЕКСТ, форма занятия (Контрольная работа, Тест, Лекция, ...)" ]
+                    , li [] [ strong [] [ text "Материалы урока" ], text " - ТЕКСТ, ссылки на материалы урока (в свободной форме)" ]
+                    , li [] [ strong [] [ text "Домашнее задание" ], text " - ТЕКСТ, текст домашнего задания (в свободной форме)" ]
+                    , li [] [ strong [] [ text "Количество оценок" ], text " - ЧИСЛО, максимальное количество оценок по теме" ]
+                    , li [] [ strong [] [ text "Часы" ], text " - ЧИСЛО, количество академических часов по данному уроку" ]
+                    ]
+                , p [] [ text "Скачать шаблон такого файла можно по ", a [ href "/template_activities.csv" ] [ text "ссылке" ], text "." ]
+                , p []
+                    [ text <|
+                        "Убедившись, что ваш файл соответствует указанному выше формату, укажите его в поле ниже и отправьте на сервер. "
+                            ++ "По завершению процесса импорта вы увидите результат (успех, ошибка)."
+                    ]
+                , div [ class "row center-xs" ]
+                    [ state
+                    ]
+                ]
+    in
+    case model.activity_import_state of
+        ActivityImportStateFileSelection m ->
+            case m.file of
+                Just file ->
+                    form <|
+                        div [ class "col", style "display" "inline-block" ]
+                            [ Html.map
+                                MsgFileInputImport
+                              <|
+                                FI.view m
+                            , button [ class "ui button green", onClick MsgOnClickActivitiesImport ] [ text "Начать импорт" ]
+                            ]
+
+                Nothing ->
+                    form <|
+                        div [ class "col", style "display" "inline-block" ]
+                            [ Html.map
+                                MsgFileInputImport
+                              <|
+                                FI.view m
+                            ]
+
+        ActivityImportStateNone ->
+            text ""
+
+        ActivityImportStateInProgress ->
+            form <|
+                div [ class "col", style "display" "inline-block" ]
+                    [ MessageBox.view
+                        MessageBox.None
+                        True
+                        Nothing
+                        (text "")
+                        (text "Выполняется импорт")
+                    ]
+
+        ActivityImportStateSuccess msg ->
+            form <|
+                div [ class "col", style "display" "inline-block" ]
+                    [ MessageBox.view
+                        MessageBox.Success
+                        False
+                        Nothing
+                        (text "")
+                        (text <| "Импорт успешно завершен: " ++ msg)
+                    ]
+
+        ActivityImportStateError err ->
+            form <|
+                div [ class "col", style "display" "inline-block" ]
+                    [ MessageBox.view
+                        MessageBox.Error
+                        False
+                        Nothing
+                        (text "")
+                        (text <| "Импорт выполнен с ошибкой: " ++ err)
+                    ]
 
 
 viewCourse : CourseDeep -> List ( Int, CA.Model ) -> Model -> Html Msg
@@ -689,14 +870,37 @@ viewCourse courseRead components_activity model =
                     , style "top" "0"
                     , style "z-index" "10"
                     ]
-                    [ span [] [ text "Добавить: " ]
-                    , button [ class "ui button green", onClick MsgOnClickAddGen ]
-                        [ i [ class "plus icon" ] []
-                        , text "Тема"
-                        ]
-                    , button [ class "ui button green", onClick MsgOnClickAddFin ]
-                        [ i [ class "plus icon" ] []
-                        , text "Контроль"
+                    [ div [ class "row around-xs" ]
+                        [ div [ class "col-xs-12 col-md-8 mb-5" ]
+                            [ div
+                                [ style "min-width" "100px"
+                                , style "display" "inline-block"
+                                , style "text-align" "right"
+                                , class "mr-10"
+                                ]
+                                [ text "Добавить: " ]
+                            , button [ class "ui button green", onClick MsgOnClickAddGen ]
+                                [ i [ class "plus icon" ] []
+                                , text "Тема"
+                                ]
+                            , button [ class "ui button green", onClick MsgOnClickAddFin ]
+                                [ i [ class "plus icon" ] []
+                                , text "Контроль"
+                                ]
+                            ]
+                        , div [ class "col-xs-12 col-md-4 start-xs end-md mb-5" ]
+                            [ span
+                                [ style "min-width" "100px"
+                                , style "display" "inline-block"
+                                , style "text-align" "right"
+                                , class "mr-10"
+                                ]
+                                [ text "Импорт: " ]
+                            , button [ class "ui button green", onClick MsgOnClickImportActivities ]
+                                [ i [ class "file icon" ] []
+                                , text "CSV"
+                                ]
+                            ]
                         ]
                     ]
 
@@ -779,6 +983,20 @@ viewCourse courseRead components_activity model =
                 [ ( "Закрыть", MsgCloseMembers ) ]
                 do_show
 
+        modal_activities_import m =
+            case m of
+                ActivityImportStateNone ->
+                    text ""
+
+                _ ->
+                    Modal.view
+                        "activities_import"
+                        "Импорт тем"
+                        (viewActivitiesImport model)
+                        MsgCloseActivitiesImport
+                        [ ( "Закрыть", MsgCloseActivitiesImport ) ]
+                        True
+
         activities_title =
             h1 [ class "row between-xs" ]
                 [ text "Содержание"
@@ -802,6 +1020,7 @@ viewCourse courseRead components_activity model =
     in
     div [ style "padding-bottom" "3em" ]
         [ modal_members model.show_members
+        , modal_activities_import model.activity_import_state
         , breadcrumbs
         , header
         , activities_title
@@ -825,4 +1044,4 @@ view model =
             viewCourse courseRead components_activity model
 
         FetchFailed err ->
-            MessageBox.view Error Nothing (text "Ошибка") (text <| "Не удалось получить данные курса: " ++ err)
+            MessageBox.view Error False Nothing (text "Ошибка") (text <| "Не удалось получить данные курса: " ++ err)

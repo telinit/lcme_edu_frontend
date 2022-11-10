@@ -34,6 +34,8 @@ module Api.Data exposing
     , ErrorMessage
     , File
     , ImportForCourse
+    , ImportForCourseResult
+    , ImportForCourseResultObject
     , Login
     , Mark
     , Message
@@ -81,6 +83,8 @@ module Api.Data exposing
     , encodeErrorMessage
     , encodeFile
     , encodeImportForCourse
+    , encodeImportForCourseResult
+    , encodeImportForCourseResultObject
     , encodeLogin
     , encodeMark
     , encodeMessage
@@ -100,6 +104,8 @@ module Api.Data exposing
     , errorMessageDecoder
     , fileDecoder
     , importForCourseDecoder
+    , importForCourseResultDecoder
+    , importForCourseResultObjectDecoder
     , loginDecoder
     , markDecoder
     , messageDecoder
@@ -384,6 +390,19 @@ type alias File =
 
 type alias ImportForCourse =
     { data : String
+    , courseId : Uuid
+    }
+
+
+type alias ImportForCourseResult =
+    { objects : List ImportForCourseResultObject
+    }
+
+
+type alias ImportForCourseResultObject =
+    { index : Int
+    , type_ : String
+    , topic : String
     }
 
 
@@ -1066,6 +1085,49 @@ encodeImportForCoursePairs model =
     let
         pairs =
             [ encode "data" Json.Encode.string model.data
+            , encode "course_id" Uuid.encode model.courseId
+            ]
+    in
+    pairs
+
+
+encodeImportForCourseResult : ImportForCourseResult -> Json.Encode.Value
+encodeImportForCourseResult =
+    encodeObject << encodeImportForCourseResultPairs
+
+
+encodeImportForCourseResultWithTag : ( String, String ) -> ImportForCourseResult -> Json.Encode.Value
+encodeImportForCourseResultWithTag ( tagField, tag ) model =
+    encodeObject (encodeImportForCourseResultPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeImportForCourseResultPairs : ImportForCourseResult -> List EncodedField
+encodeImportForCourseResultPairs model =
+    let
+        pairs =
+            [ encode "objects" (Json.Encode.list encodeImportForCourseResultObject) model.objects
+            ]
+    in
+    pairs
+
+
+encodeImportForCourseResultObject : ImportForCourseResultObject -> Json.Encode.Value
+encodeImportForCourseResultObject =
+    encodeObject << encodeImportForCourseResultObjectPairs
+
+
+encodeImportForCourseResultObjectWithTag : ( String, String ) -> ImportForCourseResultObject -> Json.Encode.Value
+encodeImportForCourseResultObjectWithTag ( tagField, tag ) model =
+    encodeObject (encodeImportForCourseResultObjectPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeImportForCourseResultObjectPairs : ImportForCourseResultObject -> List EncodedField
+encodeImportForCourseResultObjectPairs model =
+    let
+        pairs =
+            [ encode "index" Json.Encode.int model.index
+            , encode "type" Json.Encode.string model.type_
+            , encode "topic" Json.Encode.string model.topic
             ]
     in
     pairs
@@ -1834,6 +1896,21 @@ importForCourseDecoder : Json.Decode.Decoder ImportForCourse
 importForCourseDecoder =
     Json.Decode.succeed ImportForCourse
         |> decode "data" Json.Decode.string
+        |> decode "course_id" Uuid.decoder
+
+
+importForCourseResultDecoder : Json.Decode.Decoder ImportForCourseResult
+importForCourseResultDecoder =
+    Json.Decode.succeed ImportForCourseResult
+        |> decode "objects" (Json.Decode.list importForCourseResultObjectDecoder)
+
+
+importForCourseResultObjectDecoder : Json.Decode.Decoder ImportForCourseResultObject
+importForCourseResultObjectDecoder =
+    Json.Decode.succeed ImportForCourseResultObject
+        |> decode "index" Json.Decode.int
+        |> decode "type" Json.Decode.string
+        |> decode "topic" Json.Decode.string
 
 
 loginDecoder : Json.Decode.Decoder Login
