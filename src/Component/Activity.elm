@@ -10,6 +10,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode as JD
+import Page.CourseListPage exposing (empty_to_nothing)
 import Ports exposing (initDropdown)
 import Process
 import Task
@@ -32,6 +33,7 @@ type Field
     | FieldFGOS
     | FieldHidden
     | FieldDate
+    | FieldLessonType
 
 
 type Msg
@@ -252,7 +254,7 @@ update msg model =
                                     StateWithFinActivity
                                         { act
                                             | finalType = Just t
-                                            , title = finalTypeToStr {finalType = Just t}
+                                            , title = finalTypeToStr { finalType = Just t }
                                         }
                                         m
                               }
@@ -273,13 +275,13 @@ update msg model =
                             { act | title = v }
 
                         FieldKeywords ->
-                            { act | keywords = Just v }
+                            { act | keywords = empty_to_nothing <| Just <| String.trim v }
 
                         FieldSci ->
-                            { act | scientificTopic = Just v }
+                            { act | scientificTopic = empty_to_nothing <| Just <| String.trim v }
 
                         FieldGroup ->
-                            { act | group = Just v }
+                            { act | group = empty_to_nothing <| Just <| String.trim v }
 
                         FieldHours ->
                             { act | hours = String.toInt v }
@@ -300,6 +302,9 @@ update msg model =
 
                                 Nothing ->
                                     act
+
+                        FieldLessonType ->
+                            { act | lessonType = empty_to_nothing <| Just <| String.trim v }
             in
             case state of
                 StateWithFinActivity act fm ->
@@ -319,8 +324,8 @@ update msg model =
             ( model, Cmd.none )
 
 
-view_read : Model -> Html Msg
-view_read model =
+viewRead : Model -> Html Msg
+viewRead model =
     let
         view_with_label label bg fg body =
             div [ class "row mb-10", style "max-width" "100vw" ]
@@ -328,6 +333,7 @@ view_read model =
                     [ class "text container segment ui"
                     , style "padding" "10px 15px"
                     , style "background-color" bg
+                    , style "overflow" "hidden"
                     ]
                     [ div [ class "row middle-xs" ]
                         [ div [ class "col-xs" ]
@@ -355,14 +361,14 @@ view_read model =
                 [ h3 [ class "row start-xs pl-10 pt-10" ]
                     [ text activity.title ]
                 , div [ class "row between-xs middle-xs", style "font-size" "smaller" ]
-                    [ div [ class "col-xs-12 col-sm-4 start-xs center-sm" ]
+                    [ div [ class "col-xs-12 col-sm start-xs center-sm" ]
                         [ strong [ class "mr-10 activity-property-label" ]
                             [ i [ class "calendar alternate outline icon", style "color" "rgb(102, 119, 153)" ] []
                             , text "Дата:"
                             ]
                         , text <| posixToDDMMYYYY utc activity.date
                         ]
-                    , div [ class "col-xs-12 col-sm-4 start-xs center-sm" ]
+                    , div [ class "col-xs-12 col-sm start-xs start-sm" ]
                         [ strong [ class "mr-10 activity-property-label" ]
                             [ i [ class "clock outline icon", style "color" "rgb(102, 119, 153)" ] []
                             , text "Количество часов:"
@@ -373,7 +379,20 @@ view_read model =
                                     String.fromInt
                                     activity.hours
                         ]
-                    , div [ class "col-xs-12 col-sm-4 start-xs center-sm" ] []
+                    , div [ class "col-xs-12 col-sm start-xs start-sm" ] <|
+                        Maybe.withDefault [] <|
+                            Maybe.map
+                                (\lt ->
+                                    [ strong [ class "mr-10 activity-property-label" ]
+                                        [ i [ class "object ungroup outline icon", style "color" "rgb(102, 119, 153)" ] []
+                                        , text "Тип:"
+                                        ]
+                                    , text lt
+                                    ]
+                                )
+                            <|
+                                empty_to_nothing <|
+                                    activity.lessonType
                     ]
                 ]
 
@@ -419,8 +438,8 @@ view_read model =
             text ""
 
 
-view_write : Model -> Html Msg
-view_write model =
+viewWrite : Model -> Html Msg
+viewWrite model =
     let
         view_with_label label bg fg body =
             case model.up_down of
@@ -510,6 +529,18 @@ view_write model =
                             , type_ "text"
                             , value <| Maybe.withDefault "" activity.keywords
                             , onInput (MsgSetField FieldKeywords)
+                            ]
+                            []
+                        ]
+                    ]
+                , div [ class "row mt-10" ]
+                    [ div [ class "field start-xs col-xs-12" ]
+                        [ label [] [ text "Тип занятия" ]
+                        , input
+                            [ placeholder "Лекция, Лабораторная работа, Контрольная работа, ..."
+                            , type_ "text"
+                            , value <| Maybe.withDefault "" activity.lessonType
+                            , onInput (MsgSetField FieldLessonType)
                             ]
                             []
                         ]
@@ -725,7 +756,7 @@ view_write model =
 view : Model -> Html Msg
 view model =
     if model.editable then
-        view_write model
+        viewWrite model
 
     else
-        view_read model
+        viewRead model
