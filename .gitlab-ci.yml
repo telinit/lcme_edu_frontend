@@ -28,5 +28,4 @@ deploy-2-production:
   environment:
     name: production
     url: https://edu.lnmo.ru
-    on_stop: stop-deploy-2-production
   when: manual
