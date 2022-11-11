@@ -9,10 +9,9 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Http
-import Page.CourseListPage exposing (empty_to_nothing)
 import Task
 import Time
-import Util exposing (get_id, httpErrorToString, link_span, posixToDDMMYYYY, posixToFullDate, user_deep_to_shallow, user_full_name, user_has_any_role)
+import Util exposing (httpErrorToString, link_span, posixToFullDate, user_deep_to_shallow, user_full_name, user_has_any_role)
 import Uuid exposing (Uuid)
 
 
@@ -48,7 +47,7 @@ type alias Model =
     { token : String
     , state : State
     , current_user : UserDeep
-    , user_id : Uuid
+    , user_id : Maybe Uuid
     , state_email : SettingState
     , state_password : SettingState
     }
@@ -87,7 +86,7 @@ init token current_user profile_id =
             ( { token = token
               , current_user = current_user
               , state = StateLoading m
-              , user_id = uid
+              , user_id = Just uid
               , state_email = SettingStateUnset
               , state_password = SettingStateUnset
               }
@@ -95,10 +94,11 @@ init token current_user profile_id =
             )
 
         Nothing ->
+
             ( { token = token
               , current_user = current_user
               , state = StateComplete current_user
-              , user_id = get_id current_user
+              , user_id = current_user.id
               , state_email = Maybe.withDefault SettingStateUnset <| Maybe.map SettingStateShow current_user.email
               , state_password = SettingStateShow ""
               }
@@ -108,10 +108,6 @@ init token current_user profile_id =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        _ =
-            Debug.log "update" ( msg, model.state )
-    in
     case ( msg, model.state ) of
         ( MsgTask msg_, StateLoading model_ ) ->
             let
@@ -138,7 +134,7 @@ update msg model =
 
                 SettingStateChangePrompt old ->
                     ( { model | state_email = SettingStateChanging old }
-                    , doChangeEmail model.token (Uuid.toString model.user_id) old
+                    , doChangeEmail model.token (Maybe.withDefault "" <| Maybe.map Uuid.toString model.user_id) old
                     )
 
                 _ ->
@@ -151,7 +147,7 @@ update msg model =
 
                 SettingStateChangePrompt old ->
                     ( { model | state_password = SettingStateChanging old }
-                    , doChangePassword model.token (Uuid.toString model.user_id) old
+                    , doChangePassword model.token (Maybe.withDefault "" <| Maybe.map Uuid.toString model.user_id) old
                     )
 
                 _ ->

@@ -5,7 +5,6 @@ import Component.MarkTable as MT
 import Component.MultiTask exposing (Msg(..))
 import Html exposing (Html, a, div, i, text)
 import Html.Attributes exposing (class, href, style)
-import Util exposing (get_id_str)
 import Uuid exposing (Uuid)
 
 
@@ -56,7 +55,7 @@ view model =
                             [ text "Предметы" ]
                         , i [ class "right chevron icon divider" ]
                             []
-                        , a [ class "section", href <| "/course/" ++ get_id_str course ]
+                        , a [ class "section", href <| "/course/" ++ (Maybe.withDefault "" <| Maybe.map Uuid.toString course.id) ]
                             [ text course.title ]
                         , i [ class "right chevron icon divider" ]
                             []

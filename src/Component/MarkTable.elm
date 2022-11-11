@@ -19,7 +19,7 @@ import Maybe as M
 import Set
 import Task
 import Time as T exposing (Posix, millisToPosix)
-import Util exposing (dictFromTupleListMany, finalTypeToStr, get_id, get_id_str, httpErrorToString, index_by, posixToDDMMYYYY, user_full_name, zip)
+import Util exposing (dictFromTupleListMany, finalTypeToStr, get_id_str, httpErrorToString, index_by, posixToDDMMYYYY, user_full_name, zip)
 import Uuid exposing (Uuid)
 
 
@@ -235,10 +235,15 @@ doUpdateMark token old_mark coords new_mark =
                 Err _ ->
                     MsgNop
     in
-    Task.attempt onResult <|
-        ext_task identity token [] <|
-            markPartialUpdate (get_id_str old_mark)
-                { old_mark | value = new_mark }
+    Maybe.withDefault Cmd.none <|
+        Maybe.map
+            (\id ->
+                Task.attempt onResult <|
+                    ext_task identity token [] <|
+                        markPartialUpdate (Uuid.toString id)
+                            { old_mark | value = new_mark }
+            )
+            old_mark.id
 
 
 doDeleteMark : String -> Uuid -> ( Int, Int ) -> Cmd Msg
@@ -525,10 +530,15 @@ update msg model =
                                                         mark_slots =
                                                             M.withDefault [] <| D.get coords marks_ix
                                                     in
-                                                    mark_slots
-                                                        ++ L.repeat
-                                                            (M.withDefault 0 act.marksLimit - L.length mark_slots)
-                                                            (SlotVirtual False (get_id act) (get_id student))
+                                                    case ( act.id, student.id ) of
+                                                        ( Just aid, Just sid ) ->
+                                                            mark_slots
+                                                                ++ L.repeat
+                                                                    (M.withDefault 0 act.marksLimit - L.length mark_slots)
+                                                                    (SlotVirtual False aid sid)
+
+                                                        _ ->
+                                                            mark_slots
 
                                                 ( _, _ ) ->
                                                     []
@@ -637,12 +647,17 @@ update msg model =
                 CmdDeleteMark ->
                     case mark_slot of
                         SlotMark isSelected mark ->
-                            ( model
-                            , doDeleteMark
-                                model.token
-                                (get_id mark)
-                                ( x, y )
-                            )
+                            Maybe.withDefault ( model, Cmd.none ) <|
+                                Maybe.map
+                                    (\id ->
+                                        ( model
+                                        , doDeleteMark
+                                            model.token
+                                            id
+                                            ( x, y )
+                                        )
+                                    )
+                                    mark.id
 
                         SlotVirtual _ _ _ ->
                             ( model, Cmd.none )

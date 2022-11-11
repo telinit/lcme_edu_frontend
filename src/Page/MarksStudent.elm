@@ -5,7 +5,7 @@ import Component.MarkTable as MT
 import Component.Misc exposing (user_link)
 import Html exposing (Html, div, h1, h2, text)
 import Html.Attributes exposing (class, style)
-import Util exposing (get_id_str, user_deep_to_shallow, user_has_any_role)
+import Util exposing (user_deep_to_shallow, user_has_any_role)
 import Uuid exposing (Uuid)
 
 
@@ -81,7 +81,7 @@ view model =
                     List.member "student" <| Maybe.withDefault [] model.user.roles
 
                 lnk user =
-                    user_link (Just <| "/marks/student/" ++ get_id_str user) user
+                    user_link (Just <| "/marks/student/" ++ (Maybe.withDefault "" <| Maybe.map Uuid.toString user.id)) user
             in
             div [ class "row center-xs" ]
                 [ div [ class "col" ] <|

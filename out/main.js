@@ -6643,10 +6643,6 @@ var $author$project$Main$PageCourse = function (a) {
 var $author$project$Main$PageCourseList = function (a) {
 	return {$: 'PageCourseList', a: a};
 };
-var $author$project$Main$PageFatalError = F2(
-	function (a, b) {
-		return {$: 'PageFatalError', a: a, b: b};
-	});
 var $author$project$Main$PageFront = function (a) {
 	return {$: 'PageFront', a: a};
 };
@@ -10017,23 +10013,6 @@ var $author$project$Page$UserProfile$StateLoading = function (a) {
 var $author$project$Page$UserProfile$TaskResultUser = function (a) {
 	return {$: 'TaskResultUser', a: a};
 };
-var $elm$core$Debug$toString = _Debug_toString;
-var $elm$core$Debug$todo = _Debug_todo;
-var $author$project$Util$get_id = function (record) {
-	var _v0 = record.id;
-	if (_v0.$ === 'Just') {
-		var id = _v0.a;
-		return id;
-	} else {
-		return _Debug_todo(
-			'Util',
-			{
-				start: {line: 134, column: 13},
-				end: {line: 134, column: 23}
-			})(
-			'get_id: ' + $elm$core$Debug$toString(record));
-	}
-};
 var $author$project$Api$Request$User$userGetDeep = function (id_path) {
 	return A7(
 		$author$project$Api$request,
@@ -10076,7 +10055,7 @@ var $author$project$Page$UserProfile$init = F3(
 					state_email: $author$project$Page$UserProfile$SettingStateUnset,
 					state_password: $author$project$Page$UserProfile$SettingStateUnset,
 					token: token,
-					user_id: uid
+					user_id: $elm$core$Maybe$Just(uid)
 				},
 				A2($elm$core$Platform$Cmd$map, $author$project$Page$UserProfile$MsgTask, c));
 		} else {
@@ -10090,7 +10069,7 @@ var $author$project$Page$UserProfile$init = F3(
 						A2($elm$core$Maybe$map, $author$project$Page$UserProfile$SettingStateShow, current_user.email)),
 					state_password: $author$project$Page$UserProfile$SettingStateShow(''),
 					token: token,
-					user_id: $author$project$Util$get_id(current_user)
+					user_id: current_user.id
 				},
 				$elm$core$Platform$Cmd$none);
 		}
@@ -12125,7 +12104,6 @@ var $author$project$Component$Activity$setError = F2(
 			});
 	});
 var $elm$core$String$trim = _String_trim;
-var $elm$core$Debug$log = _Debug_log;
 var $author$project$Component$Select$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -12147,19 +12125,12 @@ var $author$project$Component$Select$update = F2(
 						model,
 						{active: !model.active}),
 					$elm$core$Platform$Cmd$none);
-			case 'MsgCloseMenu':
+			default:
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{active: false}),
 					$elm$core$Platform$Cmd$none);
-			default:
-				var value = msg.a;
-				var _v1 = A2(
-					$elm$core$Debug$log,
-					'value',
-					A2($elm$json$Json$Encode$encode, 4, value));
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$Component$Activity$update = F2(
@@ -12374,10 +12345,6 @@ var $elm$file$File$Select$file = F2(
 	});
 var $author$project$Component$FileInput$update = F2(
 	function (msg, model) {
-		var _v0 = A2(
-			$elm$core$Debug$log,
-			'FileInput.update',
-			_Utils_Tuple2(msg, model));
 		if (msg.$ === 'MsgDoSelectFile') {
 			return _Utils_Tuple2(
 				model,
@@ -12403,13 +12370,13 @@ var $author$project$Page$CoursePage$update = F2(
 					return $.order;
 				},
 				course.activities);
-			var _v50 = $elm$core$List$unzip(
+			var _v52 = $elm$core$List$unzip(
 				A2(
 					$elm$core$List$map,
 					$author$project$Component$Activity$init_from_activity(model.token),
 					activities));
-			var ms = _v50.a;
-			var cs = _v50.b;
+			var ms = _v52.a;
+			var cs = _v52.b;
 			var len = $elm$core$List$length(ms);
 			var id_range = A2($elm$core$List$range, model.activity_component_pk, (model.activity_component_pk + len) - 1);
 			var pairs_id_cmd = A2($author$project$Util$zip, id_range, cs);
@@ -12430,9 +12397,9 @@ var $author$project$Page$CoursePage$update = F2(
 				$elm$core$Platform$Cmd$batch(
 					A2(
 						$elm$core$List$map,
-						function (_v51) {
-							var id = _v51.a;
-							var c_ = _v51.b;
+						function (_v53) {
+							var id = _v53.a;
+							var c_ = _v53.b;
 							return A2(
 								$elm$core$Platform$Cmd$map,
 								$author$project$Page$CoursePage$MsgActivity(id),
@@ -12679,53 +12646,72 @@ var $author$project$Page$CoursePage$update = F2(
 							var _v22 = _v0.b;
 							var course = _v22.a;
 							var act_components = _v22.b;
-							var act_base = {
-								body: $elm$core$Maybe$Nothing,
-								contentType: $elm$core$Maybe$Nothing,
-								course: $author$project$Util$get_id(course),
-								createdAt: $elm$core$Maybe$Nothing,
-								date: t,
-								dueDate: $elm$core$Maybe$Nothing,
-								embed: $elm$core$Maybe$Nothing,
-								fgosComplient: $elm$core$Maybe$Just(false),
-								files: $elm$core$Maybe$Nothing,
-								finalType: $elm$core$Maybe$Nothing,
-								group: $elm$core$Maybe$Nothing,
-								hours: $elm$core$Maybe$Just(1),
-								id: $elm$core$Maybe$Nothing,
-								isHidden: $elm$core$Maybe$Just(false),
-								keywords: $elm$core$Maybe$Nothing,
-								lessonType: $elm$core$Maybe$Nothing,
-								link: $elm$core$Maybe$Nothing,
-								linkedActivity: $elm$core$Maybe$Nothing,
-								marksLimit: $elm$core$Maybe$Just(2),
-								order: i + 1,
-								scientificTopic: $elm$core$Maybe$Nothing,
-								title: '',
-								updatedAt: $elm$core$Maybe$Nothing
-							};
 							var act = function () {
-								var _v25 = model.edit_mode;
+								var _v25 = _Utils_Tuple2(model.edit_mode, course.id);
 								_v25$2:
 								while (true) {
-									if (_v25.$ === 'EditOn') {
-										switch (_v25.a.$) {
+									if ((_v25.a.$ === 'EditOn') && (_v25.b.$ === 'Just')) {
+										switch (_v25.a.a.$) {
 											case 'AddGen':
 												var _v26 = _v25.a;
+												var _v27 = _v26.a;
+												var cid = _v25.b.a;
 												return $elm$core$Maybe$Just(
-													_Utils_update(
-														act_base,
-														{
-															contentType: $elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeGEN)
-														}));
+													{
+														body: $elm$core$Maybe$Nothing,
+														contentType: $elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeGEN),
+														course: cid,
+														createdAt: $elm$core$Maybe$Nothing,
+														date: t,
+														dueDate: $elm$core$Maybe$Nothing,
+														embed: $elm$core$Maybe$Nothing,
+														fgosComplient: $elm$core$Maybe$Just(false),
+														files: $elm$core$Maybe$Nothing,
+														finalType: $elm$core$Maybe$Nothing,
+														group: $elm$core$Maybe$Nothing,
+														hours: $elm$core$Maybe$Just(1),
+														id: $elm$core$Maybe$Nothing,
+														isHidden: $elm$core$Maybe$Just(false),
+														keywords: $elm$core$Maybe$Nothing,
+														lessonType: $elm$core$Maybe$Nothing,
+														link: $elm$core$Maybe$Nothing,
+														linkedActivity: $elm$core$Maybe$Nothing,
+														marksLimit: $elm$core$Maybe$Just(2),
+														order: i + 1,
+														scientificTopic: $elm$core$Maybe$Nothing,
+														title: '',
+														updatedAt: $elm$core$Maybe$Nothing
+													});
 											case 'AddFin':
-												var _v27 = _v25.a;
+												var _v28 = _v25.a;
+												var _v29 = _v28.a;
+												var cid = _v25.b.a;
 												return $elm$core$Maybe$Just(
-													_Utils_update(
-														act_base,
-														{
-															contentType: $elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeFIN)
-														}));
+													{
+														body: $elm$core$Maybe$Nothing,
+														contentType: $elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeFIN),
+														course: cid,
+														createdAt: $elm$core$Maybe$Nothing,
+														date: t,
+														dueDate: $elm$core$Maybe$Nothing,
+														embed: $elm$core$Maybe$Nothing,
+														fgosComplient: $elm$core$Maybe$Just(false),
+														files: $elm$core$Maybe$Nothing,
+														finalType: $elm$core$Maybe$Nothing,
+														group: $elm$core$Maybe$Nothing,
+														hours: $elm$core$Maybe$Just(1),
+														id: $elm$core$Maybe$Nothing,
+														isHidden: $elm$core$Maybe$Just(false),
+														keywords: $elm$core$Maybe$Nothing,
+														lessonType: $elm$core$Maybe$Nothing,
+														link: $elm$core$Maybe$Nothing,
+														linkedActivity: $elm$core$Maybe$Nothing,
+														marksLimit: $elm$core$Maybe$Just(2),
+														order: i + 1,
+														scientificTopic: $elm$core$Maybe$Nothing,
+														title: '',
+														updatedAt: $elm$core$Maybe$Nothing
+													});
 											default:
 												break _v25$2;
 										}
@@ -12773,12 +12759,12 @@ var $author$project$Page$CoursePage$update = F2(
 					}
 				case 'MsgOnClickEditCancel':
 					if (_v0.b.$ === 'FetchDone') {
-						var _v28 = _v0.a;
-						var _v29 = _v0.b;
-						var course = _v29.a;
-						var _v30 = parse_course(course);
-						var m = _v30.a;
-						var c = _v30.b;
+						var _v30 = _v0.a;
+						var _v31 = _v0.b;
+						var course = _v31.a;
+						var _v32 = parse_course(course);
+						var m = _v32.a;
+						var c = _v32.b;
 						return _Utils_Tuple2(
 							A2($author$project$Page$CoursePage$setEditMode, false, m),
 							c);
@@ -12787,10 +12773,10 @@ var $author$project$Page$CoursePage$update = F2(
 					}
 				case 'MsgOnClickSave':
 					if (_v0.b.$ === 'FetchDone') {
-						var _v31 = _v0.a;
-						var _v32 = _v0.b;
-						var course = _v32.a;
-						var act_components = _v32.b;
+						var _v33 = _v0.a;
+						var _v34 = _v0.b;
+						var course = _v34.a;
+						var act_components = _v34.b;
 						var create = A2(
 							$elm$core$List$filterMap,
 							A2(
@@ -12808,12 +12794,12 @@ var $author$project$Page$CoursePage$update = F2(
 											$elm$core$Basics$eq($elm$core$Maybe$Nothing))))),
 							act_components);
 						var ac_to_tuple = function (c) {
-							var _v34 = $author$project$Component$Activity$getActivity(c);
-							if (_v34.$ === 'Just') {
-								var act = _v34.a;
-								var _v35 = act.id;
-								if (_v35.$ === 'Just') {
-									var id = _v35.a;
+							var _v36 = $author$project$Component$Activity$getActivity(c);
+							if (_v36.$ === 'Just') {
+								var act = _v36.a;
+								var _v37 = act.id;
+								if (_v37.$ === 'Just') {
+									var id = _v37.a;
 									return $elm$core$Maybe$Just(
 										_Utils_Tuple2(
 											$danyx23$elm_uuid$Uuid$toString(id),
@@ -12835,7 +12821,7 @@ var $author$project$Page$CoursePage$update = F2(
 							A3(
 								$author$project$Util$task_to_cmd,
 								A2($elm$core$Basics$composeR, $author$project$Util$httpErrorToString, $author$project$Page$CoursePage$MsgCourseSaveError),
-								function (_v33) {
+								function (_v35) {
 									return $author$project$Page$CoursePage$MsgCourseSaved;
 								},
 								A4(
@@ -12856,9 +12842,9 @@ var $author$project$Page$CoursePage$update = F2(
 				case 'MsgCourseSaveError':
 					if (_v0.b.$ === 'FetchDone') {
 						var e = _v0.a.a;
-						var _v36 = _v0.b;
-						var course = _v36.a;
-						var act_components = _v36.b;
+						var _v38 = _v0.b;
+						var course = _v38.a;
+						var act_components = _v38.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -12871,11 +12857,11 @@ var $author$project$Page$CoursePage$update = F2(
 					}
 				case 'MsgCourseSaved':
 					if (_v0.b.$ === 'FetchDone') {
-						var _v37 = _v0.a;
-						var _v38 = _v0.b;
-						var course = _v38.a;
-						var act_components = _v38.b;
-						var _v39 = A3(
+						var _v39 = _v0.a;
+						var _v40 = _v0.b;
+						var course = _v40.a;
+						var act_components = _v40.b;
+						var _v41 = A3(
 							$author$project$Page$CoursePage$init,
 							model.token,
 							A2(
@@ -12883,8 +12869,8 @@ var $author$project$Page$CoursePage$update = F2(
 								'',
 								A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, course.id)),
 							model.user);
-						var m = _v39.a;
-						var c = _v39.b;
+						var m = _v41.a;
+						var c = _v41.b;
 						return _Utils_Tuple2(
 							A2($author$project$Page$CoursePage$setEditMode, false, m),
 							c);
@@ -12892,14 +12878,14 @@ var $author$project$Page$CoursePage$update = F2(
 						break _v0$18;
 					}
 				case 'MsgOnClickImportActivities':
-					var _v40 = _v0.a;
-					var _v41 = A2(
+					var _v42 = _v0.a;
+					var _v43 = A2(
 						$author$project$Component$FileInput$init,
 						$elm$core$Maybe$Just('Выберите файл с темами'),
 						_List_fromArray(
 							['text/csv']));
-					var m = _v41.a;
-					var c = _v41.b;
+					var m = _v43.a;
+					var c = _v43.b;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
@@ -12908,7 +12894,7 @@ var $author$project$Page$CoursePage$update = F2(
 							}),
 						A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFileInputImport, c));
 				case 'MsgCloseActivitiesImport':
-					var _v42 = _v0.a;
+					var _v44 = _v0.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
@@ -12916,12 +12902,12 @@ var $author$project$Page$CoursePage$update = F2(
 						$elm$core$Platform$Cmd$none);
 				case 'MsgFileInputImport':
 					var msg_ = _v0.a.a;
-					var _v43 = model.activity_import_state;
-					if (_v43.$ === 'ActivityImportStateFileSelection') {
-						var model_ = _v43.a;
-						var _v44 = A2($author$project$Component$FileInput$update, msg_, model_);
-						var m = _v44.a;
-						var c = _v44.b;
+					var _v45 = model.activity_import_state;
+					if (_v45.$ === 'ActivityImportStateFileSelection') {
+						var model_ = _v45.a;
+						var _v46 = A2($author$project$Component$FileInput$update, msg_, model_);
+						var m = _v46.a;
+						var c = _v46.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -12934,17 +12920,17 @@ var $author$project$Page$CoursePage$update = F2(
 					}
 				case 'MsgOnClickActivitiesImport':
 					if (_v0.b.$ === 'FetchDone') {
-						var _v45 = _v0.a;
-						var _v46 = _v0.b;
-						var course = _v46.a;
-						var _v47 = model.activity_import_state;
-						switch (_v47.$) {
+						var _v47 = _v0.a;
+						var _v48 = _v0.b;
+						var course = _v48.a;
+						var _v49 = model.activity_import_state;
+						switch (_v49.$) {
 							case 'ActivityImportStateFileSelection':
-								var model_ = _v47.a;
-								var _v48 = _Utils_Tuple2(model_.file, course.id);
-								if ((_v48.a.$ === 'Just') && (_v48.b.$ === 'Just')) {
-									var file = _v48.a.a;
-									var cid = _v48.b.a;
+								var model_ = _v49.a;
+								var _v50 = _Utils_Tuple2(model_.file, course.id);
+								if ((_v50.a.$ === 'Just') && (_v50.b.$ === 'Just')) {
+									var file = _v50.a.a;
+									var cid = _v50.b.a;
 									return _Utils_Tuple2(
 										_Utils_update(
 											model,
@@ -12971,10 +12957,10 @@ var $author$project$Page$CoursePage$update = F2(
 									return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 								}
 							case 'ActivityImportStateSuccess':
-								var status = _v47.a;
+								var status = _v49.a;
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 							case 'ActivityImportStateError':
-								var err = _v47.a;
+								var err = _v49.a;
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 							default:
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -13690,7 +13676,6 @@ var $author$project$Component$MarkTable$MsgMarkUpdated = F2(
 	function (a, b) {
 		return {$: 'MsgMarkUpdated', a: a, b: b};
 	});
-var $author$project$Util$get_id_str = A2($elm$core$Basics$composeL, $danyx23$elm_uuid$Uuid$toString, $author$project$Util$get_id);
 var $author$project$Api$Request$Mark$markPartialUpdate = F2(
 	function (id_path, data_body) {
 		return A7(
@@ -13720,21 +13705,35 @@ var $author$project$Component$MarkTable$doUpdateMark = F4(
 			}
 		};
 		return A2(
-			$elm$core$Task$attempt,
-			onResult,
-			A4(
-				$author$project$Api$ext_task,
-				$elm$core$Basics$identity,
-				token,
-				_List_Nil,
-				A2(
-					$author$project$Api$Request$Mark$markPartialUpdate,
-					$author$project$Util$get_id_str(old_mark),
-					_Utils_update(
-						old_mark,
-						{value: new_mark}))));
+			$elm$core$Maybe$withDefault,
+			$elm$core$Platform$Cmd$none,
+			A2(
+				$elm$core$Maybe$map,
+				function (id) {
+					return A2(
+						$elm$core$Task$attempt,
+						onResult,
+						A4(
+							$author$project$Api$ext_task,
+							$elm$core$Basics$identity,
+							token,
+							_List_Nil,
+							A2(
+								$author$project$Api$Request$Mark$markPartialUpdate,
+								$danyx23$elm_uuid$Uuid$toString(id),
+								_Utils_update(
+									old_mark,
+									{value: new_mark}))));
+				},
+				old_mark.id));
 	});
 var $elm$browser$Browser$Dom$focus = _Browser_call('focus');
+var $author$project$Util$get_id_str = function (record) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		'',
+		A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, record.id));
+};
 var $author$project$Util$index_by = F2(
 	function (key, list) {
 		return $elm$core$Dict$fromList(
@@ -14068,10 +14067,10 @@ var $author$project$Component$MarkTable$update = F2(
 									var marks_ix = $author$project$Util$dictFromTupleListMany(
 										A2(
 											$elm$core$List$map,
-											function (_v11) {
-												var a = _v11.a;
-												var b = _v11.b;
-												var c_ = _v11.c;
+											function (_v12) {
+												var a = _v12.a;
+												var b = _v12.b;
+												var c_ = _v12.c;
 												return _Utils_Tuple2(
 													_Utils_Tuple2(b, c_),
 													A2($author$project$Component$MarkTable$SlotMark, false, a));
@@ -14117,16 +14116,19 @@ var $author$project$Component$MarkTable$update = F2(
 															$elm$core$Maybe$withDefault,
 															_List_Nil,
 															A2($elm$core$Dict$get, coords, marks_ix));
-														return _Utils_ap(
-															mark_slots,
-															A2(
-																$elm$core$List$repeat,
-																A2($elm$core$Maybe$withDefault, 0, act.marksLimit) - $elm$core$List$length(mark_slots),
-																A3(
-																	$author$project$Component$MarkTable$SlotVirtual,
-																	false,
-																	$author$project$Util$get_id(act),
-																	$author$project$Util$get_id(student))));
+														var _v11 = _Utils_Tuple2(act.id, student.id);
+														if ((_v11.a.$ === 'Just') && (_v11.b.$ === 'Just')) {
+															var aid = _v11.a.a;
+															var sid = _v11.b.a;
+															return _Utils_ap(
+																mark_slots,
+																A2(
+																	$elm$core$List$repeat,
+																	A2($elm$core$Maybe$withDefault, 0, act.marksLimit) - $elm$core$List$length(mark_slots),
+																	A3($author$project$Component$MarkTable$SlotVirtual, false, aid, sid)));
+														} else {
+															return mark_slots;
+														}
 													} else {
 														return _List_Nil;
 													}
@@ -14181,25 +14183,25 @@ var $author$project$Component$MarkTable$update = F2(
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
 			case 'MsgMarkKeyPress':
-				var _v12 = _v0.a;
-				var mark_slot = _v12.a;
-				var x = _v12.b;
-				var y = _v12.c;
-				var cmd = _v12.d;
+				var _v13 = _v0.a;
+				var mark_slot = _v13.a;
+				var x = _v13.b;
+				var y = _v13.c;
+				var cmd = _v13.d;
 				var vec = function () {
 					if (cmd.$ === 'CmdMove') {
 						switch (cmd.a.$) {
 							case 'Left':
-								var _v23 = cmd.a;
+								var _v24 = cmd.a;
 								return _Utils_Tuple2(-1, 0);
 							case 'Top':
-								var _v24 = cmd.a;
+								var _v25 = cmd.a;
 								return _Utils_Tuple2(0, -1);
 							case 'Right':
-								var _v25 = cmd.a;
+								var _v26 = cmd.a;
 								return _Utils_Tuple2(1, 0);
 							default:
-								var _v26 = cmd.a;
+								var _v27 = cmd.a;
 								return _Utils_Tuple2(0, 1);
 						}
 					} else {
@@ -14207,11 +14209,11 @@ var $author$project$Component$MarkTable$update = F2(
 					}
 				}();
 				var v2add = F2(
-					function (_v20, _v21) {
-						var a = _v20.a;
-						var b = _v20.b;
-						var c = _v21.a;
-						var d = _v21.b;
+					function (_v21, _v22) {
+						var a = _v21.a;
+						var b = _v21.b;
+						var c = _v22.a;
+						var d = _v22.b;
 						return _Utils_Tuple2(a + c, b + d);
 					});
 				var onResult = function (res) {
@@ -14224,19 +14226,19 @@ var $author$project$Component$MarkTable$update = F2(
 					}
 				};
 				var check_coords = F2(
-					function (_v17, _v18) {
-						var x_ = _v17.a;
-						var y_ = _v17.b;
-						var w = _v18.a;
-						var h = _v18.b;
+					function (_v18, _v19) {
+						var x_ = _v18.a;
+						var y_ = _v18.b;
+						var w = _v19.a;
+						var h = _v19.b;
 						return (x_ >= 0) && ((y_ >= 0) && ((_Utils_cmp(x_, w) < 0) && (_Utils_cmp(y_, h) < 0)));
 					});
-				var _v13 = A2(
+				var _v14 = A2(
 					v2add,
 					_Utils_Tuple2(x, y),
 					vec);
-				var nx = _v13.a;
-				var ny = _v13.b;
+				var nx = _v14.a;
+				var ny = _v14.b;
 				switch (cmd.$) {
 					case 'CmdMove':
 						return A2(
@@ -14289,23 +14291,31 @@ var $author$project$Component$MarkTable$update = F2(
 						if (mark_slot.$ === 'SlotMark') {
 							var isSelected = mark_slot.a;
 							var mark = mark_slot.b;
-							return _Utils_Tuple2(
-								model,
-								A3(
-									$author$project$Component$MarkTable$doDeleteMark,
-									model.token,
-									$author$project$Util$get_id(mark),
-									_Utils_Tuple2(x, y)));
+							return A2(
+								$elm$core$Maybe$withDefault,
+								_Utils_Tuple2(model, $elm$core$Platform$Cmd$none),
+								A2(
+									$elm$core$Maybe$map,
+									function (id) {
+										return _Utils_Tuple2(
+											model,
+											A3(
+												$author$project$Component$MarkTable$doDeleteMark,
+												model.token,
+												id,
+												_Utils_Tuple2(x, y)));
+									},
+									mark.id));
 						} else {
 							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 				}
 			case 'MsgMarkCreated':
-				var _v27 = _v0.a;
-				var _v28 = _v27.a;
-				var x = _v28.a;
-				var y = _v28.b;
-				var mark = _v27.b;
+				var _v28 = _v0.a;
+				var _v29 = _v28.a;
+				var x = _v29.a;
+				var y = _v29.b;
+				var mark = _v28.b;
 				return _Utils_Tuple2(
 					A3(
 						$author$project$Component$MarkTable$updateMark,
@@ -14314,11 +14324,11 @@ var $author$project$Component$MarkTable$update = F2(
 						$elm$core$Maybe$Just(mark)),
 					$elm$core$Platform$Cmd$none);
 			case 'MsgMarkUpdated':
-				var _v29 = _v0.a;
-				var _v30 = _v29.a;
-				var x = _v30.a;
-				var y = _v30.b;
-				var mark = _v29.b;
+				var _v30 = _v0.a;
+				var _v31 = _v30.a;
+				var x = _v31.a;
+				var y = _v31.b;
+				var mark = _v30.b;
 				return _Utils_Tuple2(
 					A3(
 						$author$project$Component$MarkTable$updateMark,
@@ -14327,9 +14337,9 @@ var $author$project$Component$MarkTable$update = F2(
 						$elm$core$Maybe$Just(mark)),
 					$elm$core$Platform$Cmd$none);
 			case 'MsgMarkDeleted':
-				var _v31 = _v0.a.a;
-				var x = _v31.a;
-				var y = _v31.b;
+				var _v32 = _v0.a.a;
+				var x = _v32.a;
+				var y = _v32.b;
 				return _Utils_Tuple2(
 					A3(
 						$author$project$Component$MarkTable$updateMark,
@@ -14338,7 +14348,7 @@ var $author$project$Component$MarkTable$update = F2(
 						$elm$core$Maybe$Nothing),
 					$elm$core$Platform$Cmd$none);
 			default:
-				var _v32 = _v0.a;
+				var _v33 = _v0.a;
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
@@ -14494,23 +14504,19 @@ var $author$project$Page$UserProfile$doChangePassword = F3(
 	});
 var $author$project$Page$UserProfile$update = F2(
 	function (msg, model) {
-		var _v0 = A2(
-			$elm$core$Debug$log,
-			'update',
-			_Utils_Tuple2(msg, model.state));
-		var _v1 = _Utils_Tuple2(msg, model.state);
-		_v1$7:
+		var _v0 = _Utils_Tuple2(msg, model.state);
+		_v0$7:
 		while (true) {
-			if (_v1.b.$ === 'StateLoading') {
-				if (_v1.a.$ === 'MsgTask') {
-					var msg_ = _v1.a.a;
-					var model_ = _v1.b.a;
-					var _v2 = A2($author$project$Component$MultiTask$update, msg_, model_);
-					var m = _v2.a;
-					var c = _v2.b;
+			if (_v0.b.$ === 'StateLoading') {
+				if (_v0.a.$ === 'MsgTask') {
+					var msg_ = _v0.a.a;
+					var model_ = _v0.b.a;
+					var _v1 = A2($author$project$Component$MultiTask$update, msg_, model_);
+					var m = _v1.a;
+					var c = _v1.b;
 					if ((((msg_.$ === 'TaskFinishedAll') && msg_.a.b) && (msg_.a.a.$ === 'Ok')) && (!msg_.a.b.b)) {
-						var _v4 = msg_.a;
-						var user = _v4.a.a.a;
+						var _v3 = msg_.a;
+						var user = _v3.a.a.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -14531,17 +14537,17 @@ var $author$project$Page$UserProfile$update = F2(
 							A2($elm$core$Platform$Cmd$map, $author$project$Page$UserProfile$MsgTask, c));
 					}
 				} else {
-					break _v1$7;
+					break _v0$7;
 				}
 			} else {
-				switch (_v1.a.$) {
+				switch (_v0.a.$) {
 					case 'MsgChangeEmail':
-						var _v5 = _v1.a;
-						var user = _v1.b.a;
-						var _v6 = model.state_email;
-						switch (_v6.$) {
+						var _v4 = _v0.a;
+						var user = _v0.b.a;
+						var _v5 = model.state_email;
+						switch (_v5.$) {
 							case 'SettingStateShow':
-								var old = _v6.a;
+								var old = _v5.a;
 								return _Utils_Tuple2(
 									_Utils_update(
 										model,
@@ -14550,7 +14556,7 @@ var $author$project$Page$UserProfile$update = F2(
 										}),
 									$elm$core$Platform$Cmd$none);
 							case 'SettingStateChangePrompt':
-								var old = _v6.a;
+								var old = _v5.a;
 								return _Utils_Tuple2(
 									_Utils_update(
 										model,
@@ -14560,18 +14566,21 @@ var $author$project$Page$UserProfile$update = F2(
 									A3(
 										$author$project$Page$UserProfile$doChangeEmail,
 										model.token,
-										$danyx23$elm_uuid$Uuid$toString(model.user_id),
+										A2(
+											$elm$core$Maybe$withDefault,
+											'',
+											A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, model.user_id)),
 										old));
 							default:
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					case 'MsgChangePassword':
-						var _v7 = _v1.a;
-						var user = _v1.b.a;
-						var _v8 = model.state_password;
-						switch (_v8.$) {
+						var _v6 = _v0.a;
+						var user = _v0.b.a;
+						var _v7 = model.state_password;
+						switch (_v7.$) {
 							case 'SettingStateShow':
-								var old = _v8.a;
+								var old = _v7.a;
 								return _Utils_Tuple2(
 									_Utils_update(
 										model,
@@ -14580,7 +14589,7 @@ var $author$project$Page$UserProfile$update = F2(
 										}),
 									$elm$core$Platform$Cmd$none);
 							case 'SettingStateChangePrompt':
-								var old = _v8.a;
+								var old = _v7.a;
 								return _Utils_Tuple2(
 									_Utils_update(
 										model,
@@ -14590,16 +14599,19 @@ var $author$project$Page$UserProfile$update = F2(
 									A3(
 										$author$project$Page$UserProfile$doChangePassword,
 										model.token,
-										$danyx23$elm_uuid$Uuid$toString(model.user_id),
+										A2(
+											$elm$core$Maybe$withDefault,
+											'',
+											A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, model.user_id)),
 										old));
 							default:
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					case 'MsgNewEmailValue':
-						var val = _v1.a.a;
-						var user = _v1.b.a;
-						var _v9 = model.state_email;
-						if (_v9.$ === 'SettingStateChangePrompt') {
+						var val = _v0.a.a;
+						var user = _v0.b.a;
+						var _v8 = model.state_email;
+						if (_v8.$ === 'SettingStateChangePrompt') {
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
@@ -14611,10 +14623,10 @@ var $author$project$Page$UserProfile$update = F2(
 							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					case 'MsgNewPasswordValue':
-						var val = _v1.a.a;
-						var user = _v1.b.a;
-						var _v10 = model.state_password;
-						if (_v10.$ === 'SettingStateChangePrompt') {
+						var val = _v0.a.a;
+						var user = _v0.b.a;
+						var _v9 = model.state_password;
+						if (_v9.$ === 'SettingStateChangePrompt') {
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
@@ -14626,8 +14638,8 @@ var $author$project$Page$UserProfile$update = F2(
 							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					case 'MsgChangeEmailDone':
-						var res = _v1.a.a;
-						var user = _v1.b.a;
+						var res = _v0.a.a;
+						var user = _v0.b.a;
 						if (res.$ === 'Ok') {
 							return _Utils_Tuple2(
 								_Utils_update(
@@ -14645,8 +14657,8 @@ var $author$project$Page$UserProfile$update = F2(
 								$elm$core$Platform$Cmd$none);
 						}
 					case 'MsgChangePasswordDone':
-						var res = _v1.a.a;
-						var user = _v1.b.a;
+						var res = _v0.a.a;
+						var user = _v0.b.a;
 						if (res.$ === 'Ok') {
 							return _Utils_Tuple2(
 								_Utils_update(
@@ -14664,7 +14676,7 @@ var $author$project$Page$UserProfile$update = F2(
 								$elm$core$Platform$Cmd$none);
 						}
 					default:
-						break _v1$7;
+						break _v0$7;
 				}
 			}
 		}
@@ -15198,18 +15210,7 @@ var $author$project$Main$update = F2(
 					}
 			}
 		}
-		return _Utils_Tuple2(
-			_Utils_update(
-				model,
-				{
-					layout: $author$project$Main$LayoutNone,
-					page: A2(
-						$author$project$Main$PageFatalError,
-						model.page,
-						$elm$core$Debug$toString(
-							_Utils_Tuple2(msg, model)))
-				}),
-			$elm$core$Platform$Cmd$none);
+		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 	});
 var $author$project$Page$DefaultLayout$SidebarHide = {$: 'SidebarHide'};
 var $elm$html$Html$Attributes$stringProperty = F2(
@@ -20392,7 +20393,10 @@ var $author$project$Page$MarksCourse$view = function (model) {
 							[
 								$elm$html$Html$Attributes$class('section'),
 								$elm$html$Html$Attributes$href(
-								'/course/' + $author$project$Util$get_id_str(course))
+								'/course/' + A2(
+									$elm$core$Maybe$withDefault,
+									'',
+									A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, course.id)))
 							]),
 						_List_fromArray(
 							[
@@ -20548,7 +20552,10 @@ var $author$project$Page$MarksStudent$view = function (model) {
 			return A2(
 				$author$project$Component$Misc$user_link,
 				$elm$core$Maybe$Just(
-					'/marks/student/' + $author$project$Util$get_id_str(user)),
+					'/marks/student/' + A2(
+						$elm$core$Maybe$withDefault,
+						'',
+						A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, user.id))),
 				user);
 		};
 		return A2(

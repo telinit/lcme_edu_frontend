@@ -401,7 +401,7 @@ update msg model =
             ( { model | page = PageFront model__ }, Cmd.map MsgPageFront cmd_ )
 
         _ ->
-            ( { model | page = PageFatalError model.page <| Debug.toString ( msg, model ), layout = LayoutNone }, Cmd.none )
+            ( model, Cmd.none )
 
 
 

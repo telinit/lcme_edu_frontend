@@ -32,10 +32,6 @@ init prompt mimes =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        _ =
-            Debug.log "FileInput.update" ( msg, model )
-    in
     case msg of
         MsgDoSelectFile ->
             ( model, File.Select.file model.mimes MsgFileSelected )

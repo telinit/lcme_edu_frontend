@@ -4,10 +4,8 @@ import Browser.Events
 import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput)
+import Html.Events exposing (onClick)
 import Json.Decode as JD exposing (Value)
-import Json.Encode as JE
-import Util exposing (log_decoder, onClickPrevent, onClickStop)
 
 
 type alias Key =
@@ -32,7 +30,6 @@ type Msg
     | MsgItemSelected Key
     | MsgToggleMenu
     | MsgCloseMenu
-    | MsgDebug Value
 
 
 init : Label -> Bool -> Dict Key Label -> ( Model, Cmd Msg )
@@ -71,13 +68,6 @@ update msg model =
 
         MsgCloseMenu ->
             ( { model | active = False }, Cmd.none )
-
-        MsgDebug value ->
-            let
-                _ =
-                    Debug.log "value" <| JE.encode 4 value
-            in
-            ( model, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg

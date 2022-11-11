@@ -22,7 +22,7 @@ import Set
 import String exposing (trim)
 import Task
 import Time exposing (Posix)
-import Util exposing (assoc_update, get_id, get_id_str, httpErrorToString, list_insert_at, maybeFilter, task_to_cmd, user_full_name, zip)
+import Util exposing (assoc_update, get_id_str, httpErrorToString, list_insert_at, maybeFilter, task_to_cmd, user_full_name, zip)
 import Uuid exposing (Uuid)
 
 
@@ -402,40 +402,61 @@ update msg model =
 
         ( MsgOnClickAddBefore i (Just t), FetchDone course act_components ) ->
             let
-                act_base =
-                    { id = Nothing
-                    , createdAt = Nothing
-                    , updatedAt = Nothing
-                    , contentType = Nothing
-                    , title = ""
-                    , lessonType = Nothing
-                    , keywords = Nothing
-                    , isHidden = Just False
-                    , marksLimit = Just 2
-                    , hours = Just 1
-                    , fgosComplient = Just False
-                    , order = i + 1
-                    , date = t
-                    , group = Nothing
-                    , scientificTopic = Nothing
-                    , body = Nothing
-                    , dueDate = Nothing
-                    , link = Nothing
-                    , embed = Nothing
-                    , finalType = Nothing
-                    , course = get_id course
-                    , files = Nothing
-                    , linkedActivity = Nothing
-                    }
-
                 act =
-                    case model.edit_mode of
-                        EditOn AddGen _ ->
+                    case ( model.edit_mode, course.id ) of
+                        ( EditOn AddGen _, Just cid ) ->
                             Just
-                                { act_base | contentType = Just ActivityContentTypeGEN }
+                                { id = Nothing
+                                , createdAt = Nothing
+                                , updatedAt = Nothing
+                                , title = ""
+                                , lessonType = Nothing
+                                , keywords = Nothing
+                                , isHidden = Just False
+                                , marksLimit = Just 2
+                                , hours = Just 1
+                                , fgosComplient = Just False
+                                , order = i + 1
+                                , date = t
+                                , group = Nothing
+                                , scientificTopic = Nothing
+                                , body = Nothing
+                                , dueDate = Nothing
+                                , link = Nothing
+                                , embed = Nothing
+                                , finalType = Nothing
+                                , contentType = Just ActivityContentTypeGEN
+                                , course = cid
+                                , files = Nothing
+                                , linkedActivity = Nothing
+                                }
 
-                        EditOn AddFin _ ->
-                            Just { act_base | contentType = Just ActivityContentTypeFIN }
+                        ( EditOn AddFin _, Just cid ) ->
+                            Just
+                                { id = Nothing
+                                , createdAt = Nothing
+                                , updatedAt = Nothing
+                                , title = ""
+                                , lessonType = Nothing
+                                , keywords = Nothing
+                                , isHidden = Just False
+                                , marksLimit = Just 2
+                                , hours = Just 1
+                                , fgosComplient = Just False
+                                , order = i + 1
+                                , date = t
+                                , group = Nothing
+                                , scientificTopic = Nothing
+                                , body = Nothing
+                                , dueDate = Nothing
+                                , link = Nothing
+                                , embed = Nothing
+                                , finalType = Nothing
+                                , contentType = Just ActivityContentTypeFIN
+                                , course = cid
+                                , files = Nothing
+                                , linkedActivity = Nothing
+                                }
 
                         _ ->
                             Nothing

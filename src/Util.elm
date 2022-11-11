@@ -120,25 +120,6 @@ index_by_id records =
     Dict.fromList <| List.filterMap (\rec -> Maybe.map (\id -> ( id, rec )) rec.id) records
 
 
-
--- FIXME: Remove this later
-
-
-get_id : { a | id : Maybe Uuid } -> Uuid
-get_id record =
-    case record.id of
-        Just id ->
-            id
-
-        Nothing ->
-            Debug.todo <| "get_id: " ++ Debug.toString record
-
-
-get_id_str : { a | id : Maybe Uuid } -> String
-get_id_str =
-    Uuid.toString << get_id
-
-
 dictGroupBy : (b -> comparable) -> List b -> Dict comparable (List b)
 dictGroupBy key list =
     let
@@ -161,11 +142,6 @@ dictFromTupleListMany =
                     Just [ new ]
     in
     List.foldl (\( a, b ) -> Dict.update a (update_ b)) Dict.empty
-
-
-maybeForceJust : Maybe a -> a
-maybeForceJust =
-    Maybe.withDefault <| Debug.todo "maybeForceJust"
 
 
 zip : List a -> List b -> List ( a, b )
@@ -398,11 +374,6 @@ maybeFilter pred maybe =
             Nothing
 
 
-log_decoder : String -> JD.Decoder a -> JD.Decoder a
-log_decoder prompt decoder =
-    JD.andThen (\res -> Debug.log prompt <| JD.succeed res) decoder
-
-
 assoc_update : k -> v -> List ( k, v ) -> List ( k, v )
 assoc_update k v list =
     case list of
@@ -449,7 +420,6 @@ fileSizeToISO size =
 
         prec digits x =
             let
-
                 m =
                     10.0 ^ toFloat digits
 
@@ -472,3 +442,8 @@ fileSizeToISO size =
 
     else
         String.fromInt size ++ " байт"
+
+
+get_id_str : { a | id : Maybe Uuid } -> String
+get_id_str record =
+    Maybe.withDefault "" <| Maybe.map Uuid.toString record.id
