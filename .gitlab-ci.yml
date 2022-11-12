@@ -26,6 +26,7 @@ deploy-2-production:
   script:
     - docker container rm edu-lnmo-front-builder || true
     - docker run --name edu-lnmo-front-builder git.lnmo.ru/lcme/edu-lnmo-front-builder:latest
+    - id
     - rm -rf /var/www/edu-lnmo-ru
     - docker cp edu-lnmo-front-builder:/build_out /var/www/edu-lnmo-ru
   environment:
