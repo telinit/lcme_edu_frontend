@@ -12360,6 +12360,12 @@ var $author$project$Component$FileInput$update = F2(
 				$elm$core$Platform$Cmd$none);
 		}
 	});
+var $elm$file$File$Download$url = function (href) {
+	return A2(
+		$elm$core$Task$perform,
+		$elm$core$Basics$never,
+		_File_downloadUrl(href));
+};
 var $author$project$Util$zip = $elm$core$List$map2($elm$core$Tuple$pair);
 var $author$project$Page$CoursePage$update = F2(
 	function (msg, model) {
@@ -12370,13 +12376,13 @@ var $author$project$Page$CoursePage$update = F2(
 					return $.order;
 				},
 				course.activities);
-			var _v52 = $elm$core$List$unzip(
+			var _v53 = $elm$core$List$unzip(
 				A2(
 					$elm$core$List$map,
 					$author$project$Component$Activity$init_from_activity(model.token),
 					activities));
-			var ms = _v52.a;
-			var cs = _v52.b;
+			var ms = _v53.a;
+			var cs = _v53.b;
 			var len = $elm$core$List$length(ms);
 			var id_range = A2($elm$core$List$range, model.activity_component_pk, (model.activity_component_pk + len) - 1);
 			var pairs_id_cmd = A2($author$project$Util$zip, id_range, cs);
@@ -12397,9 +12403,9 @@ var $author$project$Page$CoursePage$update = F2(
 				$elm$core$Platform$Cmd$batch(
 					A2(
 						$elm$core$List$map,
-						function (_v53) {
-							var id = _v53.a;
-							var c_ = _v53.b;
+						function (_v54) {
+							var id = _v54.a;
+							var c_ = _v54.b;
 							return A2(
 								$elm$core$Platform$Cmd$map,
 								$author$project$Page$CoursePage$MsgActivity(id),
@@ -12408,7 +12414,7 @@ var $author$project$Page$CoursePage$update = F2(
 						pairs_id_cmd)));
 		};
 		var _v0 = _Utils_Tuple2(msg, model.state);
-		_v0$18:
+		_v0$19:
 		while (true) {
 			switch (_v0.a.$) {
 				case 'MsgFetch':
@@ -12443,7 +12449,7 @@ var $author$project$Page$CoursePage$update = F2(
 								A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
 						}
 					} else {
-						break _v0$18;
+						break _v0$19;
 					}
 				case 'MsgClickMembers':
 					var _v4 = _v0.a;
@@ -12475,7 +12481,7 @@ var $author$project$Page$CoursePage$update = F2(
 										}))),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$18;
+						break _v0$19;
 					}
 				case 'MsgActivity':
 					if (_v0.b.$ === 'FetchDone') {
@@ -12590,7 +12596,7 @@ var $author$project$Page$CoursePage$update = F2(
 							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					} else {
-						break _v0$18;
+						break _v0$19;
 					}
 				case 'MsgOnClickAddGen':
 					var _v15 = _v0.a;
@@ -12754,7 +12760,7 @@ var $author$project$Page$CoursePage$update = F2(
 										c));
 							}
 						} else {
-							break _v0$18;
+							break _v0$19;
 						}
 					}
 				case 'MsgOnClickEditCancel':
@@ -12769,7 +12775,7 @@ var $author$project$Page$CoursePage$update = F2(
 							A2($author$project$Page$CoursePage$setEditMode, false, m),
 							c);
 					} else {
-						break _v0$18;
+						break _v0$19;
 					}
 				case 'MsgOnClickSave':
 					if (_v0.b.$ === 'FetchDone') {
@@ -12837,7 +12843,7 @@ var $author$project$Page$CoursePage$update = F2(
 											A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, course.id)),
 										{create: create, update: update_}))));
 					} else {
-						break _v0$18;
+						break _v0$19;
 					}
 				case 'MsgCourseSaveError':
 					if (_v0.b.$ === 'FetchDone') {
@@ -12853,7 +12859,7 @@ var $author$project$Page$CoursePage$update = F2(
 								}),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$18;
+						break _v0$19;
 					}
 				case 'MsgCourseSaved':
 					if (_v0.b.$ === 'FetchDone') {
@@ -12875,7 +12881,7 @@ var $author$project$Page$CoursePage$update = F2(
 							A2($author$project$Page$CoursePage$setEditMode, false, m),
 							c);
 					} else {
-						break _v0$18;
+						break _v0$19;
 					}
 				case 'MsgOnClickImportActivities':
 					var _v42 = _v0.a;
@@ -12966,9 +12972,9 @@ var $author$project$Page$CoursePage$update = F2(
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					} else {
-						break _v0$18;
+						break _v0$19;
 					}
-				default:
+				case 'MsgActivitiesImportFinished':
 					var res = _v0.a.a;
 					if (res.$ === 'Ok') {
 						var v = res.a;
@@ -12991,6 +12997,11 @@ var $author$project$Page$CoursePage$update = F2(
 								}),
 							$elm$core$Platform$Cmd$none);
 					}
+				default:
+					var _v52 = _v0.a;
+					return _Utils_Tuple2(
+						model,
+						$elm$file$File$Download$url('https://edu.lnmo.ru/template_activities.csv'));
 			}
 		}
 		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -17824,6 +17835,7 @@ var $author$project$Component$Modal$view = F6(
 				])) : $elm$html$Html$text('');
 	});
 var $author$project$Page$CoursePage$MsgOnClickActivitiesImport = {$: 'MsgOnClickActivitiesImport'};
+var $author$project$Page$CoursePage$MsgOnClickDownloadActivitiesTemplate = {$: 'MsgOnClickDownloadActivitiesTemplate'};
 var $author$project$Component$MessageBox$None = {$: 'None'};
 var $author$project$Component$MessageBox$Success = {$: 'Success'};
 var $elm$html$Html$li = _VirtualDom_node('li');
@@ -18161,7 +18173,8 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 							$elm$html$Html$a,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$href('/template_activities.csv')
+									$elm$html$Html$Attributes$href('/template_activities.csv'),
+									$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickDownloadActivitiesTemplate)
 								]),
 							_List_fromArray(
 								[

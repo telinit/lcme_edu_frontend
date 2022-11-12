@@ -65,6 +65,7 @@ type Msg
     | MsgFileInputImport FI.Msg
     | MsgOnClickActivitiesImport
     | MsgActivitiesImportFinished (Result String ImportForCourseResult)
+    | MsgOnClickDownloadActivitiesTemplate
 
 
 type FetchResult
@@ -615,6 +616,9 @@ update msg model =
                 Err e ->
                     ( { model | activity_import_state = ActivityImportStateError e }, Cmd.none )
 
+        (MsgOnClickDownloadActivitiesTemplate, _) ->
+            ( model, File.Download.url "https://edu.lnmo.ru/template_activities.csv" )
+
         ( _, _ ) ->
             ( model, Cmd.none )
 
@@ -643,7 +647,7 @@ viewActivitiesImport model =
                     , li [] [ strong [] [ text "Количество оценок" ], text " - ЧИСЛО, максимальное количество оценок по теме" ]
                     , li [] [ strong [] [ text "Часы" ], text " - ЧИСЛО, количество академических часов по данному уроку" ]
                     ]
-                , p [] [ text "Скачать шаблон такого файла можно по ", a [ href "/template_activities.csv" ] [ text "ссылке" ], text "." ]
+                , p [] [ text "Скачать шаблон такого файла можно по ", a [ href "/template_activities.csv", onClick MsgOnClickDownloadActivitiesTemplate ] [ text "ссылке" ], text "." ]
                 , p []
                     [ text <|
                         "Убедившись, что ваш файл соответствует указанному выше формату, укажите его в поле ниже и отправьте на сервер. "
