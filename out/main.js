@@ -17827,6 +17827,7 @@ var $author$project$Page$CoursePage$MsgOnClickActivitiesImport = {$: 'MsgOnClick
 var $author$project$Component$MessageBox$None = {$: 'None'};
 var $author$project$Component$MessageBox$Success = {$: 'Success'};
 var $elm$html$Html$li = _VirtualDom_node('li');
+var $elm$html$Html$Attributes$target = $elm$html$Html$Attributes$stringProperty('target');
 var $elm$html$Html$ul = _VirtualDom_node('ul');
 var $author$project$Component$FileInput$MsgDoSelectFile = {$: 'MsgDoSelectFile'};
 var $elm$core$String$fromFloat = _String_fromNumber;
@@ -18161,7 +18162,8 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 							$elm$html$Html$a,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$href('/template_activities.csv')
+									$elm$html$Html$Attributes$href('/template_activities.csv'),
+									$elm$html$Html$Attributes$target('_blank')
 								]),
 							_List_fromArray(
 								[
