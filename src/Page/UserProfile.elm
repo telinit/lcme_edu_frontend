@@ -94,7 +94,6 @@ init token current_user profile_id =
             )
 
         Nothing ->
-
             ( { token = token
               , current_user = current_user
               , state = StateComplete current_user
@@ -450,6 +449,11 @@ view model =
                 is_staff_or_own_page =
                     user_has_any_role model.current_user [ "staff", "admin" ] || model.current_user.id == user.id
 
+                is_related =
+                    List.any ((==) model.current_user.id) <|
+                        List.map .id <|
+                            (user.children ++ user.parents)
+
                 show_email =
                     is_staff_or_own_page
 
@@ -457,10 +461,10 @@ view model =
                     is_staff_or_own_page
 
                 show_parents =
-                    is_staff_or_own_page || (List.any ((==) model.current_user.id) <| List.map .id user.children)
+                    is_staff_or_own_page || is_related
 
                 show_children =
-                    is_staff_or_own_page || (List.any ((==) model.current_user.id) <| List.map .id user.parents)
+                    is_staff_or_own_page || is_related
 
                 education =
                     List.map viewEducation <| List.sortBy (.started >> Time.posixToMillis) user.education

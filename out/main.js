@@ -8196,7 +8196,7 @@ var $author$project$Api$request = F7(
 	function (method, path, pathParams, queryParams, headerParams, body, decoder) {
 		return $author$project$Api$Request(
 			{
-				basePath: 'http://edu.lcme/api',
+				basePath: 'https://edu.lnmo.ru/api',
 				body: A2(
 					$elm$core$Maybe$withDefault,
 					$elm$http$Http$emptyBody,
@@ -21402,17 +21402,9 @@ var $author$project$Page$UserProfile$view = function (model) {
 			model.current_user,
 			_List_fromArray(
 				['staff', 'admin'])) || _Utils_eq(model.current_user.id, user.id);
-		var show_children = is_staff_or_own_page || A2(
-			$elm$core$List$any,
-			$elm$core$Basics$eq(model.current_user.id),
-			A2(
-				$elm$core$List$map,
-				function ($) {
-					return $.id;
-				},
-				user.parents));
 		var show_email = is_staff_or_own_page;
-		var show_parents = is_staff_or_own_page || A2(
+		var show_password = is_staff_or_own_page;
+		var is_related = A2(
 			$elm$core$List$any,
 			$elm$core$Basics$eq(model.current_user.id),
 			A2(
@@ -21420,8 +21412,9 @@ var $author$project$Page$UserProfile$view = function (model) {
 				function ($) {
 					return $.id;
 				},
-				user.children));
-		var show_password = is_staff_or_own_page;
+				_Utils_ap(user.children, user.parents)));
+		var show_children = is_staff_or_own_page || is_related;
+		var show_parents = is_staff_or_own_page || is_related;
 		var fio = $author$project$Util$user_full_name(
 			$author$project$Util$user_deep_to_shallow(user));
 		var education = A2(
