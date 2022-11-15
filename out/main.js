@@ -28665,7 +28665,7 @@ var $author$project$Component$Activity$viewRead = function (model) {
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('mt-10 mb-10'),
-											A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+											A2($elm$html$Html$Attributes$style, 'text-align', 'left')
 										]),
 									_List_fromArray(
 										[
@@ -28760,7 +28760,7 @@ var $author$project$Component$Activity$viewRead = function (model) {
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('mt-10 mb-10'),
-											A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+											A2($elm$html$Html$Attributes$style, 'text-align', 'left')
 										]),
 									_List_fromArray(
 										[

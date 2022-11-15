@@ -489,7 +489,7 @@ viewRead model =
                         "#B6C6D5FF"
                         [ h3 [ class "row start-xs pl-10 pt-10" ]
                             [ text activity.title ]
-                        , div [ class "mt-10 mb-10", style "text-align" "center" ]
+                        , div [ class "mt-10 mb-10", style "text-align" "left" ]
                             [ Maybe.withDefault (text "") <|
                                 Maybe.map
                                     (\b ->
@@ -519,7 +519,7 @@ viewRead model =
                         [ h3 [ class "row start-xs pl-10 pt-10" ]
                             [ text activity.title ]
                         , div
-                            [ class "mt-10 mb-10", style "text-align" "center" ]
+                            [ class "mt-10 mb-10", style "text-align" "left" ]
                             [ Maybe.withDefault (text "") <|
                                 Maybe.map
                                     (\b ->
