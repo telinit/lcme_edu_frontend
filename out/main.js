@@ -16314,10 +16314,7 @@ var $author$project$Component$Misc$user_link = F2(
 					_List_Nil),
 					A2(
 					$elm$html$Html$span,
-					_List_fromArray(
-						[
-							A2($elm$html$Html$Attributes$style, 'margin-left', '0.5em')
-						]),
+					_List_Nil,
 					_List_fromArray(
 						[
 							$elm$html$Html$text(

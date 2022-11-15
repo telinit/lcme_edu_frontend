@@ -14,5 +14,5 @@ user_link custom_link user =
         ]
         --src <| Maybe.withDefault "" <| Maybe.map (\av -> av.downloadUrl) user.avatar
         [ img [ class "ui avatar image", src <| Maybe.withDefault "/img/user.png" user.avatar ] []
-        , span [ style "margin-left" "0.5em" ] [ text <| user_full_name user ]
+        , span [ ] [ text <| user_full_name user ]
         ]
