@@ -33744,7 +33744,12 @@ var $author$project$Component$MarkTable$viewTableCell = F3(
 							$elm$html$Html$Attributes$style,
 							'min-width',
 							$elm$core$String$fromInt(
-								$elm$core$List$length(slot_list) * 50) + 'px')
+								$elm$core$List$length(slot_list) * 50) + 'px'),
+							A2(
+							$elm$html$Html$Attributes$style,
+							'max-width',
+							$elm$core$String$fromInt(
+								$elm$core$List$length(slot_list) * 60) + 'px')
 						]),
 					A2(
 						$elm$core$List$indexedMap,
