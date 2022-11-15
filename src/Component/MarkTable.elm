@@ -833,7 +833,6 @@ viewTableCell y x slot_list =
         [ div
             [ class "row center-xs"
             , style "min-width" (String.fromInt (List.length slot_list * 50) ++ "px") -- TODO: change with something better
-            , style "max-width" (String.fromInt (List.length slot_list * 60) ++ "px") -- TODO: change with something better
             ]
           <|
             L.indexedMap (viewMarkSlot y x) slot_list
