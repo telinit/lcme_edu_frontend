@@ -67,8 +67,14 @@ right_menu profile is_mobile =
 
 menu items =
     List.map
-        (\{ href, label, icon } ->
-            a [ class "item", Html.Attributes.href href ]
+        (\{ href, label, icon, target } ->
+            a
+                (List.filterMap identity
+                    [ Just <| class "item"
+                    , Just <| Html.Attributes.href href
+                    , Maybe.map Html.Attributes.target target
+                    ]
+                )
                 [ i [ class icon, class "icon" ] []
                 , text label
                 ]
@@ -76,7 +82,7 @@ menu items =
         items
 
 
-make_header_pc : { name : String, avatar : String } -> List { href : String, label : String, icon : String } -> Html msg
+make_header_pc : { name : String, avatar : String } -> List { href : String, label : String, icon : String, target : Maybe String } -> Html msg
 make_header_pc profile items =
     div [ class "ui menu computer only grid" ]
         ([ logo "four wide column ui" ] ++ menu items ++ right_menu profile False)
@@ -108,15 +114,20 @@ view map_msg model html =
 
         items =
             List.filterMap identity
-                [ Just { label = "Предметы", href = "/courses", icon = "book" }
-                , if user_has_any_role model.user [ "parent", "student" ] then
-                    Just { label = "Оценки", href = "/marks", icon = "chart bar outline" }
+                [ Just { label = "Предметы", href = "/courses", icon = "book", target = Nothing }
+                , if user_has_any_role model.user [ "parent" ] then
+                    Just { label = "Оценки детей", href = "/marks", icon = "chart bar outline", target = Nothing }
+
+                  else
+                    Nothing
+                , if user_has_any_role model.user [ "student" ] then
+                    Just { label = "Мои оценки", href = "/marks", icon = "chart bar outline", target = Nothing }
 
                   else
                     Nothing
                 , --, Just { label = "Сообщения", href = "/messages", icon = "envelope outline" }
                   if user_has_all_roles model.user [ "admin" ] then
-                    Just { label = "Администрирование", href = "/admin", icon = "cog" }
+                    Just { label = "Администрирование", href = "/admin", icon = "cog", target = Just "_blank" }
 
                   else
                     Nothing

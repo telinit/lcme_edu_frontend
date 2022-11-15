@@ -15462,6 +15462,7 @@ var $author$project$Page$DefaultLayout$header_mobile = function () {
 				$author$project$Page$DefaultLayout$logo('fourteen wide')
 			]));
 }();
+var $elm$html$Html$Attributes$target = $elm$html$Html$Attributes$stringProperty('target');
 var $author$project$Page$DefaultLayout$menu = function (items) {
 	return A2(
 		$elm$core$List$map,
@@ -15469,13 +15470,20 @@ var $author$project$Page$DefaultLayout$menu = function (items) {
 			var href = _v0.href;
 			var label = _v0.label;
 			var icon = _v0.icon;
+			var target = _v0.target;
 			return A2(
 				$elm$html$Html$a,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('item'),
-						$elm$html$Html$Attributes$href(href)
-					]),
+				A2(
+					$elm$core$List$filterMap,
+					$elm$core$Basics$identity,
+					_List_fromArray(
+						[
+							$elm$core$Maybe$Just(
+							$elm$html$Html$Attributes$class('item')),
+							$elm$core$Maybe$Just(
+							$elm$html$Html$Attributes$href(href)),
+							A2($elm$core$Maybe$map, $elm$html$Html$Attributes$target, target)
+						])),
 				_List_fromArray(
 					[
 						A2(
@@ -15602,19 +15610,30 @@ var $author$project$Page$DefaultLayout$view = F3(
 			_List_fromArray(
 				[
 					$elm$core$Maybe$Just(
-					{href: '/courses', icon: 'book', label: 'Предметы'}),
+					{href: '/courses', icon: 'book', label: 'Предметы', target: $elm$core$Maybe$Nothing}),
 					A2(
 					$author$project$Util$user_has_any_role,
 					model.user,
 					_List_fromArray(
-						['parent', 'student'])) ? $elm$core$Maybe$Just(
-					{href: '/marks', icon: 'chart bar outline', label: 'Оценки'}) : $elm$core$Maybe$Nothing,
+						['parent'])) ? $elm$core$Maybe$Just(
+					{href: '/marks', icon: 'chart bar outline', label: 'Оценки детей', target: $elm$core$Maybe$Nothing}) : $elm$core$Maybe$Nothing,
+					A2(
+					$author$project$Util$user_has_any_role,
+					model.user,
+					_List_fromArray(
+						['student'])) ? $elm$core$Maybe$Just(
+					{href: '/marks', icon: 'chart bar outline', label: 'Мои оценки', target: $elm$core$Maybe$Nothing}) : $elm$core$Maybe$Nothing,
 					A2(
 					$author$project$Util$user_has_all_roles,
 					model.user,
 					_List_fromArray(
 						['admin'])) ? $elm$core$Maybe$Just(
-					{href: '/admin', icon: 'cog', label: 'Администрирование'}) : $elm$core$Maybe$Nothing
+					{
+						href: '/admin',
+						icon: 'cog',
+						label: 'Администрирование',
+						target: $elm$core$Maybe$Just('_blank')
+					}) : $elm$core$Maybe$Nothing
 				]));
 		var sidebar = A2(
 			$elm$html$Html$div,
@@ -23984,7 +24003,6 @@ var $jxxcarlson$elm_markdown$Markdown$Render$strikethrough = function (str) {
 				$elm$html$Html$text(str)
 			]));
 };
-var $elm$html$Html$Attributes$target = $elm$html$Html$Attributes$stringProperty('target');
 var $jxxcarlson$elm_markdown$Markdown$Render$joinLine = F4(
 	function (selectedId, id, level, items) {
 		var folder = F2(
