@@ -10,13 +10,15 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Json.Decode as JD
+import Markdown.Option
+import Markdown.Render
 import Page.CourseListPage exposing (empty_to_nothing)
 import Ports exposing (initDropdown, scrollIdIntoView)
 import Process
 import Random
 import Task
 import Time exposing (utc)
-import Util exposing (finalTypeToStr, httpErrorToString, isoDateToPosix, posixToDDMMYYYY, posixToISODate, task_to_cmd)
+import Util exposing (finalTypeToStr, httpErrorToString, isoDateToPosix, posixToDDMMYYYY, posixToFullDate, posixToISODate, task_to_cmd)
 import Uuid exposing (Uuid, uuidGenerator)
 
 
@@ -48,12 +50,13 @@ type Msg
     | MsgInitUI
     | MsgNoop
     | MsgSetInternalID Uuid
+    | MsgMarkdownMsg Markdown.Render.MarkdownMsg
+    | MsgGotTZ Time.Zone
 
 
 type State
     = StateLoading
-    | StateWithGenActivity Activity
-    | StateWithFinActivity Activity SEL.Model
+    | StateActivity Activity
     | StateCreatingNew
     | StateError String
 
@@ -61,9 +64,11 @@ type State
 type alias Model =
     { state : State
     , token : String
+    , tz : Maybe Time.Zone
     , editable : Bool
     , up_down : ControlsUpDown
     , internal_id : Maybe Uuid
+    , component_fin_type : Maybe SEL.Model
     }
 
 
@@ -80,6 +85,10 @@ doGenID =
     Random.generate MsgSetInternalID uuidGenerator
 
 
+doGetTZ =
+    Task.perform MsgGotTZ Time.here
+
+
 init_creator : String -> ( Model, Cmd Msg )
 init_creator token =
     ( { state = StateCreatingNew
@@ -87,8 +96,10 @@ init_creator token =
       , editable = False
       , up_down = ControlsUpDown False False
       , internal_id = Nothing
+      , component_fin_type = Nothing
+      , tz = Nothing
       }
-    , doGenID
+    , Cmd.batch [ doGenID, doGetTZ ]
     )
 
 
@@ -99,8 +110,10 @@ init_from_id token id =
       , editable = False
       , up_down = ControlsUpDown False False
       , internal_id = Nothing
+      , component_fin_type = Nothing
+      , tz = Nothing
       }
-    , Cmd.batch [ doFetch token id, doGenID ]
+    , Cmd.batch [ doFetch token id, doGenID, doGetTZ ]
     )
 
 
@@ -124,29 +137,33 @@ init_from_activity token act =
                             ]
             in
             ( { state =
-                    StateWithFinActivity act
-                        (SEL.doSelect
+                    StateActivity act
+              , token = token
+              , editable = False
+              , up_down = ControlsUpDown False False
+              , internal_id = Nothing
+              , tz = Nothing
+              , component_fin_type =
+                    Just <|
+                        SEL.doSelect
                             (Maybe.withDefault "" <|
                                 Maybe.map stringFromActivityFinalType act.finalType
                             )
                             m
-                        )
-              , token = token
-              , editable = False
-              , up_down = ControlsUpDown False False
-              , internal_id = Nothing
               }
-            , Cmd.batch [ Cmd.map MsgFinTypeSelect c, doGenID ]
+            , Cmd.batch [ Cmd.map MsgFinTypeSelect c, doGenID, doGetTZ ]
             )
 
         _ ->
-            ( { state = StateWithGenActivity act
+            ( { state = StateActivity act
               , token = token
               , editable = False
               , up_down = ControlsUpDown False False
               , internal_id = Nothing
+              , component_fin_type = Nothing
+              , tz = Nothing
               }
-            , doGenID
+            , Cmd.batch [ doGenID, doGetTZ ]
             )
 
 
@@ -166,7 +183,7 @@ getOrder model =
         StateLoading ->
             -1
 
-        StateWithGenActivity activity ->
+        StateActivity activity ->
             activity.order
 
         StateCreatingNew ->
@@ -175,20 +192,14 @@ getOrder model =
         StateError _ ->
             -1
 
-        StateWithFinActivity activity _ ->
-            activity.order
-
 
 setOrder : Int -> Model -> Model
 setOrder ord model =
     let
         new_state =
             case model.state of
-                StateWithGenActivity activity ->
-                    StateWithGenActivity { activity | order = ord }
-
-                StateWithFinActivity activity model_ ->
-                    StateWithFinActivity { activity | order = ord } model_
+                StateActivity activity ->
+                    StateActivity { activity | order = ord }
 
                 _ ->
                     model.state
@@ -199,10 +210,7 @@ setOrder ord model =
 getID : Model -> Maybe Uuid
 getID model =
     case model.state of
-        StateWithGenActivity activity ->
-            activity.id
-
-        StateWithFinActivity activity _ ->
+        StateActivity activity ->
             activity.id
 
         _ ->
@@ -212,10 +220,7 @@ getID model =
 getActivity : Model -> Maybe Activity
 getActivity model =
     case model.state of
-        StateWithGenActivity activity ->
-            Just activity
-
-        StateWithFinActivity activity _ ->
+        StateActivity activity ->
             Just activity
 
         _ ->
@@ -235,12 +240,9 @@ doScrollInto model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    case model.state of
-        StateWithFinActivity _ sel ->
-            Sub.map MsgFinTypeSelect <| SEL.subscriptions sel
-
-        _ ->
-            Sub.none
+    Maybe.withDefault Sub.none <|
+        Maybe.map (\sel -> Sub.map MsgFinTypeSelect <| SEL.subscriptions sel) <|
+            model.component_fin_type
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -265,36 +267,51 @@ update msg model =
             --( model, initDropdown ".ui.dropdown" )
             ( model, Cmd.none )
 
-        ( MsgFinTypeSelect msg_, StateWithFinActivity act s ) ->
-            let
-                ( m, c ) =
-                    SEL.update msg_ s
-            in
-            case msg_ of
-                SEL.MsgItemSelected k ->
-                    let
-                        res =
-                            JD.decodeString activityFinalTypeDecoder <| "\"" ++ k ++ "\""
-                    in
-                    case res of
-                        Ok t ->
-                            ( { model
-                                | state =
-                                    StateWithFinActivity
-                                        { act
-                                            | finalType = Just t
-                                            , title = finalTypeToStr { finalType = Just t }
-                                        }
-                                        m
-                              }
-                            , Cmd.map MsgFinTypeSelect c
-                            )
+        ( MsgFinTypeSelect msg_, StateActivity act ) ->
+            Maybe.withDefault ( model, Cmd.none ) <|
+                Maybe.map
+                    (\model_ft ->
+                        let
+                            ( m, c ) =
+                                SEL.update msg_ model_ft
+                        in
+                        case msg_ of
+                            SEL.MsgItemSelected k ->
+                                let
+                                    res =
+                                        JD.decodeString activityFinalTypeDecoder <| "\"" ++ k ++ "\""
+                                in
+                                case res of
+                                    Ok t ->
+                                        ( { model
+                                            | state =
+                                                StateActivity
+                                                    { act
+                                                        | finalType = Just t
+                                                        , title = finalTypeToStr { finalType = Just t }
+                                                    }
+                                            , component_fin_type = Just m
+                                          }
+                                        , Cmd.map MsgFinTypeSelect c
+                                        )
 
-                        _ ->
-                            ( { model | state = StateWithFinActivity act m }, Cmd.map MsgFinTypeSelect c )
+                                    _ ->
+                                        ( { model
+                                            | state = StateActivity act
+                                            , component_fin_type = Just m
+                                          }
+                                        , Cmd.map MsgFinTypeSelect c
+                                        )
 
-                _ ->
-                    ( { model | state = StateWithFinActivity act m }, Cmd.map MsgFinTypeSelect c )
+                            _ ->
+                                ( { model
+                                    | state = StateActivity act
+                                    , component_fin_type = Just m
+                                  }
+                                , Cmd.map MsgFinTypeSelect c
+                                )
+                    )
+                    model.component_fin_type
 
         ( MsgSetField f v, state ) ->
             let
@@ -336,13 +353,8 @@ update msg model =
                             { act | lessonType = empty_to_nothing <| Just <| String.trim v }
             in
             case state of
-                StateWithFinActivity act fm ->
-                    ( { model | state = StateWithFinActivity (new_act act) fm }
-                    , Cmd.none
-                    )
-
-                StateWithGenActivity act ->
-                    ( { model | state = StateWithGenActivity (new_act act) }
+                StateActivity act ->
+                    ( { model | state = StateActivity (new_act act) }
                     , Cmd.none
                     )
 
@@ -351,6 +363,9 @@ update msg model =
 
         ( MsgSetInternalID id, _ ) ->
             ( { model | internal_id = Just id }, Cmd.none )
+
+        ( MsgGotTZ tz, _ ) ->
+            ( { model | tz = Just tz }, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -392,79 +407,194 @@ viewRead model =
                 , text "Загружаем активность"
                 ]
 
-        StateWithGenActivity activity ->
-            view_with_label "Тема"
-                "#EEF6FFFF"
-                "#B6C6D5FF"
-                [ h3 [ class "row start-xs pl-10 pt-10" ]
-                    [ text activity.title ]
-                , div [ class "row between-xs middle-xs", style "font-size" "smaller" ]
-                    [ div [ class "col-xs-12 col-sm start-xs center-sm" ]
-                        [ strong [ class "mr-10 activity-property-label" ]
-                            [ i [ class "calendar alternate outline icon", style "color" "rgb(102, 119, 153)" ] []
-                            , text "Дата:"
-                            ]
-                        , text <| posixToDDMMYYYY utc activity.date
-                        ]
-                    , div [ class "col-xs-12 col-sm start-xs start-sm" ]
-                        [ strong [ class "mr-10 activity-property-label" ]
-                            [ i [ class "clock outline icon", style "color" "rgb(102, 119, 153)" ] []
-                            , text "Количество часов:"
-                            ]
-                        , text <|
-                            Maybe.withDefault "Н/Д" <|
-                                Maybe.map
-                                    String.fromInt
-                                    activity.hours
-                        ]
-                    , div [ class "col-xs-12 col-sm start-xs start-sm" ] <|
-                        Maybe.withDefault [] <|
-                            Maybe.map
-                                (\lt ->
-                                    [ strong [ class "mr-10 activity-property-label" ]
-                                        [ i [ class "object ungroup outline icon", style "color" "rgb(102, 119, 153)" ] []
-                                        , text "Тип:"
-                                        ]
-                                    , text lt
+        StateActivity activity ->
+            case activity.contentType of
+                Just ActivityContentTypeGEN ->
+                    view_with_label "Тема"
+                        "#EEF6FFFF"
+                        "#B6C6D5FF"
+                        [ h3 [ class "row start-xs pl-10 pt-10" ]
+                            [ text activity.title ]
+                        , div [ class "row between-xs middle-xs", style "font-size" "smaller" ]
+                            [ div [ class "col-xs-12 col-sm start-xs center-sm" ]
+                                [ strong [ class "mr-10 activity-property-label" ]
+                                    [ i [ class "calendar alternate outline icon", style "color" "rgb(102, 119, 153)" ] []
+                                    , text "Дата:"
                                     ]
-                                )
-                            <|
-                                empty_to_nothing <|
-                                    activity.lessonType
-                    ]
-                ]
+                                , text <| posixToDDMMYYYY utc activity.date
+                                ]
+                            , div [ class "col-xs-12 col-sm start-xs start-sm" ]
+                                [ strong [ class "mr-10 activity-property-label" ]
+                                    [ i [ class "clock outline icon", style "color" "rgb(102, 119, 153)" ] []
+                                    , text "Количество часов:"
+                                    ]
+                                , text <|
+                                    Maybe.withDefault "Н/Д" <|
+                                        Maybe.map
+                                            String.fromInt
+                                            activity.hours
+                                ]
+                            , div [ class "col-xs-12 col-sm start-xs start-sm" ] <|
+                                Maybe.withDefault [] <|
+                                    Maybe.map
+                                        (\lt ->
+                                            [ strong [ class "mr-10 activity-property-label" ]
+                                                [ i [ class "object ungroup outline icon", style "color" "rgb(102, 119, 153)" ] []
+                                                , text "Тип:"
+                                                ]
+                                            , text lt
+                                            ]
+                                        )
+                                    <|
+                                        empty_to_nothing <|
+                                            activity.lessonType
+                            ]
+                        ]
 
-        StateWithFinActivity activity s ->
-            view_with_label "Итоговый контроль"
-                "#FFEFE2FF"
-                "#D9C6C1FF"
-                [ h3 [ class "row start-xs pl-10 pt-10" ]
-                    [ text <| finalTypeToStr activity
-                    ]
-                , div [ class "row between-xs middle-xs", style "font-size" "smaller" ]
-                    [ div [ class "col-xs-12 col-sm-4 start-xs center-sm" ]
-                        [ strong [ class "mr-10 activity-property-label" ]
-                            [ i [ class "calendar alternate outline icon", style "color" "rgb(102, 119, 153)" ] []
-                            , text "Дата:"
+                Just ActivityContentTypeFIN ->
+                    view_with_label "Итоговый контроль"
+                        "#FFEFE2FF"
+                        "#D9C6C1FF"
+                        [ h3 [ class "row start-xs pl-10 pt-10" ]
+                            [ text <| finalTypeToStr activity
                             ]
-                        , text <| posixToDDMMYYYY utc activity.date
+                        , div [ class "row between-xs middle-xs", style "font-size" "smaller" ]
+                            [ div [ class "col-xs-12 col-sm-4 start-xs center-sm" ]
+                                [ strong [ class "mr-10 activity-property-label" ]
+                                    [ i [ class "calendar alternate outline icon", style "color" "rgb(102, 119, 153)" ] []
+                                    , text "Дата:"
+                                    ]
+                                , text <| posixToDDMMYYYY utc activity.date
+                                ]
+                            , div [ class "col-xs-12 col-sm-4 start-xs center-sm" ]
+                                []
+                            , div [ class "col-xs-12 col-sm-4 start-xs center-sm" ]
+                                [ strong [ class "mr-10 activity-property-label" ]
+                                    [ i [ class "chart bar outline icon", style "color" "rgb(102, 119, 153)" ] []
+                                    , text
+                                        "Лимит оценок: "
+                                    ]
+                                , text <|
+                                    Maybe.withDefault "Н/Д" <|
+                                        Maybe.map
+                                            String.fromInt
+                                            activity.marksLimit
+                                ]
+                            ]
                         ]
-                    , div [ class "col-xs-12 col-sm-4 start-xs center-sm" ]
-                        []
-                    , div [ class "col-xs-12 col-sm-4 start-xs center-sm" ]
-                        [ strong [ class "mr-10 activity-property-label" ]
-                            [ i [ class "chart bar outline icon", style "color" "rgb(102, 119, 153)" ] []
-                            , text
-                                "Лимит оценок: "
-                            ]
-                        , text <|
-                            Maybe.withDefault "Н/Д" <|
+
+                Just ActivityContentTypeTXT ->
+                    view_with_label "Материал"
+                        "#EEF6FFFF"
+                        "#B6C6D5FF"
+                        [ h3 [ class "row start-xs pl-10 pt-10" ]
+                            [ text activity.title ]
+                        , div []
+                            [ Maybe.withDefault (text "") <|
                                 Maybe.map
-                                    String.fromInt
-                                    activity.marksLimit
+                                    (\b ->
+                                        Html.map MsgMarkdownMsg <|
+                                            Markdown.Render.toHtml Markdown.Option.ExtendedMath b
+                                    )
+                                    activity.body
+                            ]
+                        , div [ class "row between-xs middle-xs", style "font-size" "smaller" ]
+                            [ div [ class "col-xs-12 col-sm start-xs center-sm" ]
+                                [ strong [ class "mr-10 activity-property-label" ]
+                                    [ i [ class "calendar alternate outline icon", style "color" "rgb(102, 119, 153)" ] []
+                                    , text "Дата:"
+                                    ]
+                                , text <| posixToDDMMYYYY utc activity.date
+                                ]
+                            , div [ class "col-xs-12 col-sm start-xs start-sm" ]
+                                []
+                            , div [ class "col-xs-12 col-sm start-xs start-sm" ] []
+                            ]
                         ]
-                    ]
-                ]
+
+                Just ActivityContentTypeTSK ->
+                    view_with_label "Задание"
+                        "#EEF6FFFF"
+                        "#B6C6D5FF"
+                        [ h3 [ class "row start-xs pl-10 pt-10" ]
+                            [ text activity.title ]
+                        , div
+                            []
+                            [ Maybe.withDefault (text "") <|
+                                Maybe.map
+                                    (\b ->
+                                        Html.map MsgMarkdownMsg <|
+                                            Markdown.Render.toHtml Markdown.Option.ExtendedMath b
+                                    )
+                                    activity.body
+                            ]
+                        , div [] <|
+                            Maybe.withDefault [] <|
+                                Maybe.map
+                                    (\d ->
+                                        [ strong [] [ text "Срок сдачи: " ]
+                                        , span []
+                                            [ text <|
+                                                posixToFullDate (Maybe.withDefault Time.utc model.tz) d
+                                            ]
+                                        ]
+                                    )
+                                    activity.dueDate
+                        , div [ class "row between-xs middle-xs", style "font-size" "smaller" ]
+                            [ div [ class "col-xs-12 col-sm start-xs center-sm" ]
+                                [ strong [ class "mr-10 activity-property-label" ]
+                                    [ i [ class "calendar alternate outline icon", style "color" "rgb(102, 119, 153)" ] []
+                                    , text "Дата:"
+                                    ]
+                                , text <| posixToDDMMYYYY utc activity.date
+                                ]
+                            , div [ class "col-xs-12 col-sm start-xs start-sm" ]
+                                [ strong [ class "mr-10 activity-property-label" ]
+                                    [ i [ class "clock outline icon", style "color" "rgb(102, 119, 153)" ] []
+                                    , text "Количество часов:"
+                                    ]
+                                , text <|
+                                    Maybe.withDefault "Н/Д" <|
+                                        Maybe.map
+                                            String.fromInt
+                                            activity.hours
+                                ]
+                            , div [ class "col-xs-12 col-sm start-xs start-sm" ] []
+                            ]
+                        ]
+
+                Just ActivityContentTypeLNK ->
+                    view_with_label "Ссылка"
+                        "#EEF6FFFF"
+                        "#B6C6D5FF"
+                        [ h3 [ class "row start-xs pl-10 pt-10" ]
+                            [ text activity.title ]
+                        , div
+                            []
+                            [ h2 []
+                                [ a
+                                    [ href <| Maybe.withDefault "#" activity.link
+                                    ]
+                                    [ i [ class "linkify icon" ] []
+                                    , text <| Maybe.withDefault "(пустая ссылка)" activity.link
+                                    ]
+                                ]
+                            ]
+                        , div [ class "row between-xs middle-xs", style "font-size" "smaller" ]
+                            [ div [ class "col-xs-12 col-sm start-xs center-sm" ]
+                                []
+                            , div [ class "col-xs-12 col-sm start-xs start-sm" ]
+                                []
+                            , div [ class "col-xs-12 col-sm start-xs start-sm" ]
+                                []
+                            ]
+                        ]
+
+                Just ActivityContentTypeMED ->
+                    text "TODO"
+
+                Nothing ->
+                    text ""
 
         StateError err ->
             div
@@ -549,246 +679,268 @@ viewWrite model =
                 , text "Загружаем активность"
                 ]
 
-        StateWithGenActivity activity ->
-            view_with_label "Тема"
-                "#EEF6FFFF"
-                "#B6C6D5FF"
-                [ div [ class "row mt-10" ]
-                    [ div [ class "field start-xs col-xs-12" ]
-                        [ label [] [ text "Название" ]
-                        , input
-                            [ placeholder "Основное название темы"
-                            , type_ "text"
-                            , value activity.title
-                            , onInput (MsgSetField FieldTitle)
-                            ]
-                            []
-                        ]
-                    ]
-                , div [ class "row mt-10" ]
-                    [ div [ class "field start-xs col-xs-12" ]
-                        [ label [] [ text "Метки" ]
-                        , input
-                            [ placeholder "Отображаются наверху таблицы"
-                            , type_ "text"
-                            , value <| Maybe.withDefault "" activity.keywords
-                            , onInput (MsgSetField FieldKeywords)
-                            ]
-                            []
-                        ]
-                    ]
-                , div [ class "row mt-10" ]
-                    [ div [ class "field start-xs col-xs-12" ]
-                        [ label [] [ text "Тип занятия" ]
-                        , input
-                            [ placeholder "Лекция, Лабораторная работа, Контрольная работа, ..."
-                            , type_ "text"
-                            , value <| Maybe.withDefault "" activity.lessonType
-                            , onInput (MsgSetField FieldLessonType)
-                            ]
-                            []
-                        ]
-                    ]
-                , div [ class "row mt-10" ]
-                    [ div [ class "field start-xs col-xs-12 col-sm-6" ]
-                        [ label [] [ text "Научный раздел" ]
-                        , input
-                            [ placeholder ""
-                            , type_ "text"
-                            , value <| Maybe.withDefault "" activity.scientificTopic
-                            , onInput (MsgSetField FieldSci)
-                            ]
-                            []
-                        ]
-                    , div [ class "field start-xs col-xs-12 col-sm-6" ]
-                        [ label [] [ text "Группа" ]
-                        , input
-                            [ placeholder "Для объединения в разделы"
-                            , type_ "text"
-                            , value <| Maybe.withDefault "" activity.group
-                            , onInput (MsgSetField FieldGroup)
-                            ]
-                            []
-                        ]
-                    ]
-                , div [ class "row mt-10" ]
-                    [ div [ class "field start-xs col-xs-12 col-sm-6" ]
-                        [ label [] [ text "Количество часов" ]
-                        , input
-                            [ placeholder ""
-                            , type_ "number"
-                            , Html.Attributes.min "0"
-                            , value <| String.fromInt <| Maybe.withDefault 1 activity.hours
-                            , onInput (MsgSetField FieldHours)
-                            ]
-                            []
-                        ]
-                    , div [ class "field start-xs col-xs-12 col-sm-6" ]
-                        [ label [] [ text "Лимит оценок" ]
-                        , input
-                            [ placeholder ""
-                            , type_ "number"
-                            , Html.Attributes.min "0"
-                            , value <| String.fromInt <| Maybe.withDefault 1 activity.marksLimit
-                            , onInput (MsgSetField FieldLimit)
-                            ]
-                            []
-                        ]
-                    ]
-                , div [ class "row mt-10" ]
-                    [ div [ class "field start-xs col-xs-12 col-sm-6" ]
-                        [ label [] [ text "Соответствие ФГОС" ]
-                        , div [ class "ui checkbox ml-20", style "scale" "1.25" ]
-                            [ input
-                                [ attribute "tabindex" "0"
-                                , type_ "checkbox"
-                                , checked <| Maybe.withDefault False activity.fgosComplient
-                                , onCheck
-                                    (\c ->
-                                        MsgSetField FieldFGOS <|
-                                            if c then
-                                                "1"
-
-                                            else
-                                                "0"
-                                    )
-                                ]
-                                []
-                            , label []
-                                [ text "Соответствует" ]
-                            ]
-                        ]
-                    , div [ class "field start-xs col-xs-12 col-sm-6" ]
-                        [ label [] [ text "Видимость для учащихся" ]
-                        , div [ class "ui checkbox ml-15", style "scale" "1.25" ]
-                            [ input
-                                [ attribute "tabindex" "0"
-                                , type_ "checkbox"
-                                , checked <| Maybe.withDefault False activity.isHidden
-                                , onCheck
-                                    (\c ->
-                                        MsgSetField FieldHidden <|
-                                            if c then
-                                                "1"
-
-                                            else
-                                                "0"
-                                    )
-                                ]
-                                []
-                            , label []
-                                [ text "Скрыта" ]
-                            ]
-                        ]
-                    ]
-                , div [ class "row mt-10" ]
-                    [ div [ class "field start-xs col-xs-12 col-sm-6" ]
-                        [ label [] [ text "Дата проведения" ]
-                        , div [ class "ui input" ]
-                            [ input
-                                [ placeholder ""
-                                , type_ "date"
-                                , value <| Maybe.withDefault "" <| posixToISODate activity.date
-                                , onInput (MsgSetField FieldDate)
-                                ]
-                                []
-                            ]
-                        ]
-                    , div [ class "field start-xs col-xs-12 col-sm-3" ]
-                        [ label [] [ text "Номер в списке" ]
-                        , h1 [ style "margin" "10px 0 0 10px" ] [ text <| String.fromInt activity.order ]
-                        ]
-                    , div [ class "field start-xs col-xs-12 col-sm-3" ]
-                        [ div [ class "row middle-xs end-md center-xs", style "height" "100%" ]
-                            [ button
-                                [ class "ui button red"
-                                , style "position" "relative"
-
-                                --, style "left" "50px"
-                                , style "top" "5px"
-                                , onClick MsgOnClickDelete
-                                ]
-                                [ i [ class "icon trash" ] []
-                                , text "Удалить"
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-
-        StateWithFinActivity activity s ->
-            view_with_label "Итоговый контроль"
-                "#FFEFE2FF"
-                "#D9C6C1FF"
-                [ div [ class "row mt-10" ]
-                    [ div [ class "field start-xs col-xs-12" ]
-                        [ label [] [ text "Тип контроля" ]
-                        , Html.map MsgFinTypeSelect <| SEL.view s
-                        ]
-                    ]
-                , div [ class "row mt-10" ]
-                    [ div [ class "field start-xs col-xs-12 col-sm-6" ]
-                        [ label [] [ text "Лимит оценок" ]
-                        , input
-                            [ placeholder ""
-                            , type_ "number"
-                            , Html.Attributes.min "0"
-                            , value <| String.fromInt <| Maybe.withDefault 1 activity.marksLimit
-                            , onInput (MsgSetField FieldLimit)
-                            ]
-                            []
-                        ]
-                    , div [ class "field start-xs col-xs-12 col-sm-6" ]
-                        [ label [] [ text "Видимость для учащихся" ]
-                        , div [ class "row middle-xs ml-10", style "height" "43px" ]
-                            [ div [ class "ui checkbox", style "scale" "1.25" ]
-                                [ input
-                                    [ attribute "tabindex" "0"
-                                    , type_ "checkbox"
-                                    , checked <| Maybe.withDefault False activity.isHidden
-                                    , onInput (MsgSetField FieldHidden)
+        StateActivity activity ->
+            case activity.contentType of
+                Just ActivityContentTypeGEN ->
+                    view_with_label "Тема"
+                        "#EEF6FFFF"
+                        "#B6C6D5FF"
+                        [ div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12" ]
+                                [ label [] [ text "Название" ]
+                                , input
+                                    [ placeholder "Основное название темы"
+                                    , type_ "text"
+                                    , value activity.title
+                                    , onInput (MsgSetField FieldTitle)
                                     ]
                                     []
-                                , label []
-                                    [ text "Скрыт" ]
                                 ]
                             ]
-                        ]
-                    ]
-                , div [ class "row mt-10" ]
-                    [ div [ class "field start-xs col-xs-12 col-sm-6" ]
-                        [ label [] [ text "Дата выставления" ]
-                        , div [ class "ui input" ]
-                            [ input
-                                [ placeholder ""
-                                , type_ "date"
-                                , value <| Maybe.withDefault "" <| posixToISODate activity.date
-                                , onInput (MsgSetField FieldDate)
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12" ]
+                                [ label [] [ text "Метки" ]
+                                , input
+                                    [ placeholder "Отображаются наверху таблицы"
+                                    , type_ "text"
+                                    , value <| Maybe.withDefault "" activity.keywords
+                                    , onInput (MsgSetField FieldKeywords)
+                                    ]
+                                    []
                                 ]
-                                []
                             ]
-                        ]
-                    , div [ class "field start-xs col-xs-12 col-sm-3" ]
-                        [ label [] [ text "Номер в списке" ]
-                        , h1 [ style "margin" "10px 0 0 10px" ] [ text <| String.fromInt activity.order ]
-                        ]
-                    , div [ class "field start-xs col-xs-12 col-sm-3" ]
-                        [ div [ class "row middle-xs end-md center-xs", style "height" "100%" ]
-                            [ button
-                                [ class "ui button red"
-                                , style "position" "relative"
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12" ]
+                                [ label [] [ text "Тип занятия" ]
+                                , input
+                                    [ placeholder "Лекция, Лабораторная работа, Контрольная работа, ..."
+                                    , type_ "text"
+                                    , value <| Maybe.withDefault "" activity.lessonType
+                                    , onInput (MsgSetField FieldLessonType)
+                                    ]
+                                    []
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Научный раздел" ]
+                                , input
+                                    [ placeholder ""
+                                    , type_ "text"
+                                    , value <| Maybe.withDefault "" activity.scientificTopic
+                                    , onInput (MsgSetField FieldSci)
+                                    ]
+                                    []
+                                ]
+                            , div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Группа" ]
+                                , input
+                                    [ placeholder "Для объединения в разделы"
+                                    , type_ "text"
+                                    , value <| Maybe.withDefault "" activity.group
+                                    , onInput (MsgSetField FieldGroup)
+                                    ]
+                                    []
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Количество часов" ]
+                                , input
+                                    [ placeholder ""
+                                    , type_ "number"
+                                    , Html.Attributes.min "0"
+                                    , value <| String.fromInt <| Maybe.withDefault 1 activity.hours
+                                    , onInput (MsgSetField FieldHours)
+                                    ]
+                                    []
+                                ]
+                            , div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Лимит оценок" ]
+                                , input
+                                    [ placeholder ""
+                                    , type_ "number"
+                                    , Html.Attributes.min "0"
+                                    , value <| String.fromInt <| Maybe.withDefault 1 activity.marksLimit
+                                    , onInput (MsgSetField FieldLimit)
+                                    ]
+                                    []
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Соответствие ФГОС" ]
+                                , div [ class "ui checkbox ml-20", style "scale" "1.25" ]
+                                    [ input
+                                        [ attribute "tabindex" "0"
+                                        , type_ "checkbox"
+                                        , checked <| Maybe.withDefault False activity.fgosComplient
+                                        , onCheck
+                                            (\c ->
+                                                MsgSetField FieldFGOS <|
+                                                    if c then
+                                                        "1"
 
-                                --, style "left" "50px"
-                                , style "top" "5px"
-                                , onClick MsgOnClickDelete
+                                                    else
+                                                        "0"
+                                            )
+                                        ]
+                                        []
+                                    , label []
+                                        [ text "Соответствует" ]
+                                    ]
                                 ]
-                                [ i [ class "icon trash" ] []
-                                , text "Удалить"
+                            , div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Видимость для учащихся" ]
+                                , div [ class "ui checkbox ml-15", style "scale" "1.25" ]
+                                    [ input
+                                        [ attribute "tabindex" "0"
+                                        , type_ "checkbox"
+                                        , checked <| Maybe.withDefault False activity.isHidden
+                                        , onCheck
+                                            (\c ->
+                                                MsgSetField FieldHidden <|
+                                                    if c then
+                                                        "1"
+
+                                                    else
+                                                        "0"
+                                            )
+                                        ]
+                                        []
+                                    , label []
+                                        [ text "Скрыта" ]
+                                    ]
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Дата проведения" ]
+                                , div [ class "ui input" ]
+                                    [ input
+                                        [ placeholder ""
+                                        , type_ "date"
+                                        , value <| Maybe.withDefault "" <| posixToISODate activity.date
+                                        , onInput (MsgSetField FieldDate)
+                                        ]
+                                        []
+                                    ]
+                                ]
+                            , div [ class "field start-xs col-xs-12 col-sm-3" ]
+                                [ label [] [ text "Номер в списке" ]
+                                , h1 [ style "margin" "10px 0 0 10px" ] [ text <| String.fromInt activity.order ]
+                                ]
+                            , div [ class "field start-xs col-xs-12 col-sm-3" ]
+                                [ div [ class "row middle-xs end-md center-xs", style "height" "100%" ]
+                                    [ button
+                                        [ class "ui button red"
+                                        , style "position" "relative"
+
+                                        --, style "left" "50px"
+                                        , style "top" "5px"
+                                        , onClick MsgOnClickDelete
+                                        ]
+                                        [ i [ class "icon trash" ] []
+                                        , text "Удалить"
+                                        ]
+                                    ]
                                 ]
                             ]
                         ]
-                    ]
-                ]
+
+                Just ActivityContentTypeFIN ->
+                    case model.component_fin_type of
+                        Just s ->
+                            view_with_label "Итоговый контроль"
+                                "#FFEFE2FF"
+                                "#D9C6C1FF"
+                                [ div [ class "row mt-10" ]
+                                    [ div [ class "field start-xs col-xs-12" ]
+                                        [ label [] [ text "Тип контроля" ]
+                                        , Html.map MsgFinTypeSelect <| SEL.view s
+                                        ]
+                                    ]
+                                , div [ class "row mt-10" ]
+                                    [ div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                        [ label [] [ text "Лимит оценок" ]
+                                        , input
+                                            [ placeholder ""
+                                            , type_ "number"
+                                            , Html.Attributes.min "0"
+                                            , value <| String.fromInt <| Maybe.withDefault 1 activity.marksLimit
+                                            , onInput (MsgSetField FieldLimit)
+                                            ]
+                                            []
+                                        ]
+                                    , div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                        [ label [] [ text "Видимость для учащихся" ]
+                                        , div [ class "row middle-xs ml-10", style "height" "43px" ]
+                                            [ div [ class "ui checkbox", style "scale" "1.25" ]
+                                                [ input
+                                                    [ attribute "tabindex" "0"
+                                                    , type_ "checkbox"
+                                                    , checked <| Maybe.withDefault False activity.isHidden
+                                                    , onInput (MsgSetField FieldHidden)
+                                                    ]
+                                                    []
+                                                , label []
+                                                    [ text "Скрыт" ]
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                , div [ class "row mt-10" ]
+                                    [ div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                        [ label [] [ text "Дата выставления" ]
+                                        , div [ class "ui input" ]
+                                            [ input
+                                                [ placeholder ""
+                                                , type_ "date"
+                                                , value <| Maybe.withDefault "" <| posixToISODate activity.date
+                                                , onInput (MsgSetField FieldDate)
+                                                ]
+                                                []
+                                            ]
+                                        ]
+                                    , div [ class "field start-xs col-xs-12 col-sm-3" ]
+                                        [ label [] [ text "Номер в списке" ]
+                                        , h1 [ style "margin" "10px 0 0 10px" ] [ text <| String.fromInt activity.order ]
+                                        ]
+                                    , div [ class "field start-xs col-xs-12 col-sm-3" ]
+                                        [ div [ class "row middle-xs end-md center-xs", style "height" "100%" ]
+                                            [ button
+                                                [ class "ui button red"
+                                                , style "position" "relative"
+
+                                                --, style "left" "50px"
+                                                , style "top" "5px"
+                                                , onClick MsgOnClickDelete
+                                                ]
+                                                [ i [ class "icon trash" ] []
+                                                , text "Удалить"
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+
+                        Nothing ->
+                            text ""
+
+                Just ActivityContentTypeTXT ->
+                    text "TODO"
+
+                Just ActivityContentTypeTSK ->
+                    text "TODO"
+
+                Just ActivityContentTypeLNK ->
+                    text "TODO"
+
+                Just ActivityContentTypeMED ->
+                    text "TODO"
+
+                Nothing ->
+                    text ""
 
         StateError err ->
             div ([ class "ui text container negative message" ] ++ List.map (Uuid.toString >> id) (List.filterMap identity [ model.internal_id ]))

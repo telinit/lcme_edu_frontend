@@ -146,7 +146,10 @@ update msg model =
 
                 SettingStateChangePrompt old ->
                     ( { model | state_password = SettingStateChanging old }
-                    , doChangePassword model.token (Maybe.withDefault "" <| Maybe.map Uuid.toString model.user_id) old
+                    , doChangePassword
+                        model.token
+                        (Maybe.withDefault "" <| Maybe.map Uuid.toString model.user_id)
+                        old
                     )
 
                 _ ->
