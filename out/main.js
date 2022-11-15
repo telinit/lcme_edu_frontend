@@ -10733,6 +10733,8 @@ var $author$project$Page$CoursePage$ActivityImportStateSuccess = function (a) {
 var $author$project$Page$CoursePage$AddFin = {$: 'AddFin'};
 var $author$project$Page$CoursePage$AddGen = {$: 'AddGen'};
 var $author$project$Page$CoursePage$AddNone = {$: 'AddNone'};
+var $author$project$Page$CoursePage$AddTsk = {$: 'AddTsk'};
+var $author$project$Page$CoursePage$AddTxt = {$: 'AddTxt'};
 var $author$project$Page$CoursePage$EditOn = F2(
 	function (a, b) {
 		return {$: 'EditOn', a: a, b: b};
@@ -12286,7 +12288,7 @@ var $author$project$Component$Activity$update = F2(
 								} else {
 									return act;
 								}
-							default:
+							case 'FieldLessonType':
 								return _Utils_update(
 									act,
 									{
@@ -12294,6 +12296,26 @@ var $author$project$Component$Activity$update = F2(
 											$elm$core$Maybe$Just(
 												$elm$core$String$trim(v)))
 									});
+							case 'FieldBody':
+								return _Utils_update(
+									act,
+									{
+										body: $elm$core$Maybe$Just(v)
+									});
+							default:
+								var _v12 = $author$project$Util$isoDateToPosix(v);
+								if (_v12.$ === 'Just') {
+									var d = _v12.a;
+									return _Utils_update(
+										act,
+										{
+											dueDate: $elm$core$Maybe$Just(d)
+										});
+								} else {
+									return _Utils_update(
+										act,
+										{dueDate: $elm$core$Maybe$Nothing});
+								}
 						}
 					};
 					if (state.$ === 'StateActivity') {
@@ -12370,13 +12392,13 @@ var $author$project$Page$CoursePage$update = F2(
 					return $.order;
 				},
 				course.activities);
-			var _v52 = $elm$core$List$unzip(
+			var _v60 = $elm$core$List$unzip(
 				A2(
 					$elm$core$List$map,
 					$author$project$Component$Activity$init_from_activity(model.token),
 					activities));
-			var ms = _v52.a;
-			var cs = _v52.b;
+			var ms = _v60.a;
+			var cs = _v60.b;
 			var len = $elm$core$List$length(ms);
 			var id_range = A2($elm$core$List$range, model.activity_component_pk, (model.activity_component_pk + len) - 1);
 			var pairs_id_cmd = A2($author$project$Util$zip, id_range, cs);
@@ -12397,9 +12419,9 @@ var $author$project$Page$CoursePage$update = F2(
 				$elm$core$Platform$Cmd$batch(
 					A2(
 						$elm$core$List$map,
-						function (_v53) {
-							var id = _v53.a;
-							var c_ = _v53.b;
+						function (_v61) {
+							var id = _v61.a;
+							var c_ = _v61.b;
 							return A2(
 								$elm$core$Platform$Cmd$map,
 								$author$project$Page$CoursePage$MsgActivity(id),
@@ -12408,7 +12430,7 @@ var $author$project$Page$CoursePage$update = F2(
 						pairs_id_cmd)));
 		};
 		var _v0 = _Utils_Tuple2(msg, model.state);
-		_v0$18:
+		_v0$20:
 		while (true) {
 			switch (_v0.a.$) {
 				case 'MsgFetch':
@@ -12443,7 +12465,7 @@ var $author$project$Page$CoursePage$update = F2(
 								A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
 						}
 					} else {
-						break _v0$18;
+						break _v0$20;
 					}
 				case 'MsgClickMembers':
 					var _v4 = _v0.a;
@@ -12475,7 +12497,7 @@ var $author$project$Page$CoursePage$update = F2(
 										}))),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$18;
+						break _v0$20;
 					}
 				case 'MsgActivity':
 					if (_v0.b.$ === 'FetchDone') {
@@ -12590,7 +12612,7 @@ var $author$project$Page$CoursePage$update = F2(
 							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					} else {
-						break _v0$18;
+						break _v0$20;
 					}
 				case 'MsgOnClickAddGen':
 					var _v15 = _v0.a;
@@ -12624,11 +12646,43 @@ var $author$project$Page$CoursePage$update = F2(
 							model,
 							{edit_mode: new_mode}),
 						$elm$core$Platform$Cmd$none);
+				case 'MsgOnClickAddTsk':
+					var _v19 = _v0.a;
+					var new_mode = function () {
+						var _v20 = model.edit_mode;
+						if (_v20.$ === 'EditOn') {
+							var mod = _v20.b;
+							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddTsk, mod);
+						} else {
+							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddTsk, false);
+						}
+					}();
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{edit_mode: new_mode}),
+						$elm$core$Platform$Cmd$none);
+				case 'MsgOnClickAddTxt':
+					var _v21 = _v0.a;
+					var new_mode = function () {
+						var _v22 = model.edit_mode;
+						if (_v22.$ === 'EditOn') {
+							var mod = _v22.b;
+							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddTxt, mod);
+						} else {
+							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddTxt, false);
+						}
+					}();
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{edit_mode: new_mode}),
+						$elm$core$Platform$Cmd$none);
 				case 'MsgOnClickAddBefore':
 					if (_v0.a.b.$ === 'Nothing') {
-						var _v19 = _v0.a;
-						var i = _v19.a;
-						var _v20 = _v19.b;
+						var _v23 = _v0.a;
+						var i = _v23.a;
+						var _v24 = _v23.b;
 						return _Utils_Tuple2(
 							model,
 							A2(
@@ -12640,22 +12694,22 @@ var $author$project$Page$CoursePage$update = F2(
 								$elm$time$Time$now));
 					} else {
 						if (_v0.b.$ === 'FetchDone') {
-							var _v21 = _v0.a;
-							var i = _v21.a;
-							var t = _v21.b.a;
-							var _v22 = _v0.b;
-							var course = _v22.a;
-							var act_components = _v22.b;
+							var _v25 = _v0.a;
+							var i = _v25.a;
+							var t = _v25.b.a;
+							var _v26 = _v0.b;
+							var course = _v26.a;
+							var act_components = _v26.b;
 							var act = function () {
-								var _v25 = _Utils_Tuple2(model.edit_mode, course.id);
-								_v25$2:
+								var _v29 = _Utils_Tuple2(model.edit_mode, course.id);
+								_v29$4:
 								while (true) {
-									if ((_v25.a.$ === 'EditOn') && (_v25.b.$ === 'Just')) {
-										switch (_v25.a.a.$) {
+									if ((_v29.a.$ === 'EditOn') && (_v29.b.$ === 'Just')) {
+										switch (_v29.a.a.$) {
 											case 'AddGen':
-												var _v26 = _v25.a;
-												var _v27 = _v26.a;
-												var cid = _v25.b.a;
+												var _v30 = _v29.a;
+												var _v31 = _v30.a;
+												var cid = _v29.b.a;
 												return $elm$core$Maybe$Just(
 													{
 														body: $elm$core$Maybe$Nothing,
@@ -12684,9 +12738,9 @@ var $author$project$Page$CoursePage$update = F2(
 														updatedAt: $elm$core$Maybe$Nothing
 													});
 											case 'AddFin':
-												var _v28 = _v25.a;
-												var _v29 = _v28.a;
-												var cid = _v25.b.a;
+												var _v32 = _v29.a;
+												var _v33 = _v32.a;
+												var cid = _v29.b.a;
 												return $elm$core$Maybe$Just(
 													{
 														body: $elm$core$Maybe$Nothing,
@@ -12714,11 +12768,73 @@ var $author$project$Page$CoursePage$update = F2(
 														title: '',
 														updatedAt: $elm$core$Maybe$Nothing
 													});
+											case 'AddTsk':
+												var _v34 = _v29.a;
+												var _v35 = _v34.a;
+												var cid = _v29.b.a;
+												return $elm$core$Maybe$Just(
+													{
+														body: $elm$core$Maybe$Nothing,
+														contentType: $elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeTSK),
+														course: cid,
+														createdAt: $elm$core$Maybe$Nothing,
+														date: t,
+														dueDate: $elm$core$Maybe$Nothing,
+														embed: $elm$core$Maybe$Nothing,
+														fgosComplient: $elm$core$Maybe$Just(false),
+														files: $elm$core$Maybe$Nothing,
+														finalType: $elm$core$Maybe$Nothing,
+														group: $elm$core$Maybe$Nothing,
+														hours: $elm$core$Maybe$Just(1),
+														id: $elm$core$Maybe$Nothing,
+														isHidden: $elm$core$Maybe$Just(false),
+														keywords: $elm$core$Maybe$Nothing,
+														lessonType: $elm$core$Maybe$Nothing,
+														link: $elm$core$Maybe$Nothing,
+														linkedActivity: $elm$core$Maybe$Nothing,
+														marksLimit: $elm$core$Maybe$Just(2),
+														order: i + 1,
+														scientificTopic: $elm$core$Maybe$Nothing,
+														submittable: $elm$core$Maybe$Just(false),
+														title: '',
+														updatedAt: $elm$core$Maybe$Nothing
+													});
+											case 'AddTxt':
+												var _v36 = _v29.a;
+												var _v37 = _v36.a;
+												var cid = _v29.b.a;
+												return $elm$core$Maybe$Just(
+													{
+														body: $elm$core$Maybe$Nothing,
+														contentType: $elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeTXT),
+														course: cid,
+														createdAt: $elm$core$Maybe$Nothing,
+														date: t,
+														dueDate: $elm$core$Maybe$Nothing,
+														embed: $elm$core$Maybe$Nothing,
+														fgosComplient: $elm$core$Maybe$Just(false),
+														files: $elm$core$Maybe$Nothing,
+														finalType: $elm$core$Maybe$Nothing,
+														group: $elm$core$Maybe$Nothing,
+														hours: $elm$core$Maybe$Just(1),
+														id: $elm$core$Maybe$Nothing,
+														isHidden: $elm$core$Maybe$Just(false),
+														keywords: $elm$core$Maybe$Nothing,
+														lessonType: $elm$core$Maybe$Nothing,
+														link: $elm$core$Maybe$Nothing,
+														linkedActivity: $elm$core$Maybe$Nothing,
+														marksLimit: $elm$core$Maybe$Just(0),
+														order: i + 1,
+														scientificTopic: $elm$core$Maybe$Nothing,
+														submittable: $elm$core$Maybe$Just(false),
+														title: '',
+														updatedAt: $elm$core$Maybe$Nothing
+													});
 											default:
-												break _v25$2;
+												break _v29$4;
 										}
 									} else {
-										break _v25$2;
+										break _v29$4;
 									}
 								}
 								return $elm$core$Maybe$Nothing;
@@ -12727,9 +12843,9 @@ var $author$project$Page$CoursePage$update = F2(
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 							} else {
 								var act_ = act.a;
-								var _v24 = A2($author$project$Component$Activity$init_from_activity, model.token, act_);
-								var m = _v24.a;
-								var c = _v24.b;
+								var _v28 = A2($author$project$Component$Activity$init_from_activity, model.token, act_);
+								var m = _v28.a;
+								var c = _v28.b;
 								return _Utils_Tuple2(
 									$author$project$Page$CoursePage$fixOrder(
 										A2(
@@ -12756,29 +12872,29 @@ var $author$project$Page$CoursePage$update = F2(
 										c));
 							}
 						} else {
-							break _v0$18;
+							break _v0$20;
 						}
 					}
 				case 'MsgOnClickEditCancel':
 					if (_v0.b.$ === 'FetchDone') {
-						var _v30 = _v0.a;
-						var _v31 = _v0.b;
-						var course = _v31.a;
-						var _v32 = parse_course(course);
-						var m = _v32.a;
-						var c = _v32.b;
+						var _v38 = _v0.a;
+						var _v39 = _v0.b;
+						var course = _v39.a;
+						var _v40 = parse_course(course);
+						var m = _v40.a;
+						var c = _v40.b;
 						return _Utils_Tuple2(
 							A2($author$project$Page$CoursePage$setEditMode, false, m),
 							c);
 					} else {
-						break _v0$18;
+						break _v0$20;
 					}
 				case 'MsgOnClickSave':
 					if (_v0.b.$ === 'FetchDone') {
-						var _v33 = _v0.a;
-						var _v34 = _v0.b;
-						var course = _v34.a;
-						var act_components = _v34.b;
+						var _v41 = _v0.a;
+						var _v42 = _v0.b;
+						var course = _v42.a;
+						var act_components = _v42.b;
 						var create = A2(
 							$elm$core$List$filterMap,
 							A2(
@@ -12796,12 +12912,12 @@ var $author$project$Page$CoursePage$update = F2(
 											$elm$core$Basics$eq($elm$core$Maybe$Nothing))))),
 							act_components);
 						var ac_to_tuple = function (c) {
-							var _v36 = $author$project$Component$Activity$getActivity(c);
-							if (_v36.$ === 'Just') {
-								var act = _v36.a;
-								var _v37 = act.id;
-								if (_v37.$ === 'Just') {
-									var id = _v37.a;
+							var _v44 = $author$project$Component$Activity$getActivity(c);
+							if (_v44.$ === 'Just') {
+								var act = _v44.a;
+								var _v45 = act.id;
+								if (_v45.$ === 'Just') {
+									var id = _v45.a;
 									return $elm$core$Maybe$Just(
 										_Utils_Tuple2(
 											$danyx23$elm_uuid$Uuid$toString(id),
@@ -12823,7 +12939,7 @@ var $author$project$Page$CoursePage$update = F2(
 							A3(
 								$author$project$Util$task_to_cmd,
 								A2($elm$core$Basics$composeR, $author$project$Util$httpErrorToString, $author$project$Page$CoursePage$MsgCourseSaveError),
-								function (_v35) {
+								function (_v43) {
 									return $author$project$Page$CoursePage$MsgCourseSaved;
 								},
 								A4(
@@ -12839,14 +12955,14 @@ var $author$project$Page$CoursePage$update = F2(
 											A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, course.id)),
 										{create: create, update: update_}))));
 					} else {
-						break _v0$18;
+						break _v0$20;
 					}
 				case 'MsgCourseSaveError':
 					if (_v0.b.$ === 'FetchDone') {
 						var e = _v0.a.a;
-						var _v38 = _v0.b;
-						var course = _v38.a;
-						var act_components = _v38.b;
+						var _v46 = _v0.b;
+						var course = _v46.a;
+						var act_components = _v46.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -12855,15 +12971,15 @@ var $author$project$Page$CoursePage$update = F2(
 								}),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$18;
+						break _v0$20;
 					}
 				case 'MsgCourseSaved':
 					if (_v0.b.$ === 'FetchDone') {
-						var _v39 = _v0.a;
-						var _v40 = _v0.b;
-						var course = _v40.a;
-						var act_components = _v40.b;
-						var _v41 = A3(
+						var _v47 = _v0.a;
+						var _v48 = _v0.b;
+						var course = _v48.a;
+						var act_components = _v48.b;
+						var _v49 = A3(
 							$author$project$Page$CoursePage$init,
 							model.token,
 							A2(
@@ -12871,23 +12987,23 @@ var $author$project$Page$CoursePage$update = F2(
 								'',
 								A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, course.id)),
 							model.user);
-						var m = _v41.a;
-						var c = _v41.b;
+						var m = _v49.a;
+						var c = _v49.b;
 						return _Utils_Tuple2(
 							A2($author$project$Page$CoursePage$setEditMode, false, m),
 							c);
 					} else {
-						break _v0$18;
+						break _v0$20;
 					}
 				case 'MsgOnClickImportActivities':
-					var _v42 = _v0.a;
-					var _v43 = A2(
+					var _v50 = _v0.a;
+					var _v51 = A2(
 						$author$project$Component$FileInput$init,
 						$elm$core$Maybe$Just('Выберите файл с темами'),
 						_List_fromArray(
 							['text/csv']));
-					var m = _v43.a;
-					var c = _v43.b;
+					var m = _v51.a;
+					var c = _v51.b;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
@@ -12896,7 +13012,7 @@ var $author$project$Page$CoursePage$update = F2(
 							}),
 						A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFileInputImport, c));
 				case 'MsgCloseActivitiesImport':
-					var _v44 = _v0.a;
+					var _v52 = _v0.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
@@ -12904,12 +13020,12 @@ var $author$project$Page$CoursePage$update = F2(
 						$elm$core$Platform$Cmd$none);
 				case 'MsgFileInputImport':
 					var msg_ = _v0.a.a;
-					var _v45 = model.activity_import_state;
-					if (_v45.$ === 'ActivityImportStateFileSelection') {
-						var model_ = _v45.a;
-						var _v46 = A2($author$project$Component$FileInput$update, msg_, model_);
-						var m = _v46.a;
-						var c = _v46.b;
+					var _v53 = model.activity_import_state;
+					if (_v53.$ === 'ActivityImportStateFileSelection') {
+						var model_ = _v53.a;
+						var _v54 = A2($author$project$Component$FileInput$update, msg_, model_);
+						var m = _v54.a;
+						var c = _v54.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -12922,17 +13038,17 @@ var $author$project$Page$CoursePage$update = F2(
 					}
 				case 'MsgOnClickActivitiesImport':
 					if (_v0.b.$ === 'FetchDone') {
-						var _v47 = _v0.a;
-						var _v48 = _v0.b;
-						var course = _v48.a;
-						var _v49 = model.activity_import_state;
-						switch (_v49.$) {
+						var _v55 = _v0.a;
+						var _v56 = _v0.b;
+						var course = _v56.a;
+						var _v57 = model.activity_import_state;
+						switch (_v57.$) {
 							case 'ActivityImportStateFileSelection':
-								var model_ = _v49.a;
-								var _v50 = _Utils_Tuple2(model_.file, course.id);
-								if ((_v50.a.$ === 'Just') && (_v50.b.$ === 'Just')) {
-									var file = _v50.a.a;
-									var cid = _v50.b.a;
+								var model_ = _v57.a;
+								var _v58 = _Utils_Tuple2(model_.file, course.id);
+								if ((_v58.a.$ === 'Just') && (_v58.b.$ === 'Just')) {
+									var file = _v58.a.a;
+									var cid = _v58.b.a;
 									return _Utils_Tuple2(
 										_Utils_update(
 											model,
@@ -12959,16 +13075,16 @@ var $author$project$Page$CoursePage$update = F2(
 									return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 								}
 							case 'ActivityImportStateSuccess':
-								var status = _v49.a;
+								var status = _v57.a;
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 							case 'ActivityImportStateError':
-								var err = _v49.a;
+								var err = _v57.a;
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 							default:
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					} else {
-						break _v0$18;
+						break _v0$20;
 					}
 				default:
 					var res = _v0.a.a;
@@ -16135,6 +16251,8 @@ var $author$project$Page$CoursePage$MsgCloseActivitiesImport = {$: 'MsgCloseActi
 var $author$project$Page$CoursePage$MsgCloseMembers = {$: 'MsgCloseMembers'};
 var $author$project$Page$CoursePage$MsgOnClickAddFin = {$: 'MsgOnClickAddFin'};
 var $author$project$Page$CoursePage$MsgOnClickAddGen = {$: 'MsgOnClickAddGen'};
+var $author$project$Page$CoursePage$MsgOnClickAddTsk = {$: 'MsgOnClickAddTsk'};
+var $author$project$Page$CoursePage$MsgOnClickAddTxt = {$: 'MsgOnClickAddTxt'};
 var $author$project$Page$CoursePage$MsgOnClickEdit = {$: 'MsgOnClickEdit'};
 var $author$project$Page$CoursePage$MsgOnClickEditCancel = {$: 'MsgOnClickEditCancel'};
 var $author$project$Page$CoursePage$MsgOnClickImportActivities = {$: 'MsgOnClickImportActivities'};
@@ -28779,38 +28897,6 @@ var $author$project$Component$Activity$viewRead = function (model) {
 										])),
 									A2(
 									$elm$html$Html$div,
-									_List_Nil,
-									A2(
-										$elm$core$Maybe$withDefault,
-										_List_Nil,
-										A2(
-											$elm$core$Maybe$map,
-											function (d) {
-												return _List_fromArray(
-													[
-														A2(
-														$elm$html$Html$strong,
-														_List_Nil,
-														_List_fromArray(
-															[
-																$elm$html$Html$text('Срок сдачи: ')
-															])),
-														A2(
-														$elm$html$Html$span,
-														_List_Nil,
-														_List_fromArray(
-															[
-																$elm$html$Html$text(
-																A2(
-																	$author$project$Util$posixToFullDate,
-																	A2($elm$core$Maybe$withDefault, $elm$time$Time$utc, model.tz),
-																	d))
-															]))
-													]);
-											},
-											activity.dueDate))),
-									A2(
-									$elm$html$Html$div,
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('row between-xs middle-xs'),
@@ -28885,7 +28971,35 @@ var $author$project$Component$Activity$viewRead = function (model) {
 												[
 													$elm$html$Html$Attributes$class('col-xs-12 col-sm start-xs start-sm')
 												]),
-											_List_Nil)
+											A2(
+												$elm$core$Maybe$withDefault,
+												_List_Nil,
+												A2(
+													$elm$core$Maybe$map,
+													function (d) {
+														return _List_fromArray(
+															[
+																A2(
+																$elm$html$Html$strong,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text('Срок сдачи: ')
+																	])),
+																A2(
+																$elm$html$Html$span,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text(
+																		A2(
+																			$author$project$Util$posixToFullDate,
+																			A2($elm$core$Maybe$withDefault, $elm$time$Time$utc, model.tz),
+																			d))
+																	]))
+															]);
+													},
+													activity.dueDate)))
 										]))
 								]));
 					case 'ActivityContentTypeLNK':
@@ -29018,7 +29132,9 @@ var $author$project$Component$Activity$viewRead = function (model) {
 			return $elm$html$Html$text('');
 	}
 };
+var $author$project$Component$Activity$FieldBody = {$: 'FieldBody'};
 var $author$project$Component$Activity$FieldDate = {$: 'FieldDate'};
+var $author$project$Component$Activity$FieldDue = {$: 'FieldDue'};
 var $author$project$Component$Activity$FieldFGOS = {$: 'FieldFGOS'};
 var $author$project$Component$Activity$FieldGroup = {$: 'FieldGroup'};
 var $author$project$Component$Activity$FieldHidden = {$: 'FieldHidden'};
@@ -29096,6 +29212,7 @@ var $author$project$Util$posixToISODate = A2(
 		$elm$core$List$head,
 		$elm$core$String$split('T')),
 	$rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime);
+var $elm$html$Html$textarea = _VirtualDom_node('textarea');
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Component$Select$MsgItemSelected = function (a) {
@@ -30111,10 +30228,872 @@ var $author$project$Component$Activity$viewWrite = function (model) {
 						}
 					case 'ActivityContentTypeTXT':
 						var _v5 = _v1.a;
-						return $elm$html$Html$text('TODO');
+						return A4(
+							view_with_label,
+							'Материал',
+							'#EEF6FFFF',
+							'#B6C6D5FF',
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row mt-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Название')
+														])),
+													A2(
+													$elm$html$Html$input,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$placeholder('Основное название темы'),
+															$elm$html$Html$Attributes$type_('text'),
+															$elm$html$Html$Attributes$value(activity.title),
+															$elm$html$Html$Events$onInput(
+															$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldTitle))
+														]),
+													_List_Nil)
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row mt-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Содержимое')
+														])),
+													A2(
+													$elm$html$Html$textarea,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$placeholder('Текст учебного материала'),
+															$elm$html$Html$Attributes$value(
+															A2($elm$core$Maybe$withDefault, '', activity.body)),
+															$elm$html$Html$Events$onInput(
+															$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldBody))
+														]),
+													_List_Nil)
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row mt-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Метки')
+														])),
+													A2(
+													$elm$html$Html$input,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$placeholder('Отображаются наверху таблицы'),
+															$elm$html$Html$Attributes$type_('text'),
+															$elm$html$Html$Attributes$value(
+															A2($elm$core$Maybe$withDefault, '', activity.keywords)),
+															$elm$html$Html$Events$onInput(
+															$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldKeywords))
+														]),
+													_List_Nil)
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row mt-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Научный раздел')
+														])),
+													A2(
+													$elm$html$Html$input,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$placeholder(''),
+															$elm$html$Html$Attributes$type_('text'),
+															$elm$html$Html$Attributes$value(
+															A2($elm$core$Maybe$withDefault, '', activity.scientificTopic)),
+															$elm$html$Html$Events$onInput(
+															$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldSci))
+														]),
+													_List_Nil)
+												])),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Группа')
+														])),
+													A2(
+													$elm$html$Html$input,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$placeholder('Для объединения в разделы'),
+															$elm$html$Html$Attributes$type_('text'),
+															$elm$html$Html$Attributes$value(
+															A2($elm$core$Maybe$withDefault, '', activity.group)),
+															$elm$html$Html$Events$onInput(
+															$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldGroup))
+														]),
+													_List_Nil)
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row mt-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Соответствие ФГОС')
+														])),
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('ui checkbox ml-20'),
+															A2($elm$html$Html$Attributes$style, 'scale', '1.25')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$input,
+															_List_fromArray(
+																[
+																	A2($elm$html$Html$Attributes$attribute, 'tabindex', '0'),
+																	$elm$html$Html$Attributes$type_('checkbox'),
+																	$elm$html$Html$Attributes$checked(
+																	A2($elm$core$Maybe$withDefault, false, activity.fgosComplient)),
+																	$elm$html$Html$Events$onCheck(
+																	function (c) {
+																		return A2(
+																			$author$project$Component$Activity$MsgSetField,
+																			$author$project$Component$Activity$FieldFGOS,
+																			c ? '1' : '0');
+																	})
+																]),
+															_List_Nil),
+															A2(
+															$elm$html$Html$label,
+															_List_Nil,
+															_List_fromArray(
+																[
+																	$elm$html$Html$text('Соответствует')
+																]))
+														]))
+												])),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Видимость для учащихся')
+														])),
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('ui checkbox ml-15'),
+															A2($elm$html$Html$Attributes$style, 'scale', '1.25')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$input,
+															_List_fromArray(
+																[
+																	A2($elm$html$Html$Attributes$attribute, 'tabindex', '0'),
+																	$elm$html$Html$Attributes$type_('checkbox'),
+																	$elm$html$Html$Attributes$checked(
+																	A2($elm$core$Maybe$withDefault, false, activity.isHidden)),
+																	$elm$html$Html$Events$onCheck(
+																	function (c) {
+																		return A2(
+																			$author$project$Component$Activity$MsgSetField,
+																			$author$project$Component$Activity$FieldHidden,
+																			c ? '1' : '0');
+																	})
+																]),
+															_List_Nil),
+															A2(
+															$elm$html$Html$label,
+															_List_Nil,
+															_List_fromArray(
+																[
+																	$elm$html$Html$text('Скрыта')
+																]))
+														]))
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row mt-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Дата публикации')
+														])),
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('ui input')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$input,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$placeholder(''),
+																	$elm$html$Html$Attributes$type_('date'),
+																	$elm$html$Html$Attributes$value(
+																	A2(
+																		$elm$core$Maybe$withDefault,
+																		'',
+																		$author$project$Util$posixToISODate(activity.date))),
+																	$elm$html$Html$Events$onInput(
+																	$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldDate))
+																]),
+															_List_Nil)
+														]))
+												])),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-3')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Номер в списке')
+														])),
+													A2(
+													$elm$html$Html$h1,
+													_List_fromArray(
+														[
+															A2($elm$html$Html$Attributes$style, 'margin', '10px 0 0 10px')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(
+															$elm$core$String$fromInt(activity.order))
+														]))
+												])),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-3')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('row middle-xs end-md center-xs'),
+															A2($elm$html$Html$Attributes$style, 'height', '100%')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$button,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$class('ui button red'),
+																	A2($elm$html$Html$Attributes$style, 'position', 'relative'),
+																	A2($elm$html$Html$Attributes$style, 'top', '5px'),
+																	$elm$html$Html$Events$onClick($author$project$Component$Activity$MsgOnClickDelete)
+																]),
+															_List_fromArray(
+																[
+																	A2(
+																	$elm$html$Html$i,
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$Attributes$class('icon trash')
+																		]),
+																	_List_Nil),
+																	$elm$html$Html$text('Удалить')
+																]))
+														]))
+												]))
+										]))
+								]));
 					case 'ActivityContentTypeTSK':
 						var _v6 = _v1.a;
-						return $elm$html$Html$text('TODO');
+						return A4(
+							view_with_label,
+							'Задание',
+							'hsl(266, 100%, 97%)',
+							'hsl(266, 27%, 77%)',
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row mt-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Название')
+														])),
+													A2(
+													$elm$html$Html$input,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$placeholder('Основное название темы'),
+															$elm$html$Html$Attributes$type_('text'),
+															$elm$html$Html$Attributes$value(activity.title),
+															$elm$html$Html$Events$onInput(
+															$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldTitle))
+														]),
+													_List_Nil)
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row mt-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Содержимое')
+														])),
+													A2(
+													$elm$html$Html$textarea,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$placeholder('Текст учебного материала'),
+															$elm$html$Html$Attributes$value(
+															A2($elm$core$Maybe$withDefault, '', activity.body)),
+															$elm$html$Html$Events$onInput(
+															$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldBody))
+														]),
+													_List_Nil)
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row mt-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Срок выполнения')
+														])),
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('ui input')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$input,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$placeholder(''),
+																	$elm$html$Html$Attributes$type_('date'),
+																	$elm$html$Html$Attributes$value(
+																	A2(
+																		$elm$core$Maybe$withDefault,
+																		'',
+																		A2(
+																			$elm$core$Maybe$withDefault,
+																			$elm$core$Maybe$Just(''),
+																			A2($elm$core$Maybe$map, $author$project$Util$posixToISODate, activity.dueDate)))),
+																	$elm$html$Html$Events$onInput(
+																	$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldDue))
+																]),
+															_List_Nil)
+														]))
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row mt-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Метки')
+														])),
+													A2(
+													$elm$html$Html$input,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$placeholder('Отображаются наверху таблицы'),
+															$elm$html$Html$Attributes$type_('text'),
+															$elm$html$Html$Attributes$value(
+															A2($elm$core$Maybe$withDefault, '', activity.keywords)),
+															$elm$html$Html$Events$onInput(
+															$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldKeywords))
+														]),
+													_List_Nil)
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row mt-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Научный раздел')
+														])),
+													A2(
+													$elm$html$Html$input,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$placeholder(''),
+															$elm$html$Html$Attributes$type_('text'),
+															$elm$html$Html$Attributes$value(
+															A2($elm$core$Maybe$withDefault, '', activity.scientificTopic)),
+															$elm$html$Html$Events$onInput(
+															$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldSci))
+														]),
+													_List_Nil)
+												])),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Группа')
+														])),
+													A2(
+													$elm$html$Html$input,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$placeholder('Для объединения в разделы'),
+															$elm$html$Html$Attributes$type_('text'),
+															$elm$html$Html$Attributes$value(
+															A2($elm$core$Maybe$withDefault, '', activity.group)),
+															$elm$html$Html$Events$onInput(
+															$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldGroup))
+														]),
+													_List_Nil)
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row mt-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Соответствие ФГОС')
+														])),
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('ui checkbox ml-20'),
+															A2($elm$html$Html$Attributes$style, 'scale', '1.25')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$input,
+															_List_fromArray(
+																[
+																	A2($elm$html$Html$Attributes$attribute, 'tabindex', '0'),
+																	$elm$html$Html$Attributes$type_('checkbox'),
+																	$elm$html$Html$Attributes$checked(
+																	A2($elm$core$Maybe$withDefault, false, activity.fgosComplient)),
+																	$elm$html$Html$Events$onCheck(
+																	function (c) {
+																		return A2(
+																			$author$project$Component$Activity$MsgSetField,
+																			$author$project$Component$Activity$FieldFGOS,
+																			c ? '1' : '0');
+																	})
+																]),
+															_List_Nil),
+															A2(
+															$elm$html$Html$label,
+															_List_Nil,
+															_List_fromArray(
+																[
+																	$elm$html$Html$text('Соответствует')
+																]))
+														]))
+												])),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Видимость для учащихся')
+														])),
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('ui checkbox ml-15'),
+															A2($elm$html$Html$Attributes$style, 'scale', '1.25')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$input,
+															_List_fromArray(
+																[
+																	A2($elm$html$Html$Attributes$attribute, 'tabindex', '0'),
+																	$elm$html$Html$Attributes$type_('checkbox'),
+																	$elm$html$Html$Attributes$checked(
+																	A2($elm$core$Maybe$withDefault, false, activity.isHidden)),
+																	$elm$html$Html$Events$onCheck(
+																	function (c) {
+																		return A2(
+																			$author$project$Component$Activity$MsgSetField,
+																			$author$project$Component$Activity$FieldHidden,
+																			c ? '1' : '0');
+																	})
+																]),
+															_List_Nil),
+															A2(
+															$elm$html$Html$label,
+															_List_Nil,
+															_List_fromArray(
+																[
+																	$elm$html$Html$text('Скрыта')
+																]))
+														]))
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row mt-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Дата публикации')
+														])),
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('ui input')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$input,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$placeholder(''),
+																	$elm$html$Html$Attributes$type_('date'),
+																	$elm$html$Html$Attributes$value(
+																	A2(
+																		$elm$core$Maybe$withDefault,
+																		'',
+																		$author$project$Util$posixToISODate(activity.date))),
+																	$elm$html$Html$Events$onInput(
+																	$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldDate))
+																]),
+															_List_Nil)
+														]))
+												])),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-3')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Номер в списке')
+														])),
+													A2(
+													$elm$html$Html$h1,
+													_List_fromArray(
+														[
+															A2($elm$html$Html$Attributes$style, 'margin', '10px 0 0 10px')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(
+															$elm$core$String$fromInt(activity.order))
+														]))
+												])),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-3')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('row middle-xs end-md center-xs'),
+															A2($elm$html$Html$Attributes$style, 'height', '100%')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$button,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$class('ui button red'),
+																	A2($elm$html$Html$Attributes$style, 'position', 'relative'),
+																	A2($elm$html$Html$Attributes$style, 'top', '5px'),
+																	$elm$html$Html$Events$onClick($author$project$Component$Activity$MsgOnClickDelete)
+																]),
+															_List_fromArray(
+																[
+																	A2(
+																	$elm$html$Html$i,
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$Attributes$class('icon trash')
+																		]),
+																	_List_Nil),
+																	$elm$html$Html$text('Удалить')
+																]))
+														]))
+												]))
+										]))
+								]));
 					case 'ActivityContentTypeLNK':
 						var _v7 = _v1.a;
 						return $elm$html$Html$text('TODO');
@@ -30838,15 +31817,15 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 		};
 		var header = function () {
 			var teacher = function () {
-				var _v11 = $elm$core$List$head(
+				var _v10 = $elm$core$List$head(
 					A2(
 						$elm$core$List$filter,
 						function (e) {
 							return _Utils_eq(e.role, $author$project$Api$Data$CourseEnrollmentReadRoleT);
 						},
 						courseRead.enrollments));
-				if (_v11.$ === 'Just') {
-					var t = _v11.a;
+				if (_v10.$ === 'Just') {
+					var t = _v10.a;
 					return A2(
 						$elm$html$Html$span,
 						_List_fromArray(
@@ -30883,9 +31862,9 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 				}
 			}();
 			var for_group = function () {
-				var _v10 = $author$project$Page$CourseListPage$empty_to_nothing(courseRead.forGroup);
-				if (_v10.$ === 'Just') {
-					var g = _v10.a;
+				var _v9 = $author$project$Page$CourseListPage$empty_to_nothing(courseRead.forGroup);
+				if (_v9.$ === 'Just') {
+					var g = _v9.a;
 					return A2(
 						$elm$html$Html$span,
 						_List_fromArray(
@@ -30915,11 +31894,11 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 						A2($elm$html$Html$Attributes$style, 'color', '#679'),
 						A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap')
 					]);
-				var _v8 = _Utils_Tuple2(courseRead.forClass, courseRead.forSpecialization);
-				if (_v8.a.$ === 'Just') {
-					if (_v8.b.$ === 'Just') {
-						var cls = _v8.a.a;
-						var spec = _v8.b.a;
+				var _v7 = _Utils_Tuple2(courseRead.forClass, courseRead.forSpecialization);
+				if (_v7.a.$ === 'Just') {
+					if (_v7.b.$ === 'Just') {
+						var cls = _v7.a.a;
+						var spec = _v7.b.a;
 						return A2(
 							$elm$html$Html$span,
 							_List_Nil,
@@ -30929,8 +31908,8 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 									$elm$html$Html$text(cls + (' класс (' + (spec.name + ' направление)')))
 								]));
 					} else {
-						var cls = _v8.a.a;
-						var _v9 = _v8.b;
+						var cls = _v7.a.a;
+						var _v8 = _v7.b;
 						return A2(
 							$elm$html$Html$span,
 							_List_Nil,
@@ -30966,14 +31945,14 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 					},
 					courseRead.cover));
 			var buttons = function () {
-				var _v5 = _Utils_Tuple2(model.is_staff || model.teaching_here, model.edit_mode);
-				_v5$0:
+				var _v4 = _Utils_Tuple2(model.is_staff || model.teaching_here, model.edit_mode);
+				_v4$0:
 				while (true) {
-					if (_v5.b.$ === 'EditOff') {
-						if (!_v5.a) {
-							break _v5$0;
+					if (_v4.b.$ === 'EditOff') {
+						if (!_v4.a) {
+							break _v4$0;
 						} else {
-							var _v6 = _v5.b;
+							var _v5 = _v4.b;
 							return _List_fromArray(
 								[
 									A2(
@@ -30997,11 +31976,11 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 								]);
 						}
 					} else {
-						if (!_v5.a) {
-							break _v5$0;
+						if (!_v4.a) {
+							break _v4$0;
 						} else {
-							var _v7 = _v5.b;
-							var mod = _v7.b;
+							var _v6 = _v4.b;
+							var mod = _v6.b;
 							return _List_fromArray(
 								[
 									A2(
@@ -31258,24 +32237,23 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 						]));
 			};
 			var _v2 = model.edit_mode;
-			_v2$2:
-			while (true) {
-				if (_v2.$ === 'EditOn') {
-					switch (_v2.a.$) {
-						case 'AddGen':
-							var _v3 = _v2.a;
-							return base('Добавить тему здесь');
-						case 'AddFin':
-							var _v4 = _v2.a;
-							return base('Добавить контроль здесь');
-						default:
-							break _v2$2;
-					}
-				} else {
-					break _v2$2;
+			if (_v2.$ === 'EditOn') {
+				var m = _v2.a;
+				switch (m.$) {
+					case 'AddGen':
+						return base('Добавить тему здесь');
+					case 'AddFin':
+						return base('Добавить контроль здесь');
+					case 'AddNone':
+						return $elm$html$Html$text('');
+					case 'AddTsk':
+						return base('Добавить задание здесь');
+					default:
+						return base('Добавить материал здесь');
 				}
+			} else {
+				return $elm$html$Html$text('');
 			}
-			return $elm$html$Html$text('');
 		};
 		var add_activity_bar = (!_Utils_eq(model.edit_mode, $author$project$Page$CoursePage$EditOff)) ? A2(
 			$elm$html$Html$div,
@@ -31301,7 +32279,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('col-xs-12 col-md-8 mb-5')
+									$elm$html$Html$Attributes$class('col-xs-12 mb-5')
 								]),
 							_List_fromArray(
 								[
@@ -31312,7 +32290,8 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 											A2($elm$html$Html$Attributes$style, 'min-width', '100px'),
 											A2($elm$html$Html$Attributes$style, 'display', 'inline-block'),
 											A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
-											$elm$html$Html$Attributes$class('mr-10')
+											$elm$html$Html$Attributes$class('mr-10'),
+											A2($elm$html$Html$Attributes$style, 'flex-wrap', 'nowrap')
 										]),
 									_List_fromArray(
 										[
@@ -31353,13 +32332,49 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 												]),
 											_List_Nil),
 											$elm$html$Html$text('Контроль')
+										])),
+									A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('ui button green'),
+											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickAddTsk)
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$i,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('plus icon')
+												]),
+											_List_Nil),
+											$elm$html$Html$text('Задание')
+										])),
+									A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('ui button green'),
+											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickAddTxt)
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$i,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('plus icon')
+												]),
+											_List_Nil),
+											$elm$html$Html$text('Материал')
 										]))
 								])),
 							A2(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('col-xs-12 col-md-4 start-xs end-md mb-5')
+									$elm$html$Html$Attributes$class('col-xs-12 start-xs mb-5')
 								]),
 							_List_fromArray(
 								[

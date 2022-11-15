@@ -34,6 +34,8 @@ type AddMode
     = AddNone
     | AddGen
     | AddFin
+    | AddTsk
+    | AddTxt
 
 
 type EditMode
@@ -58,6 +60,8 @@ type Msg
     | MsgOnClickSave
     | MsgOnClickAddGen
     | MsgOnClickAddFin
+    | MsgOnClickAddTsk
+    | MsgOnClickAddTxt
     | MsgOnClickAddBefore Int (Maybe Posix)
     | MsgCourseSaved
     | MsgCourseSaveError String
@@ -397,6 +401,30 @@ update msg model =
             in
             ( { model | edit_mode = new_mode }, Cmd.none )
 
+        ( MsgOnClickAddTsk, _ ) ->
+            let
+                new_mode =
+                    case model.edit_mode of
+                        EditOn _ mod ->
+                            EditOn AddTsk mod
+
+                        _ ->
+                            EditOn AddTsk False
+            in
+            ( { model | edit_mode = new_mode }, Cmd.none )
+
+        ( MsgOnClickAddTxt, _ ) ->
+            let
+                new_mode =
+                    case model.edit_mode of
+                        EditOn _ mod ->
+                            EditOn AddTxt mod
+
+                        _ ->
+                            EditOn AddTxt False
+            in
+            ( { model | edit_mode = new_mode }, Cmd.none )
+
         ( MsgOnClickAddBefore i Nothing, _ ) ->
             ( model, Task.perform (Just >> MsgOnClickAddBefore i) <| Time.now )
 
@@ -454,6 +482,62 @@ update msg model =
                                 , embed = Nothing
                                 , finalType = Nothing
                                 , contentType = Just ActivityContentTypeFIN
+                                , course = cid
+                                , files = Nothing
+                                , linkedActivity = Nothing
+                                , submittable = Just False
+                                }
+
+                        ( EditOn AddTsk _, Just cid ) ->
+                            Just
+                                { id = Nothing
+                                , createdAt = Nothing
+                                , updatedAt = Nothing
+                                , title = ""
+                                , lessonType = Nothing
+                                , keywords = Nothing
+                                , isHidden = Just False
+                                , marksLimit = Just 2
+                                , hours = Just 1
+                                , fgosComplient = Just False
+                                , order = i + 1
+                                , date = t
+                                , group = Nothing
+                                , scientificTopic = Nothing
+                                , body = Nothing
+                                , dueDate = Nothing
+                                , link = Nothing
+                                , embed = Nothing
+                                , finalType = Nothing
+                                , contentType = Just ActivityContentTypeTSK
+                                , course = cid
+                                , files = Nothing
+                                , linkedActivity = Nothing
+                                , submittable = Just False
+                                }
+
+                        ( EditOn AddTxt _, Just cid ) ->
+                            Just
+                                { id = Nothing
+                                , createdAt = Nothing
+                                , updatedAt = Nothing
+                                , title = ""
+                                , lessonType = Nothing
+                                , keywords = Nothing
+                                , isHidden = Just False
+                                , marksLimit = Just 0
+                                , hours = Just 1
+                                , fgosComplient = Just False
+                                , order = i + 1
+                                , date = t
+                                , group = Nothing
+                                , scientificTopic = Nothing
+                                , body = Nothing
+                                , dueDate = Nothing
+                                , link = Nothing
+                                , embed = Nothing
+                                , finalType = Nothing
+                                , contentType = Just ActivityContentTypeTXT
                                 , course = cid
                                 , files = Nothing
                                 , linkedActivity = Nothing
@@ -894,12 +978,13 @@ viewCourse courseRead components_activity model =
                     , style "z-index" "10"
                     ]
                     [ div [ class "row around-xs" ]
-                        [ div [ class "col-xs-12 col-md-8 mb-5" ]
+                        [ div [ class "col-xs-12 mb-5" ]
                             [ div
                                 [ style "min-width" "100px"
                                 , style "display" "inline-block"
                                 , style "text-align" "right"
                                 , class "mr-10"
+                                , style "flex-wrap" "nowrap"
                                 ]
                                 [ text "Добавить: " ]
                             , button [ class "ui button green", onClick MsgOnClickAddGen ]
@@ -910,8 +995,16 @@ viewCourse courseRead components_activity model =
                                 [ i [ class "plus icon" ] []
                                 , text "Контроль"
                                 ]
+                            , button [ class "ui button green", onClick MsgOnClickAddTsk ]
+                                [ i [ class "plus icon" ] []
+                                , text "Задание"
+                                ]
+                            , button [ class "ui button green", onClick MsgOnClickAddTxt ]
+                                [ i [ class "plus icon" ] []
+                                , text "Материал"
+                                ]
                             ]
-                        , div [ class "col-xs-12 col-md-4 start-xs end-md mb-5" ]
+                        , div [ class "col-xs-12 start-xs mb-5" ]
                             [ span
                                 [ style "min-width" "100px"
                                 , style "display" "inline-block"
@@ -948,13 +1041,24 @@ viewCourse courseRead components_activity model =
                         ]
             in
             case model.edit_mode of
-                EditOn AddGen _ ->
-                    base "Добавить тему здесь"
+                EditOn m _ ->
+                    case m of
+                        AddGen ->
+                            base "Добавить тему здесь"
 
-                EditOn AddFin _ ->
-                    base "Добавить контроль здесь"
+                        AddFin ->
+                            base "Добавить контроль здесь"
 
-                _ ->
+                        AddNone ->
+                            text ""
+
+                        AddTsk ->
+                            base "Добавить задание здесь"
+
+                        AddTxt ->
+                            base "Добавить материал здесь"
+
+                EditOff ->
                     text ""
 
         activities =

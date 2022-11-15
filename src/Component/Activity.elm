@@ -37,6 +37,8 @@ type Field
     | FieldHidden
     | FieldDate
     | FieldLessonType
+    | FieldBody
+    | FieldDue
 
 
 type Msg
@@ -351,6 +353,17 @@ update msg model =
 
                         FieldLessonType ->
                             { act | lessonType = empty_to_nothing <| Just <| String.trim v }
+
+                        FieldBody ->
+                            { act | body = Just v }
+
+                        FieldDue ->
+                            case isoDateToPosix v of
+                                Just d ->
+                                    { act | dueDate = Just d }
+
+                                Nothing ->
+                                    { act | dueDate = Nothing }
             in
             case state of
                 StateActivity act ->
@@ -528,18 +541,6 @@ viewRead model =
                                     )
                                     activity.body
                             ]
-                        , div [] <|
-                            Maybe.withDefault [] <|
-                                Maybe.map
-                                    (\d ->
-                                        [ strong [] [ text "Срок сдачи: " ]
-                                        , span []
-                                            [ text <|
-                                                posixToFullDate (Maybe.withDefault Time.utc model.tz) d
-                                            ]
-                                        ]
-                                    )
-                                    activity.dueDate
                         , div [ class "row between-xs middle-xs", style "font-size" "smaller" ]
                             [ div [ class "col-xs-12 col-sm start-xs center-sm" ]
                                 [ strong [ class "mr-10 activity-property-label" ]
@@ -559,7 +560,18 @@ viewRead model =
                                             String.fromInt
                                             activity.hours
                                 ]
-                            , div [ class "col-xs-12 col-sm start-xs start-sm" ] []
+                            , div [ class "col-xs-12 col-sm start-xs start-sm" ] <|
+                                Maybe.withDefault [] <|
+                                    Maybe.map
+                                        (\d ->
+                                            [ strong [] [ text "Срок сдачи: " ]
+                                            , span []
+                                                [ text <|
+                                                    posixToFullDate (Maybe.withDefault Time.utc model.tz) d
+                                                ]
+                                            ]
+                                        )
+                                        activity.dueDate
                             ]
                         ]
 
@@ -928,10 +940,305 @@ viewWrite model =
                             text ""
 
                 Just ActivityContentTypeTXT ->
-                    text "TODO"
+                    view_with_label "Материал"
+                        "#EEF6FFFF"
+                        "#B6C6D5FF"
+                        [ div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12" ]
+                                [ label [] [ text "Название" ]
+                                , input
+                                    [ placeholder "Основное название темы"
+                                    , type_ "text"
+                                    , value activity.title
+                                    , onInput (MsgSetField FieldTitle)
+                                    ]
+                                    []
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12" ]
+                                [ label [] [ text "Содержимое" ]
+                                , textarea
+                                    [ placeholder "Текст учебного материала"
+                                    , value <| Maybe.withDefault "" activity.body
+                                    , onInput (MsgSetField FieldBody)
+                                    ]
+                                    []
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12" ]
+                                [ label [] [ text "Метки" ]
+                                , input
+                                    [ placeholder "Отображаются наверху таблицы"
+                                    , type_ "text"
+                                    , value <| Maybe.withDefault "" activity.keywords
+                                    , onInput (MsgSetField FieldKeywords)
+                                    ]
+                                    []
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Научный раздел" ]
+                                , input
+                                    [ placeholder ""
+                                    , type_ "text"
+                                    , value <| Maybe.withDefault "" activity.scientificTopic
+                                    , onInput (MsgSetField FieldSci)
+                                    ]
+                                    []
+                                ]
+                            , div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Группа" ]
+                                , input
+                                    [ placeholder "Для объединения в разделы"
+                                    , type_ "text"
+                                    , value <| Maybe.withDefault "" activity.group
+                                    , onInput (MsgSetField FieldGroup)
+                                    ]
+                                    []
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Соответствие ФГОС" ]
+                                , div [ class "ui checkbox ml-20", style "scale" "1.25" ]
+                                    [ input
+                                        [ attribute "tabindex" "0"
+                                        , type_ "checkbox"
+                                        , checked <| Maybe.withDefault False activity.fgosComplient
+                                        , onCheck
+                                            (\c ->
+                                                MsgSetField FieldFGOS <|
+                                                    if c then
+                                                        "1"
+
+                                                    else
+                                                        "0"
+                                            )
+                                        ]
+                                        []
+                                    , label []
+                                        [ text "Соответствует" ]
+                                    ]
+                                ]
+                            , div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Видимость для учащихся" ]
+                                , div [ class "ui checkbox ml-15", style "scale" "1.25" ]
+                                    [ input
+                                        [ attribute "tabindex" "0"
+                                        , type_ "checkbox"
+                                        , checked <| Maybe.withDefault False activity.isHidden
+                                        , onCheck
+                                            (\c ->
+                                                MsgSetField FieldHidden <|
+                                                    if c then
+                                                        "1"
+
+                                                    else
+                                                        "0"
+                                            )
+                                        ]
+                                        []
+                                    , label []
+                                        [ text "Скрыта" ]
+                                    ]
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Дата публикации" ]
+                                , div [ class "ui input" ]
+                                    [ input
+                                        [ placeholder ""
+                                        , type_ "date"
+                                        , value <| Maybe.withDefault "" <| posixToISODate activity.date
+                                        , onInput (MsgSetField FieldDate)
+                                        ]
+                                        []
+                                    ]
+                                ]
+                            , div [ class "field start-xs col-xs-12 col-sm-3" ]
+                                [ label [] [ text "Номер в списке" ]
+                                , h1 [ style "margin" "10px 0 0 10px" ] [ text <| String.fromInt activity.order ]
+                                ]
+                            , div [ class "field start-xs col-xs-12 col-sm-3" ]
+                                [ div [ class "row middle-xs end-md center-xs", style "height" "100%" ]
+                                    [ button
+                                        [ class "ui button red"
+                                        , style "position" "relative"
+
+                                        --, style "left" "50px"
+                                        , style "top" "5px"
+                                        , onClick MsgOnClickDelete
+                                        ]
+                                        [ i [ class "icon trash" ] []
+                                        , text "Удалить"
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
 
                 Just ActivityContentTypeTSK ->
-                    text "TODO"
+                    view_with_label "Задание"
+                        "hsl(266, 100%, 97%)"
+                        "hsl(266, 27%, 77%)"
+                        [ div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12" ]
+                                [ label [] [ text "Название" ]
+                                , input
+                                    [ placeholder "Основное название темы"
+                                    , type_ "text"
+                                    , value activity.title
+                                    , onInput (MsgSetField FieldTitle)
+                                    ]
+                                    []
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12" ]
+                                [ label [] [ text "Содержимое" ]
+                                , textarea
+                                    [ placeholder "Текст учебного материала"
+                                    , value <| Maybe.withDefault "" activity.body
+                                    , onInput (MsgSetField FieldBody)
+                                    ]
+                                    []
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12" ]
+                                [ label [] [ text "Срок выполнения" ]
+                                , div [ class "ui input" ]
+                                    [ input
+                                        [ placeholder ""
+                                        , type_ "date"
+                                        , value <|
+                                            Maybe.withDefault "" <|
+                                                Maybe.withDefault (Just "") <|
+                                                    Maybe.map posixToISODate activity.dueDate
+                                        , onInput (MsgSetField FieldDue)
+                                        ]
+                                        []
+                                    ]
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12" ]
+                                [ label [] [ text "Метки" ]
+                                , input
+                                    [ placeholder "Отображаются наверху таблицы"
+                                    , type_ "text"
+                                    , value <| Maybe.withDefault "" activity.keywords
+                                    , onInput (MsgSetField FieldKeywords)
+                                    ]
+                                    []
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Научный раздел" ]
+                                , input
+                                    [ placeholder ""
+                                    , type_ "text"
+                                    , value <| Maybe.withDefault "" activity.scientificTopic
+                                    , onInput (MsgSetField FieldSci)
+                                    ]
+                                    []
+                                ]
+                            , div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Группа" ]
+                                , input
+                                    [ placeholder "Для объединения в разделы"
+                                    , type_ "text"
+                                    , value <| Maybe.withDefault "" activity.group
+                                    , onInput (MsgSetField FieldGroup)
+                                    ]
+                                    []
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Соответствие ФГОС" ]
+                                , div [ class "ui checkbox ml-20", style "scale" "1.25" ]
+                                    [ input
+                                        [ attribute "tabindex" "0"
+                                        , type_ "checkbox"
+                                        , checked <| Maybe.withDefault False activity.fgosComplient
+                                        , onCheck
+                                            (\c ->
+                                                MsgSetField FieldFGOS <|
+                                                    if c then
+                                                        "1"
+
+                                                    else
+                                                        "0"
+                                            )
+                                        ]
+                                        []
+                                    , label []
+                                        [ text "Соответствует" ]
+                                    ]
+                                ]
+                            , div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Видимость для учащихся" ]
+                                , div [ class "ui checkbox ml-15", style "scale" "1.25" ]
+                                    [ input
+                                        [ attribute "tabindex" "0"
+                                        , type_ "checkbox"
+                                        , checked <| Maybe.withDefault False activity.isHidden
+                                        , onCheck
+                                            (\c ->
+                                                MsgSetField FieldHidden <|
+                                                    if c then
+                                                        "1"
+
+                                                    else
+                                                        "0"
+                                            )
+                                        ]
+                                        []
+                                    , label []
+                                        [ text "Скрыта" ]
+                                    ]
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Дата публикации" ]
+                                , div [ class "ui input" ]
+                                    [ input
+                                        [ placeholder ""
+                                        , type_ "date"
+                                        , value <| Maybe.withDefault "" <| posixToISODate activity.date
+                                        , onInput (MsgSetField FieldDate)
+                                        ]
+                                        []
+                                    ]
+                                ]
+                            , div [ class "field start-xs col-xs-12 col-sm-3" ]
+                                [ label [] [ text "Номер в списке" ]
+                                , h1 [ style "margin" "10px 0 0 10px" ] [ text <| String.fromInt activity.order ]
+                                ]
+                            , div [ class "field start-xs col-xs-12 col-sm-3" ]
+                                [ div [ class "row middle-xs end-md center-xs", style "height" "100%" ]
+                                    [ button
+                                        [ class "ui button red"
+                                        , style "position" "relative"
+
+                                        --, style "left" "50px"
+                                        , style "top" "5px"
+                                        , onClick MsgOnClickDelete
+                                        ]
+                                        [ i [ class "icon trash" ] []
+                                        , text "Удалить"
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
 
                 Just ActivityContentTypeLNK ->
                     text "TODO"

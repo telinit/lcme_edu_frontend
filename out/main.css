@@ -44,3 +44,7 @@
     background-color: #db2828 !important;
     box-shadow: -1px -1px 0px 0px #B03060 !important;
 }
+
+#__RENDERED_TEXT__ .mm-paragraph {
+    padding: 10px;
+}
