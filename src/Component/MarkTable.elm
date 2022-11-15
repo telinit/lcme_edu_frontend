@@ -866,7 +866,7 @@ viewTableHeader columns =
                         td
                             ([ style "text-align" "center"
                              , style "vertical-align" "top"
-                             , style "white-space" "nowrap"
+                             --, style "white-space" "nowrap"
                              ]
                                 ++ td_attrs col
                             )

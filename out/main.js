@@ -33485,8 +33485,7 @@ var $author$project$Component$MarkTable$viewTableHeader = function (columns) {
 									_List_fromArray(
 										[
 											A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-											A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
-											A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap')
+											A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
 										]),
 									td_attrs(col)),
 								_List_fromArray(
