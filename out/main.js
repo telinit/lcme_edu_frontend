@@ -28646,8 +28646,8 @@ var $author$project$Component$Activity$viewRead = function (model) {
 						return A4(
 							view_with_label,
 							'Материал',
-							'#EEF6FFFF',
-							'#B6C6D5FF',
+							'hsl(170, 100%, 97%)',
+							'hsl(170, 27%, 77%)',
 							_List_fromArray(
 								[
 									A2(
@@ -28662,7 +28662,11 @@ var $author$project$Component$Activity$viewRead = function (model) {
 										])),
 									A2(
 									$elm$html$Html$div,
-									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('mt-10 mb-10'),
+											A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+										]),
 									_List_fromArray(
 										[
 											A2(
@@ -28737,8 +28741,8 @@ var $author$project$Component$Activity$viewRead = function (model) {
 						return A4(
 							view_with_label,
 							'Задание',
-							'#EEF6FFFF',
-							'#B6C6D5FF',
+							'hsl(61, 100%, 97%)',
+							'hsl(61, 27%, 77%)',
 							_List_fromArray(
 								[
 									A2(
