@@ -429,6 +429,7 @@ update msg model =
                                 , course = cid
                                 , files = Nothing
                                 , linkedActivity = Nothing
+                                , submittable = Just False
                                 }
 
                         ( EditOn AddFin _, Just cid ) ->
@@ -456,6 +457,7 @@ update msg model =
                                 , course = cid
                                 , files = Nothing
                                 , linkedActivity = Nothing
+                                , submittable = Just False
                                 }
 
                         _ ->
