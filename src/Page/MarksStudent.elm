@@ -22,6 +22,7 @@ type alias Model =
     { state : State
     , token : String
     , user : UserDeep
+    , student_id : Maybe Uuid
     }
 
 
@@ -49,10 +50,10 @@ init token user mb_student_id =
                 ( m, c ) =
                     MT.initForStudent token id
             in
-            ( { state = MarksTable m, token = token, user = user }, Cmd.map MsgTable c )
+            ( { state = MarksTable m, token = token, user = user, student_id = student_id }, Cmd.map MsgTable c )
 
         Nothing ->
-            ( { state = StudentSelection, token = token, user = user }, Cmd.none )
+            ( { state = StudentSelection, token = token, user = user, student_id = student_id }, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -73,7 +74,29 @@ view : Model -> Html Msg
 view model =
     case model.state of
         MarksTable t ->
-            div [ class "row center-xs" ] [ Html.map MsgTable <| MT.view t ]
+            let
+                u1 =
+                    [ user_deep_to_shallow model.user ]
+
+                u2 =
+                    model.user.children
+            in
+            div []
+                [ Maybe.withDefault (text "") <|
+                    Maybe.map
+                        (\u ->
+                            div []
+                                [ h2 []
+                                    [ text "Учащийся:"
+                                    , user_link Nothing u
+                                    ]
+                                ]
+                        )
+                    <|
+                        List.head <|
+                            List.filter (.id >> (==) model.student_id) (u1 ++ u2)
+                , div [ class "row center-xs" ] [ Html.map MsgTable <| MT.view t ]
+                ]
 
         StudentSelection ->
             let

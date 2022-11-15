@@ -9996,13 +9996,14 @@ var $author$project$Page$MarksStudent$init = F3(
 			return _Utils_Tuple2(
 				{
 					state: $author$project$Page$MarksStudent$MarksTable(m),
+					student_id: student_id,
 					token: token,
 					user: user
 				},
 				A2($elm$core$Platform$Cmd$map, $author$project$Page$MarksStudent$MsgTable, c));
 		} else {
 			return _Utils_Tuple2(
-				{state: $author$project$Page$MarksStudent$StudentSelection, token: token, user: user},
+				{state: $author$project$Page$MarksStudent$StudentSelection, student_id: student_id, token: token, user: user},
 				$elm$core$Platform$Cmd$none);
 		}
 	});
@@ -16288,7 +16289,7 @@ var $elm$html$Html$Attributes$classList = function (classes) {
 				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
 };
 var $author$project$Component$Misc$user_link = F2(
-	function (mb_link, user) {
+	function (custom_link, user) {
 		return A2(
 			$elm$html$Html$a,
 			_List_fromArray(
@@ -16299,7 +16300,7 @@ var $author$project$Component$Misc$user_link = F2(
 					A2(
 						$elm$core$Maybe$withDefault,
 						'/profile/' + $author$project$Util$get_id_str(user),
-						mb_link))
+						custom_link))
 				]),
 			_List_fromArray(
 				[
@@ -34011,18 +34012,60 @@ var $author$project$Page$MarksStudent$view = function (model) {
 	var _v0 = model.state;
 	if (_v0.$ === 'MarksTable') {
 		var t = _v0.a;
+		var u2 = model.user.children;
+		var u1 = _List_fromArray(
+			[
+				$author$project$Util$user_deep_to_shallow(model.user)
+			]);
 		return A2(
 			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('row center-xs')
-				]),
+			_List_Nil,
 			_List_fromArray(
 				[
 					A2(
-					$elm$html$Html$map,
-					$author$project$Page$MarksStudent$MsgTable,
-					$author$project$Component$MarkTable$view(t))
+					$elm$core$Maybe$withDefault,
+					$elm$html$Html$text(''),
+					A2(
+						$elm$core$Maybe$map,
+						function (u) {
+							return A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$h2,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Учащийся:'),
+												A2($author$project$Component$Misc$user_link, $elm$core$Maybe$Nothing, u)
+											]))
+									]));
+						},
+						$elm$core$List$head(
+							A2(
+								$elm$core$List$filter,
+								A2(
+									$elm$core$Basics$composeR,
+									function ($) {
+										return $.id;
+									},
+									$elm$core$Basics$eq(model.student_id)),
+								_Utils_ap(u1, u2))))),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('row center-xs')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$map,
+							$author$project$Page$MarksStudent$MsgTable,
+							$author$project$Component$MarkTable$view(t))
+						]))
 				]));
 	} else {
 		var self_is_student = A2(
