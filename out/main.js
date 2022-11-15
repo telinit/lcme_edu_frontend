@@ -32402,15 +32402,33 @@ var $author$project$Component$MarkTable$viewTableHeader = function (columns) {
 		if (col.$ === 'Activity') {
 			var act = col.a;
 			var _v1 = act.contentType;
-			if ((_v1.$ === 'Just') && (_v1.a.$ === 'ActivityContentTypeFIN')) {
-				var _v2 = _v1.a;
-				return _List_fromArray(
-					[
-						A2($elm$html$Html$Attributes$style, 'background-color', '#FFEFE2FF')
-					]);
-			} else {
-				return _List_Nil;
+			_v1$2:
+			while (true) {
+				if (_v1.$ === 'Just') {
+					switch (_v1.a.$) {
+						case 'ActivityContentTypeFIN':
+							var _v2 = _v1.a;
+							return _List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'background-color', '#FFEFE2FF')
+								]);
+						case 'ActivityContentTypeTSK':
+							var _v3 = _v1.a;
+							return _List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'background-color', 'hsl(266, 100%, 97%)')
+								]);
+						default:
+							break _v1$2;
+					}
+				} else {
+					break _v1$2;
+				}
 			}
+			return _List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'background-color', '#EEF6FFFF')
+				]);
 		} else {
 			return _List_Nil;
 		}

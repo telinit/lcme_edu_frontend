@@ -849,8 +849,11 @@ viewTableHeader columns =
                         Just ActivityContentTypeFIN ->
                             [ style "background-color" "#FFEFE2FF" ]
 
+                        Just ActivityContentTypeTSK ->
+                            [style "background-color" "hsl(266, 100%, 97%)"]
+
                         _ ->
-                            []
+                            [style "background-color" "#EEF6FFFF"]
 
                 Date _ ->
                     []
