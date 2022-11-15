@@ -485,11 +485,11 @@ viewRead model =
 
                 Just ActivityContentTypeTXT ->
                     view_with_label "Материал"
-                        "hsl(170, 100%, 97%)"
-                        "hsl(170, 27%, 77%)"
+                        "#EEF6FFFF"
+                        "#B6C6D5FF"
                         [ h3 [ class "row start-xs pl-10 pt-10" ]
                             [ text activity.title ]
-                        , div [class "mt-10 mb-10", style "text-align" "center"]
+                        , div [ class "mt-10 mb-10", style "text-align" "center" ]
                             [ Maybe.withDefault (text "") <|
                                 Maybe.map
                                     (\b ->
@@ -514,12 +514,12 @@ viewRead model =
 
                 Just ActivityContentTypeTSK ->
                     view_with_label "Задание"
-                        "hsl(61, 100%, 97%)"
-                        "hsl(61, 27%, 77%)"
+                        "hsl(266, 100%, 97%)"
+                        "hsl(266, 27%, 77%)"
                         [ h3 [ class "row start-xs pl-10 pt-10" ]
                             [ text activity.title ]
                         , div
-                            []
+                            [ class "mt-10 mb-10", style "text-align" "center" ]
                             [ Maybe.withDefault (text "") <|
                                 Maybe.map
                                     (\b ->
