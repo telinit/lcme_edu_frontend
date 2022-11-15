@@ -18,26 +18,8 @@ module Api.Request.Message exposing
     ( messageCreate
     , messageDelete
     , messageList
-    , messageNewsCreate
-    , messageNewsDelete
-    , messageNewsList
-    , messageNewsPartialUpdate
-    , messageNewsRead
-    , messageNewsUpdate
     , messagePartialUpdate
-    , messagePrivateCreate
-    , messagePrivateDelete
-    , messagePrivateList
-    , messagePrivatePartialUpdate
-    , messagePrivateRead
-    , messagePrivateUpdate
     , messageRead
-    , messageTaskCreate
-    , messageTaskDelete
-    , messageTaskList
-    , messageTaskPartialUpdate
-    , messageTaskRead
-    , messageTaskUpdate
     , messageUpdate
     )
 
@@ -47,7 +29,6 @@ import Dict
 import Http
 import Json.Decode
 import Json.Encode
-import Uuid exposing (Uuid)
 
 
 messageCreate : Api.Data.Message -> Api.Request Api.Data.Message
@@ -86,78 +67,6 @@ messageList =
         (Json.Decode.list Api.Data.messageDecoder)
 
 
-messageNewsCreate : Api.Data.MessageNews -> Api.Request Api.Data.MessageNews
-messageNewsCreate data_body =
-    Api.request
-        "POST"
-        "/message/news/"
-        []
-        []
-        []
-        (Just (Api.Data.encodeMessageNews data_body))
-        Api.Data.messageNewsDecoder
-
-
-messageNewsDelete : Uuid -> Api.Request ()
-messageNewsDelete id_path =
-    Api.request
-        "DELETE"
-        "/message/news/{id}/"
-        [ ( "id", Uuid.toString id_path ) ]
-        []
-        []
-        Nothing
-        (Json.Decode.succeed ())
-
-
-messageNewsList : Api.Request (List Api.Data.MessageNews)
-messageNewsList =
-    Api.request
-        "GET"
-        "/message/news/"
-        []
-        []
-        []
-        Nothing
-        (Json.Decode.list Api.Data.messageNewsDecoder)
-
-
-messageNewsPartialUpdate : Uuid -> Api.Data.MessageNews -> Api.Request Api.Data.MessageNews
-messageNewsPartialUpdate id_path data_body =
-    Api.request
-        "PATCH"
-        "/message/news/{id}/"
-        [ ( "id", Uuid.toString id_path ) ]
-        []
-        []
-        (Just (Api.Data.encodeMessageNews data_body))
-        Api.Data.messageNewsDecoder
-
-
-messageNewsRead : Uuid -> Api.Request Api.Data.MessageNews
-messageNewsRead id_path =
-    Api.request
-        "GET"
-        "/message/news/{id}/"
-        [ ( "id", Uuid.toString id_path ) ]
-        []
-        []
-        Nothing
-        Api.Data.messageNewsDecoder
-
-
-messageNewsUpdate : Uuid -> Api.Data.MessageNews -> Api.Request Api.Data.MessageNews
-messageNewsUpdate id_path data_body =
-    Api.request
-        "PUT"
-        "/message/news/{id}/"
-        [ ( "id", Uuid.toString id_path ) ]
-        []
-        []
-        (Just (Api.Data.encodeMessageNews data_body))
-        Api.Data.messageNewsDecoder
-
-
 messagePartialUpdate : String -> Api.Data.Message -> Api.Request Api.Data.Message
 messagePartialUpdate id_path data_body =
     Api.request
@@ -170,78 +79,6 @@ messagePartialUpdate id_path data_body =
         Api.Data.messageDecoder
 
 
-messagePrivateCreate : Api.Data.MessagePrivate -> Api.Request Api.Data.MessagePrivate
-messagePrivateCreate data_body =
-    Api.request
-        "POST"
-        "/message/private/"
-        []
-        []
-        []
-        (Just (Api.Data.encodeMessagePrivate data_body))
-        Api.Data.messagePrivateDecoder
-
-
-messagePrivateDelete : String -> Api.Request ()
-messagePrivateDelete id_path =
-    Api.request
-        "DELETE"
-        "/message/private/{id}/"
-        [ ( "id", identity id_path ) ]
-        []
-        []
-        Nothing
-        (Json.Decode.succeed ())
-
-
-messagePrivateList : Api.Request (List Api.Data.MessagePrivate)
-messagePrivateList =
-    Api.request
-        "GET"
-        "/message/private/"
-        []
-        []
-        []
-        Nothing
-        (Json.Decode.list Api.Data.messagePrivateDecoder)
-
-
-messagePrivatePartialUpdate : String -> Api.Data.MessagePrivate -> Api.Request Api.Data.MessagePrivate
-messagePrivatePartialUpdate id_path data_body =
-    Api.request
-        "PATCH"
-        "/message/private/{id}/"
-        [ ( "id", identity id_path ) ]
-        []
-        []
-        (Just (Api.Data.encodeMessagePrivate data_body))
-        Api.Data.messagePrivateDecoder
-
-
-messagePrivateRead : String -> Api.Request Api.Data.MessagePrivate
-messagePrivateRead id_path =
-    Api.request
-        "GET"
-        "/message/private/{id}/"
-        [ ( "id", identity id_path ) ]
-        []
-        []
-        Nothing
-        Api.Data.messagePrivateDecoder
-
-
-messagePrivateUpdate : String -> Api.Data.MessagePrivate -> Api.Request Api.Data.MessagePrivate
-messagePrivateUpdate id_path data_body =
-    Api.request
-        "PUT"
-        "/message/private/{id}/"
-        [ ( "id", identity id_path ) ]
-        []
-        []
-        (Just (Api.Data.encodeMessagePrivate data_body))
-        Api.Data.messagePrivateDecoder
-
-
 messageRead : String -> Api.Request Api.Data.Message
 messageRead id_path =
     Api.request
@@ -252,78 +89,6 @@ messageRead id_path =
         []
         Nothing
         Api.Data.messageDecoder
-
-
-messageTaskCreate : Api.Data.MessageTaskSubmission -> Api.Request Api.Data.MessageTaskSubmission
-messageTaskCreate data_body =
-    Api.request
-        "POST"
-        "/message/task/"
-        []
-        []
-        []
-        (Just (Api.Data.encodeMessageTaskSubmission data_body))
-        Api.Data.messageTaskSubmissionDecoder
-
-
-messageTaskDelete : String -> Api.Request ()
-messageTaskDelete id_path =
-    Api.request
-        "DELETE"
-        "/message/task/{id}/"
-        [ ( "id", identity id_path ) ]
-        []
-        []
-        Nothing
-        (Json.Decode.succeed ())
-
-
-messageTaskList : Api.Request (List Api.Data.MessageTaskSubmission)
-messageTaskList =
-    Api.request
-        "GET"
-        "/message/task/"
-        []
-        []
-        []
-        Nothing
-        (Json.Decode.list Api.Data.messageTaskSubmissionDecoder)
-
-
-messageTaskPartialUpdate : String -> Api.Data.MessageTaskSubmission -> Api.Request Api.Data.MessageTaskSubmission
-messageTaskPartialUpdate id_path data_body =
-    Api.request
-        "PATCH"
-        "/message/task/{id}/"
-        [ ( "id", identity id_path ) ]
-        []
-        []
-        (Just (Api.Data.encodeMessageTaskSubmission data_body))
-        Api.Data.messageTaskSubmissionDecoder
-
-
-messageTaskRead : String -> Api.Request Api.Data.MessageTaskSubmission
-messageTaskRead id_path =
-    Api.request
-        "GET"
-        "/message/task/{id}/"
-        [ ( "id", identity id_path ) ]
-        []
-        []
-        Nothing
-        Api.Data.messageTaskSubmissionDecoder
-
-
-messageTaskUpdate : String -> Api.Data.MessageTaskSubmission -> Api.Request Api.Data.MessageTaskSubmission
-messageTaskUpdate id_path data_body =
-    Api.request
-        "PUT"
-        "/message/task/{id}/"
-        [ ( "id", identity id_path ) ]
-        []
-        []
-        (Just (Api.Data.encodeMessageTaskSubmission data_body))
-        Api.Data.messageTaskSubmissionDecoder
 
 
 messageUpdate : String -> Api.Data.Message -> Api.Request Api.Data.Message

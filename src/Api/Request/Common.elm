@@ -21,12 +21,12 @@ module Api.Request.Common exposing
     , commonDepartmentPartialUpdate
     , commonDepartmentRead
     , commonDepartmentUpdate
-    , commonOrganisationCreate
-    , commonOrganisationDelete
-    , commonOrganisationList
-    , commonOrganisationPartialUpdate
-    , commonOrganisationRead
-    , commonOrganisationUpdate
+    , commonOrganizationCreate
+    , commonOrganizationDelete
+    , commonOrganizationList
+    , commonOrganizationPartialUpdate
+    , commonOrganizationRead
+    , commonOrganizationUpdate
     )
 
 import Api
@@ -110,11 +110,11 @@ commonDepartmentUpdate id_path data_body =
         Api.Data.departmentDecoder
 
 
-commonOrganisationCreate : Api.Data.Organization -> Api.Request Api.Data.Organization
-commonOrganisationCreate data_body =
+commonOrganizationCreate : Api.Data.Organization -> Api.Request Api.Data.Organization
+commonOrganizationCreate data_body =
     Api.request
         "POST"
-        "/common/organisation/"
+        "/common/organization/"
         []
         []
         []
@@ -122,11 +122,11 @@ commonOrganisationCreate data_body =
         Api.Data.organizationDecoder
 
 
-commonOrganisationDelete : Uuid -> Api.Request ()
-commonOrganisationDelete id_path =
+commonOrganizationDelete : Uuid -> Api.Request ()
+commonOrganizationDelete id_path =
     Api.request
         "DELETE"
-        "/common/organisation/{id}/"
+        "/common/organization/{id}/"
         [ ( "id", Uuid.toString id_path ) ]
         []
         []
@@ -134,11 +134,11 @@ commonOrganisationDelete id_path =
         (Json.Decode.succeed ())
 
 
-commonOrganisationList : Api.Request (List Api.Data.Organization)
-commonOrganisationList =
+commonOrganizationList : Api.Request (List Api.Data.Organization)
+commonOrganizationList =
     Api.request
         "GET"
-        "/common/organisation/"
+        "/common/organization/"
         []
         []
         []
@@ -146,11 +146,11 @@ commonOrganisationList =
         (Json.Decode.list Api.Data.organizationDecoder)
 
 
-commonOrganisationPartialUpdate : Uuid -> Api.Data.Organization -> Api.Request Api.Data.Organization
-commonOrganisationPartialUpdate id_path data_body =
+commonOrganizationPartialUpdate : Uuid -> Api.Data.Organization -> Api.Request Api.Data.Organization
+commonOrganizationPartialUpdate id_path data_body =
     Api.request
         "PATCH"
-        "/common/organisation/{id}/"
+        "/common/organization/{id}/"
         [ ( "id", Uuid.toString id_path ) ]
         []
         []
@@ -158,11 +158,11 @@ commonOrganisationPartialUpdate id_path data_body =
         Api.Data.organizationDecoder
 
 
-commonOrganisationRead : Uuid -> Api.Request Api.Data.Organization
-commonOrganisationRead id_path =
+commonOrganizationRead : Uuid -> Api.Request Api.Data.Organization
+commonOrganizationRead id_path =
     Api.request
         "GET"
-        "/common/organisation/{id}/"
+        "/common/organization/{id}/"
         [ ( "id", Uuid.toString id_path ) ]
         []
         []
@@ -170,11 +170,11 @@ commonOrganisationRead id_path =
         Api.Data.organizationDecoder
 
 
-commonOrganisationUpdate : Uuid -> Api.Data.Organization -> Api.Request Api.Data.Organization
-commonOrganisationUpdate id_path data_body =
+commonOrganizationUpdate : Uuid -> Api.Data.Organization -> Api.Request Api.Data.Organization
+commonOrganizationUpdate id_path data_body =
     Api.request
         "PUT"
-        "/common/organisation/{id}/"
+        "/common/organization/{id}/"
         [ ( "id", Uuid.toString id_path ) ]
         []
         []

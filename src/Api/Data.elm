@@ -39,9 +39,7 @@ module Api.Data exposing
     , Login
     , Mark
     , Message
-    , MessageNews
-    , MessagePrivate
-    , MessageTaskSubmission
+    , MessageType(..)
     , Organization
     , ResetPasswordComplete
     , ResetPasswordRequest
@@ -88,9 +86,6 @@ module Api.Data exposing
     , encodeLogin
     , encodeMark
     , encodeMessage
-    , encodeMessageNews
-    , encodeMessagePrivate
-    , encodeMessageTaskSubmission
     , encodeOrganization
     , encodeResetPasswordComplete
     , encodeResetPasswordRequest
@@ -109,9 +104,7 @@ module Api.Data exposing
     , loginDecoder
     , markDecoder
     , messageDecoder
-    , messageNewsDecoder
-    , messagePrivateDecoder
-    , messageTaskSubmissionDecoder
+    , messageTypeVariants
     , organizationDecoder
     , resetPasswordCompleteDecoder
     , resetPasswordRequestDecoder
@@ -156,6 +149,7 @@ type alias Activity =
     , scientificTopic : Maybe String
     , body : Maybe String
     , dueDate : Maybe Posix
+    , submittable : Maybe Bool
     , link : Maybe String
     , embed : Maybe Bool
     , finalType : Maybe ActivityFinalType
@@ -428,47 +422,31 @@ type alias Message =
     { id : Maybe Uuid
     , createdAt : Maybe Posix
     , updatedAt : Maybe Posix
+    , type_ : Maybe MessageType
     , body : Maybe String
-    , sentAt : Posix
+    , manualCategory : Maybe String
+    , manualAudience : Maybe String
+    , thread : Maybe Uuid
     , sender : Uuid
+    , receiver : Maybe Uuid
     , attachments : Maybe (List Uuid)
     }
 
 
-type alias MessageNews =
-    { id : Maybe Uuid
-    , createdAt : Maybe Posix
-    , updatedAt : Maybe Posix
-    , body : Maybe String
-    , sentAt : Posix
-    , sender : Uuid
-    , attachments : Maybe (List Uuid)
-    }
+type MessageType
+    = MessageTypeTHR
+    | MessageTypePRV
+    | MessageTypeNEW
+    | MessageTypeMAN
 
 
-type alias MessagePrivate =
-    { id : Maybe Uuid
-    , createdAt : Maybe Posix
-    , updatedAt : Maybe Posix
-    , body : Maybe String
-    , sentAt : Posix
-    , sender : Uuid
-    , receiver : Uuid
-    , attachments : Maybe (List Uuid)
-    }
-
-
-type alias MessageTaskSubmission =
-    { id : Maybe Uuid
-    , createdAt : Maybe Posix
-    , updatedAt : Maybe Posix
-    , body : Maybe String
-    , sentAt : Posix
-    , sender : Uuid
-    , receiver : Uuid
-    , activity : Uuid
-    , attachments : Maybe (List Uuid)
-    }
+messageTypeVariants : List MessageType
+messageTypeVariants =
+    [ MessageTypeTHR
+    , MessageTypePRV
+    , MessageTypeNEW
+    , MessageTypeMAN
+    ]
 
 
 type alias Organization =
@@ -636,6 +614,7 @@ encodeActivityPairs model =
             , maybeEncodeNullable "scientific_topic" Json.Encode.string model.scientificTopic
             , maybeEncode "body" Json.Encode.string model.body
             , maybeEncodeNullable "due_date" Api.Time.encodeDateTime model.dueDate
+            , maybeEncode "submittable" Json.Encode.bool model.submittable
             , maybeEncodeNullable "link" Json.Encode.string model.link
             , maybeEncode "embed" Json.Encode.bool model.embed
             , maybeEncodeNullable "final_type" encodeActivityFinalType model.finalType
@@ -1198,94 +1177,38 @@ encodeMessagePairs model =
             [ maybeEncode "id" Uuid.encode model.id
             , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
+            , maybeEncode "type" encodeMessageType model.type_
             , maybeEncode "body" Json.Encode.string model.body
-            , encode "sent_at" Api.Time.encodeDateTime model.sentAt
+            , maybeEncodeNullable "manual_category" Json.Encode.string model.manualCategory
+            , maybeEncodeNullable "manual_audience" Json.Encode.string model.manualAudience
+            , maybeEncodeNullable "thread" Uuid.encode model.thread
             , encode "sender" Uuid.encode model.sender
+            , maybeEncodeNullable "receiver" Uuid.encode model.receiver
             , maybeEncode "attachments" (Json.Encode.list Uuid.encode) model.attachments
             ]
     in
     pairs
 
 
-encodeMessageNews : MessageNews -> Json.Encode.Value
-encodeMessageNews =
-    encodeObject << encodeMessageNewsPairs
+stringFromMessageType : MessageType -> String
+stringFromMessageType model =
+    case model of
+        MessageTypeTHR ->
+            "THR"
+
+        MessageTypePRV ->
+            "PRV"
+
+        MessageTypeNEW ->
+            "NEW"
+
+        MessageTypeMAN ->
+            "MAN"
 
 
-encodeMessageNewsWithTag : ( String, String ) -> MessageNews -> Json.Encode.Value
-encodeMessageNewsWithTag ( tagField, tag ) model =
-    encodeObject (encodeMessageNewsPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeMessageNewsPairs : MessageNews -> List EncodedField
-encodeMessageNewsPairs model =
-    let
-        pairs =
-            [ maybeEncode "id" Uuid.encode model.id
-            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
-            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
-            , maybeEncode "body" Json.Encode.string model.body
-            , encode "sent_at" Api.Time.encodeDateTime model.sentAt
-            , encode "sender" Uuid.encode model.sender
-            , maybeEncode "attachments" (Json.Encode.list Uuid.encode) model.attachments
-            ]
-    in
-    pairs
-
-
-encodeMessagePrivate : MessagePrivate -> Json.Encode.Value
-encodeMessagePrivate =
-    encodeObject << encodeMessagePrivatePairs
-
-
-encodeMessagePrivateWithTag : ( String, String ) -> MessagePrivate -> Json.Encode.Value
-encodeMessagePrivateWithTag ( tagField, tag ) model =
-    encodeObject (encodeMessagePrivatePairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeMessagePrivatePairs : MessagePrivate -> List EncodedField
-encodeMessagePrivatePairs model =
-    let
-        pairs =
-            [ maybeEncode "id" Uuid.encode model.id
-            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
-            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
-            , maybeEncode "body" Json.Encode.string model.body
-            , encode "sent_at" Api.Time.encodeDateTime model.sentAt
-            , encode "sender" Uuid.encode model.sender
-            , encode "receiver" Uuid.encode model.receiver
-            , maybeEncode "attachments" (Json.Encode.list Uuid.encode) model.attachments
-            ]
-    in
-    pairs
-
-
-encodeMessageTaskSubmission : MessageTaskSubmission -> Json.Encode.Value
-encodeMessageTaskSubmission =
-    encodeObject << encodeMessageTaskSubmissionPairs
-
-
-encodeMessageTaskSubmissionWithTag : ( String, String ) -> MessageTaskSubmission -> Json.Encode.Value
-encodeMessageTaskSubmissionWithTag ( tagField, tag ) model =
-    encodeObject (encodeMessageTaskSubmissionPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeMessageTaskSubmissionPairs : MessageTaskSubmission -> List EncodedField
-encodeMessageTaskSubmissionPairs model =
-    let
-        pairs =
-            [ maybeEncode "id" Uuid.encode model.id
-            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
-            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
-            , maybeEncode "body" Json.Encode.string model.body
-            , encode "sent_at" Api.Time.encodeDateTime model.sentAt
-            , encode "sender" Uuid.encode model.sender
-            , encode "receiver" Uuid.encode model.receiver
-            , encode "activity" Uuid.encode model.activity
-            , maybeEncode "attachments" (Json.Encode.list Uuid.encode) model.attachments
-            ]
-    in
-    pairs
+encodeMessageType : MessageType -> Json.Encode.Value
+encodeMessageType =
+    Json.Encode.string << stringFromMessageType
 
 
 encodeOrganization : Organization -> Json.Encode.Value
@@ -1603,6 +1526,7 @@ activityDecoder =
         |> maybeDecodeNullable "scientific_topic" Json.Decode.string Nothing
         |> maybeDecode "body" Json.Decode.string Nothing
         |> maybeDecodeNullable "due_date" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "submittable" Json.Decode.bool Nothing
         |> maybeDecodeNullable "link" Json.Decode.string Nothing
         |> maybeDecode "embed" Json.Decode.bool Nothing
         |> maybeDecodeNullable "final_type" activityFinalTypeDecoder Nothing
@@ -1939,49 +1863,37 @@ messageDecoder =
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "type" messageTypeDecoder Nothing
         |> maybeDecode "body" Json.Decode.string Nothing
-        |> decode "sent_at" Api.Time.dateTimeDecoder
+        |> maybeDecodeNullable "manual_category" Json.Decode.string Nothing
+        |> maybeDecodeNullable "manual_audience" Json.Decode.string Nothing
+        |> maybeDecodeNullable "thread" Uuid.decoder Nothing
         |> decode "sender" Uuid.decoder
+        |> maybeDecodeNullable "receiver" Uuid.decoder Nothing
         |> maybeDecode "attachments" (Json.Decode.list Uuid.decoder) Nothing
 
 
-messageNewsDecoder : Json.Decode.Decoder MessageNews
-messageNewsDecoder =
-    Json.Decode.succeed MessageNews
-        |> maybeDecode "id" Uuid.decoder Nothing
-        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
-        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
-        |> maybeDecode "body" Json.Decode.string Nothing
-        |> decode "sent_at" Api.Time.dateTimeDecoder
-        |> decode "sender" Uuid.decoder
-        |> maybeDecode "attachments" (Json.Decode.list Uuid.decoder) Nothing
+messageTypeDecoder : Json.Decode.Decoder MessageType
+messageTypeDecoder =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\value ->
+                case value of
+                    "THR" ->
+                        Json.Decode.succeed MessageTypeTHR
 
+                    "PRV" ->
+                        Json.Decode.succeed MessageTypePRV
 
-messagePrivateDecoder : Json.Decode.Decoder MessagePrivate
-messagePrivateDecoder =
-    Json.Decode.succeed MessagePrivate
-        |> maybeDecode "id" Uuid.decoder Nothing
-        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
-        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
-        |> maybeDecode "body" Json.Decode.string Nothing
-        |> decode "sent_at" Api.Time.dateTimeDecoder
-        |> decode "sender" Uuid.decoder
-        |> decode "receiver" Uuid.decoder
-        |> maybeDecode "attachments" (Json.Decode.list Uuid.decoder) Nothing
+                    "NEW" ->
+                        Json.Decode.succeed MessageTypeNEW
 
+                    "MAN" ->
+                        Json.Decode.succeed MessageTypeMAN
 
-messageTaskSubmissionDecoder : Json.Decode.Decoder MessageTaskSubmission
-messageTaskSubmissionDecoder =
-    Json.Decode.succeed MessageTaskSubmission
-        |> maybeDecode "id" Uuid.decoder Nothing
-        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
-        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
-        |> maybeDecode "body" Json.Decode.string Nothing
-        |> decode "sent_at" Api.Time.dateTimeDecoder
-        |> decode "sender" Uuid.decoder
-        |> decode "receiver" Uuid.decoder
-        |> decode "activity" Uuid.decoder
-        |> maybeDecode "attachments" (Json.Decode.list Uuid.decoder) Nothing
+                    other ->
+                        Json.Decode.fail <| "Unknown type: " ++ other
+            )
 
 
 organizationDecoder : Json.Decode.Decoder Organization
