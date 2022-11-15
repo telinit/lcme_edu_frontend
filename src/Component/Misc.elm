@@ -9,8 +9,7 @@ import Util exposing (get_id_str, user_full_name)
 user_link : Maybe String -> UserShallow -> Html msg
 user_link custom_link user =
     a
-        [ class "row middle-xs"
-        , style "flex-wrap" "nowrap"
+        [ style "flex-wrap" "nowrap"
         , href <| Maybe.withDefault ("/profile/" ++ get_id_str user) custom_link
         ]
         --src <| Maybe.withDefault "" <| Maybe.map (\av -> av.downloadUrl) user.avatar

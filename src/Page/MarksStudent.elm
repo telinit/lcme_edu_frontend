@@ -3,7 +3,7 @@ module Page.MarksStudent exposing (..)
 import Api.Data exposing (UserDeep)
 import Component.MarkTable as MT
 import Component.Misc exposing (user_link)
-import Html exposing (Html, div, h1, h2, text)
+import Html exposing (Html, div, h1, h2, h3, span, text)
 import Html.Attributes exposing (class, style)
 import Util exposing (user_deep_to_shallow, user_has_any_role)
 import Uuid exposing (Uuid)
@@ -86,8 +86,8 @@ view model =
                     Maybe.map
                         (\u ->
                             div []
-                                [ h2 []
-                                    [ text "Учащийся:"
+                                [ h3 [class "row center-xs middle-xs"]
+                                    [ span [class "mr-5"] [text "Учащийся: "]
                                     , user_link Nothing u
                                     ]
                                 ]

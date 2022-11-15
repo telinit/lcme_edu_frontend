@@ -16294,7 +16294,6 @@ var $author$project$Component$Misc$user_link = F2(
 			$elm$html$Html$a,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('row middle-xs'),
 					A2($elm$html$Html$Attributes$style, 'flex-wrap', 'nowrap'),
 					$elm$html$Html$Attributes$href(
 					A2(
@@ -34034,11 +34033,23 @@ var $author$project$Page$MarksStudent$view = function (model) {
 								_List_fromArray(
 									[
 										A2(
-										$elm$html$Html$h2,
-										_List_Nil,
+										$elm$html$Html$h3,
 										_List_fromArray(
 											[
-												$elm$html$Html$text('Учащийся:'),
+												$elm$html$Html$Attributes$class('row center-xs middle-xs')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$span,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('mr-5')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Учащийся: ')
+													])),
 												A2($author$project$Component$Misc$user_link, $elm$core$Maybe$Nothing, u)
 											]))
 									]));
