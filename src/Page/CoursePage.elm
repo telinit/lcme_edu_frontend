@@ -445,7 +445,7 @@ update msg model =
                                 , hours = Just 1
                                 , fgosComplient = Just False
                                 , order = i + 1
-                                , date = t
+                                , date = Just t
                                 , group = Nothing
                                 , scientificTopic = Nothing
                                 , body = Nothing
@@ -473,7 +473,7 @@ update msg model =
                                 , hours = Just 1
                                 , fgosComplient = Just False
                                 , order = i + 1
-                                , date = t
+                                , date = Just t
                                 , group = Nothing
                                 , scientificTopic = Nothing
                                 , body = Nothing
@@ -501,7 +501,7 @@ update msg model =
                                 , hours = Just 1
                                 , fgosComplient = Just False
                                 , order = i + 1
-                                , date = t
+                                , date = Just t
                                 , group = Nothing
                                 , scientificTopic = Nothing
                                 , body = Nothing
@@ -529,7 +529,7 @@ update msg model =
                                 , hours = Just 1
                                 , fgosComplient = Just False
                                 , order = i + 1
-                                , date = t
+                                , date = Just t
                                 , group = Nothing
                                 , scientificTopic = Nothing
                                 , body = Nothing
@@ -712,7 +712,7 @@ viewActivitiesImport model =
             div []
                 [ p []
                     [ text "Перед началом импорта убедитесь, что ваш файл с темами сохранен в формате "
-                    , strong [] [ text "CSV" ]
+                    , strong [] [ text "CSV UTF-8" ]
                     , text " и имеет заголовок (первую строку) со следующими полями:"
                     ]
                 , ul []
@@ -729,7 +729,13 @@ viewActivitiesImport model =
                     , li [] [ strong [] [ text "Количество оценок" ], text " - ЧИСЛО, максимальное количество оценок по теме" ]
                     , li [] [ strong [] [ text "Часы" ], text " - ЧИСЛО, количество академических часов по данному уроку" ]
                     ]
-                , p [] [ text "Скачать шаблон такого файла можно по ", a [ href "/template_activities.csv", target "_blank" ] [ text "ссылке" ], text "." ]
+                , p []
+                    [ text <|
+                        "Все перечисленные выше поля обязательны и должны присутствовать в вашем файле в неизменном"
+                            ++ " значении (без лишних пробелов и переводов строк). Скачать шаблон такого файла можно по "
+                    , a [ href "/template_activities.csv", target "_blank" ] [ text "ссылке" ]
+                    , text "."
+                    ]
                 , p []
                     [ text <|
                         "Убедившись, что ваш файл соответствует указанному выше формату, укажите его в поле ниже и отправьте на сервер. "
@@ -795,7 +801,11 @@ viewActivitiesImport model =
                         False
                         Nothing
                         (text "")
-                        (text <| "Импорт выполнен с ошибкой: " ++ err)
+                      <|
+                        div []
+                            [ div [] [ text "Импорт выполнен с ошибкой: " ]
+                            , div [ class "ml-10" ] [ text err ]
+                            ]
                     ]
 
 

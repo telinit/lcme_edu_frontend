@@ -66,7 +66,7 @@ type State
 type alias Model =
     { state : State
     , token : String
-    , tz : Maybe Time.Zone
+    , tz : Time.Zone
     , editable : Bool
     , up_down : ControlsUpDown
     , internal_id : Maybe Uuid
@@ -99,7 +99,7 @@ init_creator token =
       , up_down = ControlsUpDown False False
       , internal_id = Nothing
       , component_fin_type = Nothing
-      , tz = Nothing
+      , tz = utc
       }
     , Cmd.batch [ doGenID, doGetTZ ]
     )
@@ -113,7 +113,7 @@ init_from_id token id =
       , up_down = ControlsUpDown False False
       , internal_id = Nothing
       , component_fin_type = Nothing
-      , tz = Nothing
+      , tz = utc
       }
     , Cmd.batch [ doFetch token id, doGenID, doGetTZ ]
     )
@@ -144,7 +144,7 @@ init_from_activity token act =
               , editable = False
               , up_down = ControlsUpDown False False
               , internal_id = Nothing
-              , tz = Nothing
+              , tz = utc
               , component_fin_type =
                     Just <|
                         SEL.doSelect
@@ -163,7 +163,7 @@ init_from_activity token act =
               , up_down = ControlsUpDown False False
               , internal_id = Nothing
               , component_fin_type = Nothing
-              , tz = Nothing
+              , tz = utc
               }
             , Cmd.batch [ doGenID, doGetTZ ]
             )
@@ -344,12 +344,7 @@ update msg model =
                             { act | isHidden = Just <| v == "1" }
 
                         FieldDate ->
-                            case isoDateToPosix v of
-                                Just d ->
-                                    { act | date = d }
-
-                                Nothing ->
-                                    act
+                            { act | date = isoDateToPosix v }
 
                         FieldLessonType ->
                             { act | lessonType = empty_to_nothing <| Just <| String.trim v }
@@ -358,12 +353,7 @@ update msg model =
                             { act | body = Just v }
 
                         FieldDue ->
-                            case isoDateToPosix v of
-                                Just d ->
-                                    { act | dueDate = Just d }
-
-                                Nothing ->
-                                    { act | dueDate = Nothing }
+                            { act | dueDate = isoDateToPosix v }
             in
             case state of
                 StateActivity act ->
@@ -378,7 +368,7 @@ update msg model =
             ( { model | internal_id = Just id }, Cmd.none )
 
         ( MsgGotTZ tz, _ ) ->
-            ( { model | tz = Just tz }, Cmd.none )
+            ( { model | tz = tz }, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -434,7 +424,9 @@ viewRead model =
                                     [ i [ class "calendar alternate outline icon", style "color" "rgb(102, 119, 153)" ] []
                                     , text "Дата:"
                                     ]
-                                , text <| posixToDDMMYYYY utc activity.date
+                                , text <|
+                                    Maybe.withDefault "(не указана)" <|
+                                        Maybe.map (posixToDDMMYYYY model.tz) activity.date
                                 ]
                             , div [ class "col-xs-12 col-sm start-xs start-sm" ]
                                 [ strong [ class "mr-10 activity-property-label" ]
@@ -477,7 +469,9 @@ viewRead model =
                                     [ i [ class "calendar alternate outline icon", style "color" "rgb(102, 119, 153)" ] []
                                     , text "Дата:"
                                     ]
-                                , text <| posixToDDMMYYYY utc activity.date
+                                , text <|
+                                    Maybe.withDefault "(не указана)" <|
+                                        Maybe.map (posixToDDMMYYYY model.tz) activity.date
                                 ]
                             , div [ class "col-xs-12 col-sm-4 start-xs center-sm" ]
                                 []
@@ -517,7 +511,9 @@ viewRead model =
                                     [ i [ class "calendar alternate outline icon", style "color" "rgb(102, 119, 153)" ] []
                                     , text "Дата:"
                                     ]
-                                , text <| posixToDDMMYYYY utc activity.date
+                                , text <|
+                                    Maybe.withDefault "(не указана)" <|
+                                        Maybe.map (posixToDDMMYYYY model.tz) activity.date
                                 ]
                             , div [ class "col-xs-12 col-sm start-xs start-sm" ]
                                 []
@@ -547,7 +543,9 @@ viewRead model =
                                     [ i [ class "calendar alternate outline icon", style "color" "rgb(102, 119, 153)" ] []
                                     , text "Дата:"
                                     ]
-                                , text <| posixToDDMMYYYY utc activity.date
+                                , text <|
+                                    Maybe.withDefault "(не указана)" <|
+                                        Maybe.map (posixToDDMMYYYY model.tz) activity.date
                                 ]
                             , div [ class "col-xs-12 col-sm start-xs start-sm" ]
                                 [ strong [ class "mr-10 activity-property-label" ]
@@ -567,7 +565,7 @@ viewRead model =
                                             [ strong [] [ text "Срок сдачи: " ]
                                             , span []
                                                 [ text <|
-                                                    posixToFullDate (Maybe.withDefault Time.utc model.tz) d
+                                                    posixToFullDate model.tz d
                                                 ]
                                             ]
                                         )
@@ -832,7 +830,10 @@ viewWrite model =
                                     [ input
                                         [ placeholder ""
                                         , type_ "date"
-                                        , value <| Maybe.withDefault "" <| posixToISODate activity.date
+                                        , value <|
+                                            Maybe.withDefault "" <|
+                                                Maybe.withDefault (Just "") <|
+                                                    Maybe.map posixToISODate activity.date
                                         , onInput (MsgSetField FieldDate)
                                         ]
                                         []
@@ -908,7 +909,10 @@ viewWrite model =
                                             [ input
                                                 [ placeholder ""
                                                 , type_ "date"
-                                                , value <| Maybe.withDefault "" <| posixToISODate activity.date
+                                                , value <|
+                                                    Maybe.withDefault "" <|
+                                                        Maybe.withDefault (Just "") <|
+                                                            Maybe.map posixToISODate activity.date
                                                 , onInput (MsgSetField FieldDate)
                                                 ]
                                                 []
@@ -1053,7 +1057,10 @@ viewWrite model =
                                     [ input
                                         [ placeholder ""
                                         , type_ "date"
-                                        , value <| Maybe.withDefault "" <| posixToISODate activity.date
+                                        , value <|
+                                            Maybe.withDefault "" <|
+                                                Maybe.withDefault (Just "") <|
+                                                    Maybe.map posixToISODate activity.date
                                         , onInput (MsgSetField FieldDate)
                                         ]
                                         []
@@ -1101,7 +1108,7 @@ viewWrite model =
                             [ div [ class "field start-xs col-xs-12" ]
                                 [ label [] [ text "Содержимое" ]
                                 , textarea
-                                    [ placeholder "Текст учебного материала"
+                                    [ placeholder "Текст задания"
                                     , value <| Maybe.withDefault "" activity.body
                                     , onInput (MsgSetField FieldBody)
                                     ]
@@ -1212,7 +1219,10 @@ viewWrite model =
                                     [ input
                                         [ placeholder ""
                                         , type_ "date"
-                                        , value <| Maybe.withDefault "" <| posixToISODate activity.date
+                                        , value <|
+                                            Maybe.withDefault "" <|
+                                                Maybe.withDefault (Just "") <|
+                                                    Maybe.map posixToISODate activity.date
                                         , onInput (MsgSetField FieldDate)
                                         ]
                                         []

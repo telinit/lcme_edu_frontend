@@ -18,7 +18,7 @@ import List as L
 import Maybe as M
 import Set
 import Task
-import Time as T exposing (Posix, millisToPosix)
+import Time as T exposing (Posix, Zone, millisToPosix, utc)
 import Util exposing (dictFromTupleListMany, finalTypeToStr, get_id_str, httpErrorToString, index_by, posixToDDMMYYYY, user_full_name, zip)
 import Uuid exposing (Uuid)
 
@@ -110,6 +110,7 @@ type alias Model =
     , cells : List (List (List MarkSlot))
     , state : State
     , token : String
+    , tz : Zone
     , student_id : Maybe Uuid
     , teacher_id : Maybe Uuid
     , size : ( Int, Int )
@@ -300,6 +301,7 @@ initForStudent token student_id =
       , student_id = Just student_id
       , teacher_id = Nothing
       , size = ( 0, 0 )
+      , tz = utc
       }
     , Cmd.map MsgFetch c
     )
@@ -328,6 +330,7 @@ initForCourse token course_id teacher_id =
       , student_id = Nothing
       , teacher_id = teacher_id
       , size = ( 0, 0 )
+      , tz = utc
       }
     , Cmd.map MsgFetch c
     )
@@ -409,11 +412,11 @@ update msg model =
                                 L.map T.millisToPosix <|
                                     Set.toList <|
                                         Set.fromList <|
-                                            L.map (.date >> T.posixToMillis) <|
+                                            L.filterMap (.date >> Maybe.map T.posixToMillis) <|
                                                 L.sortBy .order acts
 
                         activity_timestamp act =
-                            String.fromInt <| T.posixToMillis act.date
+                            Maybe.map (String.fromInt << T.posixToMillis) act.date
 
                         activity_course_id act =
                             Uuid.toString act.course
@@ -422,11 +425,14 @@ update msg model =
                             D.get (Uuid.toString mark.activity) ix_acts
                                 |> M.andThen
                                     (\act ->
-                                        Just
-                                            ( mark
-                                            , activity_timestamp act
-                                            , activity_course_id act
+                                        M.map
+                                            (\date ->
+                                                ( mark
+                                                , String.fromInt <| T.posixToMillis date
+                                                , activity_course_id act
+                                                )
                                             )
+                                            act.date
                                     )
 
                         marks_ix =
@@ -675,20 +681,20 @@ update msg model =
             ( model, Cmd.none )
 
 
-viewColumn : Column -> Html Msg
-viewColumn column =
+viewColumn : Zone -> Column -> Html Msg
+viewColumn tz column =
     case column of
         Activity activity ->
             case activity.contentType of
                 Just ActivityContentTypeFIN ->
                     div []
-                        [ div [ style "font-weight" "bold" ] [ text <| posixToDDMMYYYY T.utc activity.date ]
+                        [ div [ style "font-weight" "bold" ] [ text <| Maybe.withDefault "(нет даты)" <| Maybe.map (posixToDDMMYYYY tz) activity.date ]
                         , div [] [ text <| finalTypeToStr activity ]
                         ]
 
                 _ ->
                     div []
-                        [ div [ style "font-weight" "bold" ] [ text <| posixToDDMMYYYY T.utc activity.date ]
+                        [ div [ style "font-weight" "bold" ] [ text <| Maybe.withDefault "(нет даты)" <| Maybe.map (posixToDDMMYYYY tz) activity.date ]
                         , div [] [ text <| Maybe.withDefault "" activity.keywords ]
                         ]
 
@@ -839,8 +845,8 @@ viewTableCell y x slot_list =
         ]
 
 
-viewTableHeader : List Column -> Html Msg
-viewTableHeader columns =
+viewTableHeader : Zone -> List Column -> Html Msg
+viewTableHeader tz columns =
     let
         td_attrs col =
             case col of
@@ -850,10 +856,10 @@ viewTableHeader columns =
                             [ style "background-color" "#FFEFE2FF" ]
 
                         Just ActivityContentTypeTSK ->
-                            [style "background-color" "hsl(266, 100%, 97%)"]
+                            [ style "background-color" "hsl(266, 100%, 97%)" ]
 
                         _ ->
-                            [style "background-color" "#EEF6FFFF"]
+                            [ style "background-color" "#EEF6FFFF" ]
 
                 Date _ ->
                     []
@@ -866,11 +872,12 @@ viewTableHeader columns =
                         td
                             ([ style "text-align" "center"
                              , style "vertical-align" "top"
+
                              --, style "white-space" "nowrap"
                              ]
                                 ++ td_attrs col
                             )
-                            [ viewColumn col ]
+                            [ viewColumn tz col ]
                     )
                     columns
             )
@@ -895,15 +902,15 @@ viewTableRow y ( row, cols ) =
         )
 
 
-viewTable : List Row -> List Column -> RowList -> Html Msg
-viewTable rows columns cells =
+viewTable : Zone -> List Row -> List Column -> RowList -> Html Msg
+viewTable tz rows columns cells =
     table
         [ class "ui celled striped unstackable table"
         , style "max-width" "100vw"
         , style "display" "block"
         , style "overflow-x" "scroll"
         ]
-        ((++) [ viewTableHeader columns ] <| L.indexedMap viewTableRow <| zip rows cells)
+        ((++) [ viewTableHeader tz columns ] <| L.indexedMap viewTableRow <| zip rows cells)
 
 
 view : Model -> Html Msg
@@ -917,7 +924,7 @@ view model =
                 h3 [] [ text "Нет данных" ]
 
             else
-                viewTable model.rows model.columns model.cells
+                viewTable model.tz model.rows model.columns model.cells
 
         Error string ->
             text string

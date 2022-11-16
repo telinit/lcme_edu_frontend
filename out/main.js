@@ -8912,10 +8912,11 @@ var $author$project$Api$Data$activityDecoder = A4(
 											'group',
 											$elm$json$Json$Decode$string,
 											$elm$core$Maybe$Nothing,
-											A3(
-												$author$project$Api$Data$decode,
+											A4(
+												$author$project$Api$Data$maybeDecodeNullable,
 												'date',
 												$author$project$Api$Time$dateDecoder,
+												$elm$core$Maybe$Nothing,
 												A3(
 													$author$project$Api$Data$decode,
 													'order',
@@ -9785,6 +9786,7 @@ var $danyx23$elm_uuid$Uuid$toString = function (_v0) {
 	var internalString = _v0.a;
 	return internalString;
 };
+var $elm$time$Time$utc = A2($elm$time$Time$Zone, 0, _List_Nil);
 var $author$project$Component$MarkTable$initForCourse = F3(
 	function (token, course_id, teacher_id) {
 		var _v0 = $author$project$Component$MultiTask$init(
@@ -9824,7 +9826,8 @@ var $author$project$Component$MarkTable$initForCourse = F3(
 				state: $author$project$Component$MarkTable$Loading(m),
 				student_id: $elm$core$Maybe$Nothing,
 				teacher_id: teacher_id,
-				token: token
+				token: token,
+				tz: $elm$time$Time$utc
 			},
 			A2($elm$core$Platform$Cmd$map, $author$project$Component$MarkTable$MsgFetch, c));
 	});
@@ -9916,7 +9919,8 @@ var $author$project$Component$MarkTable$initForStudent = F2(
 				state: $author$project$Component$MarkTable$Loading(m),
 				student_id: $elm$core$Maybe$Just(student_id),
 				teacher_id: $elm$core$Maybe$Nothing,
-				token: token
+				token: token,
+				tz: $elm$time$Time$utc
 			},
 			A2($elm$core$Platform$Cmd$map, $author$project$Component$MarkTable$MsgFetch, c));
 	});
@@ -11224,7 +11228,6 @@ var $elm$time$Time$toYear = F2(
 		return $elm$time$Time$toCivil(
 			A2($elm$time$Time$toAdjustedMinutes, zone, time)).year;
 	});
-var $elm$time$Time$utc = A2($elm$time$Time$Zone, 0, _List_Nil);
 var $rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime = function (time) {
 	return A2(
 		$rtfeldman$elm_iso8601_date_strings$Iso8601$toPaddedString,
@@ -11306,7 +11309,7 @@ var $author$project$Api$Data$encodeActivityPairs = function (model) {
 			A3($author$project$Api$Data$maybeEncode, 'hours', $elm$json$Json$Encode$int, model.hours),
 			A3($author$project$Api$Data$maybeEncode, 'fgos_complient', $elm$json$Json$Encode$bool, model.fgosComplient),
 			A3($author$project$Api$Data$encode, 'order', $elm$json$Json$Encode$int, model.order),
-			A3($author$project$Api$Data$encode, 'date', $author$project$Api$Time$encodeDate, model.date),
+			A3($author$project$Api$Data$maybeEncodeNullable, 'date', $author$project$Api$Time$encodeDate, model.date),
 			A3($author$project$Api$Data$maybeEncodeNullable, 'group', $elm$json$Json$Encode$string, model.group),
 			A3($author$project$Api$Data$maybeEncodeNullable, 'scientific_topic', $elm$json$Json$Encode$string, model.scientificTopic),
 			A3($author$project$Api$Data$maybeEncode, 'body', $elm$json$Json$Encode$string, model.body),
@@ -11912,7 +11915,7 @@ var $author$project$Component$Activity$init_from_activity = F2(
 					internal_id: $elm$core$Maybe$Nothing,
 					state: $author$project$Component$Activity$StateActivity(act),
 					token: token,
-					tz: $elm$core$Maybe$Nothing,
+					tz: $elm$time$Time$utc,
 					up_down: A2($author$project$Component$Activity$ControlsUpDown, false, false)
 				},
 				$elm$core$Platform$Cmd$batch(
@@ -11930,7 +11933,7 @@ var $author$project$Component$Activity$init_from_activity = F2(
 					internal_id: $elm$core$Maybe$Nothing,
 					state: $author$project$Component$Activity$StateActivity(act),
 					token: token,
-					tz: $elm$core$Maybe$Nothing,
+					tz: $elm$time$Time$utc,
 					up_down: A2($author$project$Component$Activity$ControlsUpDown, false, false)
 				},
 				$elm$core$Platform$Cmd$batch(
@@ -12280,15 +12283,11 @@ var $author$project$Component$Activity$update = F2(
 										isHidden: $elm$core$Maybe$Just(v === '1')
 									});
 							case 'FieldDate':
-								var _v11 = $author$project$Util$isoDateToPosix(v);
-								if (_v11.$ === 'Just') {
-									var d = _v11.a;
-									return _Utils_update(
-										act,
-										{date: d});
-								} else {
-									return act;
-								}
+								return _Utils_update(
+									act,
+									{
+										date: $author$project$Util$isoDateToPosix(v)
+									});
 							case 'FieldLessonType':
 								return _Utils_update(
 									act,
@@ -12304,19 +12303,11 @@ var $author$project$Component$Activity$update = F2(
 										body: $elm$core$Maybe$Just(v)
 									});
 							default:
-								var _v12 = $author$project$Util$isoDateToPosix(v);
-								if (_v12.$ === 'Just') {
-									var d = _v12.a;
-									return _Utils_update(
-										act,
-										{
-											dueDate: $elm$core$Maybe$Just(d)
-										});
-								} else {
-									return _Utils_update(
-										act,
-										{dueDate: $elm$core$Maybe$Nothing});
-								}
+								return _Utils_update(
+									act,
+									{
+										dueDate: $author$project$Util$isoDateToPosix(v)
+									});
 						}
 					};
 					if (state.$ === 'StateActivity') {
@@ -12346,9 +12337,7 @@ var $author$project$Component$Activity$update = F2(
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{
-								tz: $elm$core$Maybe$Just(tz)
-							}),
+							{tz: tz}),
 						$elm$core$Platform$Cmd$none);
 				default:
 					break _v0$10;
@@ -12717,7 +12706,7 @@ var $author$project$Page$CoursePage$update = F2(
 														contentType: $elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeGEN),
 														course: cid,
 														createdAt: $elm$core$Maybe$Nothing,
-														date: t,
+														date: $elm$core$Maybe$Just(t),
 														dueDate: $elm$core$Maybe$Nothing,
 														embed: $elm$core$Maybe$Nothing,
 														fgosComplient: $elm$core$Maybe$Just(false),
@@ -12748,7 +12737,7 @@ var $author$project$Page$CoursePage$update = F2(
 														contentType: $elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeFIN),
 														course: cid,
 														createdAt: $elm$core$Maybe$Nothing,
-														date: t,
+														date: $elm$core$Maybe$Just(t),
 														dueDate: $elm$core$Maybe$Nothing,
 														embed: $elm$core$Maybe$Nothing,
 														fgosComplient: $elm$core$Maybe$Just(false),
@@ -12779,7 +12768,7 @@ var $author$project$Page$CoursePage$update = F2(
 														contentType: $elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeTSK),
 														course: cid,
 														createdAt: $elm$core$Maybe$Nothing,
-														date: t,
+														date: $elm$core$Maybe$Just(t),
 														dueDate: $elm$core$Maybe$Nothing,
 														embed: $elm$core$Maybe$Nothing,
 														fgosComplient: $elm$core$Maybe$Just(false),
@@ -12810,7 +12799,7 @@ var $author$project$Page$CoursePage$update = F2(
 														contentType: $elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeTXT),
 														course: cid,
 														createdAt: $elm$core$Maybe$Nothing,
-														date: t,
+														date: $elm$core$Maybe$Just(t),
 														dueDate: $elm$core$Maybe$Nothing,
 														embed: $elm$core$Maybe$Nothing,
 														fgosComplient: $elm$core$Maybe$Just(false),
@@ -14031,13 +14020,13 @@ var $author$project$Component$MarkTable$update = F2(
 											$elm$core$Set$toList(
 												$elm$core$Set$fromList(
 													A2(
-														$elm$core$List$map,
+														$elm$core$List$filterMap,
 														A2(
 															$elm$core$Basics$composeR,
 															function ($) {
 																return $.date;
 															},
-															$elm$time$Time$posixToMillis),
+															$elm$core$Maybe$map($elm$time$Time$posixToMillis)),
 														A2(
 															$elm$core$List$sortBy,
 															function ($) {
@@ -14045,8 +14034,10 @@ var $author$project$Component$MarkTable$update = F2(
 															},
 															acts))))));
 									var activity_timestamp = function (act) {
-										return $elm$core$String$fromInt(
-											$elm$time$Time$posixToMillis(act.date));
+										return A2(
+											$elm$core$Maybe$map,
+											A2($elm$core$Basics$composeL, $elm$core$String$fromInt, $elm$time$Time$posixToMillis),
+											act.date);
 									};
 									var activity_course_id = function (act) {
 										return $danyx23$elm_uuid$Uuid$toString(act.course);
@@ -14055,11 +14046,16 @@ var $author$project$Component$MarkTable$update = F2(
 										return A2(
 											$elm$core$Maybe$andThen,
 											function (act) {
-												return $elm$core$Maybe$Just(
-													_Utils_Tuple3(
-														mark,
-														activity_timestamp(act),
-														activity_course_id(act)));
+												return A2(
+													$elm$core$Maybe$map,
+													function (date) {
+														return _Utils_Tuple3(
+															mark,
+															$elm$core$String$fromInt(
+																$elm$time$Time$posixToMillis(date)),
+															activity_course_id(act));
+													},
+													act.date);
 											},
 											A2(
 												$elm$core$Dict$get,
@@ -28603,7 +28599,13 @@ var $author$project$Component$Activity$viewRead = function (model) {
 															$elm$html$Html$text('Дата:')
 														])),
 													$elm$html$Html$text(
-													A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, activity.date))
+													A2(
+														$elm$core$Maybe$withDefault,
+														'(не указана)',
+														A2(
+															$elm$core$Maybe$map,
+															$author$project$Util$posixToDDMMYYYY(model.tz),
+															activity.date)))
 												])),
 											A2(
 											$elm$html$Html$div,
@@ -28731,7 +28733,13 @@ var $author$project$Component$Activity$viewRead = function (model) {
 															$elm$html$Html$text('Дата:')
 														])),
 													$elm$html$Html$text(
-													A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, activity.date))
+													A2(
+														$elm$core$Maybe$withDefault,
+														'(не указана)',
+														A2(
+															$elm$core$Maybe$map,
+															$author$project$Util$posixToDDMMYYYY(model.tz),
+															activity.date)))
 												])),
 											A2(
 											$elm$html$Html$div,
@@ -28851,7 +28859,13 @@ var $author$project$Component$Activity$viewRead = function (model) {
 															$elm$html$Html$text('Дата:')
 														])),
 													$elm$html$Html$text(
-													A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, activity.date))
+													A2(
+														$elm$core$Maybe$withDefault,
+														'(не указана)',
+														A2(
+															$elm$core$Maybe$map,
+															$author$project$Util$posixToDDMMYYYY(model.tz),
+															activity.date)))
 												])),
 											A2(
 											$elm$html$Html$div,
@@ -28946,7 +28960,13 @@ var $author$project$Component$Activity$viewRead = function (model) {
 															$elm$html$Html$text('Дата:')
 														])),
 													$elm$html$Html$text(
-													A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, activity.date))
+													A2(
+														$elm$core$Maybe$withDefault,
+														'(не указана)',
+														A2(
+															$elm$core$Maybe$map,
+															$author$project$Util$posixToDDMMYYYY(model.tz),
+															activity.date)))
 												])),
 											A2(
 											$elm$html$Html$div,
@@ -29007,10 +29027,7 @@ var $author$project$Component$Activity$viewRead = function (model) {
 																_List_fromArray(
 																	[
 																		$elm$html$Html$text(
-																		A2(
-																			$author$project$Util$posixToFullDate,
-																			A2($elm$core$Maybe$withDefault, $elm$time$Time$utc, model.tz),
-																			d))
+																		A2($author$project$Util$posixToFullDate, model.tz, d))
 																	]))
 															]);
 													},
@@ -29912,7 +29929,10 @@ var $author$project$Component$Activity$viewWrite = function (model) {
 																	A2(
 																		$elm$core$Maybe$withDefault,
 																		'',
-																		$author$project$Util$posixToISODate(activity.date))),
+																		A2(
+																			$elm$core$Maybe$withDefault,
+																			$elm$core$Maybe$Just(''),
+																			A2($elm$core$Maybe$map, $author$project$Util$posixToISODate, activity.date)))),
 																	$elm$html$Html$Events$onInput(
 																	$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldDate))
 																]),
@@ -30163,7 +30183,10 @@ var $author$project$Component$Activity$viewWrite = function (model) {
 																		A2(
 																			$elm$core$Maybe$withDefault,
 																			'',
-																			$author$project$Util$posixToISODate(activity.date))),
+																			A2(
+																				$elm$core$Maybe$withDefault,
+																				$elm$core$Maybe$Just(''),
+																				A2($elm$core$Maybe$map, $author$project$Util$posixToISODate, activity.date)))),
 																		$elm$html$Html$Events$onInput(
 																		$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldDate))
 																	]),
@@ -30574,7 +30597,10 @@ var $author$project$Component$Activity$viewWrite = function (model) {
 																	A2(
 																		$elm$core$Maybe$withDefault,
 																		'',
-																		$author$project$Util$posixToISODate(activity.date))),
+																		A2(
+																			$elm$core$Maybe$withDefault,
+																			$elm$core$Maybe$Just(''),
+																			A2($elm$core$Maybe$map, $author$project$Util$posixToISODate, activity.date)))),
 																	$elm$html$Html$Events$onInput(
 																	$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldDate))
 																]),
@@ -30721,7 +30747,7 @@ var $author$project$Component$Activity$viewWrite = function (model) {
 													$elm$html$Html$textarea,
 													_List_fromArray(
 														[
-															$elm$html$Html$Attributes$placeholder('Текст учебного материала'),
+															$elm$html$Html$Attributes$placeholder('Текст задания'),
 															$elm$html$Html$Attributes$value(
 															A2($elm$core$Maybe$withDefault, '', activity.body)),
 															$elm$html$Html$Events$onInput(
@@ -31034,7 +31060,10 @@ var $author$project$Component$Activity$viewWrite = function (model) {
 																	A2(
 																		$elm$core$Maybe$withDefault,
 																		'',
-																		$author$project$Util$posixToISODate(activity.date))),
+																		A2(
+																			$elm$core$Maybe$withDefault,
+																			$elm$core$Maybe$Just(''),
+																			A2($elm$core$Maybe$map, $author$project$Util$posixToISODate, activity.date)))),
 																	$elm$html$Html$Events$onInput(
 																	$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldDate))
 																]),
@@ -31399,7 +31428,7 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 							_List_Nil,
 							_List_fromArray(
 								[
-									$elm$html$Html$text('CSV')
+									$elm$html$Html$text('CSV UTF-8')
 								])),
 							$elm$html$Html$text(' и имеет заголовок (первую строку) со следующими полями:')
 						])),
@@ -31582,7 +31611,7 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 					_List_Nil,
 					_List_fromArray(
 						[
-							$elm$html$Html$text('Скачать шаблон такого файла можно по '),
+							$elm$html$Html$text('Все перечисленные выше поля обязательны и должны присутствовать в вашем файле в неизменном' + ' значении (без лишних пробелов и переводов строк). Скачать шаблон такого файла можно по '),
 							A2(
 							$elm$html$Html$a,
 							_List_fromArray(
@@ -31722,7 +31751,29 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 							false,
 							$elm$core$Maybe$Nothing,
 							$elm$html$Html$text(''),
-							$elm$html$Html$text('Импорт выполнен с ошибкой: ' + err))
+							A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Импорт выполнен с ошибкой: ')
+											])),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('ml-10')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text(err)
+											]))
+									])))
 						])));
 	}
 };
@@ -33363,139 +33414,153 @@ var $author$project$Component$MarkTable$showFetchedData = function (fetchedData)
 	}
 };
 var $elm$html$Html$thead = _VirtualDom_node('thead');
-var $author$project$Component$MarkTable$viewColumn = function (column) {
-	if (column.$ === 'Activity') {
-		var activity = column.a;
-		var _v1 = activity.contentType;
-		if ((_v1.$ === 'Just') && (_v1.a.$ === 'ActivityContentTypeFIN')) {
-			var _v2 = _v1.a;
-			return A2(
-				$elm$html$Html$div,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text(
-								A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, activity.date))
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$elm$html$Html$text(
-								$author$project$Util$finalTypeToStr(activity))
-							]))
-					]));
-		} else {
-			return A2(
-				$elm$html$Html$div,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text(
-								A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, activity.date))
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$elm$html$Html$text(
-								A2($elm$core$Maybe$withDefault, '', activity.keywords))
-							]))
-					]));
-		}
-	} else {
-		var posix = column.a;
-		return $elm$html$Html$text(
-			A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, posix));
-	}
-};
-var $author$project$Component$MarkTable$viewTableHeader = function (columns) {
-	var td_attrs = function (col) {
-		if (col.$ === 'Activity') {
-			var act = col.a;
-			var _v1 = act.contentType;
-			_v1$2:
-			while (true) {
-				if (_v1.$ === 'Just') {
-					switch (_v1.a.$) {
-						case 'ActivityContentTypeFIN':
-							var _v2 = _v1.a;
-							return _List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'background-color', '#FFEFE2FF')
-								]);
-						case 'ActivityContentTypeTSK':
-							var _v3 = _v1.a;
-							return _List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'background-color', 'hsl(266, 100%, 97%)')
-								]);
-						default:
-							break _v1$2;
-					}
-				} else {
-					break _v1$2;
-				}
-			}
-			return _List_fromArray(
-				[
-					A2($elm$html$Html$Attributes$style, 'background-color', '#EEF6FFFF')
-				]);
-		} else {
-			return _List_Nil;
-		}
-	};
-	return A2(
-		$elm$html$Html$thead,
-		_List_Nil,
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$tr,
-				_List_Nil,
-				_Utils_ap(
+var $author$project$Component$MarkTable$viewColumn = F2(
+	function (tz, column) {
+		if (column.$ === 'Activity') {
+			var activity = column.a;
+			var _v1 = activity.contentType;
+			if ((_v1.$ === 'Just') && (_v1.a.$ === 'ActivityContentTypeFIN')) {
+				var _v2 = _v1.a;
+				return A2(
+					$elm$html$Html$div,
+					_List_Nil,
 					_List_fromArray(
 						[
-							A2($elm$html$Html$tr, _List_Nil, _List_Nil)
-						]),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									A2(
+										$elm$core$Maybe$withDefault,
+										'(нет даты)',
+										A2(
+											$elm$core$Maybe$map,
+											$author$project$Util$posixToDDMMYYYY(tz),
+											activity.date)))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									$author$project$Util$finalTypeToStr(activity))
+								]))
+						]));
+			} else {
+				return A2(
+					$elm$html$Html$div,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									A2(
+										$elm$core$Maybe$withDefault,
+										'(нет даты)',
+										A2(
+											$elm$core$Maybe$map,
+											$author$project$Util$posixToDDMMYYYY(tz),
+											activity.date)))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									A2($elm$core$Maybe$withDefault, '', activity.keywords))
+								]))
+						]));
+			}
+		} else {
+			var posix = column.a;
+			return $elm$html$Html$text(
+				A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, posix));
+		}
+	});
+var $author$project$Component$MarkTable$viewTableHeader = F2(
+	function (tz, columns) {
+		var td_attrs = function (col) {
+			if (col.$ === 'Activity') {
+				var act = col.a;
+				var _v1 = act.contentType;
+				_v1$2:
+				while (true) {
+					if (_v1.$ === 'Just') {
+						switch (_v1.a.$) {
+							case 'ActivityContentTypeFIN':
+								var _v2 = _v1.a;
+								return _List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'background-color', '#FFEFE2FF')
+									]);
+							case 'ActivityContentTypeTSK':
+								var _v3 = _v1.a;
+								return _List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'background-color', 'hsl(266, 100%, 97%)')
+									]);
+							default:
+								break _v1$2;
+						}
+					} else {
+						break _v1$2;
+					}
+				}
+				return _List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'background-color', '#EEF6FFFF')
+					]);
+			} else {
+				return _List_Nil;
+			}
+		};
+		return A2(
+			$elm$html$Html$thead,
+			_List_Nil,
+			_List_fromArray(
+				[
 					A2(
-						$elm$core$List$map,
-						function (col) {
-							return A2(
-								$elm$html$Html$td,
-								_Utils_ap(
+					$elm$html$Html$tr,
+					_List_Nil,
+					_Utils_ap(
+						_List_fromArray(
+							[
+								A2($elm$html$Html$tr, _List_Nil, _List_Nil)
+							]),
+						A2(
+							$elm$core$List$map,
+							function (col) {
+								return A2(
+									$elm$html$Html$td,
+									_Utils_ap(
+										_List_fromArray(
+											[
+												A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+												A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
+											]),
+										td_attrs(col)),
 									_List_fromArray(
 										[
-											A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-											A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
-										]),
-									td_attrs(col)),
-								_List_fromArray(
-									[
-										$author$project$Component$MarkTable$viewColumn(col)
-									]));
-						},
-						columns)))
-			]));
-};
+											A2($author$project$Component$MarkTable$viewColumn, tz, col)
+										]));
+							},
+							columns)))
+				]));
+	});
 var $author$project$Component$MarkTable$viewRow = function (row) {
 	if (row.$ === 'User') {
 		var user = row.a;
@@ -33791,8 +33856,8 @@ var $author$project$Component$MarkTable$viewTableRow = F2(
 					_Utils_Tuple2(0, _List_Nil),
 					cols).b));
 	});
-var $author$project$Component$MarkTable$viewTable = F3(
-	function (rows, columns, cells) {
+var $author$project$Component$MarkTable$viewTable = F4(
+	function (tz, rows, columns, cells) {
 		return A2(
 			$elm$html$Html$table,
 			_List_fromArray(
@@ -33805,7 +33870,7 @@ var $author$project$Component$MarkTable$viewTable = F3(
 			_Utils_ap(
 				_List_fromArray(
 					[
-						$author$project$Component$MarkTable$viewTableHeader(columns)
+						A2($author$project$Component$MarkTable$viewTableHeader, tz, columns)
 					]),
 				A2(
 					$elm$core$List$indexedMap,
@@ -33828,7 +33893,7 @@ var $author$project$Component$MarkTable$view = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$text('Нет данных')
-					])) : A3($author$project$Component$MarkTable$viewTable, model.rows, model.columns, model.cells);
+					])) : A4($author$project$Component$MarkTable$viewTable, model.tz, model.rows, model.columns, model.cells);
 		default:
 			var string = _v0.a;
 			return $elm$html$Html$text(string);

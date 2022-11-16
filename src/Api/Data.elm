@@ -144,7 +144,7 @@ type alias Activity =
     , hours : Maybe Int
     , fgosComplient : Maybe Bool
     , order : Int
-    , date : Posix
+    , date : Maybe Posix
     , group : Maybe String
     , scientificTopic : Maybe String
     , body : Maybe String
@@ -609,7 +609,7 @@ encodeActivityPairs model =
             , maybeEncode "hours" Json.Encode.int model.hours
             , maybeEncode "fgos_complient" Json.Encode.bool model.fgosComplient
             , encode "order" Json.Encode.int model.order
-            , encode "date" Api.Time.encodeDate model.date
+            , maybeEncodeNullable "date" Api.Time.encodeDate model.date
             , maybeEncodeNullable "group" Json.Encode.string model.group
             , maybeEncodeNullable "scientific_topic" Json.Encode.string model.scientificTopic
             , maybeEncode "body" Json.Encode.string model.body
@@ -1521,7 +1521,7 @@ activityDecoder =
         |> maybeDecode "hours" Json.Decode.int Nothing
         |> maybeDecode "fgos_complient" Json.Decode.bool Nothing
         |> decode "order" Json.Decode.int
-        |> decode "date" Api.Time.dateDecoder
+        |> maybeDecodeNullable "date" Api.Time.dateDecoder Nothing
         |> maybeDecodeNullable "group" Json.Decode.string Nothing
         |> maybeDecodeNullable "scientific_topic" Json.Decode.string Nothing
         |> maybeDecode "body" Json.Decode.string Nothing
