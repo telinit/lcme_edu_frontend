@@ -460,12 +460,16 @@ validateActivityCSV data =
                                             ed ++ em ++ ey
 
                                         _ ->
-                                            [ { kind = IssueKindError
-                                              , row = Just row_num
-                                              , col = Just i
-                                              , msg = "Некорректное значение даты"
-                                              }
-                                            ]
+                                            if tv == "" then
+                                                [] -- Allow empty
+
+                                            else
+                                                [ { kind = IssueKindError
+                                                  , row = Just row_num
+                                                  , col = Just i
+                                                  , msg = "Некорректное значение даты"
+                                                  }
+                                                ]
 
                                 "Тема" ->
                                     if tv == "" then
@@ -516,10 +520,10 @@ validateActivityCSV data =
                                     emptyValue
 
                                 "Материалы урока" ->
-                                    emptyValue
+                                    []
 
                                 "Домашнее задание" ->
-                                    emptyValue
+                                    []
 
                                 "Количество оценок" ->
                                     validateInt i k v
