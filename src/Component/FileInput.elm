@@ -62,7 +62,7 @@ view model =
                     [ div [] [ text model.prompt ] ]
     in
     div [ class "ui segment", style "cursor" "pointer", onClick MsgDoSelectFile ]
-        [ div [ class "row middle-xs start-xs" ]
+        [ div [ class "row middle-xs center-xs" ]
             [ div [ class "col", style "font-size" "24pt" ]
                 [ i [ class "file icon" ] []
                 ]

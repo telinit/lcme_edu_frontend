@@ -16,7 +16,7 @@ import File
 import File.Download
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onInput)
 import Http exposing (Error(..))
 import List exposing (filterMap)
 import Page.CourseListPage exposing (empty_to_nothing)
@@ -69,9 +69,11 @@ type Msg
     | MsgCourseSaveError String
     | MsgActivity Int CA.Msg
     | MsgFileInputImport FI.Msg
+    | MsgOnInputActivityCSVSep String
     | MsgOnClickActivitiesImport
     | MsgActivitiesImportFinished (Result String ImportForCourseResult)
-    | MsgActivityImportGotCSVData String
+    | MsgActivityImportGotCSVData Char String
+    | MsgOnClickToggleActivityImportSettings
 
 
 type FetchResult
@@ -94,9 +96,9 @@ type alias ActivityCSVValidationIssue =
 
 type ActivityImportState
     = ActivityImportStateNone
-    | ActivityImportStateFileSelection FI.Model
+    | ActivityImportStateDataInput Bool String FI.Model
     | ActivityImportStateValidationInProgress
-    | ActivityImportStateValidationFinished String (Result (List ActivityCSVValidationIssue) ())
+    | ActivityImportStateValidationFinished Char String (Result (List ActivityCSVValidationIssue) ())
     | ActivityImportStateInProgress
     | ActivityImportStateFinished (Result String String)
 
@@ -265,14 +267,14 @@ setEditMode edt model =
     }
 
 
-validateActivityCSV : String -> List ActivityCSVValidationIssue
-validateActivityCSV data =
+validateActivityCSV : Char -> String -> List ActivityCSVValidationIssue
+validateActivityCSV sep data =
     let
         hasErrors =
             List.any (\i -> i.kind == IssueKindError)
 
         parsed =
-            Csv.parseRows data
+            Csv.parseWith sep data
 
         validateHeaderRow : List String -> List ActivityCSVValidationIssue
         validateHeaderRow fields =
@@ -381,6 +383,9 @@ validateActivityCSV data =
 
                 validateCell i k v =
                     let
+                        _ =
+                            Debug.log "validateCell" ( i, k, v )
+
                         tv =
                             String.trim v
 
@@ -461,7 +466,8 @@ validateActivityCSV data =
 
                                         _ ->
                                             if tv == "" then
-                                                [] -- Allow empty
+                                                []
+                                                -- Allow empty
 
                                             else
                                                 [ { kind = IssueKindError
@@ -543,57 +549,33 @@ validateActivityCSV data =
                     header
                     fields
     in
-    case parsed of
-        Ok val ->
-            case val of
-                [] ->
-                    [ { kind = IssueKindError
-                      , row = Nothing
-                      , col = Nothing
-                      , msg =
-                            "Пустой файл."
-                      }
-                    ]
+    let
+        headerErrors =
+            validateHeaderRow parsed.headers
 
-                header :: body ->
-                    let
-                        headerErrors =
-                            validateHeaderRow header
+        trimmedHeader =
+            List.map String.trim parsed.headers
+    in
+    if hasErrors headerErrors then
+        headerErrors
 
-                        trimmedHeader =
-                            List.map String.trim header
-                    in
-                    if hasErrors headerErrors then
-                        headerErrors
+    else
+        case parsed.records of
+            [] ->
+                { kind = IssueKindNotice
+                , row = Nothing
+                , col = Nothing
+                , msg =
+                    "Нет строк для импорта."
+                }
+                    :: headerErrors
 
-                    else
-                        case body of
-                            [] ->
-                                { kind = IssueKindNotice
-                                , row = Nothing
-                                , col = Nothing
-                                , msg =
-                                    "Нет строк для импорта."
-                                }
-                                    :: headerErrors
-
-                            _ ->
-                                let
-                                    bodyErrors =
-                                        List.indexedMap (\i -> validateBodyRow (i + 2) trimmedHeader) body
-                                in
-                                headerErrors ++ List.concat bodyErrors
-
-        Err error ->
-            [ { kind = IssueKindError
-              , row = Nothing
-              , col = Nothing
-              , msg =
-                    "Ошибка при разборе CSV-файла около символа с номером "
-                        ++ String.fromInt (String.length data - String.length error)
-                        ++ ". Ваш файл пуст, поврежден, неправильно сохранен (неверная кодировка или еще что-то...) или вовсе не является CSV файлом."
-              }
-            ]
+            _ ->
+                let
+                    bodyErrors =
+                        List.indexedMap (\i -> validateBodyRow (i + 2) trimmedHeader) parsed.records
+                in
+                headerErrors ++ List.concat bodyErrors
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -988,14 +970,14 @@ update msg model =
                 ( m, c ) =
                     FI.init (Just "Выберите файл с темами") [ "text/csv" ]
             in
-            ( { model | activity_import_state = ActivityImportStateFileSelection m }, Cmd.map MsgFileInputImport c )
+            ( { model | activity_import_state = ActivityImportStateDataInput False "," m }, Cmd.map MsgFileInputImport c )
 
         ( MsgCloseActivitiesImport, _ ) ->
             ( { model | activity_import_state = ActivityImportStateNone }, Cmd.none )
 
         ( MsgFileInputImport msg_, _ ) ->
             case model.activity_import_state of
-                ActivityImportStateFileSelection model_ ->
+                ActivityImportStateDataInput show_settings sep model_ ->
                     let
                         ( m, c ) =
                             FI.update msg_ model_
@@ -1007,28 +989,35 @@ update msg model =
                               }
                             , Cmd.batch
                                 [ Cmd.map MsgFileInputImport c
-                                , Task.perform MsgActivityImportGotCSVData <| File.toString f
+                                , Task.perform
+                                    (MsgActivityImportGotCSVData <|
+                                        Maybe.withDefault ',' <|
+                                            Maybe.map Tuple.first <|
+                                                String.uncons sep
+                                    )
+                                  <|
+                                    File.toString f
                                 ]
                             )
 
                         _ ->
-                            ( { model | activity_import_state = ActivityImportStateFileSelection m }, Cmd.map MsgFileInputImport c )
+                            ( { model | activity_import_state = ActivityImportStateDataInput show_settings sep m }, Cmd.map MsgFileInputImport c )
 
                 _ ->
                     ( model, Cmd.none )
 
         ( MsgOnClickActivitiesImport, FetchDone course _ ) ->
             case model.activity_import_state of
-                ActivityImportStateFileSelection _ ->
+                ActivityImportStateDataInput _ _ _ ->
                     ( model, Cmd.none )
 
-                ActivityImportStateValidationFinished csv_data _ ->
+                ActivityImportStateValidationFinished sep csv_data _ ->
                     case course.id of
                         Just cid ->
                             ( { model
                                 | activity_import_state = ActivityImportStateInProgress
                               }
-                            , activityImportForCourse { data = csv_data, courseId = cid }
+                            , activityImportForCourse { data = csv_data, sep = String.cons sep "", courseId = cid }
                                 |> ext_task identity model.token []
                                 |> Task.mapError httpErrorToString
                                 |> Task.attempt MsgActivitiesImportFinished
@@ -1056,10 +1045,10 @@ update msg model =
             , Cmd.none
             )
 
-        ( MsgActivityImportGotCSVData data, _ ) ->
+        ( MsgActivityImportGotCSVData sep data, _ ) ->
             let
                 val_res =
-                    validateActivityCSV data
+                    validateActivityCSV sep data
 
                 res =
                     case val_res of
@@ -1069,7 +1058,23 @@ update msg model =
                         _ ->
                             Err val_res
             in
-            ( { model | activity_import_state = ActivityImportStateValidationFinished data res }, Cmd.none )
+            ( { model | activity_import_state = ActivityImportStateValidationFinished sep data res }, Cmd.none )
+
+        ( MsgOnInputActivityCSVSep sep, _ ) ->
+            case model.activity_import_state of
+                ActivityImportStateDataInput show_settings _ m ->
+                    ( { model | activity_import_state = ActivityImportStateDataInput show_settings sep m }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        ( MsgOnClickToggleActivityImportSettings, _ ) ->
+            case model.activity_import_state of
+                ActivityImportStateDataInput show_settings sep m ->
+                    ( { model | activity_import_state = ActivityImportStateDataInput (not show_settings) sep m }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -1162,108 +1167,135 @@ viewActivitiesImport model =
                         "Убедившись, что ваш файл соответствует указанному выше формату, укажите его в поле ниже и отправьте на сервер. "
                             ++ "По завершению процесса импорта вы увидите результат (успех, ошибка)."
                     ]
-                , div [ class "row center-xs" ]
-                    [ state
-                    ]
+                , state
                 ]
     in
     case model.activity_import_state of
-        ActivityImportStateFileSelection m ->
-            case m.file of
-                Just file ->
-                    form <|
-                        div [ class "col", style "display" "inline-block" ]
-                            [ Html.map
-                                MsgFileInputImport
-                              <|
-                                FI.view m
-                            , button
-                                [ class "ui button green"
-                                , onClick MsgOnClickActivitiesImport
-                                ]
-                                [ text "Начать импорт" ]
+        ActivityImportStateDataInput show_settings sep m ->
+            form <|
+                div []
+                    [ div [ class "row between-xs" ]
+                        [ h3 [] [ text "Настройки импорта" ]
+                        , button [ class "ui button", onClick MsgOnClickToggleActivityImportSettings ]
+                            [ i [ class "cog icon" ] []
+                            , text "Настройки"
                             ]
+                        ]
+                    , div [ class "row center-xs" ]
+                        [ div [ class "col" ]
+                            [ div
+                                [ class "row"
+                                , style "display"
+                                    (if show_settings then
+                                        "initial"
 
-                Nothing ->
-                    form <|
-                        div [ class "col", style "display" "inline-block" ]
-                            [ Html.map
-                                MsgFileInputImport
-                              <|
-                                FI.view m
+                                     else
+                                        "none"
+                                    )
+                                ]
+                                [ div [ class "ui input middle-xs mb-10" ]
+                                    [ label [ class "mr-10" ] [ text "Разделитель: " ]
+                                    , input [ class "", type_ "text", placeholder "Разделитель", value sep, onInput MsgOnInputActivityCSVSep ] []
+                                    ]
+                                ]
+                            , div [ class "row center-xs", style "display" "block", style "min-width" "300px" ]
+                                [ Html.map
+                                    MsgFileInputImport
+                                  <|
+                                    FI.view m
+                                ]
                             ]
+                        ]
+                    ]
 
         ActivityImportStateNone ->
             text ""
 
         ActivityImportStateInProgress ->
             form <|
-                div [ class "col", style "display" "inline-block" ]
-                    [ MessageBox.view
-                        MessageBox.None
-                        True
-                        Nothing
-                        (text "")
-                        (text "Выполняется импорт")
+                div [ class "row center-xs" ]
+                    [ div [ class "col", style "display" "inline-block" ]
+                        [ MessageBox.view
+                            MessageBox.None
+                            True
+                            Nothing
+                            (text "")
+                            (text "Выполняется импорт")
+                        ]
                     ]
 
         ActivityImportStateFinished res ->
             case res of
                 Ok msg ->
                     form <|
-                        div [ class "col", style "display" "inline-block" ]
-                            [ MessageBox.view
-                                MessageBox.Success
-                                False
-                                Nothing
-                                (text "")
-                                (text <| "Импорт успешно завершен: " ++ msg)
+                        div [ class "row center-xs" ]
+                            [ div [ class "col", style "display" "inline-block" ]
+                                [ MessageBox.view
+                                    MessageBox.Success
+                                    False
+                                    Nothing
+                                    (text "")
+                                    (text <| "Импорт успешно завершен: " ++ msg)
+                                ]
                             ]
 
                 Err err ->
                     form <|
-                        div [ class "col", style "display" "inline-block" ]
-                            [ MessageBox.view
-                                MessageBox.Error
-                                False
-                                Nothing
-                                (text "")
-                              <|
-                                div []
-                                    [ div [] [ text "Импорт выполнен с ошибкой: " ]
-                                    , div [ class "ml-10" ] [ text err ]
+                        div [ class "row center-xs" ]
+                            [ div [ class "col", style "display" "inline-block" ]
+                                [ MessageBox.view
+                                    MessageBox.Error
+                                    False
+                                    Nothing
+                                    (text "")
+                                  <|
+                                    div []
+                                        [ div [] [ text "Импорт выполнен с ошибкой: " ]
+                                        , div [ class "ml-10" ] [ text err ]
+                                        ]
+                                , button [ class "ui button primary", onClick MsgOnClickImportActivities ]
+                                    [ i [ class "undo icon" ] []
+                                    , text "Начать сначала"
                                     ]
+                                ]
                             ]
 
         ActivityImportStateValidationInProgress ->
             form <|
-                div [ class "col", style "display" "inline-block" ]
-                    [ MessageBox.view
-                        MessageBox.None
-                        True
-                        Nothing
-                        (text "")
-                        (text <| "Проводим предварительную проверку вашего файла...")
+                div [ class "row center-xs" ]
+                    [ div [ class "col", style "display" "inline-block" ]
+                        [ MessageBox.view
+                            MessageBox.None
+                            True
+                            Nothing
+                            (text "")
+                            (text <| "Проводим предварительную проверку вашего файла...")
+                        ]
                     ]
 
-        ActivityImportStateValidationFinished _ result ->
+        ActivityImportStateValidationFinished _ _ result ->
             let
                 cont color_class =
                     button [ class <| "ui button " ++ color_class, onClick MsgOnClickActivitiesImport ] [ i [ class "play icon" ] [], text "Продолжить импорт" ]
 
                 restart =
-                    button [ class "ui button primary", onClick MsgOnClickImportActivities ] [ i [ class "undo icon" ] [], text "Начать сначала" ]
+                    button [ class "ui button primary", onClick MsgOnClickImportActivities ]
+                        [ i [ class "undo icon" ] []
+                        , text "Начать сначала"
+                        ]
 
                 succ =
                     form <|
-                        div [ class "col", style "display" "inline-block" ]
-                            [ MessageBox.view
-                                MessageBox.Success
-                                False
-                                Nothing
-                                (text "")
-                                (text <| "Предварительная проверка завершена. Проблем не найдено.")
-                            , div [ class "mt-10" ] [ cont "green" ]
+                        div [ class "row center-xs" ]
+                            [ div [ class "col", style "display" "inline-block" ]
+                                [ MessageBox.view
+                                    MessageBox.Success
+                                    False
+                                    Nothing
+                                    (text "")
+                                    (text <| "Предварительная проверка завершена. Проблем не найдено.")
+                                , div [ class "mt-10" ] [ cont "green" ]
+                                ]
                             ]
             in
             case result of
@@ -1296,37 +1328,39 @@ viewActivitiesImport model =
                                     hd.kind /= IssueKindError
                             in
                             form <|
-                                div [ class "col", style "display" "inline-block" ]
-                                    [ MessageBox.view
-                                        (if canContinue then
-                                            MessageBox.Warning
+                                div [ class "row center-xs" ]
+                                    [ div [ class "col", style "display" "inline-block" ]
+                                        [ MessageBox.view
+                                            (if canContinue then
+                                                MessageBox.Warning
 
-                                         else
-                                            MessageBox.Error
-                                        )
-                                        False
-                                        Nothing
-                                        (text "")
-                                        (text <|
-                                            if canContinue then
-                                                "Были найдены некоторые проблемы в ваших данных. "
-                                                    ++ "Рекомендуется ознакомиться с их списком ниже и исправить недочеты. "
-                                                    ++ "Тем не менее, вы можете продолжить загрузку без исправления."
+                                             else
+                                                MessageBox.Error
+                                            )
+                                            False
+                                            Nothing
+                                            (text "")
+                                            (text <|
+                                                if canContinue then
+                                                    "Были найдены некоторые проблемы в ваших данных. "
+                                                        ++ "Рекомендуется ознакомиться с их списком ниже и исправить недочеты. "
+                                                        ++ "Тем не менее, вы можете продолжить загрузку без исправления."
 
-                                            else
-                                                "Были найдены серьезные ошибки в вашем файле. Для продолжения необходимо "
-                                                    ++ "вначале исправить все ошибки и, желательно, все остальные недостатки."
-                                        )
-                                    , div []
-                                        [ restart
-                                        , if canContinue then
-                                            cont "yellow"
+                                                else
+                                                    "Были найдены серьезные ошибки в вашем файле. Для продолжения необходимо "
+                                                        ++ "вначале исправить все ошибки и, желательно, все остальные недостатки."
+                                            )
+                                        , div []
+                                            [ restart
+                                            , if canContinue then
+                                                cont "yellow"
 
-                                          else
-                                            text ""
+                                              else
+                                                text ""
+                                            ]
+                                        , h3 [] [ text <| "Список найденных проблем (" ++ String.fromInt (List.length sorted) ++ "):" ]
+                                        , div [] <| List.map viewActValidationIssue sorted
                                         ]
-                                    , h3 [] [ text <| "Список найденных проблем (" ++ String.fromInt (List.length sorted) ++ "):" ]
-                                    , div [] <| List.map viewActValidationIssue sorted
                                     ]
 
 

@@ -4372,6 +4372,124 @@ function _Browser_load(url)
 }
 
 
+// CREATE
+
+var _Regex_never = /.^/;
+
+var _Regex_fromStringWith = F2(function(options, string)
+{
+	var flags = 'g';
+	if (options.multiline) { flags += 'm'; }
+	if (options.caseInsensitive) { flags += 'i'; }
+
+	try
+	{
+		return $elm$core$Maybe$Just(new RegExp(string, flags));
+	}
+	catch(error)
+	{
+		return $elm$core$Maybe$Nothing;
+	}
+});
+
+
+// USE
+
+var _Regex_contains = F2(function(re, string)
+{
+	return string.match(re) !== null;
+});
+
+
+var _Regex_findAtMost = F3(function(n, re, str)
+{
+	var out = [];
+	var number = 0;
+	var string = str;
+	var lastIndex = re.lastIndex;
+	var prevLastIndex = -1;
+	var result;
+	while (number++ < n && (result = re.exec(string)))
+	{
+		if (prevLastIndex == re.lastIndex) break;
+		var i = result.length - 1;
+		var subs = new Array(i);
+		while (i > 0)
+		{
+			var submatch = result[i];
+			subs[--i] = submatch
+				? $elm$core$Maybe$Just(submatch)
+				: $elm$core$Maybe$Nothing;
+		}
+		out.push(A4($elm$regex$Regex$Match, result[0], result.index, number, _List_fromArray(subs)));
+		prevLastIndex = re.lastIndex;
+	}
+	re.lastIndex = lastIndex;
+	return _List_fromArray(out);
+});
+
+
+var _Regex_replaceAtMost = F4(function(n, re, replacer, string)
+{
+	var count = 0;
+	function jsReplacer(match)
+	{
+		if (count++ >= n)
+		{
+			return match;
+		}
+		var i = arguments.length - 3;
+		var submatches = new Array(i);
+		while (i > 0)
+		{
+			var submatch = arguments[i];
+			submatches[--i] = submatch
+				? $elm$core$Maybe$Just(submatch)
+				: $elm$core$Maybe$Nothing;
+		}
+		return replacer(A4($elm$regex$Regex$Match, match, arguments[arguments.length - 2], count, _List_fromArray(submatches)));
+	}
+	return string.replace(re, jsReplacer);
+});
+
+var _Regex_splitAtMost = F3(function(n, re, str)
+{
+	var string = str;
+	var out = [];
+	var start = re.lastIndex;
+	var restoreLastIndex = re.lastIndex;
+	while (n--)
+	{
+		var result = re.exec(string);
+		if (!result) break;
+		out.push(string.slice(start, result.index));
+		start = re.lastIndex;
+	}
+	out.push(string.slice(start));
+	re.lastIndex = restoreLastIndex;
+	return _List_fromArray(out);
+});
+
+var _Regex_infinity = Infinity;
+
+
+function _Url_percentEncode(string)
+{
+	return encodeURIComponent(string);
+}
+
+function _Url_percentDecode(string)
+{
+	try
+	{
+		return $elm$core$Maybe$Just(decodeURIComponent(string));
+	}
+	catch (e)
+	{
+		return $elm$core$Maybe$Nothing;
+	}
+}
+
 
 function _Time_now(millisToPosix)
 {
@@ -4548,107 +4666,6 @@ var _Parser_findSubString = F5(function(smallString, offset, row, col, bigString
 });
 
 
-// CREATE
-
-var _Regex_never = /.^/;
-
-var _Regex_fromStringWith = F2(function(options, string)
-{
-	var flags = 'g';
-	if (options.multiline) { flags += 'm'; }
-	if (options.caseInsensitive) { flags += 'i'; }
-
-	try
-	{
-		return $elm$core$Maybe$Just(new RegExp(string, flags));
-	}
-	catch(error)
-	{
-		return $elm$core$Maybe$Nothing;
-	}
-});
-
-
-// USE
-
-var _Regex_contains = F2(function(re, string)
-{
-	return string.match(re) !== null;
-});
-
-
-var _Regex_findAtMost = F3(function(n, re, str)
-{
-	var out = [];
-	var number = 0;
-	var string = str;
-	var lastIndex = re.lastIndex;
-	var prevLastIndex = -1;
-	var result;
-	while (number++ < n && (result = re.exec(string)))
-	{
-		if (prevLastIndex == re.lastIndex) break;
-		var i = result.length - 1;
-		var subs = new Array(i);
-		while (i > 0)
-		{
-			var submatch = result[i];
-			subs[--i] = submatch
-				? $elm$core$Maybe$Just(submatch)
-				: $elm$core$Maybe$Nothing;
-		}
-		out.push(A4($elm$regex$Regex$Match, result[0], result.index, number, _List_fromArray(subs)));
-		prevLastIndex = re.lastIndex;
-	}
-	re.lastIndex = lastIndex;
-	return _List_fromArray(out);
-});
-
-
-var _Regex_replaceAtMost = F4(function(n, re, replacer, string)
-{
-	var count = 0;
-	function jsReplacer(match)
-	{
-		if (count++ >= n)
-		{
-			return match;
-		}
-		var i = arguments.length - 3;
-		var submatches = new Array(i);
-		while (i > 0)
-		{
-			var submatch = arguments[i];
-			submatches[--i] = submatch
-				? $elm$core$Maybe$Just(submatch)
-				: $elm$core$Maybe$Nothing;
-		}
-		return replacer(A4($elm$regex$Regex$Match, match, arguments[arguments.length - 2], count, _List_fromArray(submatches)));
-	}
-	return string.replace(re, jsReplacer);
-});
-
-var _Regex_splitAtMost = F3(function(n, re, str)
-{
-	var string = str;
-	var out = [];
-	var start = re.lastIndex;
-	var restoreLastIndex = re.lastIndex;
-	while (n--)
-	{
-		var result = re.exec(string);
-		if (!result) break;
-		out.push(string.slice(start, result.index));
-		start = re.lastIndex;
-	}
-	out.push(string.slice(start));
-	re.lastIndex = restoreLastIndex;
-	return _List_fromArray(out);
-});
-
-var _Regex_infinity = Infinity;
-
-
 
 // SEND REQUEST
 
@@ -4822,23 +4839,6 @@ function _Http_track(router, xhr, tracker)
 			size: event.lengthComputable ? $elm$core$Maybe$Just(event.total) : $elm$core$Maybe$Nothing
 		}))));
 	});
-}
-
-function _Url_percentEncode(string)
-{
-	return encodeURIComponent(string);
-}
-
-function _Url_percentDecode(string)
-{
-	try
-	{
-		return $elm$core$Maybe$Just(decodeURIComponent(string));
-	}
-	catch (e)
-	{
-		return $elm$core$Maybe$Nothing;
-	}
 }
 
 
@@ -5856,7 +5856,1016 @@ var $author$project$Util$Left = function (a) {
 	return {$: 'Left', a: a};
 };
 var $author$project$Main$PageBlank = {$: 'PageBlank'};
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $author$project$Main$UrlCourse = function (a) {
+	return {$: 'UrlCourse', a: a};
+};
+var $author$project$Main$UrlCourseList = {$: 'UrlCourseList'};
+var $author$project$Main$UrlLogin = {$: 'UrlLogin'};
+var $author$project$Main$UrlLogout = {$: 'UrlLogout'};
+var $author$project$Main$UrlMarks = {$: 'UrlMarks'};
+var $author$project$Main$UrlMarksOfCourse = function (a) {
+	return {$: 'UrlMarksOfCourse', a: a};
+};
+var $author$project$Main$UrlMarksOfPerson = function (a) {
+	return {$: 'UrlMarksOfPerson', a: a};
+};
+var $author$project$Main$UrlMessages = {$: 'UrlMessages'};
+var $author$project$Main$UrlNews = {$: 'UrlNews'};
+var $author$project$Main$UrlNotFound = {$: 'UrlNotFound'};
+var $author$project$Main$UrlPageFront = {$: 'UrlPageFront'};
+var $author$project$Main$UrlPasswordReset = function (a) {
+	return {$: 'UrlPasswordReset', a: a};
+};
+var $author$project$Main$UrlProfileOfUser = function (a) {
+	return {$: 'UrlProfileOfUser', a: a};
+};
+var $author$project$Main$UrlProfileOwn = {$: 'UrlProfileOwn'};
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
+var $danyx23$elm_uuid$Uuid$Uuid = function (a) {
+	return {$: 'Uuid', a: a};
+};
+var $elm$regex$Regex$Match = F4(
+	function (match, index, number, submatches) {
+		return {index: index, match: match, number: number, submatches: submatches};
+	});
+var $elm$regex$Regex$contains = _Regex_contains;
+var $elm$regex$Regex$fromStringWith = _Regex_fromStringWith;
+var $elm$regex$Regex$fromString = function (string) {
+	return A2(
+		$elm$regex$Regex$fromStringWith,
+		{caseInsensitive: false, multiline: false},
+		string);
+};
+var $elm$regex$Regex$never = _Regex_never;
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $danyx23$elm_uuid$Uuid$Barebones$uuidRegex = A2(
+	$elm$core$Maybe$withDefault,
+	$elm$regex$Regex$never,
+	$elm$regex$Regex$fromString('^[0-9A-Fa-f]{8,8}-[0-9A-Fa-f]{4,4}-[1-5][0-9A-Fa-f]{3,3}-[8-9A-Ba-b][0-9A-Fa-f]{3,3}-[0-9A-Fa-f]{12,12}$'));
+var $danyx23$elm_uuid$Uuid$Barebones$isValidUuid = function (uuidAsString) {
+	return A2($elm$regex$Regex$contains, $danyx23$elm_uuid$Uuid$Barebones$uuidRegex, uuidAsString);
+};
+var $elm$core$String$toLower = _String_toLower;
+var $danyx23$elm_uuid$Uuid$fromString = function (text) {
+	return $danyx23$elm_uuid$Uuid$Barebones$isValidUuid(text) ? $elm$core$Maybe$Just(
+		$danyx23$elm_uuid$Uuid$Uuid(
+			$elm$core$String$toLower(text))) : $elm$core$Maybe$Nothing;
+};
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$url$Url$Parser$Parser = function (a) {
+	return {$: 'Parser', a: a};
+};
+var $elm$url$Url$Parser$State = F5(
+	function (visited, unvisited, params, frag, value) {
+		return {frag: frag, params: params, unvisited: unvisited, value: value, visited: visited};
+	});
+var $elm$url$Url$Parser$mapState = F2(
+	function (func, _v0) {
+		var visited = _v0.visited;
+		var unvisited = _v0.unvisited;
+		var params = _v0.params;
+		var frag = _v0.frag;
+		var value = _v0.value;
+		return A5(
+			$elm$url$Url$Parser$State,
+			visited,
+			unvisited,
+			params,
+			frag,
+			func(value));
+	});
+var $elm$url$Url$Parser$map = F2(
+	function (subValue, _v0) {
+		var parseArg = _v0.a;
+		return $elm$url$Url$Parser$Parser(
+			function (_v1) {
+				var visited = _v1.visited;
+				var unvisited = _v1.unvisited;
+				var params = _v1.params;
+				var frag = _v1.frag;
+				var value = _v1.value;
+				return A2(
+					$elm$core$List$map,
+					$elm$url$Url$Parser$mapState(value),
+					parseArg(
+						A5($elm$url$Url$Parser$State, visited, unvisited, params, frag, subValue)));
+			});
+	});
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
+		}
+	});
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
+};
+var $elm$core$List$concatMap = F2(
+	function (f, list) {
+		return $elm$core$List$concat(
+			A2($elm$core$List$map, f, list));
+	});
+var $elm$url$Url$Parser$oneOf = function (parsers) {
+	return $elm$url$Url$Parser$Parser(
+		function (state) {
+			return A2(
+				$elm$core$List$concatMap,
+				function (_v0) {
+					var parser = _v0.a;
+					return parser(state);
+				},
+				parsers);
+		});
+};
+var $elm$url$Url$Parser$getFirstMatch = function (states) {
+	getFirstMatch:
+	while (true) {
+		if (!states.b) {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			var state = states.a;
+			var rest = states.b;
+			var _v1 = state.unvisited;
+			if (!_v1.b) {
+				return $elm$core$Maybe$Just(state.value);
+			} else {
+				if ((_v1.a === '') && (!_v1.b.b)) {
+					return $elm$core$Maybe$Just(state.value);
+				} else {
+					var $temp$states = rest;
+					states = $temp$states;
+					continue getFirstMatch;
+				}
+			}
+		}
+	}
+};
+var $elm$url$Url$Parser$removeFinalEmpty = function (segments) {
+	if (!segments.b) {
+		return _List_Nil;
+	} else {
+		if ((segments.a === '') && (!segments.b.b)) {
+			return _List_Nil;
+		} else {
+			var segment = segments.a;
+			var rest = segments.b;
+			return A2(
+				$elm$core$List$cons,
+				segment,
+				$elm$url$Url$Parser$removeFinalEmpty(rest));
+		}
+	}
+};
+var $elm$url$Url$Parser$preparePath = function (path) {
+	var _v0 = A2($elm$core$String$split, '/', path);
+	if (_v0.b && (_v0.a === '')) {
+		var segments = _v0.b;
+		return $elm$url$Url$Parser$removeFinalEmpty(segments);
+	} else {
+		var segments = _v0;
+		return $elm$url$Url$Parser$removeFinalEmpty(segments);
+	}
+};
+var $elm$url$Url$Parser$addToParametersHelp = F2(
+	function (value, maybeList) {
+		if (maybeList.$ === 'Nothing') {
+			return $elm$core$Maybe$Just(
+				_List_fromArray(
+					[value]));
+		} else {
+			var list = maybeList.a;
+			return $elm$core$Maybe$Just(
+				A2($elm$core$List$cons, value, list));
+		}
+	});
+var $elm$url$Url$percentDecode = _Url_percentDecode;
+var $elm$core$Basics$compare = _Utils_compare;
+var $elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
+				switch (_v1.$) {
+					case 'LT':
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 'EQ':
+						return $elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
+var $elm$core$Dict$Black = {$: 'Black'};
+var $elm$core$Dict$RBNode_elm_builtin = F5(
+	function (a, b, c, d, e) {
+		return {$: 'RBNode_elm_builtin', a: a, b: b, c: c, d: d, e: e};
+	});
+var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
+var $elm$core$Dict$Red = {$: 'Red'};
+var $elm$core$Dict$balance = F5(
+	function (color, key, value, left, right) {
+		if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Red')) {
+			var _v1 = right.a;
+			var rK = right.b;
+			var rV = right.c;
+			var rLeft = right.d;
+			var rRight = right.e;
+			if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
+				var _v3 = left.a;
+				var lK = left.b;
+				var lV = left.c;
+				var lLeft = left.d;
+				var lRight = left.e;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Red,
+					key,
+					value,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, rK, rV, rLeft, rRight));
+			} else {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					color,
+					rK,
+					rV,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, left, rLeft),
+					rRight);
+			}
+		} else {
+			if ((((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) && (left.d.$ === 'RBNode_elm_builtin')) && (left.d.a.$ === 'Red')) {
+				var _v5 = left.a;
+				var lK = left.b;
+				var lV = left.c;
+				var _v6 = left.d;
+				var _v7 = _v6.a;
+				var llK = _v6.b;
+				var llV = _v6.c;
+				var llLeft = _v6.d;
+				var llRight = _v6.e;
+				var lRight = left.e;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Red,
+					lK,
+					lV,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, llK, llV, llLeft, llRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, key, value, lRight, right));
+			} else {
+				return A5($elm$core$Dict$RBNode_elm_builtin, color, key, value, left, right);
+			}
+		}
+	});
+var $elm$core$Dict$insertHelp = F3(
+	function (key, value, dict) {
+		if (dict.$ === 'RBEmpty_elm_builtin') {
+			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
+		} else {
+			var nColor = dict.a;
+			var nKey = dict.b;
+			var nValue = dict.c;
+			var nLeft = dict.d;
+			var nRight = dict.e;
+			var _v1 = A2($elm$core$Basics$compare, key, nKey);
+			switch (_v1.$) {
+				case 'LT':
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						A3($elm$core$Dict$insertHelp, key, value, nLeft),
+						nRight);
+				case 'EQ':
+					return A5($elm$core$Dict$RBNode_elm_builtin, nColor, nKey, value, nLeft, nRight);
+				default:
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						nLeft,
+						A3($elm$core$Dict$insertHelp, key, value, nRight));
+			}
+		}
+	});
+var $elm$core$Dict$insert = F3(
+	function (key, value, dict) {
+		var _v0 = A3($elm$core$Dict$insertHelp, key, value, dict);
+		if ((_v0.$ === 'RBNode_elm_builtin') && (_v0.a.$ === 'Red')) {
+			var _v1 = _v0.a;
+			var k = _v0.b;
+			var v = _v0.c;
+			var l = _v0.d;
+			var r = _v0.e;
+			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, k, v, l, r);
+		} else {
+			var x = _v0;
+			return x;
+		}
+	});
+var $elm$core$Dict$getMin = function (dict) {
+	getMin:
+	while (true) {
+		if ((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) {
+			var left = dict.d;
+			var $temp$dict = left;
+			dict = $temp$dict;
+			continue getMin;
+		} else {
+			return dict;
+		}
+	}
+};
+var $elm$core$Dict$moveRedLeft = function (dict) {
+	if (((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) && (dict.e.$ === 'RBNode_elm_builtin')) {
+		if ((dict.e.d.$ === 'RBNode_elm_builtin') && (dict.e.d.a.$ === 'Red')) {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v1 = dict.d;
+			var lClr = _v1.a;
+			var lK = _v1.b;
+			var lV = _v1.c;
+			var lLeft = _v1.d;
+			var lRight = _v1.e;
+			var _v2 = dict.e;
+			var rClr = _v2.a;
+			var rK = _v2.b;
+			var rV = _v2.c;
+			var rLeft = _v2.d;
+			var _v3 = rLeft.a;
+			var rlK = rLeft.b;
+			var rlV = rLeft.c;
+			var rlL = rLeft.d;
+			var rlR = rLeft.e;
+			var rRight = _v2.e;
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				$elm$core$Dict$Red,
+				rlK,
+				rlV,
+				A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					rlL),
+				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, rK, rV, rlR, rRight));
+		} else {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v4 = dict.d;
+			var lClr = _v4.a;
+			var lK = _v4.b;
+			var lV = _v4.c;
+			var lLeft = _v4.d;
+			var lRight = _v4.e;
+			var _v5 = dict.e;
+			var rClr = _v5.a;
+			var rK = _v5.b;
+			var rV = _v5.c;
+			var rLeft = _v5.d;
+			var rRight = _v5.e;
+			if (clr.$ === 'Black') {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
+			} else {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
+			}
+		}
+	} else {
+		return dict;
+	}
+};
+var $elm$core$Dict$moveRedRight = function (dict) {
+	if (((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) && (dict.e.$ === 'RBNode_elm_builtin')) {
+		if ((dict.d.d.$ === 'RBNode_elm_builtin') && (dict.d.d.a.$ === 'Red')) {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v1 = dict.d;
+			var lClr = _v1.a;
+			var lK = _v1.b;
+			var lV = _v1.c;
+			var _v2 = _v1.d;
+			var _v3 = _v2.a;
+			var llK = _v2.b;
+			var llV = _v2.c;
+			var llLeft = _v2.d;
+			var llRight = _v2.e;
+			var lRight = _v1.e;
+			var _v4 = dict.e;
+			var rClr = _v4.a;
+			var rK = _v4.b;
+			var rV = _v4.c;
+			var rLeft = _v4.d;
+			var rRight = _v4.e;
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				$elm$core$Dict$Red,
+				lK,
+				lV,
+				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, llK, llV, llLeft, llRight),
+				A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					lRight,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight)));
+		} else {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v5 = dict.d;
+			var lClr = _v5.a;
+			var lK = _v5.b;
+			var lV = _v5.c;
+			var lLeft = _v5.d;
+			var lRight = _v5.e;
+			var _v6 = dict.e;
+			var rClr = _v6.a;
+			var rK = _v6.b;
+			var rV = _v6.c;
+			var rLeft = _v6.d;
+			var rRight = _v6.e;
+			if (clr.$ === 'Black') {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
+			} else {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
+			}
+		}
+	} else {
+		return dict;
+	}
+};
+var $elm$core$Dict$removeHelpPrepEQGT = F7(
+	function (targetKey, dict, color, key, value, left, right) {
+		if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
+			var _v1 = left.a;
+			var lK = left.b;
+			var lV = left.c;
+			var lLeft = left.d;
+			var lRight = left.e;
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				color,
+				lK,
+				lV,
+				lLeft,
+				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, lRight, right));
+		} else {
+			_v2$2:
+			while (true) {
+				if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Black')) {
+					if (right.d.$ === 'RBNode_elm_builtin') {
+						if (right.d.a.$ === 'Black') {
+							var _v3 = right.a;
+							var _v4 = right.d;
+							var _v5 = _v4.a;
+							return $elm$core$Dict$moveRedRight(dict);
+						} else {
+							break _v2$2;
+						}
+					} else {
+						var _v6 = right.a;
+						var _v7 = right.d;
+						return $elm$core$Dict$moveRedRight(dict);
+					}
+				} else {
+					break _v2$2;
+				}
+			}
+			return dict;
+		}
+	});
+var $elm$core$Dict$removeMin = function (dict) {
+	if ((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) {
+		var color = dict.a;
+		var key = dict.b;
+		var value = dict.c;
+		var left = dict.d;
+		var lColor = left.a;
+		var lLeft = left.d;
+		var right = dict.e;
+		if (lColor.$ === 'Black') {
+			if ((lLeft.$ === 'RBNode_elm_builtin') && (lLeft.a.$ === 'Red')) {
+				var _v3 = lLeft.a;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					color,
+					key,
+					value,
+					$elm$core$Dict$removeMin(left),
+					right);
+			} else {
+				var _v4 = $elm$core$Dict$moveRedLeft(dict);
+				if (_v4.$ === 'RBNode_elm_builtin') {
+					var nColor = _v4.a;
+					var nKey = _v4.b;
+					var nValue = _v4.c;
+					var nLeft = _v4.d;
+					var nRight = _v4.e;
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						$elm$core$Dict$removeMin(nLeft),
+						nRight);
+				} else {
+					return $elm$core$Dict$RBEmpty_elm_builtin;
+				}
+			}
+		} else {
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				color,
+				key,
+				value,
+				$elm$core$Dict$removeMin(left),
+				right);
+		}
+	} else {
+		return $elm$core$Dict$RBEmpty_elm_builtin;
+	}
+};
+var $elm$core$Dict$removeHelp = F2(
+	function (targetKey, dict) {
+		if (dict.$ === 'RBEmpty_elm_builtin') {
+			return $elm$core$Dict$RBEmpty_elm_builtin;
+		} else {
+			var color = dict.a;
+			var key = dict.b;
+			var value = dict.c;
+			var left = dict.d;
+			var right = dict.e;
+			if (_Utils_cmp(targetKey, key) < 0) {
+				if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Black')) {
+					var _v4 = left.a;
+					var lLeft = left.d;
+					if ((lLeft.$ === 'RBNode_elm_builtin') && (lLeft.a.$ === 'Red')) {
+						var _v6 = lLeft.a;
+						return A5(
+							$elm$core$Dict$RBNode_elm_builtin,
+							color,
+							key,
+							value,
+							A2($elm$core$Dict$removeHelp, targetKey, left),
+							right);
+					} else {
+						var _v7 = $elm$core$Dict$moveRedLeft(dict);
+						if (_v7.$ === 'RBNode_elm_builtin') {
+							var nColor = _v7.a;
+							var nKey = _v7.b;
+							var nValue = _v7.c;
+							var nLeft = _v7.d;
+							var nRight = _v7.e;
+							return A5(
+								$elm$core$Dict$balance,
+								nColor,
+								nKey,
+								nValue,
+								A2($elm$core$Dict$removeHelp, targetKey, nLeft),
+								nRight);
+						} else {
+							return $elm$core$Dict$RBEmpty_elm_builtin;
+						}
+					}
+				} else {
+					return A5(
+						$elm$core$Dict$RBNode_elm_builtin,
+						color,
+						key,
+						value,
+						A2($elm$core$Dict$removeHelp, targetKey, left),
+						right);
+				}
+			} else {
+				return A2(
+					$elm$core$Dict$removeHelpEQGT,
+					targetKey,
+					A7($elm$core$Dict$removeHelpPrepEQGT, targetKey, dict, color, key, value, left, right));
+			}
+		}
+	});
+var $elm$core$Dict$removeHelpEQGT = F2(
+	function (targetKey, dict) {
+		if (dict.$ === 'RBNode_elm_builtin') {
+			var color = dict.a;
+			var key = dict.b;
+			var value = dict.c;
+			var left = dict.d;
+			var right = dict.e;
+			if (_Utils_eq(targetKey, key)) {
+				var _v1 = $elm$core$Dict$getMin(right);
+				if (_v1.$ === 'RBNode_elm_builtin') {
+					var minKey = _v1.b;
+					var minValue = _v1.c;
+					return A5(
+						$elm$core$Dict$balance,
+						color,
+						minKey,
+						minValue,
+						left,
+						$elm$core$Dict$removeMin(right));
+				} else {
+					return $elm$core$Dict$RBEmpty_elm_builtin;
+				}
+			} else {
+				return A5(
+					$elm$core$Dict$balance,
+					color,
+					key,
+					value,
+					left,
+					A2($elm$core$Dict$removeHelp, targetKey, right));
+			}
+		} else {
+			return $elm$core$Dict$RBEmpty_elm_builtin;
+		}
+	});
+var $elm$core$Dict$remove = F2(
+	function (key, dict) {
+		var _v0 = A2($elm$core$Dict$removeHelp, key, dict);
+		if ((_v0.$ === 'RBNode_elm_builtin') && (_v0.a.$ === 'Red')) {
+			var _v1 = _v0.a;
+			var k = _v0.b;
+			var v = _v0.c;
+			var l = _v0.d;
+			var r = _v0.e;
+			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, k, v, l, r);
+		} else {
+			var x = _v0;
+			return x;
+		}
+	});
+var $elm$core$Dict$update = F3(
+	function (targetKey, alter, dictionary) {
+		var _v0 = alter(
+			A2($elm$core$Dict$get, targetKey, dictionary));
+		if (_v0.$ === 'Just') {
+			var value = _v0.a;
+			return A3($elm$core$Dict$insert, targetKey, value, dictionary);
+		} else {
+			return A2($elm$core$Dict$remove, targetKey, dictionary);
+		}
+	});
+var $elm$url$Url$Parser$addParam = F2(
+	function (segment, dict) {
+		var _v0 = A2($elm$core$String$split, '=', segment);
+		if ((_v0.b && _v0.b.b) && (!_v0.b.b.b)) {
+			var rawKey = _v0.a;
+			var _v1 = _v0.b;
+			var rawValue = _v1.a;
+			var _v2 = $elm$url$Url$percentDecode(rawKey);
+			if (_v2.$ === 'Nothing') {
+				return dict;
+			} else {
+				var key = _v2.a;
+				var _v3 = $elm$url$Url$percentDecode(rawValue);
+				if (_v3.$ === 'Nothing') {
+					return dict;
+				} else {
+					var value = _v3.a;
+					return A3(
+						$elm$core$Dict$update,
+						key,
+						$elm$url$Url$Parser$addToParametersHelp(value),
+						dict);
+				}
+			}
+		} else {
+			return dict;
+		}
+	});
+var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
+var $elm$url$Url$Parser$prepareQuery = function (maybeQuery) {
+	if (maybeQuery.$ === 'Nothing') {
+		return $elm$core$Dict$empty;
+	} else {
+		var qry = maybeQuery.a;
+		return A3(
+			$elm$core$List$foldr,
+			$elm$url$Url$Parser$addParam,
+			$elm$core$Dict$empty,
+			A2($elm$core$String$split, '&', qry));
+	}
+};
+var $elm$url$Url$Parser$parse = F2(
+	function (_v0, url) {
+		var parser = _v0.a;
+		return $elm$url$Url$Parser$getFirstMatch(
+			parser(
+				A5(
+					$elm$url$Url$Parser$State,
+					_List_Nil,
+					$elm$url$Url$Parser$preparePath(url.path),
+					$elm$url$Url$Parser$prepareQuery(url.query),
+					url.fragment,
+					$elm$core$Basics$identity)));
+	});
+var $elm$url$Url$Parser$query = function (_v0) {
+	var queryParser = _v0.a;
+	return $elm$url$Url$Parser$Parser(
+		function (_v1) {
+			var visited = _v1.visited;
+			var unvisited = _v1.unvisited;
+			var params = _v1.params;
+			var frag = _v1.frag;
+			var value = _v1.value;
+			return _List_fromArray(
+				[
+					A5(
+					$elm$url$Url$Parser$State,
+					visited,
+					unvisited,
+					params,
+					frag,
+					value(
+						queryParser(params)))
+				]);
+		});
+};
+var $elm$url$Url$Parser$slash = F2(
+	function (_v0, _v1) {
+		var parseBefore = _v0.a;
+		var parseAfter = _v1.a;
+		return $elm$url$Url$Parser$Parser(
+			function (state) {
+				return A2(
+					$elm$core$List$concatMap,
+					parseAfter,
+					parseBefore(state));
+			});
+	});
+var $elm$url$Url$Parser$questionMark = F2(
+	function (parser, queryParser) {
+		return A2(
+			$elm$url$Url$Parser$slash,
+			parser,
+			$elm$url$Url$Parser$query(queryParser));
+	});
+var $elm$url$Url$Parser$s = function (str) {
+	return $elm$url$Url$Parser$Parser(
+		function (_v0) {
+			var visited = _v0.visited;
+			var unvisited = _v0.unvisited;
+			var params = _v0.params;
+			var frag = _v0.frag;
+			var value = _v0.value;
+			if (!unvisited.b) {
+				return _List_Nil;
+			} else {
+				var next = unvisited.a;
+				var rest = unvisited.b;
+				return _Utils_eq(next, str) ? _List_fromArray(
+					[
+						A5(
+						$elm$url$Url$Parser$State,
+						A2($elm$core$List$cons, next, visited),
+						rest,
+						params,
+						frag,
+						value)
+					]) : _List_Nil;
+			}
+		});
+};
+var $elm$url$Url$Parser$custom = F2(
+	function (tipe, stringToSomething) {
+		return $elm$url$Url$Parser$Parser(
+			function (_v0) {
+				var visited = _v0.visited;
+				var unvisited = _v0.unvisited;
+				var params = _v0.params;
+				var frag = _v0.frag;
+				var value = _v0.value;
+				if (!unvisited.b) {
+					return _List_Nil;
+				} else {
+					var next = unvisited.a;
+					var rest = unvisited.b;
+					var _v2 = stringToSomething(next);
+					if (_v2.$ === 'Just') {
+						var nextValue = _v2.a;
+						return _List_fromArray(
+							[
+								A5(
+								$elm$url$Url$Parser$State,
+								A2($elm$core$List$cons, next, visited),
+								rest,
+								params,
+								frag,
+								value(nextValue))
+							]);
+					} else {
+						return _List_Nil;
+					}
+				}
+			});
+	});
+var $elm$url$Url$Parser$string = A2($elm$url$Url$Parser$custom, 'STRING', $elm$core$Maybe$Just);
+var $elm$url$Url$Parser$Internal$Parser = function (a) {
+	return {$: 'Parser', a: a};
+};
+var $elm$url$Url$Parser$Query$custom = F2(
+	function (key, func) {
+		return $elm$url$Url$Parser$Internal$Parser(
+			function (dict) {
+				return func(
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, key, dict)));
+			});
+	});
+var $elm$url$Url$Parser$Query$string = function (key) {
+	return A2(
+		$elm$url$Url$Parser$Query$custom,
+		key,
+		function (stringList) {
+			if (stringList.b && (!stringList.b.b)) {
+				var str = stringList.a;
+				return $elm$core$Maybe$Just(str);
+			} else {
+				return $elm$core$Maybe$Nothing;
+			}
+		});
+};
+var $elm$url$Url$Parser$top = $elm$url$Url$Parser$Parser(
+	function (state) {
+		return _List_fromArray(
+			[state]);
+	});
+var $author$project$Main$parse_url = function (url) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		$author$project$Main$UrlNotFound,
+		A2(
+			$elm$url$Url$Parser$parse,
+			$elm$url$Url$Parser$oneOf(
+				_List_fromArray(
+					[
+						A2($elm$url$Url$Parser$map, $author$project$Main$UrlPageFront, $elm$url$Url$Parser$top),
+						A2(
+						$elm$url$Url$Parser$map,
+						$author$project$Main$UrlPasswordReset,
+						A2(
+							$elm$url$Url$Parser$slash,
+							$elm$url$Url$Parser$s('login'),
+							A2(
+								$elm$url$Url$Parser$questionMark,
+								$elm$url$Url$Parser$s('password_reset'),
+								$elm$url$Url$Parser$Query$string('token')))),
+						A2(
+						$elm$url$Url$Parser$map,
+						$author$project$Main$UrlLogin,
+						$elm$url$Url$Parser$s('login')),
+						A2(
+						$elm$url$Url$Parser$map,
+						$author$project$Main$UrlLogout,
+						$elm$url$Url$Parser$s('logout')),
+						A2(
+						$elm$url$Url$Parser$map,
+						$author$project$Main$UrlCourseList,
+						$elm$url$Url$Parser$s('courses')),
+						A2(
+						$elm$url$Url$Parser$map,
+						$author$project$Main$UrlCourse,
+						A2(
+							$elm$url$Url$Parser$slash,
+							$elm$url$Url$Parser$s('course'),
+							$elm$url$Url$Parser$string)),
+						A2(
+						$elm$url$Url$Parser$map,
+						$author$project$Main$UrlMarks,
+						$elm$url$Url$Parser$s('marks')),
+						A2(
+						$elm$url$Url$Parser$map,
+						A2(
+							$elm$core$Basics$composeL,
+							A2(
+								$elm$core$Basics$composeL,
+								$elm$core$Maybe$withDefault($author$project$Main$UrlNotFound),
+								$elm$core$Maybe$map($author$project$Main$UrlMarksOfPerson)),
+							$danyx23$elm_uuid$Uuid$fromString),
+						A2(
+							$elm$url$Url$Parser$slash,
+							$elm$url$Url$Parser$s('marks'),
+							A2(
+								$elm$url$Url$Parser$slash,
+								$elm$url$Url$Parser$s('student'),
+								$elm$url$Url$Parser$string))),
+						A2(
+						$elm$url$Url$Parser$map,
+						A2(
+							$elm$core$Basics$composeL,
+							A2(
+								$elm$core$Basics$composeL,
+								$elm$core$Maybe$withDefault($author$project$Main$UrlNotFound),
+								$elm$core$Maybe$map($author$project$Main$UrlMarksOfCourse)),
+							$danyx23$elm_uuid$Uuid$fromString),
+						A2(
+							$elm$url$Url$Parser$slash,
+							$elm$url$Url$Parser$s('marks'),
+							A2(
+								$elm$url$Url$Parser$slash,
+								$elm$url$Url$Parser$s('course'),
+								$elm$url$Url$Parser$string))),
+						A2(
+						$elm$url$Url$Parser$map,
+						$author$project$Main$UrlProfileOwn,
+						$elm$url$Url$Parser$s('profile')),
+						A2(
+						$elm$url$Url$Parser$map,
+						A2(
+							$elm$core$Basics$composeL,
+							A2(
+								$elm$core$Basics$composeL,
+								$elm$core$Maybe$withDefault($author$project$Main$UrlNotFound),
+								$elm$core$Maybe$map($author$project$Main$UrlProfileOfUser)),
+							$danyx23$elm_uuid$Uuid$fromString),
+						A2(
+							$elm$url$Url$Parser$slash,
+							$elm$url$Url$Parser$s('profile'),
+							$elm$url$Url$Parser$string)),
+						A2(
+						$elm$url$Url$Parser$map,
+						$author$project$Main$UrlMessages,
+						$elm$url$Url$Parser$s('messages')),
+						A2(
+						$elm$url$Url$Parser$map,
+						$author$project$Main$UrlNews,
+						$elm$url$Url$Parser$s('news'))
+					])),
+			url));
+};
 var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
 var $elm$url$Url$addPort = F2(
 	function (maybePort, starter) {
@@ -5914,11 +6923,18 @@ var $author$project$Main$init = F3(
 				token: $author$project$Util$Left(token),
 				url: url
 			},
-			$elm$core$Platform$Cmd$batch(
-				_List_fromArray(
-					[
-						A2($elm$browser$Browser$Navigation$pushUrl, key, '/login')
-					])));
+			function () {
+				var _v1 = $author$project$Main$parse_url(url);
+				if (_v1.$ === 'UrlPasswordReset') {
+					return A2(
+						$elm$core$Task$perform,
+						$elm$core$Basics$identity,
+						$elm$core$Task$succeed(
+							$author$project$Main$MsgUrlChanged(url)));
+				} else {
+					return A2($elm$browser$Browser$Navigation$pushUrl, key, '/login');
+				}
+			}());
 	});
 var $elm$json$Json$Decode$string = _Json_decodeString;
 var $author$project$Main$MsgPageCourse = function (a) {
@@ -5937,16 +6953,6 @@ var $author$project$Page$CoursePage$MsgActivity = F2(
 var $author$project$Component$Activity$MsgFinTypeSelect = function (a) {
 	return {$: 'MsgFinTypeSelect', a: a};
 };
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
 var $author$project$Component$Select$MsgCloseMenu = {$: 'MsgCloseMenu'};
 var $elm$browser$Browser$Events$Document = {$: 'Document'};
 var $elm$browser$Browser$Events$MySub = F3(
@@ -5957,8 +6963,6 @@ var $elm$browser$Browser$Events$State = F2(
 	function (subs, pids) {
 		return {pids: pids, subs: subs};
 	});
-var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
-var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
 var $elm$browser$Browser$Events$init = $elm$core$Task$succeed(
 	A2($elm$browser$Browser$Events$State, _List_Nil, $elm$core$Dict$empty));
 var $elm$browser$Browser$Events$nodeToKey = function (node) {
@@ -5977,115 +6981,6 @@ var $elm$browser$Browser$Events$addKey = function (sub) {
 			name),
 		sub);
 };
-var $elm$core$Dict$Black = {$: 'Black'};
-var $elm$core$Dict$RBNode_elm_builtin = F5(
-	function (a, b, c, d, e) {
-		return {$: 'RBNode_elm_builtin', a: a, b: b, c: c, d: d, e: e};
-	});
-var $elm$core$Dict$Red = {$: 'Red'};
-var $elm$core$Dict$balance = F5(
-	function (color, key, value, left, right) {
-		if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Red')) {
-			var _v1 = right.a;
-			var rK = right.b;
-			var rV = right.c;
-			var rLeft = right.d;
-			var rRight = right.e;
-			if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
-				var _v3 = left.a;
-				var lK = left.b;
-				var lV = left.c;
-				var lLeft = left.d;
-				var lRight = left.e;
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Red,
-					key,
-					value,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, rK, rV, rLeft, rRight));
-			} else {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					color,
-					rK,
-					rV,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, left, rLeft),
-					rRight);
-			}
-		} else {
-			if ((((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) && (left.d.$ === 'RBNode_elm_builtin')) && (left.d.a.$ === 'Red')) {
-				var _v5 = left.a;
-				var lK = left.b;
-				var lV = left.c;
-				var _v6 = left.d;
-				var _v7 = _v6.a;
-				var llK = _v6.b;
-				var llV = _v6.c;
-				var llLeft = _v6.d;
-				var llRight = _v6.e;
-				var lRight = left.e;
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Red,
-					lK,
-					lV,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, llK, llV, llLeft, llRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, key, value, lRight, right));
-			} else {
-				return A5($elm$core$Dict$RBNode_elm_builtin, color, key, value, left, right);
-			}
-		}
-	});
-var $elm$core$Basics$compare = _Utils_compare;
-var $elm$core$Dict$insertHelp = F3(
-	function (key, value, dict) {
-		if (dict.$ === 'RBEmpty_elm_builtin') {
-			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
-		} else {
-			var nColor = dict.a;
-			var nKey = dict.b;
-			var nValue = dict.c;
-			var nLeft = dict.d;
-			var nRight = dict.e;
-			var _v1 = A2($elm$core$Basics$compare, key, nKey);
-			switch (_v1.$) {
-				case 'LT':
-					return A5(
-						$elm$core$Dict$balance,
-						nColor,
-						nKey,
-						nValue,
-						A3($elm$core$Dict$insertHelp, key, value, nLeft),
-						nRight);
-				case 'EQ':
-					return A5($elm$core$Dict$RBNode_elm_builtin, nColor, nKey, value, nLeft, nRight);
-				default:
-					return A5(
-						$elm$core$Dict$balance,
-						nColor,
-						nKey,
-						nValue,
-						nLeft,
-						A3($elm$core$Dict$insertHelp, key, value, nRight));
-			}
-		}
-	});
-var $elm$core$Dict$insert = F3(
-	function (key, value, dict) {
-		var _v0 = A3($elm$core$Dict$insertHelp, key, value, dict);
-		if ((_v0.$ === 'RBNode_elm_builtin') && (_v0.a.$ === 'Red')) {
-			var _v1 = _v0.a;
-			var k = _v0.b;
-			var v = _v0.c;
-			var l = _v0.d;
-			var r = _v0.e;
-			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, k, v, l, r);
-		} else {
-			var x = _v0;
-			return x;
-		}
-	});
 var $elm$core$Dict$fromList = function (assocs) {
 	return A3(
 		$elm$core$List$foldl,
@@ -6353,15 +7248,6 @@ var $author$project$Component$Select$subscriptions = function (model) {
 	return model.active ? $elm$browser$Browser$Events$onMouseUp(
 		$elm$json$Json$Decode$succeed($author$project$Component$Select$MsgCloseMenu)) : $elm$core$Platform$Sub$none;
 };
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $author$project$Component$Activity$subscriptions = function (model) {
 	return A2(
 		$elm$core$Maybe$withDefault,
@@ -6409,37 +7295,6 @@ var $elm$time$Time$State = F2(
 	});
 var $elm$time$Time$init = $elm$core$Task$succeed(
 	A2($elm$time$Time$State, $elm$core$Dict$empty, $elm$core$Dict$empty));
-var $elm$core$Dict$get = F2(
-	function (targetKey, dict) {
-		get:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
-				switch (_v1.$) {
-					case 'LT':
-						var $temp$targetKey = targetKey,
-							$temp$dict = left;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-					case 'EQ':
-						return $elm$core$Maybe$Just(value);
-					default:
-						var $temp$targetKey = targetKey,
-							$temp$dict = right;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-				}
-			}
-		}
-	});
 var $elm$time$Time$addMySub = F2(
 	function (_v0, state) {
 		var interval = _v0.a;
@@ -6594,11 +7449,6 @@ var $elm$time$Time$onSelfMsg = F3(
 				A2($elm$core$Task$andThen, tellTaggers, $elm$time$Time$now));
 		}
 	});
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
-	});
 var $elm$time$Time$subMap = F2(
 	function (f, _v0) {
 		var interval = _v0.a;
@@ -6683,6 +7533,7 @@ var $author$project$Main$PageUserProfile = function (a) {
 var $author$project$Util$Right = function (a) {
 	return {$: 'Right', a: a};
 };
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$json$Json$Encode$object = function (pairs) {
 	return _Json_wrap(
 		A3(
@@ -7568,35 +8419,6 @@ var $author$project$Api$Data$decode = F2(
 		return $author$project$Api$Data$decodeChain(
 			A2($elm$json$Json$Decode$field, key, decoder));
 	});
-var $danyx23$elm_uuid$Uuid$Uuid = function (a) {
-	return {$: 'Uuid', a: a};
-};
-var $elm$regex$Regex$Match = F4(
-	function (match, index, number, submatches) {
-		return {index: index, match: match, number: number, submatches: submatches};
-	});
-var $elm$regex$Regex$contains = _Regex_contains;
-var $elm$regex$Regex$fromStringWith = _Regex_fromStringWith;
-var $elm$regex$Regex$fromString = function (string) {
-	return A2(
-		$elm$regex$Regex$fromStringWith,
-		{caseInsensitive: false, multiline: false},
-		string);
-};
-var $elm$regex$Regex$never = _Regex_never;
-var $danyx23$elm_uuid$Uuid$Barebones$uuidRegex = A2(
-	$elm$core$Maybe$withDefault,
-	$elm$regex$Regex$never,
-	$elm$regex$Regex$fromString('^[0-9A-Fa-f]{8,8}-[0-9A-Fa-f]{4,4}-[1-5][0-9A-Fa-f]{3,3}-[8-9A-Ba-b][0-9A-Fa-f]{3,3}-[0-9A-Fa-f]{12,12}$'));
-var $danyx23$elm_uuid$Uuid$Barebones$isValidUuid = function (uuidAsString) {
-	return A2($elm$regex$Regex$contains, $danyx23$elm_uuid$Uuid$Barebones$uuidRegex, uuidAsString);
-};
-var $elm$core$String$toLower = _String_toLower;
-var $danyx23$elm_uuid$Uuid$fromString = function (text) {
-	return $danyx23$elm_uuid$Uuid$Barebones$isValidUuid(text) ? $elm$core$Maybe$Just(
-		$danyx23$elm_uuid$Uuid$Uuid(
-			$elm$core$String$toLower(text))) : $elm$core$Maybe$Nothing;
-};
 var $danyx23$elm_uuid$Uuid$decoder = A2(
 	$elm$json$Json$Decode$andThen,
 	function (string) {
@@ -7735,379 +8557,6 @@ var $elm$core$Maybe$isJust = function (maybe) {
 		return false;
 	}
 };
-var $elm$core$Dict$getMin = function (dict) {
-	getMin:
-	while (true) {
-		if ((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) {
-			var left = dict.d;
-			var $temp$dict = left;
-			dict = $temp$dict;
-			continue getMin;
-		} else {
-			return dict;
-		}
-	}
-};
-var $elm$core$Dict$moveRedLeft = function (dict) {
-	if (((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) && (dict.e.$ === 'RBNode_elm_builtin')) {
-		if ((dict.e.d.$ === 'RBNode_elm_builtin') && (dict.e.d.a.$ === 'Red')) {
-			var clr = dict.a;
-			var k = dict.b;
-			var v = dict.c;
-			var _v1 = dict.d;
-			var lClr = _v1.a;
-			var lK = _v1.b;
-			var lV = _v1.c;
-			var lLeft = _v1.d;
-			var lRight = _v1.e;
-			var _v2 = dict.e;
-			var rClr = _v2.a;
-			var rK = _v2.b;
-			var rV = _v2.c;
-			var rLeft = _v2.d;
-			var _v3 = rLeft.a;
-			var rlK = rLeft.b;
-			var rlV = rLeft.c;
-			var rlL = rLeft.d;
-			var rlR = rLeft.e;
-			var rRight = _v2.e;
-			return A5(
-				$elm$core$Dict$RBNode_elm_builtin,
-				$elm$core$Dict$Red,
-				rlK,
-				rlV,
-				A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
-					rlL),
-				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, rK, rV, rlR, rRight));
-		} else {
-			var clr = dict.a;
-			var k = dict.b;
-			var v = dict.c;
-			var _v4 = dict.d;
-			var lClr = _v4.a;
-			var lK = _v4.b;
-			var lV = _v4.c;
-			var lLeft = _v4.d;
-			var lRight = _v4.e;
-			var _v5 = dict.e;
-			var rClr = _v5.a;
-			var rK = _v5.b;
-			var rV = _v5.c;
-			var rLeft = _v5.d;
-			var rRight = _v5.e;
-			if (clr.$ === 'Black') {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
-			} else {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
-			}
-		}
-	} else {
-		return dict;
-	}
-};
-var $elm$core$Dict$moveRedRight = function (dict) {
-	if (((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) && (dict.e.$ === 'RBNode_elm_builtin')) {
-		if ((dict.d.d.$ === 'RBNode_elm_builtin') && (dict.d.d.a.$ === 'Red')) {
-			var clr = dict.a;
-			var k = dict.b;
-			var v = dict.c;
-			var _v1 = dict.d;
-			var lClr = _v1.a;
-			var lK = _v1.b;
-			var lV = _v1.c;
-			var _v2 = _v1.d;
-			var _v3 = _v2.a;
-			var llK = _v2.b;
-			var llV = _v2.c;
-			var llLeft = _v2.d;
-			var llRight = _v2.e;
-			var lRight = _v1.e;
-			var _v4 = dict.e;
-			var rClr = _v4.a;
-			var rK = _v4.b;
-			var rV = _v4.c;
-			var rLeft = _v4.d;
-			var rRight = _v4.e;
-			return A5(
-				$elm$core$Dict$RBNode_elm_builtin,
-				$elm$core$Dict$Red,
-				lK,
-				lV,
-				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, llK, llV, llLeft, llRight),
-				A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					lRight,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight)));
-		} else {
-			var clr = dict.a;
-			var k = dict.b;
-			var v = dict.c;
-			var _v5 = dict.d;
-			var lClr = _v5.a;
-			var lK = _v5.b;
-			var lV = _v5.c;
-			var lLeft = _v5.d;
-			var lRight = _v5.e;
-			var _v6 = dict.e;
-			var rClr = _v6.a;
-			var rK = _v6.b;
-			var rV = _v6.c;
-			var rLeft = _v6.d;
-			var rRight = _v6.e;
-			if (clr.$ === 'Black') {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
-			} else {
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					$elm$core$Dict$Black,
-					k,
-					v,
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
-					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
-			}
-		}
-	} else {
-		return dict;
-	}
-};
-var $elm$core$Dict$removeHelpPrepEQGT = F7(
-	function (targetKey, dict, color, key, value, left, right) {
-		if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
-			var _v1 = left.a;
-			var lK = left.b;
-			var lV = left.c;
-			var lLeft = left.d;
-			var lRight = left.e;
-			return A5(
-				$elm$core$Dict$RBNode_elm_builtin,
-				color,
-				lK,
-				lV,
-				lLeft,
-				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, lRight, right));
-		} else {
-			_v2$2:
-			while (true) {
-				if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Black')) {
-					if (right.d.$ === 'RBNode_elm_builtin') {
-						if (right.d.a.$ === 'Black') {
-							var _v3 = right.a;
-							var _v4 = right.d;
-							var _v5 = _v4.a;
-							return $elm$core$Dict$moveRedRight(dict);
-						} else {
-							break _v2$2;
-						}
-					} else {
-						var _v6 = right.a;
-						var _v7 = right.d;
-						return $elm$core$Dict$moveRedRight(dict);
-					}
-				} else {
-					break _v2$2;
-				}
-			}
-			return dict;
-		}
-	});
-var $elm$core$Dict$removeMin = function (dict) {
-	if ((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) {
-		var color = dict.a;
-		var key = dict.b;
-		var value = dict.c;
-		var left = dict.d;
-		var lColor = left.a;
-		var lLeft = left.d;
-		var right = dict.e;
-		if (lColor.$ === 'Black') {
-			if ((lLeft.$ === 'RBNode_elm_builtin') && (lLeft.a.$ === 'Red')) {
-				var _v3 = lLeft.a;
-				return A5(
-					$elm$core$Dict$RBNode_elm_builtin,
-					color,
-					key,
-					value,
-					$elm$core$Dict$removeMin(left),
-					right);
-			} else {
-				var _v4 = $elm$core$Dict$moveRedLeft(dict);
-				if (_v4.$ === 'RBNode_elm_builtin') {
-					var nColor = _v4.a;
-					var nKey = _v4.b;
-					var nValue = _v4.c;
-					var nLeft = _v4.d;
-					var nRight = _v4.e;
-					return A5(
-						$elm$core$Dict$balance,
-						nColor,
-						nKey,
-						nValue,
-						$elm$core$Dict$removeMin(nLeft),
-						nRight);
-				} else {
-					return $elm$core$Dict$RBEmpty_elm_builtin;
-				}
-			}
-		} else {
-			return A5(
-				$elm$core$Dict$RBNode_elm_builtin,
-				color,
-				key,
-				value,
-				$elm$core$Dict$removeMin(left),
-				right);
-		}
-	} else {
-		return $elm$core$Dict$RBEmpty_elm_builtin;
-	}
-};
-var $elm$core$Dict$removeHelp = F2(
-	function (targetKey, dict) {
-		if (dict.$ === 'RBEmpty_elm_builtin') {
-			return $elm$core$Dict$RBEmpty_elm_builtin;
-		} else {
-			var color = dict.a;
-			var key = dict.b;
-			var value = dict.c;
-			var left = dict.d;
-			var right = dict.e;
-			if (_Utils_cmp(targetKey, key) < 0) {
-				if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Black')) {
-					var _v4 = left.a;
-					var lLeft = left.d;
-					if ((lLeft.$ === 'RBNode_elm_builtin') && (lLeft.a.$ === 'Red')) {
-						var _v6 = lLeft.a;
-						return A5(
-							$elm$core$Dict$RBNode_elm_builtin,
-							color,
-							key,
-							value,
-							A2($elm$core$Dict$removeHelp, targetKey, left),
-							right);
-					} else {
-						var _v7 = $elm$core$Dict$moveRedLeft(dict);
-						if (_v7.$ === 'RBNode_elm_builtin') {
-							var nColor = _v7.a;
-							var nKey = _v7.b;
-							var nValue = _v7.c;
-							var nLeft = _v7.d;
-							var nRight = _v7.e;
-							return A5(
-								$elm$core$Dict$balance,
-								nColor,
-								nKey,
-								nValue,
-								A2($elm$core$Dict$removeHelp, targetKey, nLeft),
-								nRight);
-						} else {
-							return $elm$core$Dict$RBEmpty_elm_builtin;
-						}
-					}
-				} else {
-					return A5(
-						$elm$core$Dict$RBNode_elm_builtin,
-						color,
-						key,
-						value,
-						A2($elm$core$Dict$removeHelp, targetKey, left),
-						right);
-				}
-			} else {
-				return A2(
-					$elm$core$Dict$removeHelpEQGT,
-					targetKey,
-					A7($elm$core$Dict$removeHelpPrepEQGT, targetKey, dict, color, key, value, left, right));
-			}
-		}
-	});
-var $elm$core$Dict$removeHelpEQGT = F2(
-	function (targetKey, dict) {
-		if (dict.$ === 'RBNode_elm_builtin') {
-			var color = dict.a;
-			var key = dict.b;
-			var value = dict.c;
-			var left = dict.d;
-			var right = dict.e;
-			if (_Utils_eq(targetKey, key)) {
-				var _v1 = $elm$core$Dict$getMin(right);
-				if (_v1.$ === 'RBNode_elm_builtin') {
-					var minKey = _v1.b;
-					var minValue = _v1.c;
-					return A5(
-						$elm$core$Dict$balance,
-						color,
-						minKey,
-						minValue,
-						left,
-						$elm$core$Dict$removeMin(right));
-				} else {
-					return $elm$core$Dict$RBEmpty_elm_builtin;
-				}
-			} else {
-				return A5(
-					$elm$core$Dict$balance,
-					color,
-					key,
-					value,
-					left,
-					A2($elm$core$Dict$removeHelp, targetKey, right));
-			}
-		} else {
-			return $elm$core$Dict$RBEmpty_elm_builtin;
-		}
-	});
-var $elm$core$Dict$remove = F2(
-	function (key, dict) {
-		var _v0 = A2($elm$core$Dict$removeHelp, key, dict);
-		if ((_v0.$ === 'RBNode_elm_builtin') && (_v0.a.$ === 'Red')) {
-			var _v1 = _v0.a;
-			var k = _v0.b;
-			var v = _v0.c;
-			var l = _v0.d;
-			var r = _v0.e;
-			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, k, v, l, r);
-		} else {
-			var x = _v0;
-			return x;
-		}
-	});
-var $elm$core$Dict$update = F3(
-	function (targetKey, alter, dictionary) {
-		var _v0 = alter(
-			A2($elm$core$Dict$get, targetKey, dictionary));
-		if (_v0.$ === 'Just') {
-			var value = _v0.a;
-			return A3($elm$core$Dict$insert, targetKey, value, dictionary);
-		} else {
-			return A2($elm$core$Dict$remove, targetKey, dictionary);
-		}
-	});
 var $elm$http$Http$emptyBody = _Http_emptyBody;
 var $elm$http$Http$Header = F2(
 	function (a, b) {
@@ -10088,380 +10537,23 @@ var $author$project$Page$UserProfile$init = F3(
 				$elm$core$Platform$Cmd$none);
 		}
 	});
+var $author$project$Page$Login$PasswordReset = function (a) {
+	return {$: 'PasswordReset', a: a};
+};
+var $author$project$Page$Login$init_password_reset_fin = function (reset_token) {
+	return _Utils_Tuple2(
+		{
+			message: $author$project$Page$Login$None,
+			password: '',
+			state: $author$project$Page$Login$PasswordReset(
+				$elm$core$Maybe$Just(reset_token)),
+			token: '',
+			username: ''
+		},
+		$elm$core$Platform$Cmd$none);
+};
 var $elm$browser$Browser$Navigation$load = _Browser_load;
-var $author$project$Main$UrlCourse = function (a) {
-	return {$: 'UrlCourse', a: a};
-};
-var $author$project$Main$UrlCourseList = {$: 'UrlCourseList'};
-var $author$project$Main$UrlLogin = {$: 'UrlLogin'};
-var $author$project$Main$UrlLogout = {$: 'UrlLogout'};
-var $author$project$Main$UrlMarks = {$: 'UrlMarks'};
-var $author$project$Main$UrlMarksOfCourse = function (a) {
-	return {$: 'UrlMarksOfCourse', a: a};
-};
-var $author$project$Main$UrlMarksOfPerson = function (a) {
-	return {$: 'UrlMarksOfPerson', a: a};
-};
-var $author$project$Main$UrlMessages = {$: 'UrlMessages'};
-var $author$project$Main$UrlNews = {$: 'UrlNews'};
-var $author$project$Main$UrlNotFound = {$: 'UrlNotFound'};
-var $author$project$Main$UrlPageFront = {$: 'UrlPageFront'};
-var $author$project$Main$UrlProfileOfUser = function (a) {
-	return {$: 'UrlProfileOfUser', a: a};
-};
-var $author$project$Main$UrlProfileOwn = {$: 'UrlProfileOwn'};
-var $elm$url$Url$Parser$Parser = function (a) {
-	return {$: 'Parser', a: a};
-};
-var $elm$url$Url$Parser$State = F5(
-	function (visited, unvisited, params, frag, value) {
-		return {frag: frag, params: params, unvisited: unvisited, value: value, visited: visited};
-	});
-var $elm$url$Url$Parser$mapState = F2(
-	function (func, _v0) {
-		var visited = _v0.visited;
-		var unvisited = _v0.unvisited;
-		var params = _v0.params;
-		var frag = _v0.frag;
-		var value = _v0.value;
-		return A5(
-			$elm$url$Url$Parser$State,
-			visited,
-			unvisited,
-			params,
-			frag,
-			func(value));
-	});
-var $elm$url$Url$Parser$map = F2(
-	function (subValue, _v0) {
-		var parseArg = _v0.a;
-		return $elm$url$Url$Parser$Parser(
-			function (_v1) {
-				var visited = _v1.visited;
-				var unvisited = _v1.unvisited;
-				var params = _v1.params;
-				var frag = _v1.frag;
-				var value = _v1.value;
-				return A2(
-					$elm$core$List$map,
-					$elm$url$Url$Parser$mapState(value),
-					parseArg(
-						A5($elm$url$Url$Parser$State, visited, unvisited, params, frag, subValue)));
-			});
-	});
-var $elm$core$List$append = F2(
-	function (xs, ys) {
-		if (!ys.b) {
-			return xs;
-		} else {
-			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
-		}
-	});
-var $elm$core$List$concat = function (lists) {
-	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
-};
-var $elm$core$List$concatMap = F2(
-	function (f, list) {
-		return $elm$core$List$concat(
-			A2($elm$core$List$map, f, list));
-	});
-var $elm$url$Url$Parser$oneOf = function (parsers) {
-	return $elm$url$Url$Parser$Parser(
-		function (state) {
-			return A2(
-				$elm$core$List$concatMap,
-				function (_v0) {
-					var parser = _v0.a;
-					return parser(state);
-				},
-				parsers);
-		});
-};
-var $elm$url$Url$Parser$getFirstMatch = function (states) {
-	getFirstMatch:
-	while (true) {
-		if (!states.b) {
-			return $elm$core$Maybe$Nothing;
-		} else {
-			var state = states.a;
-			var rest = states.b;
-			var _v1 = state.unvisited;
-			if (!_v1.b) {
-				return $elm$core$Maybe$Just(state.value);
-			} else {
-				if ((_v1.a === '') && (!_v1.b.b)) {
-					return $elm$core$Maybe$Just(state.value);
-				} else {
-					var $temp$states = rest;
-					states = $temp$states;
-					continue getFirstMatch;
-				}
-			}
-		}
-	}
-};
-var $elm$url$Url$Parser$removeFinalEmpty = function (segments) {
-	if (!segments.b) {
-		return _List_Nil;
-	} else {
-		if ((segments.a === '') && (!segments.b.b)) {
-			return _List_Nil;
-		} else {
-			var segment = segments.a;
-			var rest = segments.b;
-			return A2(
-				$elm$core$List$cons,
-				segment,
-				$elm$url$Url$Parser$removeFinalEmpty(rest));
-		}
-	}
-};
-var $elm$url$Url$Parser$preparePath = function (path) {
-	var _v0 = A2($elm$core$String$split, '/', path);
-	if (_v0.b && (_v0.a === '')) {
-		var segments = _v0.b;
-		return $elm$url$Url$Parser$removeFinalEmpty(segments);
-	} else {
-		var segments = _v0;
-		return $elm$url$Url$Parser$removeFinalEmpty(segments);
-	}
-};
-var $elm$url$Url$Parser$addToParametersHelp = F2(
-	function (value, maybeList) {
-		if (maybeList.$ === 'Nothing') {
-			return $elm$core$Maybe$Just(
-				_List_fromArray(
-					[value]));
-		} else {
-			var list = maybeList.a;
-			return $elm$core$Maybe$Just(
-				A2($elm$core$List$cons, value, list));
-		}
-	});
-var $elm$url$Url$percentDecode = _Url_percentDecode;
-var $elm$url$Url$Parser$addParam = F2(
-	function (segment, dict) {
-		var _v0 = A2($elm$core$String$split, '=', segment);
-		if ((_v0.b && _v0.b.b) && (!_v0.b.b.b)) {
-			var rawKey = _v0.a;
-			var _v1 = _v0.b;
-			var rawValue = _v1.a;
-			var _v2 = $elm$url$Url$percentDecode(rawKey);
-			if (_v2.$ === 'Nothing') {
-				return dict;
-			} else {
-				var key = _v2.a;
-				var _v3 = $elm$url$Url$percentDecode(rawValue);
-				if (_v3.$ === 'Nothing') {
-					return dict;
-				} else {
-					var value = _v3.a;
-					return A3(
-						$elm$core$Dict$update,
-						key,
-						$elm$url$Url$Parser$addToParametersHelp(value),
-						dict);
-				}
-			}
-		} else {
-			return dict;
-		}
-	});
-var $elm$url$Url$Parser$prepareQuery = function (maybeQuery) {
-	if (maybeQuery.$ === 'Nothing') {
-		return $elm$core$Dict$empty;
-	} else {
-		var qry = maybeQuery.a;
-		return A3(
-			$elm$core$List$foldr,
-			$elm$url$Url$Parser$addParam,
-			$elm$core$Dict$empty,
-			A2($elm$core$String$split, '&', qry));
-	}
-};
-var $elm$url$Url$Parser$parse = F2(
-	function (_v0, url) {
-		var parser = _v0.a;
-		return $elm$url$Url$Parser$getFirstMatch(
-			parser(
-				A5(
-					$elm$url$Url$Parser$State,
-					_List_Nil,
-					$elm$url$Url$Parser$preparePath(url.path),
-					$elm$url$Url$Parser$prepareQuery(url.query),
-					url.fragment,
-					$elm$core$Basics$identity)));
-	});
-var $elm$url$Url$Parser$s = function (str) {
-	return $elm$url$Url$Parser$Parser(
-		function (_v0) {
-			var visited = _v0.visited;
-			var unvisited = _v0.unvisited;
-			var params = _v0.params;
-			var frag = _v0.frag;
-			var value = _v0.value;
-			if (!unvisited.b) {
-				return _List_Nil;
-			} else {
-				var next = unvisited.a;
-				var rest = unvisited.b;
-				return _Utils_eq(next, str) ? _List_fromArray(
-					[
-						A5(
-						$elm$url$Url$Parser$State,
-						A2($elm$core$List$cons, next, visited),
-						rest,
-						params,
-						frag,
-						value)
-					]) : _List_Nil;
-			}
-		});
-};
-var $elm$url$Url$Parser$slash = F2(
-	function (_v0, _v1) {
-		var parseBefore = _v0.a;
-		var parseAfter = _v1.a;
-		return $elm$url$Url$Parser$Parser(
-			function (state) {
-				return A2(
-					$elm$core$List$concatMap,
-					parseAfter,
-					parseBefore(state));
-			});
-	});
-var $elm$url$Url$Parser$custom = F2(
-	function (tipe, stringToSomething) {
-		return $elm$url$Url$Parser$Parser(
-			function (_v0) {
-				var visited = _v0.visited;
-				var unvisited = _v0.unvisited;
-				var params = _v0.params;
-				var frag = _v0.frag;
-				var value = _v0.value;
-				if (!unvisited.b) {
-					return _List_Nil;
-				} else {
-					var next = unvisited.a;
-					var rest = unvisited.b;
-					var _v2 = stringToSomething(next);
-					if (_v2.$ === 'Just') {
-						var nextValue = _v2.a;
-						return _List_fromArray(
-							[
-								A5(
-								$elm$url$Url$Parser$State,
-								A2($elm$core$List$cons, next, visited),
-								rest,
-								params,
-								frag,
-								value(nextValue))
-							]);
-					} else {
-						return _List_Nil;
-					}
-				}
-			});
-	});
-var $elm$url$Url$Parser$string = A2($elm$url$Url$Parser$custom, 'STRING', $elm$core$Maybe$Just);
-var $elm$url$Url$Parser$top = $elm$url$Url$Parser$Parser(
-	function (state) {
-		return _List_fromArray(
-			[state]);
-	});
-var $author$project$Main$parse_url = function (url) {
-	return A2(
-		$elm$core$Maybe$withDefault,
-		$author$project$Main$UrlNotFound,
-		A2(
-			$elm$url$Url$Parser$parse,
-			$elm$url$Url$Parser$oneOf(
-				_List_fromArray(
-					[
-						A2($elm$url$Url$Parser$map, $author$project$Main$UrlPageFront, $elm$url$Url$Parser$top),
-						A2(
-						$elm$url$Url$Parser$map,
-						$author$project$Main$UrlLogin,
-						$elm$url$Url$Parser$s('login')),
-						A2(
-						$elm$url$Url$Parser$map,
-						$author$project$Main$UrlLogout,
-						$elm$url$Url$Parser$s('logout')),
-						A2(
-						$elm$url$Url$Parser$map,
-						$author$project$Main$UrlCourseList,
-						$elm$url$Url$Parser$s('courses')),
-						A2(
-						$elm$url$Url$Parser$map,
-						$author$project$Main$UrlCourse,
-						A2(
-							$elm$url$Url$Parser$slash,
-							$elm$url$Url$Parser$s('course'),
-							$elm$url$Url$Parser$string)),
-						A2(
-						$elm$url$Url$Parser$map,
-						$author$project$Main$UrlMarks,
-						$elm$url$Url$Parser$s('marks')),
-						A2(
-						$elm$url$Url$Parser$map,
-						A2(
-							$elm$core$Basics$composeL,
-							A2(
-								$elm$core$Basics$composeL,
-								$elm$core$Maybe$withDefault($author$project$Main$UrlNotFound),
-								$elm$core$Maybe$map($author$project$Main$UrlMarksOfPerson)),
-							$danyx23$elm_uuid$Uuid$fromString),
-						A2(
-							$elm$url$Url$Parser$slash,
-							$elm$url$Url$Parser$s('marks'),
-							A2(
-								$elm$url$Url$Parser$slash,
-								$elm$url$Url$Parser$s('student'),
-								$elm$url$Url$Parser$string))),
-						A2(
-						$elm$url$Url$Parser$map,
-						A2(
-							$elm$core$Basics$composeL,
-							A2(
-								$elm$core$Basics$composeL,
-								$elm$core$Maybe$withDefault($author$project$Main$UrlNotFound),
-								$elm$core$Maybe$map($author$project$Main$UrlMarksOfCourse)),
-							$danyx23$elm_uuid$Uuid$fromString),
-						A2(
-							$elm$url$Url$Parser$slash,
-							$elm$url$Url$Parser$s('marks'),
-							A2(
-								$elm$url$Url$Parser$slash,
-								$elm$url$Url$Parser$s('course'),
-								$elm$url$Url$Parser$string))),
-						A2(
-						$elm$url$Url$Parser$map,
-						$author$project$Main$UrlProfileOwn,
-						$elm$url$Url$Parser$s('profile')),
-						A2(
-						$elm$url$Url$Parser$map,
-						A2(
-							$elm$core$Basics$composeL,
-							A2(
-								$elm$core$Basics$composeL,
-								$elm$core$Maybe$withDefault($author$project$Main$UrlNotFound),
-								$elm$core$Maybe$map($author$project$Main$UrlProfileOfUser)),
-							$danyx23$elm_uuid$Uuid$fromString),
-						A2(
-							$elm$url$Url$Parser$slash,
-							$elm$url$Url$Parser$s('profile'),
-							$elm$url$Url$Parser$string)),
-						A2(
-						$elm$url$Url$Parser$map,
-						$author$project$Main$UrlMessages,
-						$elm$url$Url$Parser$s('messages')),
-						A2(
-						$elm$url$Url$Parser$map,
-						$author$project$Main$UrlNews,
-						$elm$url$Url$Parser$s('news'))
-					])),
-			url));
-};
+var $elm$core$Debug$log = _Debug_log;
 var $author$project$Page$CourseListPage$Completed = F2(
 	function (a, b) {
 		return {$: 'Completed', a: a, b: b};
@@ -10725,16 +10817,17 @@ var $author$project$Page$CourseListPage$update = F2(
 			}
 		}
 	});
-var $author$project$Page$CoursePage$ActivityImportStateFileSelection = function (a) {
-	return {$: 'ActivityImportStateFileSelection', a: a};
-};
+var $author$project$Page$CoursePage$ActivityImportStateDataInput = F3(
+	function (a, b, c) {
+		return {$: 'ActivityImportStateDataInput', a: a, b: b, c: c};
+	});
 var $author$project$Page$CoursePage$ActivityImportStateFinished = function (a) {
 	return {$: 'ActivityImportStateFinished', a: a};
 };
 var $author$project$Page$CoursePage$ActivityImportStateInProgress = {$: 'ActivityImportStateInProgress'};
-var $author$project$Page$CoursePage$ActivityImportStateValidationFinished = F2(
-	function (a, b) {
-		return {$: 'ActivityImportStateValidationFinished', a: a, b: b};
+var $author$project$Page$CoursePage$ActivityImportStateValidationFinished = F3(
+	function (a, b, c) {
+		return {$: 'ActivityImportStateValidationFinished', a: a, b: b, c: c};
 	});
 var $author$project$Page$CoursePage$ActivityImportStateValidationInProgress = {$: 'ActivityImportStateValidationInProgress'};
 var $author$project$Page$CoursePage$AddFin = {$: 'AddFin'};
@@ -10756,9 +10849,10 @@ var $author$project$Page$CoursePage$FetchFailed = function (a) {
 var $author$project$Page$CoursePage$MsgActivitiesImportFinished = function (a) {
 	return {$: 'MsgActivitiesImportFinished', a: a};
 };
-var $author$project$Page$CoursePage$MsgActivityImportGotCSVData = function (a) {
-	return {$: 'MsgActivityImportGotCSVData', a: a};
-};
+var $author$project$Page$CoursePage$MsgActivityImportGotCSVData = F2(
+	function (a, b) {
+		return {$: 'MsgActivityImportGotCSVData', a: a, b: b};
+	});
 var $author$project$Page$CoursePage$MsgCourseSaveError = function (a) {
 	return {$: 'MsgCourseSaveError', a: a};
 };
@@ -10782,6 +10876,7 @@ var $author$project$Api$Data$encodeImportForCoursePairs = function (model) {
 	var pairs = _List_fromArray(
 		[
 			A3($author$project$Api$Data$encode, 'data', $elm$json$Json$Encode$string, model.data),
+			A3($author$project$Api$Data$encode, 'sep', $elm$json$Json$Encode$string, model.sep),
 			A3($author$project$Api$Data$encode, 'course_id', $danyx23$elm_uuid$Uuid$encode, model.courseId)
 		]);
 	return pairs;
@@ -10968,6 +11063,7 @@ var $author$project$Page$CoursePage$collectFetchResults = function (fetchResults
 		return $elm$core$Maybe$Nothing;
 	}
 };
+var $elm$core$String$cons = _String_cons;
 var $elm$json$Json$Encode$dict = F3(
 	function (toKey, toValue, dictionary) {
 		return _Json_wrap(
@@ -11184,7 +11280,6 @@ var $elm$time$Time$toMonth = F2(
 				return $elm$time$Time$Dec;
 		}
 	});
-var $elm$core$String$cons = _String_cons;
 var $elm$core$String$fromChar = function (_char) {
 	return A2($elm$core$String$cons, _char, '');
 };
@@ -12415,625 +12510,507 @@ var $elm$core$Set$member = F2(
 		var dict = _v0.a;
 		return A2($elm$core$Dict$member, key, dict);
 	});
-var $samuelstevens$elm_csv$Helper$Initial = {$: 'Initial'};
-var $elm$core$String$reverse = _String_reverse;
-var $samuelstevens$elm_csv$Helper$flipRowAndText = function (row) {
-	return A2(
-		$elm$core$List$map,
-		$elm$core$String$reverse,
-		$elm$core$List$reverse(row));
-};
-var $samuelstevens$elm_csv$Helper$flipRows = function (rows) {
-	return A2(
-		$elm$core$List$map,
-		$samuelstevens$elm_csv$Helper$flipRowAndText,
-		$elm$core$List$reverse(rows));
-};
-var $samuelstevens$elm_csv$Helper$CheckDoubleQuote = {$: 'CheckDoubleQuote'};
-var $samuelstevens$elm_csv$Helper$Escaped = {$: 'Escaped'};
-var $samuelstevens$elm_csv$Helper$Field = {$: 'Field'};
-var $samuelstevens$elm_csv$Helper$Invalid = {$: 'Invalid'};
-var $samuelstevens$elm_csv$Helper$Standard = {$: 'Standard'};
-var $samuelstevens$elm_csv$Helper$nextState = F5(
-	function (state, remaining, field, row, finished) {
-		nextState:
-		while (true) {
-			switch (state.$) {
-				case 'Initial':
-					var $temp$state = $samuelstevens$elm_csv$Helper$Field,
-						$temp$remaining = remaining,
-						$temp$field = '',
-						$temp$row = _List_Nil,
-						$temp$finished = _List_Nil;
-					state = $temp$state;
-					remaining = $temp$remaining;
-					field = $temp$field;
-					row = $temp$row;
-					finished = $temp$finished;
-					continue nextState;
-				case 'Field':
-					var _v1 = $elm$core$String$uncons(remaining);
-					if (_v1.$ === 'Just') {
-						var _v2 = _v1.a;
-						var ch = _v2.a;
-						var rest = _v2.b;
-						switch (ch.valueOf()) {
-							case ',':
-								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
-									$temp$remaining = rest,
-									$temp$field = '',
-									$temp$row = A2($elm$core$List$cons, '', row),
-									$temp$finished = finished;
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-							case '\"':
-								var $temp$state = $samuelstevens$elm_csv$Helper$Escaped,
-									$temp$remaining = rest,
-									$temp$field = '',
-									$temp$row = row,
-									$temp$finished = finished;
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-							case '\u000D':
-								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
-									$temp$remaining = rest,
-									$temp$field = '',
-									$temp$row = row,
-									$temp$finished = finished;
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-							case '\n':
-								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
-									$temp$remaining = rest,
-									$temp$field = '',
-									$temp$row = _List_Nil,
-									$temp$finished = A2(
-									$elm$core$List$cons,
-									A2($elm$core$List$cons, field, row),
-									finished);
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-							default:
-								var $temp$state = $samuelstevens$elm_csv$Helper$Standard,
-									$temp$remaining = rest,
-									$temp$field = $elm$core$String$fromChar(ch),
-									$temp$row = row,
-									$temp$finished = finished;
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-						}
-					} else {
-						return $elm$core$Result$Ok(finished);
-					}
-				case 'Standard':
-					var _v4 = $elm$core$String$uncons(remaining);
-					if (_v4.$ === 'Just') {
-						var _v5 = _v4.a;
-						var ch = _v5.a;
-						var rest = _v5.b;
-						switch (ch.valueOf()) {
-							case ',':
-								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
-									$temp$remaining = rest,
-									$temp$field = '',
-									$temp$row = A2($elm$core$List$cons, field, row),
-									$temp$finished = finished;
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-							case '\n':
-								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
-									$temp$remaining = rest,
-									$temp$field = '',
-									$temp$row = _List_Nil,
-									$temp$finished = A2(
-									$elm$core$List$cons,
-									A2($elm$core$List$cons, field, row),
-									finished);
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-							case '\u000D':
-								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
-									$temp$remaining = rest,
-									$temp$field = field,
-									$temp$row = row,
-									$temp$finished = finished;
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-							default:
-								var $temp$state = $samuelstevens$elm_csv$Helper$Standard,
-									$temp$remaining = rest,
-									$temp$field = A2($elm$core$String$cons, ch, field),
-									$temp$row = row,
-									$temp$finished = finished;
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-						}
-					} else {
-						return $elm$core$Result$Ok(
-							A2(
-								$elm$core$List$cons,
-								A2($elm$core$List$cons, field, row),
-								finished));
-					}
-				case 'CheckDoubleQuote':
-					var _v7 = $elm$core$String$uncons(remaining);
-					if (_v7.$ === 'Just') {
-						var _v8 = _v7.a;
-						var ch = _v8.a;
-						var rest = _v8.b;
-						switch (ch.valueOf()) {
-							case '\"':
-								var $temp$state = $samuelstevens$elm_csv$Helper$Escaped,
-									$temp$remaining = rest,
-									$temp$field = A2(
-									$elm$core$String$cons,
-									_Utils_chr('\"'),
-									field),
-									$temp$row = row,
-									$temp$finished = finished;
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-							case ',':
-								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
-									$temp$remaining = rest,
-									$temp$field = '',
-									$temp$row = A2($elm$core$List$cons, field, row),
-									$temp$finished = finished;
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-							case '\n':
-								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
-									$temp$remaining = rest,
-									$temp$field = '',
-									$temp$row = _List_Nil,
-									$temp$finished = A2(
-									$elm$core$List$cons,
-									A2($elm$core$List$cons, field, row),
-									finished);
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-							case '\u000D':
-								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
-									$temp$remaining = rest,
-									$temp$field = field,
-									$temp$row = row,
-									$temp$finished = finished;
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-							default:
-								var $temp$state = $samuelstevens$elm_csv$Helper$Invalid,
-									$temp$remaining = rest,
-									$temp$field = '',
-									$temp$row = A2($elm$core$List$cons, field, row),
-									$temp$finished = finished;
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-						}
-					} else {
-						return $elm$core$Result$Ok(
-							A2(
-								$elm$core$List$cons,
-								A2($elm$core$List$cons, field, row),
-								finished));
-					}
-				case 'Escaped':
-					var _v10 = $elm$core$String$uncons(remaining);
-					if (_v10.$ === 'Just') {
-						var _v11 = _v10.a;
-						var ch = _v11.a;
-						var rest = _v11.b;
-						switch (ch.valueOf()) {
-							case ',':
-								var $temp$state = $samuelstevens$elm_csv$Helper$Escaped,
-									$temp$remaining = rest,
-									$temp$field = A2(
-									$elm$core$String$cons,
-									_Utils_chr(','),
-									field),
-									$temp$row = row,
-									$temp$finished = finished;
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-							case '\"':
-								var $temp$state = $samuelstevens$elm_csv$Helper$CheckDoubleQuote,
-									$temp$remaining = rest,
-									$temp$field = field,
-									$temp$row = row,
-									$temp$finished = finished;
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-							default:
-								var $temp$state = $samuelstevens$elm_csv$Helper$Escaped,
-									$temp$remaining = rest,
-									$temp$field = A2($elm$core$String$cons, ch, field),
-									$temp$row = row,
-									$temp$finished = finished;
-								state = $temp$state;
-								remaining = $temp$remaining;
-								field = $temp$field;
-								row = $temp$row;
-								finished = $temp$finished;
-								continue nextState;
-						}
-					} else {
-						var $temp$state = $samuelstevens$elm_csv$Helper$Invalid,
-							$temp$remaining = '',
-							$temp$field = '',
-							$temp$row = A2($elm$core$List$cons, field, row),
-							$temp$finished = finished;
-						state = $temp$state;
-						remaining = $temp$remaining;
-						field = $temp$field;
-						row = $temp$row;
-						finished = $temp$finished;
-						continue nextState;
-					}
-				default:
-					return $elm$core$Result$Err(remaining);
+var $jonoabroad$commatosed$Csv$appendCharacter = F2(
+	function (c, s) {
+		var _char = $elm$core$String$fromChar(c);
+		var update = function () {
+			var _v0 = s.cValue;
+			if (_v0.$ === 'Nothing') {
+				return $elm$core$Maybe$Just(_char);
+			} else {
+				var cV = _v0.a;
+				return $elm$core$Maybe$Just(
+					_Utils_ap(cV, _char));
 			}
+		}();
+		return _Utils_update(
+			s,
+			{cValue: update});
+	});
+var $jonoabroad$commatosed$Csv$handleSeparator = F2(
+	function (end, s) {
+		var fRow = F2(
+			function (mv, mr) {
+				var _v0 = _Utils_Tuple2(mv, mr);
+				if (_v0.a.$ === 'Nothing') {
+					if (_v0.b.$ === 'Nothing') {
+						var _v1 = _v0.a;
+						var _v2 = _v0.b;
+						if (end) {
+							return $elm$core$Maybe$Nothing;
+						} else {
+							return $elm$core$Maybe$Just(
+								_List_fromArray(
+									['']));
+						}
+					} else {
+						var _v5 = _v0.a;
+						var r = _v0.b.a;
+						return $elm$core$Maybe$Just(
+							A2($elm$core$List$cons, '', r));
+					}
+				} else {
+					if (_v0.b.$ === 'Nothing') {
+						var v = _v0.a.a;
+						var _v4 = _v0.b;
+						return $elm$core$Maybe$Just(
+							_List_fromArray(
+								[v]));
+					} else {
+						var v = _v0.a.a;
+						var r = _v0.b.a;
+						return $elm$core$Maybe$Just(
+							A2($elm$core$List$cons, v, r));
+					}
+				}
+			});
+		var nRow = A2(fRow, s.cValue, s.cRow);
+		return _Utils_update(
+			s,
+			{cRow: nRow, cValue: $elm$core$Maybe$Nothing});
+	});
+var $jonoabroad$commatosed$Csv$handleCharacter = F2(
+	function (c, s) {
+		return (_Utils_eq(c, s.separator) && (!s.inQuote)) ? A2($jonoabroad$commatosed$Csv$handleSeparator, false, s) : A2($jonoabroad$commatosed$Csv$appendCharacter, c, s);
+	});
+var $jonoabroad$commatosed$Csv$handleNewLine = F2(
+	function (_char, s) {
+		if (s.inQuote) {
+			return A2($jonoabroad$commatosed$Csv$appendCharacter, _char, s);
+		} else {
+			var nContent = function () {
+				var _v0 = _Utils_Tuple2(s.cValue, s.cRow);
+				if (_v0.a.$ === 'Nothing') {
+					if (_v0.b.$ === 'Nothing') {
+						var _v1 = _v0.a;
+						var _v2 = _v0.b;
+						return s.content;
+					} else {
+						var _v4 = _v0.a;
+						var r = _v0.b.a;
+						return A2(
+							$elm$core$List$cons,
+							$elm$core$List$reverse(
+								A2($elm$core$List$cons, '', r)),
+							s.content);
+					}
+				} else {
+					if (_v0.b.$ === 'Nothing') {
+						var c = _v0.a.a;
+						var _v3 = _v0.b;
+						return A2(
+							$elm$core$List$cons,
+							_List_fromArray(
+								[c]),
+							s.content);
+					} else {
+						var c = _v0.a.a;
+						var r = _v0.b.a;
+						var nRow = $elm$core$List$reverse(
+							A2($elm$core$List$cons, c, r));
+						return A2($elm$core$List$cons, nRow, s.content);
+					}
+				}
+			}();
+			return _Utils_update(
+				s,
+				{cRow: $elm$core$Maybe$Nothing, cValue: $elm$core$Maybe$Nothing, content: nContent});
 		}
 	});
-var $samuelstevens$elm_csv$Csv$parseRows = function (str) {
-	var _v0 = A5($samuelstevens$elm_csv$Helper$nextState, $samuelstevens$elm_csv$Helper$Initial, str, '', _List_Nil, _List_Nil);
-	if (_v0.$ === 'Err') {
-		var err = _v0.a;
-		return $elm$core$Result$Err(err);
+var $jonoabroad$commatosed$Csv$inQuote = function (state) {
+	var _v0 = state.previousChar;
+	if (_v0.$ === 'Nothing') {
+		return _Utils_update(
+			state,
+			{inQuote: false});
 	} else {
-		var rows = _v0.a;
-		return $elm$core$Result$Ok(
-			$samuelstevens$elm_csv$Helper$flipRows(rows));
+		var ch = _v0.a;
+		if (_Utils_eq(
+			ch,
+			_Utils_chr('\"')) || _Utils_eq(
+			ch,
+			_Utils_chr('\\'))) {
+			var nV = A2(
+				$elm$core$Maybe$map,
+				function (v) {
+					return v + '\"';
+				},
+				state.cValue);
+			return _Utils_update(
+				state,
+				{cValue: nV, inQuote: false});
+		} else {
+			return _Utils_update(
+				state,
+				{inQuote: false});
+		}
 	}
 };
-var $author$project$Page$CoursePage$validateActivityCSV = function (data) {
-	var validateHeaderRow = function (fields) {
-		if (!fields.b) {
-			return _List_fromArray(
-				[
+var $jonoabroad$commatosed$Csv$outQuote = function (state) {
+	var _v0 = state.previousChar;
+	if (_v0.$ === 'Nothing') {
+		return _Utils_update(
+			state,
+			{inQuote: true});
+	} else {
+		var prev = _v0.a;
+		if (_Utils_eq(
+			prev,
+			_Utils_chr('\"')) || _Utils_eq(
+			prev,
+			_Utils_chr('\\'))) {
+			var _v1 = state.cValue;
+			if (_v1.$ === 'Nothing') {
+				return state;
+			} else {
+				var cv = _v1.a;
+				var trimmed = A3($elm$core$String$slice, 0, -1, cv);
+				var ncVale = trimmed + '\"';
+				return _Utils_update(
+					state,
 					{
-					col: $elm$core$Maybe$Nothing,
-					kind: $author$project$Page$CoursePage$IssueKindError,
-					msg: 'Не обнаружен заголовок. Возможно, ваш файл пустой или пуста первая строка.',
-					row: $elm$core$Maybe$Just(1)
-				}
-				]);
+						cValue: $elm$core$Maybe$Just(ncVale)
+					});
+			}
 		} else {
-			var trimmedFields = A2($elm$core$List$map, $elm$core$String$trim, fields);
-			var requiredFields = $elm$core$Set$fromList(
-				_List_fromArray(
-					['Номер', 'Дата', 'Тема', 'Ключевое слово', 'Раздел', 'ФГОС', 'Раздел научной дисциплины', 'Форма занятия', 'Материалы урока', 'Домашнее задание', 'Количество оценок', 'Часы']));
-			var fieldsWithExtraWS = A2(
-				$elm$core$List$filterMap,
-				$elm$core$Basics$identity,
-				A2(
-					$elm$core$List$indexedMap,
-					F2(
-						function (i, f) {
-							return (!_Utils_eq(
-								f,
-								$elm$core$String$trim(f))) ? $elm$core$Maybe$Just(
-								{
-									col: $elm$core$Maybe$Just(i + 1),
-									kind: $author$project$Page$CoursePage$IssueKindWarning,
-									msg: 'Лишние пробельные символы в поле \'' + (f + '\''),
-									row: $elm$core$Maybe$Just(1)
-								}) : $elm$core$Maybe$Nothing;
-						}),
-					fields));
-			var extraWarnings = A2(
-				$elm$core$List$filterMap,
-				$elm$core$Basics$identity,
-				A2(
-					$elm$core$List$indexedMap,
-					F2(
-						function (c, fieldName) {
-							return A2(
-								$elm$core$Set$member,
-								$elm$core$String$trim(fieldName),
-								requiredFields) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
-								{
-									col: $elm$core$Maybe$Just(c + 1),
-									kind: $author$project$Page$CoursePage$IssueKindWarning,
-									msg: 'Обнаружено лишнее поле \'' + (fieldName + '\''),
-									row: $elm$core$Maybe$Just(1)
-								});
-						}),
-					fields));
-			var actualFields = $elm$core$Set$fromList(trimmedFields);
-			var missingFields = $elm$core$Set$toList(
-				A2($elm$core$Set$diff, requiredFields, actualFields));
-			var missingErrors = A2(
-				$elm$core$List$map,
-				function (fieldName) {
-					return {
+			return _Utils_update(
+				state,
+				{inQuote: true});
+		}
+	}
+};
+var $jonoabroad$commatosed$Csv$handleQuote = function (state) {
+	var _v0 = state.inQuote;
+	if (_v0) {
+		return $jonoabroad$commatosed$Csv$inQuote(state);
+	} else {
+		return $jonoabroad$commatosed$Csv$outQuote(state);
+	}
+};
+var $jonoabroad$commatosed$Csv$accumulator = F2(
+	function (current, state) {
+		var newState = function () {
+			switch (current.valueOf()) {
+				case '\"':
+					return $jonoabroad$commatosed$Csv$handleQuote(state);
+				case '\u000D':
+					return A2($jonoabroad$commatosed$Csv$handleNewLine, current, state);
+				case '\n':
+					return A2($jonoabroad$commatosed$Csv$handleNewLine, current, state);
+				default:
+					return A2($jonoabroad$commatosed$Csv$handleCharacter, current, state);
+			}
+		}();
+		return _Utils_update(
+			newState,
+			{
+				previousChar: $elm$core$Maybe$Just(current)
+			});
+	});
+var $elm$core$String$foldl = _String_foldl;
+var $jonoabroad$commatosed$Csv$start = function (s) {
+	return {cRow: $elm$core$Maybe$Nothing, cValue: $elm$core$Maybe$Nothing, content: _List_Nil, inQuote: false, previousChar: $elm$core$Maybe$Nothing, separator: s};
+};
+var $jonoabroad$commatosed$Csv$splitWith = F2(
+	function (separator, raw) {
+		var state = A3(
+			$elm$core$String$foldl,
+			$jonoabroad$commatosed$Csv$accumulator,
+			$jonoabroad$commatosed$Csv$start(separator),
+			raw);
+		var ss = A2($jonoabroad$commatosed$Csv$handleSeparator, true, state);
+		var sRow = A2(
+			$elm$core$Maybe$map,
+			function (a) {
+				return A2(
+					$elm$core$List$cons,
+					$elm$core$List$reverse(a),
+					ss.content);
+			},
+			ss.cRow);
+		var nContent = A2($elm$core$Maybe$withDefault, ss.content, sRow);
+		return nContent;
+	});
+var $jonoabroad$commatosed$Csv$parseWith = F2(
+	function (separator, raw) {
+		var values = $elm$core$List$reverse(
+			A2($jonoabroad$commatosed$Csv$splitWith, separator, raw));
+		if (!values.b) {
+			return {headers: _List_Nil, records: _List_Nil};
+		} else {
+			var x = values.a;
+			var xs = values.b;
+			return {headers: x, records: xs};
+		}
+	});
+var $author$project$Page$CoursePage$validateActivityCSV = F2(
+	function (sep, data) {
+		var validateHeaderRow = function (fields) {
+			if (!fields.b) {
+				return _List_fromArray(
+					[
+						{
 						col: $elm$core$Maybe$Nothing,
 						kind: $author$project$Page$CoursePage$IssueKindError,
-						msg: 'Не обнаружено обязательное поле \'' + (fieldName + '\''),
+						msg: 'Не обнаружен заголовок. Возможно, ваш файл пустой или пуста первая строка.',
 						row: $elm$core$Maybe$Just(1)
-					};
-				},
-				missingFields);
-			return _Utils_ap(missingErrors, extraWarnings);
-		}
-	};
-	var validateBodyRow = F3(
-		function (row_num, header, fields) {
-			var validateInt = F3(
-				function (i, k, v) {
-					var tv = $elm$core$String$trim(v);
-					var _v7 = $elm$core$String$toInt(tv);
-					if (_v7.$ === 'Just') {
-						return _List_Nil;
-					} else {
-						return _List_fromArray(
+					}
+					]);
+			} else {
+				var trimmedFields = A2($elm$core$List$map, $elm$core$String$trim, fields);
+				var requiredFields = $elm$core$Set$fromList(
+					_List_fromArray(
+						['Номер', 'Дата', 'Тема', 'Ключевое слово', 'Раздел', 'ФГОС', 'Раздел научной дисциплины', 'Форма занятия', 'Материалы урока', 'Домашнее задание', 'Количество оценок', 'Часы']));
+				var fieldsWithExtraWS = A2(
+					$elm$core$List$filterMap,
+					$elm$core$Basics$identity,
+					A2(
+						$elm$core$List$indexedMap,
+						F2(
+							function (i, f) {
+								return (!_Utils_eq(
+									f,
+									$elm$core$String$trim(f))) ? $elm$core$Maybe$Just(
+									{
+										col: $elm$core$Maybe$Just(i + 1),
+										kind: $author$project$Page$CoursePage$IssueKindWarning,
+										msg: 'Лишние пробельные символы в поле \'' + (f + '\''),
+										row: $elm$core$Maybe$Just(1)
+									}) : $elm$core$Maybe$Nothing;
+							}),
+						fields));
+				var extraWarnings = A2(
+					$elm$core$List$filterMap,
+					$elm$core$Basics$identity,
+					A2(
+						$elm$core$List$indexedMap,
+						F2(
+							function (c, fieldName) {
+								return A2(
+									$elm$core$Set$member,
+									$elm$core$String$trim(fieldName),
+									requiredFields) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
+									{
+										col: $elm$core$Maybe$Just(c + 1),
+										kind: $author$project$Page$CoursePage$IssueKindWarning,
+										msg: 'Обнаружено лишнее поле \'' + (fieldName + '\''),
+										row: $elm$core$Maybe$Just(1)
+									});
+							}),
+						fields));
+				var actualFields = $elm$core$Set$fromList(trimmedFields);
+				var missingFields = $elm$core$Set$toList(
+					A2($elm$core$Set$diff, requiredFields, actualFields));
+				var missingErrors = A2(
+					$elm$core$List$map,
+					function (fieldName) {
+						return {
+							col: $elm$core$Maybe$Nothing,
+							kind: $author$project$Page$CoursePage$IssueKindError,
+							msg: 'Не обнаружено обязательное поле \'' + (fieldName + '\''),
+							row: $elm$core$Maybe$Just(1)
+						};
+					},
+					missingFields);
+				return _Utils_ap(missingErrors, extraWarnings);
+			}
+		};
+		var validateBodyRow = F3(
+			function (row_num, header, fields) {
+				var validateInt = F3(
+					function (i, k, v) {
+						var tv = $elm$core$String$trim(v);
+						var _v6 = $elm$core$String$toInt(tv);
+						if (_v6.$ === 'Just') {
+							return _List_Nil;
+						} else {
+							return _List_fromArray(
+								[
+									{
+									col: $elm$core$Maybe$Just(i),
+									kind: $author$project$Page$CoursePage$IssueKindError,
+									msg: 'Значение в поле \'' + (k + ('\' не является целым числом: \'' + (v + '\''))),
+									row: $elm$core$Maybe$Just(row_num)
+								}
+								]);
+						}
+					});
+				var validateCell = F3(
+					function (i, k, v) {
+						var tv = $elm$core$String$trim(v);
+						var extraWS = (!_Utils_eq(v, tv)) ? _List_fromArray(
 							[
 								{
 								col: $elm$core$Maybe$Just(i),
-								kind: $author$project$Page$CoursePage$IssueKindError,
-								msg: 'Значение в поле \'' + (k + ('\' не является целым числом: \'' + (v + '\''))),
+								kind: $author$project$Page$CoursePage$IssueKindWarning,
+								msg: 'Лишние пробелы в ячейке',
 								row: $elm$core$Maybe$Just(row_num)
 							}
-							]);
-					}
-				});
-			var validateCell = F3(
-				function (i, k, v) {
-					var tv = $elm$core$String$trim(v);
-					var extraWS = (!_Utils_eq(v, tv)) ? _List_fromArray(
-						[
-							{
-							col: $elm$core$Maybe$Just(i),
-							kind: $author$project$Page$CoursePage$IssueKindWarning,
-							msg: 'Лишние пробелы в ячейке',
-							row: $elm$core$Maybe$Just(row_num)
-						}
-						]) : _List_Nil;
-					var emptyValue = (tv === '') ? _List_fromArray(
-						[
-							{
-							col: $elm$core$Maybe$Just(i),
-							kind: $author$project$Page$CoursePage$IssueKindWarning,
-							msg: 'Не указано значение поля \'' + (k + '\''),
-							row: $elm$core$Maybe$Just(row_num)
-						}
-						]) : _List_Nil;
-					return _Utils_ap(
-						extraWS,
-						function () {
-							switch (k) {
-								case 'Номер':
-									return A3(validateInt, i, k, v);
-								case 'Дата':
-									var parts = A2(
-										$elm$core$List$map,
-										$elm$core$String$toInt,
-										A2($elm$core$String$split, '.', tv));
-									if ((((((parts.b && (parts.a.$ === 'Just')) && parts.b.b) && (parts.b.a.$ === 'Just')) && parts.b.b.b) && (parts.b.b.a.$ === 'Just')) && (!parts.b.b.b.b)) {
-										var d = parts.a.a;
-										var _v5 = parts.b;
-										var m = _v5.a.a;
-										var _v6 = _v5.b;
-										var y = _v6.a.a;
-										var ey = (y < 1990) ? _List_fromArray(
+							]) : _List_Nil;
+						var emptyValue = (tv === '') ? _List_fromArray(
+							[
+								{
+								col: $elm$core$Maybe$Just(i),
+								kind: $author$project$Page$CoursePage$IssueKindWarning,
+								msg: 'Не указано значение поля \'' + (k + '\''),
+								row: $elm$core$Maybe$Just(row_num)
+							}
+							]) : _List_Nil;
+						var _v1 = A2(
+							$elm$core$Debug$log,
+							'validateCell',
+							_Utils_Tuple3(i, k, v));
+						return _Utils_ap(
+							extraWS,
+							function () {
+								switch (k) {
+									case 'Номер':
+										return A3(validateInt, i, k, v);
+									case 'Дата':
+										var parts = A2(
+											$elm$core$List$map,
+											$elm$core$String$toInt,
+											A2($elm$core$String$split, '.', tv));
+										if ((((((parts.b && (parts.a.$ === 'Just')) && parts.b.b) && (parts.b.a.$ === 'Just')) && parts.b.b.b) && (parts.b.b.a.$ === 'Just')) && (!parts.b.b.b.b)) {
+											var d = parts.a.a;
+											var _v4 = parts.b;
+											var m = _v4.a.a;
+											var _v5 = _v4.b;
+											var y = _v5.a.a;
+											var ey = (y < 1990) ? _List_fromArray(
+												[
+													{
+													col: $elm$core$Maybe$Just(i),
+													kind: $author$project$Page$CoursePage$IssueKindError,
+													msg: 'Некорректное значение года в дате',
+													row: $elm$core$Maybe$Just(row_num)
+												}
+												]) : _List_Nil;
+											var em = ((m < 1) || (m > 12)) ? _List_fromArray(
+												[
+													{
+													col: $elm$core$Maybe$Just(i),
+													kind: $author$project$Page$CoursePage$IssueKindError,
+													msg: 'Некорректное значение месяца в дате',
+													row: $elm$core$Maybe$Just(row_num)
+												}
+												]) : _List_Nil;
+											var ed = ((d < 1) || (d > 31)) ? _List_fromArray(
+												[
+													{
+													col: $elm$core$Maybe$Just(i),
+													kind: $author$project$Page$CoursePage$IssueKindError,
+													msg: 'Некорректное значение числа в дате',
+													row: $elm$core$Maybe$Just(row_num)
+												}
+												]) : _List_Nil;
+											return _Utils_ap(
+												ed,
+												_Utils_ap(em, ey));
+										} else {
+											return (tv === '') ? _List_Nil : _List_fromArray(
+												[
+													{
+													col: $elm$core$Maybe$Just(i),
+													kind: $author$project$Page$CoursePage$IssueKindError,
+													msg: 'Некорректное значение даты',
+													row: $elm$core$Maybe$Just(row_num)
+												}
+												]);
+										}
+									case 'Тема':
+										return (tv === '') ? _List_fromArray(
 											[
 												{
 												col: $elm$core$Maybe$Just(i),
 												kind: $author$project$Page$CoursePage$IssueKindError,
-												msg: 'Некорректное значение года в дате',
+												msg: 'Не указана тема',
 												row: $elm$core$Maybe$Just(row_num)
 											}
 											]) : _List_Nil;
-										var em = ((m < 1) || (m > 12)) ? _List_fromArray(
+									case 'Ключевое слово':
+										return (tv === '') ? emptyValue : (($elm$core$String$length(tv) > 50) ? _List_fromArray(
 											[
 												{
 												col: $elm$core$Maybe$Just(i),
-												kind: $author$project$Page$CoursePage$IssueKindError,
-												msg: 'Некорректное значение месяца в дате',
+												kind: $author$project$Page$CoursePage$IssueKindWarning,
+												msg: 'Ключевое слово слишком длинное (>50 символов)',
 												row: $elm$core$Maybe$Just(row_num)
 											}
-											]) : _List_Nil;
-										var ed = ((d < 1) || (d > 31)) ? _List_fromArray(
+											]) : _List_Nil);
+									case 'Раздел':
+										return emptyValue;
+									case 'ФГОС':
+										return A2(
+											$elm$core$List$member,
+											$elm$core$String$toLower(tv),
+											_List_fromArray(
+												['да', 'нет'])) ? _List_Nil : _List_fromArray(
 											[
 												{
 												col: $elm$core$Maybe$Just(i),
 												kind: $author$project$Page$CoursePage$IssueKindError,
-												msg: 'Некорректное значение числа в дате',
-												row: $elm$core$Maybe$Just(row_num)
-											}
-											]) : _List_Nil;
-										return _Utils_ap(
-											ed,
-											_Utils_ap(em, ey));
-									} else {
-										return _List_fromArray(
-											[
-												{
-												col: $elm$core$Maybe$Just(i),
-												kind: $author$project$Page$CoursePage$IssueKindError,
-												msg: 'Некорректное значение даты',
+												msg: 'Значение должно быть одно из: Да, Нет',
 												row: $elm$core$Maybe$Just(row_num)
 											}
 											]);
-									}
-								case 'Тема':
-									return (tv === '') ? _List_fromArray(
-										[
-											{
-											col: $elm$core$Maybe$Just(i),
-											kind: $author$project$Page$CoursePage$IssueKindError,
-											msg: 'Не указана тема',
-											row: $elm$core$Maybe$Just(row_num)
-										}
-										]) : _List_Nil;
-								case 'Ключевое слово':
-									return (tv === '') ? emptyValue : (($elm$core$String$length(tv) > 50) ? _List_fromArray(
-										[
-											{
-											col: $elm$core$Maybe$Just(i),
-											kind: $author$project$Page$CoursePage$IssueKindWarning,
-											msg: 'Ключевое слово слишком длинное (>50 символов)',
-											row: $elm$core$Maybe$Just(row_num)
-										}
-										]) : _List_Nil);
-								case 'Раздел':
-									return emptyValue;
-								case 'ФГОС':
-									return A2(
-										$elm$core$List$member,
-										$elm$core$String$toLower(tv),
-										_List_fromArray(
-											['да', 'нет'])) ? _List_Nil : _List_fromArray(
-										[
-											{
-											col: $elm$core$Maybe$Just(i),
-											kind: $author$project$Page$CoursePage$IssueKindError,
-											msg: 'Значение должно быть одно из: Да, Нет',
-											row: $elm$core$Maybe$Just(row_num)
-										}
-										]);
-								case 'Раздел научной дисциплины':
-									return emptyValue;
-								case 'Форма занятия':
-									return emptyValue;
-								case 'Материалы урока':
-									return emptyValue;
-								case 'Домашнее задание':
-									return emptyValue;
-								case 'Количество оценок':
-									return A3(validateInt, i, k, v);
-								case 'Часы':
-									return A3(validateInt, i, k, v);
-								default:
-									return _List_Nil;
-							}
-						}());
-				});
-			return $elm$core$List$concat(
-				A4(
-					$elm$core$List$map3,
-					validateCell,
-					A2(
-						$elm$core$List$range,
-						1,
-						$elm$core$List$length(fields)),
-					header,
-					fields));
-		});
-	var parsed = $samuelstevens$elm_csv$Csv$parseRows(data);
-	var hasErrors = $elm$core$List$any(
-		function (i) {
-			return _Utils_eq(i.kind, $author$project$Page$CoursePage$IssueKindError);
-		});
-	if (parsed.$ === 'Ok') {
-		var val = parsed.a;
-		if (!val.b) {
-			return _List_fromArray(
-				[
-					{col: $elm$core$Maybe$Nothing, kind: $author$project$Page$CoursePage$IssueKindError, msg: 'Пустой файл.', row: $elm$core$Maybe$Nothing}
-				]);
+									case 'Раздел научной дисциплины':
+										return emptyValue;
+									case 'Форма занятия':
+										return emptyValue;
+									case 'Материалы урока':
+										return _List_Nil;
+									case 'Домашнее задание':
+										return _List_Nil;
+									case 'Количество оценок':
+										return A3(validateInt, i, k, v);
+									case 'Часы':
+										return A3(validateInt, i, k, v);
+									default:
+										return _List_Nil;
+								}
+							}());
+					});
+				return $elm$core$List$concat(
+					A4(
+						$elm$core$List$map3,
+						validateCell,
+						A2(
+							$elm$core$List$range,
+							1,
+							$elm$core$List$length(fields)),
+						header,
+						fields));
+			});
+		var parsed = A2($jonoabroad$commatosed$Csv$parseWith, sep, data);
+		var hasErrors = $elm$core$List$any(
+			function (i) {
+				return _Utils_eq(i.kind, $author$project$Page$CoursePage$IssueKindError);
+			});
+		var trimmedHeader = A2($elm$core$List$map, $elm$core$String$trim, parsed.headers);
+		var headerErrors = validateHeaderRow(parsed.headers);
+		if (hasErrors(headerErrors)) {
+			return headerErrors;
 		} else {
-			var header = val.a;
-			var body = val.b;
-			var trimmedHeader = A2($elm$core$List$map, $elm$core$String$trim, header);
-			var headerErrors = validateHeaderRow(header);
-			if (hasErrors(headerErrors)) {
-				return headerErrors;
+			var _v0 = parsed.records;
+			if (!_v0.b) {
+				return A2(
+					$elm$core$List$cons,
+					{col: $elm$core$Maybe$Nothing, kind: $author$project$Page$CoursePage$IssueKindNotice, msg: 'Нет строк для импорта.', row: $elm$core$Maybe$Nothing},
+					headerErrors);
 			} else {
-				if (!body.b) {
-					return A2(
-						$elm$core$List$cons,
-						{col: $elm$core$Maybe$Nothing, kind: $author$project$Page$CoursePage$IssueKindNotice, msg: 'Нет строк для импорта.', row: $elm$core$Maybe$Nothing},
-						headerErrors);
-				} else {
-					var bodyErrors = A2(
-						$elm$core$List$indexedMap,
-						function (i) {
-							return A2(validateBodyRow, i + 2, trimmedHeader);
-						},
-						body);
-					return _Utils_ap(
-						headerErrors,
-						$elm$core$List$concat(bodyErrors));
-				}
+				var bodyErrors = A2(
+					$elm$core$List$indexedMap,
+					function (i) {
+						return A2(validateBodyRow, i + 2, trimmedHeader);
+					},
+					parsed.records);
+				return _Utils_ap(
+					headerErrors,
+					$elm$core$List$concat(bodyErrors));
 			}
 		}
-	} else {
-		var error = parsed.a;
-		return _List_fromArray(
-			[
-				{
-				col: $elm$core$Maybe$Nothing,
-				kind: $author$project$Page$CoursePage$IssueKindError,
-				msg: 'Ошибка при разборе CSV-файла около символа с номером ' + ($elm$core$String$fromInt(
-					$elm$core$String$length(data) - $elm$core$String$length(error)) + '. Ваш файл пуст, поврежден, неправильно сохранен (неверная кодировка или еще что-то...) или вовсе не является CSV файлом.'),
-				row: $elm$core$Maybe$Nothing
-			}
-			]);
-	}
-};
+	});
 var $author$project$Util$zip = $elm$core$List$map2($elm$core$Tuple$pair);
 var $author$project$Page$CoursePage$update = F2(
 	function (msg, model) {
@@ -13044,13 +13021,13 @@ var $author$project$Page$CoursePage$update = F2(
 					return $.order;
 				},
 				course.activities);
-			var _v61 = $elm$core$List$unzip(
+			var _v65 = $elm$core$List$unzip(
 				A2(
 					$elm$core$List$map,
 					$author$project$Component$Activity$init_from_activity(model.token),
 					activities));
-			var ms = _v61.a;
-			var cs = _v61.b;
+			var ms = _v65.a;
+			var cs = _v65.b;
 			var len = $elm$core$List$length(ms);
 			var id_range = A2($elm$core$List$range, model.activity_component_pk, (model.activity_component_pk + len) - 1);
 			var pairs_id_cmd = A2($author$project$Util$zip, id_range, cs);
@@ -13071,9 +13048,9 @@ var $author$project$Page$CoursePage$update = F2(
 				$elm$core$Platform$Cmd$batch(
 					A2(
 						$elm$core$List$map,
-						function (_v62) {
-							var id = _v62.a;
-							var c_ = _v62.b;
+						function (_v66) {
+							var id = _v66.a;
+							var c_ = _v66.b;
 							return A2(
 								$elm$core$Platform$Cmd$map,
 								$author$project$Page$CoursePage$MsgActivity(id),
@@ -13082,7 +13059,7 @@ var $author$project$Page$CoursePage$update = F2(
 						pairs_id_cmd)));
 		};
 		var _v0 = _Utils_Tuple2(msg, model.state);
-		_v0$21:
+		_v0$23:
 		while (true) {
 			switch (_v0.a.$) {
 				case 'MsgFetch':
@@ -13117,7 +13094,7 @@ var $author$project$Page$CoursePage$update = F2(
 								A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
 						}
 					} else {
-						break _v0$21;
+						break _v0$23;
 					}
 				case 'MsgClickMembers':
 					var _v4 = _v0.a;
@@ -13149,7 +13126,7 @@ var $author$project$Page$CoursePage$update = F2(
 										}))),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$21;
+						break _v0$23;
 					}
 				case 'MsgActivity':
 					if (_v0.b.$ === 'FetchDone') {
@@ -13264,7 +13241,7 @@ var $author$project$Page$CoursePage$update = F2(
 							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					} else {
-						break _v0$21;
+						break _v0$23;
 					}
 				case 'MsgOnClickAddGen':
 					var _v15 = _v0.a;
@@ -13524,7 +13501,7 @@ var $author$project$Page$CoursePage$update = F2(
 										c));
 							}
 						} else {
-							break _v0$21;
+							break _v0$23;
 						}
 					}
 				case 'MsgOnClickEditCancel':
@@ -13539,7 +13516,7 @@ var $author$project$Page$CoursePage$update = F2(
 							A2($author$project$Page$CoursePage$setEditMode, false, m),
 							c);
 					} else {
-						break _v0$21;
+						break _v0$23;
 					}
 				case 'MsgOnClickSave':
 					if (_v0.b.$ === 'FetchDone') {
@@ -13607,7 +13584,7 @@ var $author$project$Page$CoursePage$update = F2(
 											A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, course.id)),
 										{create: create, update: update_}))));
 					} else {
-						break _v0$21;
+						break _v0$23;
 					}
 				case 'MsgCourseSaveError':
 					if (_v0.b.$ === 'FetchDone') {
@@ -13623,7 +13600,7 @@ var $author$project$Page$CoursePage$update = F2(
 								}),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$21;
+						break _v0$23;
 					}
 				case 'MsgCourseSaved':
 					if (_v0.b.$ === 'FetchDone') {
@@ -13645,7 +13622,7 @@ var $author$project$Page$CoursePage$update = F2(
 							A2($author$project$Page$CoursePage$setEditMode, false, m),
 							c);
 					} else {
-						break _v0$21;
+						break _v0$23;
 					}
 				case 'MsgOnClickImportActivities':
 					var _v50 = _v0.a;
@@ -13660,7 +13637,7 @@ var $author$project$Page$CoursePage$update = F2(
 						_Utils_update(
 							model,
 							{
-								activity_import_state: $author$project$Page$CoursePage$ActivityImportStateFileSelection(m)
+								activity_import_state: A3($author$project$Page$CoursePage$ActivityImportStateDataInput, false, ',', m)
 							}),
 						A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFileInputImport, c));
 				case 'MsgCloseActivitiesImport':
@@ -13673,8 +13650,10 @@ var $author$project$Page$CoursePage$update = F2(
 				case 'MsgFileInputImport':
 					var msg_ = _v0.a.a;
 					var _v53 = model.activity_import_state;
-					if (_v53.$ === 'ActivityImportStateFileSelection') {
-						var model_ = _v53.a;
+					if (_v53.$ === 'ActivityImportStateDataInput') {
+						var show_settings = _v53.a;
+						var sep = _v53.b;
+						var model_ = _v53.c;
 						var _v54 = A2($author$project$Component$FileInput$update, msg_, model_);
 						var m = _v54.a;
 						var c = _v54.b;
@@ -13690,7 +13669,14 @@ var $author$project$Page$CoursePage$update = F2(
 											A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFileInputImport, c),
 											A2(
 											$elm$core$Task$perform,
-											$author$project$Page$CoursePage$MsgActivityImportGotCSVData,
+											$author$project$Page$CoursePage$MsgActivityImportGotCSVData(
+												A2(
+													$elm$core$Maybe$withDefault,
+													_Utils_chr(','),
+													A2(
+														$elm$core$Maybe$map,
+														$elm$core$Tuple$first,
+														$elm$core$String$uncons(sep)))),
 											$elm$file$File$toString(f))
 										])));
 						} else {
@@ -13698,7 +13684,7 @@ var $author$project$Page$CoursePage$update = F2(
 								_Utils_update(
 									model,
 									{
-										activity_import_state: $author$project$Page$CoursePage$ActivityImportStateFileSelection(m)
+										activity_import_state: A3($author$project$Page$CoursePage$ActivityImportStateDataInput, show_settings, sep, m)
 									}),
 								A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFileInputImport, c));
 						}
@@ -13712,10 +13698,11 @@ var $author$project$Page$CoursePage$update = F2(
 						var course = _v57.a;
 						var _v58 = model.activity_import_state;
 						switch (_v58.$) {
-							case 'ActivityImportStateFileSelection':
+							case 'ActivityImportStateDataInput':
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 							case 'ActivityImportStateValidationFinished':
-								var csv_data = _v58.a;
+								var sep = _v58.a;
+								var csv_data = _v58.b;
 								var _v59 = course.id;
 								if (_v59.$ === 'Just') {
 									var cid = _v59.a;
@@ -13735,7 +13722,11 @@ var $author$project$Page$CoursePage$update = F2(
 													model.token,
 													_List_Nil,
 													$author$project$Api$Request$Activity$activityImportForCourse(
-														{courseId: cid, data: csv_data})))));
+														{
+															courseId: cid,
+															data: csv_data,
+															sep: A2($elm$core$String$cons, sep, '')
+														})))));
 								} else {
 									return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 								}
@@ -13745,7 +13736,7 @@ var $author$project$Page$CoursePage$update = F2(
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					} else {
-						break _v0$21;
+						break _v0$23;
 					}
 				case 'MsgActivitiesImportFinished':
 					var res = _v0.a.a;
@@ -13763,9 +13754,11 @@ var $author$project$Page$CoursePage$update = F2(
 										res))
 							}),
 						$elm$core$Platform$Cmd$none);
-				default:
-					var data = _v0.a.a;
-					var val_res = $author$project$Page$CoursePage$validateActivityCSV(data);
+				case 'MsgActivityImportGotCSVData':
+					var _v60 = _v0.a;
+					var sep = _v60.a;
+					var data = _v60.b;
+					var val_res = A2($author$project$Page$CoursePage$validateActivityCSV, sep, data);
 					var res = function () {
 						if (!val_res.b) {
 							return $elm$core$Result$Ok(_Utils_Tuple0);
@@ -13777,9 +13770,42 @@ var $author$project$Page$CoursePage$update = F2(
 						_Utils_update(
 							model,
 							{
-								activity_import_state: A2($author$project$Page$CoursePage$ActivityImportStateValidationFinished, data, res)
+								activity_import_state: A3($author$project$Page$CoursePage$ActivityImportStateValidationFinished, sep, data, res)
 							}),
 						$elm$core$Platform$Cmd$none);
+				case 'MsgOnInputActivityCSVSep':
+					var sep = _v0.a.a;
+					var _v62 = model.activity_import_state;
+					if (_v62.$ === 'ActivityImportStateDataInput') {
+						var show_settings = _v62.a;
+						var m = _v62.c;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									activity_import_state: A3($author$project$Page$CoursePage$ActivityImportStateDataInput, show_settings, sep, m)
+								}),
+							$elm$core$Platform$Cmd$none);
+					} else {
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					}
+				default:
+					var _v63 = _v0.a;
+					var _v64 = model.activity_import_state;
+					if (_v64.$ === 'ActivityImportStateDataInput') {
+						var show_settings = _v64.a;
+						var sep = _v64.b;
+						var m = _v64.c;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									activity_import_state: A3($author$project$Page$CoursePage$ActivityImportStateDataInput, !show_settings, sep, m)
+								}),
+							$elm$core$Platform$Cmd$none);
+					} else {
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					}
 			}
 		}
 		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -13878,8 +13904,9 @@ var $author$project$Page$Login$Info = function (a) {
 };
 var $author$project$Page$Login$LoggingIn = {$: 'LoggingIn'};
 var $author$project$Page$Login$Login = {$: 'Login'};
-var $author$project$Page$Login$PasswordReset = {$: 'PasswordReset'};
-var $author$project$Page$Login$ResettingPassword = {$: 'ResettingPassword'};
+var $author$project$Page$Login$ResettingPassword = function (a) {
+	return {$: 'ResettingPassword', a: a};
+};
 var $author$project$Page$Login$Success = function (a) {
 	return {$: 'Success', a: a};
 };
@@ -14137,10 +14164,10 @@ var $author$project$Page$Login$doLogin = F2(
 			$author$project$Api$Request$User$userLogin(
 				{password: password, username: username}));
 	});
-var $author$project$Page$Login$PasswordResetRequestFailed = function (a) {
-	return {$: 'PasswordResetRequestFailed', a: a};
-};
-var $author$project$Page$Login$PasswordResetRequestSucceded = {$: 'PasswordResetRequestSucceded'};
+var $author$project$Page$Login$PasswordResetFinished = F2(
+	function (a, b) {
+		return {$: 'PasswordResetFinished', a: a, b: b};
+	});
 var $author$project$Api$Data$encodeResetPasswordRequestPairs = function (model) {
 	var pairs = _List_fromArray(
 		[
@@ -14161,14 +14188,20 @@ var $author$project$Api$Request$User$userResetPasswordRequest = function (data_b
 			$author$project$Api$Data$encodeResetPasswordRequest(data_body)),
 		$elm$json$Json$Decode$succeed(_Utils_Tuple0));
 };
-var $author$project$Page$Login$doPasswordReset = function (login) {
+var $author$project$Page$Login$doPasswordResetS1 = function (login) {
 	var onResult = function (res) {
 		if (res.$ === 'Ok') {
-			return $author$project$Page$Login$PasswordResetRequestSucceded;
+			return A2(
+				$author$project$Page$Login$PasswordResetFinished,
+				1,
+				$elm$core$Result$Ok(_Utils_Tuple0));
 		} else {
 			var e = res.a;
-			return $author$project$Page$Login$PasswordResetRequestFailed(
-				$author$project$Util$httpErrorToString(e));
+			return A2(
+				$author$project$Page$Login$PasswordResetFinished,
+				1,
+				$elm$core$Result$Err(
+					$author$project$Util$httpErrorToString(e)));
 		}
 	};
 	return A2(
@@ -14178,10 +14211,43 @@ var $author$project$Page$Login$doPasswordReset = function (login) {
 			$author$project$Api$Request$User$userResetPasswordRequest(
 				{login: login})));
 };
+var $author$project$Api$Data$encodeResetPasswordCompletePairs = function (model) {
+	var pairs = _List_fromArray(
+		[
+			A3($author$project$Api$Data$encode, 'password', $elm$json$Json$Encode$string, model.password),
+			A3($author$project$Api$Data$encode, 'token', $elm$json$Json$Encode$string, model.token)
+		]);
+	return pairs;
+};
+var $author$project$Api$Data$encodeResetPasswordComplete = A2($elm$core$Basics$composeL, $author$project$Api$Data$encodeObject, $author$project$Api$Data$encodeResetPasswordCompletePairs);
+var $author$project$Api$Request$User$userResetPasswordComplete = function (data_body) {
+	return A7(
+		$author$project$Api$request,
+		'POST',
+		'/user/reset_password_complete/',
+		_List_Nil,
+		_List_Nil,
+		_List_Nil,
+		$elm$core$Maybe$Just(
+			$author$project$Api$Data$encodeResetPasswordComplete(data_body)),
+		$elm$json$Json$Decode$succeed(_Utils_Tuple0));
+};
+var $author$project$Page$Login$doPasswordResetS2 = F2(
+	function (token, password) {
+		return A2(
+			$elm$core$Task$attempt,
+			$author$project$Page$Login$PasswordResetFinished(2),
+			A2(
+				$elm$core$Task$mapError,
+				$author$project$Util$httpErrorToString,
+				$author$project$Api$task(
+					$author$project$Api$Request$User$userResetPasswordComplete(
+						{password: password, token: token}))));
+	});
 var $author$project$Page$Login$update = F2(
 	function (msg, model) {
 		var _v0 = _Utils_Tuple2(msg, model.state);
-		_v0$12:
+		_v0$13:
 		while (true) {
 			switch (_v0.a.$) {
 				case 'DoLogin':
@@ -14194,19 +14260,21 @@ var $author$project$Page$Login$update = F2(
 								{state: $author$project$Page$Login$LoggingIn}),
 							A2($author$project$Page$Login$doLogin, model.username, model.password));
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
-				case 'DoPasswordReset':
-					if (_v0.b.$ === 'PasswordReset') {
+				case 'DoPasswordResetStartStage':
+					if ((_v0.b.$ === 'PasswordReset') && (_v0.b.a.$ === 'Nothing')) {
 						var _v3 = _v0.a;
-						var _v4 = _v0.b;
+						var _v4 = _v0.b.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
-								{state: $author$project$Page$Login$ResettingPassword}),
-							$author$project$Page$Login$doPasswordReset(model.username));
+								{
+									state: $author$project$Page$Login$ResettingPassword(1)
+								}),
+							$author$project$Page$Login$doPasswordResetS1(model.username));
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 				case 'CheckSessionFailed':
 					if (_v0.b.$ === 'CheckingStored') {
@@ -14221,14 +14289,17 @@ var $author$project$Page$Login$update = F2(
 								}),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 				case 'ShowPasswordReset':
 					var _v6 = _v0.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{message: $author$project$Page$Login$None, state: $author$project$Page$Login$PasswordReset}),
+							{
+								message: $author$project$Page$Login$None,
+								state: $author$project$Page$Login$PasswordReset($elm$core$Maybe$Nothing)
+							}),
 						$elm$core$Platform$Cmd$none);
 				case 'ShowLogin':
 					var _v7 = _v0.a;
@@ -14279,35 +14350,84 @@ var $author$project$Page$Login$update = F2(
 							model,
 							{password: p}),
 						$elm$core$Platform$Cmd$none);
-				case 'PasswordResetRequestFailed':
+				case 'PasswordResetFinished':
 					if (_v0.b.$ === 'ResettingPassword') {
-						var err = _v0.a.a;
-						var _v9 = _v0.b;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									message: $author$project$Page$Login$Error('Произошла ошибка при запросе смены пароля: ' + err),
-									state: $author$project$Page$Login$PasswordReset
-								}),
-							$elm$core$Platform$Cmd$none);
+						switch (_v0.a.a) {
+							case 1:
+								if (_v0.b.a === 1) {
+									var _v9 = _v0.a;
+									var res = _v9.b;
+									if (res.$ === 'Ok') {
+										return _Utils_Tuple2(
+											_Utils_update(
+												model,
+												{
+													message: $author$project$Page$Login$Info('Запрос на сброс пароля выполнен успешно. ' + 'Проверьте вашу электронную почту - на нее должно прийти письмо с дальнейшими инструкциями'),
+													state: $author$project$Page$Login$PasswordReset($elm$core$Maybe$Nothing)
+												}),
+											$elm$core$Platform$Cmd$none);
+									} else {
+										var err = res.a;
+										return _Utils_Tuple2(
+											_Utils_update(
+												model,
+												{
+													message: $author$project$Page$Login$Error('Произошла ошибка при запросе смены пароля: ' + err),
+													state: $author$project$Page$Login$PasswordReset($elm$core$Maybe$Nothing)
+												}),
+											$elm$core$Platform$Cmd$none);
+									}
+								} else {
+									break _v0$13;
+								}
+							case 2:
+								if (_v0.b.a === 2) {
+									var _v11 = _v0.a;
+									var res = _v11.b;
+									if (res.$ === 'Ok') {
+										return _Utils_Tuple2(
+											_Utils_update(
+												model,
+												{
+													message: $author$project$Page$Login$Info('Запрос на изменение пароля выполнен успешно. ' + 'Вы можете войти в систему с новым паролем.'),
+													state: $author$project$Page$Login$PasswordReset(
+														$elm$core$Maybe$Just(''))
+												}),
+											$elm$core$Platform$Cmd$none);
+									} else {
+										var err = res.a;
+										return _Utils_Tuple2(
+											_Utils_update(
+												model,
+												{
+													message: $author$project$Page$Login$Error('Произошла ошибка при запросе смены пароля: ' + err),
+													state: $author$project$Page$Login$PasswordReset(
+														$elm$core$Maybe$Just(''))
+												}),
+											$elm$core$Platform$Cmd$none);
+									}
+								} else {
+									break _v0$13;
+								}
+							default:
+								break _v0$13;
+						}
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 				default:
-					if (_v0.b.$ === 'ResettingPassword') {
-						var _v10 = _v0.a;
-						var _v11 = _v0.b;
+					if ((_v0.b.$ === 'PasswordReset') && (_v0.b.a.$ === 'Just')) {
+						var _v13 = _v0.a;
+						var token = _v0.b.a.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
 								{
-									message: $author$project$Page$Login$Info('Запрос на сброс пароля выполнен успешно. ' + 'Проверьте вашу электронную почту - на нее должно прийти письмо с дальнейшими инструкциями'),
-									state: $author$project$Page$Login$PasswordReset
+									state: $author$project$Page$Login$ResettingPassword(2)
 								}),
-							$elm$core$Platform$Cmd$none);
+							A2($author$project$Page$Login$doPasswordResetS2, token, model.password));
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 			}
 		}
@@ -15527,7 +15647,7 @@ var $author$project$Main$update = F2(
 						var _v4 = _Utils_Tuple2(
 							$author$project$Main$parse_url(url),
 							model.token);
-						_v4$13:
+						_v4$14:
 						while (true) {
 							switch (_v4.a.$) {
 								case 'UrlNotFound':
@@ -15602,7 +15722,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageFront, cmd_2)
 													])));
 									} else {
-										break _v4$13;
+										break _v4$14;
 									}
 								case 'UrlCourse':
 									if (_v4.b.$ === 'Right') {
@@ -15628,7 +15748,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageCourse, cmd_2)
 													])));
 									} else {
-										break _v4$13;
+										break _v4$14;
 									}
 								case 'UrlCourseList':
 									if (_v4.b.$ === 'Right') {
@@ -15654,7 +15774,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageCourseList, cmd_2)
 													])));
 									} else {
-										break _v4$13;
+										break _v4$14;
 									}
 								case 'UrlMarks':
 									if (_v4.b.$ === 'Right') {
@@ -15680,7 +15800,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageMarksOfStudent, cmd_2)
 													])));
 									} else {
-										break _v4$13;
+										break _v4$14;
 									}
 								case 'UrlMarksOfPerson':
 									if (_v4.b.$ === 'Right') {
@@ -15710,7 +15830,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageMarksOfStudent, cmd_2)
 													])));
 									} else {
-										break _v4$13;
+										break _v4$14;
 									}
 								case 'UrlMarksOfCourse':
 									if (_v4.b.$ === 'Right') {
@@ -15736,7 +15856,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageMarksOfCourse, cmd_2)
 													])));
 									} else {
-										break _v4$13;
+										break _v4$14;
 									}
 								case 'UrlProfileOwn':
 									if (_v4.b.$ === 'Right') {
@@ -15762,7 +15882,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageUserProfile, cmd_2)
 													])));
 									} else {
-										break _v4$13;
+										break _v4$14;
 									}
 								case 'UrlProfileOfUser':
 									if (_v4.b.$ === 'Right') {
@@ -15792,7 +15912,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageUserProfile, cmd_2)
 													])));
 									} else {
-										break _v4$13;
+										break _v4$14;
 									}
 								case 'UrlMessages':
 									if (_v4.b.$ === 'Right') {
@@ -15804,9 +15924,9 @@ var $author$project$Main$update = F2(
 												{page: $author$project$Main$PageBlank}),
 											$elm$core$Platform$Cmd$none);
 									} else {
-										break _v4$13;
+										break _v4$14;
 									}
-								default:
+								case 'UrlNews':
 									if (_v4.b.$ === 'Right') {
 										var _v30 = _v4.a;
 										var token = _v4.b.a;
@@ -15816,7 +15936,27 @@ var $author$project$Main$update = F2(
 												{page: $author$project$Main$PageBlank}),
 											$elm$core$Platform$Cmd$none);
 									} else {
-										break _v4$13;
+										break _v4$14;
+									}
+								default:
+									if (_v4.a.a.$ === 'Just') {
+										var token = _v4.a.a.a;
+										var _v31 = $author$project$Page$Login$init_password_reset_fin(token);
+										var m = _v31.a;
+										var c = _v31.b;
+										return A2(
+											$elm$core$Debug$log,
+											'UrlPasswordReset',
+											_Utils_Tuple2(
+												_Utils_update(
+													model,
+													{
+														layout: $author$project$Main$LayoutNone,
+														page: $author$project$Main$PageLogin(m)
+													}),
+												A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageLogin, c)));
+									} else {
+										break _v4$14;
 									}
 							}
 						}
@@ -15841,9 +15981,9 @@ var $author$project$Main$update = F2(
 							var msg_ = _v0.a.a;
 							var token = msg_.a;
 							var model_ = _v0.b.a;
-							var _v31 = A2($author$project$Page$Login$update, msg_, model_);
-							var m = _v31.a;
-							var c = _v31.b;
+							var _v32 = A2($author$project$Page$Login$update, msg_, model_);
+							var m = _v32.a;
+							var c = _v32.b;
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
@@ -15863,9 +16003,9 @@ var $author$project$Main$update = F2(
 						} else {
 							var msg_ = _v0.a.a;
 							var model_ = _v0.b.a;
-							var _v32 = A2($author$project$Page$Login$update, msg_, model_);
-							var m = _v32.a;
-							var c = _v32.b;
+							var _v33 = A2($author$project$Page$Login$update, msg_, model_);
+							var m = _v33.a;
+							var c = _v33.b;
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
@@ -15882,9 +16022,9 @@ var $author$project$Main$update = F2(
 						var msg_ = _v0.a.a;
 						var model_ = _v0.b.a;
 						var layout_ = _v0.c.a;
-						var _v33 = A2($author$project$Page$CourseListPage$update, msg_, model_);
-						var model__ = _v33.a;
-						var cmd_ = _v33.b;
+						var _v34 = A2($author$project$Page$CourseListPage$update, msg_, model_);
+						var model__ = _v34.a;
+						var cmd_ = _v34.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -15900,9 +16040,9 @@ var $author$project$Main$update = F2(
 						var msg_ = _v0.a.a;
 						var model_ = _v0.b.a;
 						var layout_ = _v0.c.a;
-						var _v34 = A2($author$project$Page$CoursePage$update, msg_, model_);
-						var model__ = _v34.a;
-						var cmd_ = _v34.b;
+						var _v35 = A2($author$project$Page$CoursePage$update, msg_, model_);
+						var model__ = _v35.a;
+						var cmd_ = _v35.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -15918,9 +16058,9 @@ var $author$project$Main$update = F2(
 						var msg_ = _v0.a.a;
 						var model_ = _v0.b.a;
 						var layout_ = _v0.c.a;
-						var _v35 = A2($author$project$Page$MarksStudent$update, msg_, model_);
-						var model__ = _v35.a;
-						var cmd_ = _v35.b;
+						var _v36 = A2($author$project$Page$MarksStudent$update, msg_, model_);
+						var model__ = _v36.a;
+						var cmd_ = _v36.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -15936,9 +16076,9 @@ var $author$project$Main$update = F2(
 						var msg_ = _v0.a.a;
 						var model_ = _v0.b.a;
 						var layout_ = _v0.c.a;
-						var _v36 = A2($author$project$Page$MarksCourse$update, msg_, model_);
-						var model__ = _v36.a;
-						var cmd_ = _v36.b;
+						var _v37 = A2($author$project$Page$MarksCourse$update, msg_, model_);
+						var model__ = _v37.a;
+						var cmd_ = _v37.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -15954,9 +16094,9 @@ var $author$project$Main$update = F2(
 						var msg_ = _v0.a.a;
 						var model_ = _v0.b.a;
 						var layout_ = _v0.c.a;
-						var _v37 = A2($author$project$Page$UserProfile$update, msg_, model_);
-						var model__ = _v37.a;
-						var cmd_ = _v37.b;
+						var _v38 = A2($author$project$Page$UserProfile$update, msg_, model_);
+						var model__ = _v38.a;
+						var cmd_ = _v38.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -15968,7 +16108,7 @@ var $author$project$Main$update = F2(
 						break _v0$12;
 					}
 				case 'MsgUnauthorized':
-					var _v38 = _v0.a;
+					var _v39 = _v0.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
@@ -15991,9 +16131,9 @@ var $author$project$Main$update = F2(
 						var msg_ = _v0.a.a;
 						var model_ = _v0.b.a;
 						var layout_ = _v0.c.a;
-						var _v39 = A2($author$project$Page$FrontPage$update, msg_, model_);
-						var model__ = _v39.a;
-						var cmd_ = _v39.b;
+						var _v40 = A2($author$project$Page$FrontPage$update, msg_, model_);
+						var model__ = _v40.a;
+						var cmd_ = _v40.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -31946,6 +32086,10 @@ var $author$project$Component$Modal$view = F6(
 				])) : $elm$html$Html$text('');
 	});
 var $author$project$Page$CoursePage$MsgOnClickActivitiesImport = {$: 'MsgOnClickActivitiesImport'};
+var $author$project$Page$CoursePage$MsgOnClickToggleActivityImportSettings = {$: 'MsgOnClickToggleActivityImportSettings'};
+var $author$project$Page$CoursePage$MsgOnInputActivityCSVSep = function (a) {
+	return {$: 'MsgOnInputActivityCSVSep', a: a};
+};
 var $author$project$Component$MessageBox$None = {$: 'None'};
 var $author$project$Component$MessageBox$Success = {$: 'Success'};
 var $author$project$Component$MessageBox$Warning = {$: 'Warning'};
@@ -32045,7 +32189,7 @@ var $author$project$Component$FileInput$view = function (model) {
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('row middle-xs start-xs')
+						$elm$html$Html$Attributes$class('row middle-xs center-xs')
 					]),
 				_List_fromArray(
 					[
@@ -32440,66 +32584,132 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 						[
 							$elm$html$Html$text('Убедившись, что ваш файл соответствует указанному выше формату, укажите его в поле ниже и отправьте на сервер. ' + 'По завершению процесса импорта вы увидите результат (успех, ошибка).')
 						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('row center-xs')
-						]),
-					_List_fromArray(
-						[state]))
+					state
 				]));
 	};
 	var _v0 = model.activity_import_state;
 	switch (_v0.$) {
-		case 'ActivityImportStateFileSelection':
-			var m = _v0.a;
-			var _v1 = m.file;
-			if (_v1.$ === 'Just') {
-				var file = _v1.a;
-				return form(
-					A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('col'),
-								A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$map,
-								$author$project$Page$CoursePage$MsgFileInputImport,
-								$author$project$Component$FileInput$view(m)),
-								A2(
-								$elm$html$Html$button,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('ui button green'),
-										$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickActivitiesImport)
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Начать импорт')
-									]))
-							])));
-			} else {
-				return form(
-					A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('col'),
-								A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$map,
-								$author$project$Page$CoursePage$MsgFileInputImport,
-								$author$project$Component$FileInput$view(m))
-							])));
-			}
+		case 'ActivityImportStateDataInput':
+			var show_settings = _v0.a;
+			var sep = _v0.b;
+			var m = _v0.c;
+			return form(
+				A2(
+					$elm$html$Html$div,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('row between-xs')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$h3,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Настройки импорта')
+										])),
+									A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('ui button'),
+											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickToggleActivityImportSettings)
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$i,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('cog icon')
+												]),
+											_List_Nil),
+											$elm$html$Html$text('Настройки')
+										]))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('row center-xs')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('col')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('row'),
+													A2(
+													$elm$html$Html$Attributes$style,
+													'display',
+													show_settings ? 'initial' : 'none')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('ui input middle-xs mb-10')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$label,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$class('mr-10')
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text('Разделитель: ')
+																])),
+															A2(
+															$elm$html$Html$input,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$class(''),
+																	$elm$html$Html$Attributes$type_('text'),
+																	$elm$html$Html$Attributes$placeholder('Разделитель'),
+																	$elm$html$Html$Attributes$value(sep),
+																	$elm$html$Html$Events$onInput($author$project$Page$CoursePage$MsgOnInputActivityCSVSep)
+																]),
+															_List_Nil)
+														]))
+												])),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('row center-xs'),
+													A2($elm$html$Html$Attributes$style, 'display', 'block'),
+													A2($elm$html$Html$Attributes$style, 'min-width', '300px')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$map,
+													$author$project$Page$CoursePage$MsgFileInputImport,
+													$author$project$Component$FileInput$view(m))
+												]))
+										]))
+								]))
+						])));
 		case 'ActivityImportStateNone':
 			return $elm$html$Html$text('');
 		case 'ActivityImportStateInProgress':
@@ -32508,18 +32718,27 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('col'),
-							A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+							$elm$html$Html$Attributes$class('row center-xs')
 						]),
 					_List_fromArray(
 						[
-							A5(
-							$author$project$Component$MessageBox$view,
-							$author$project$Component$MessageBox$None,
-							true,
-							$elm$core$Maybe$Nothing,
-							$elm$html$Html$text(''),
-							$elm$html$Html$text('Выполняется импорт'))
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('col'),
+									A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+								]),
+							_List_fromArray(
+								[
+									A5(
+									$author$project$Component$MessageBox$view,
+									$author$project$Component$MessageBox$None,
+									true,
+									$elm$core$Maybe$Nothing,
+									$elm$html$Html$text(''),
+									$elm$html$Html$text('Выполняется импорт'))
+								]))
 						])));
 		case 'ActivityImportStateFinished':
 			var res = _v0.a;
@@ -32530,18 +32749,27 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('col'),
-								A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+								$elm$html$Html$Attributes$class('row center-xs')
 							]),
 						_List_fromArray(
 							[
-								A5(
-								$author$project$Component$MessageBox$view,
-								$author$project$Component$MessageBox$Success,
-								false,
-								$elm$core$Maybe$Nothing,
-								$elm$html$Html$text(''),
-								$elm$html$Html$text('Импорт успешно завершен: ' + msg))
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('col'),
+										A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+									]),
+								_List_fromArray(
+									[
+										A5(
+										$author$project$Component$MessageBox$view,
+										$author$project$Component$MessageBox$Success,
+										false,
+										$elm$core$Maybe$Nothing,
+										$elm$html$Html$text(''),
+										$elm$html$Html$text('Импорт успешно завершен: ' + msg))
+									]))
 							])));
 			} else {
 				var err = res.a;
@@ -32550,40 +32778,67 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('col'),
-								A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+								$elm$html$Html$Attributes$class('row center-xs')
 							]),
 						_List_fromArray(
 							[
-								A5(
-								$author$project$Component$MessageBox$view,
-								$author$project$Component$MessageBox$Error,
-								false,
-								$elm$core$Maybe$Nothing,
-								$elm$html$Html$text(''),
 								A2(
-									$elm$html$Html$div,
-									_List_Nil,
-									_List_fromArray(
-										[
-											A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('col'),
+										A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+									]),
+								_List_fromArray(
+									[
+										A5(
+										$author$project$Component$MessageBox$view,
+										$author$project$Component$MessageBox$Error,
+										false,
+										$elm$core$Maybe$Nothing,
+										$elm$html$Html$text(''),
+										A2(
 											$elm$html$Html$div,
 											_List_Nil,
 											_List_fromArray(
 												[
-													$elm$html$Html$text('Импорт выполнен с ошибкой: ')
-												])),
-											A2(
-											$elm$html$Html$div,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('ml-10')
-												]),
-											_List_fromArray(
-												[
-													$elm$html$Html$text(err)
-												]))
-										])))
+													A2(
+													$elm$html$Html$div,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Импорт выполнен с ошибкой: ')
+														])),
+													A2(
+													$elm$html$Html$div,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('ml-10')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(err)
+														]))
+												]))),
+										A2(
+										$elm$html$Html$button,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('ui button primary'),
+												$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickImportActivities)
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$i,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('undo icon')
+													]),
+												_List_Nil),
+												$elm$html$Html$text('Начать сначала')
+											]))
+									]))
 							])));
 			}
 		case 'ActivityImportStateValidationInProgress':
@@ -32592,21 +32847,30 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('col'),
-							A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+							$elm$html$Html$Attributes$class('row center-xs')
 						]),
 					_List_fromArray(
 						[
-							A5(
-							$author$project$Component$MessageBox$view,
-							$author$project$Component$MessageBox$None,
-							true,
-							$elm$core$Maybe$Nothing,
-							$elm$html$Html$text(''),
-							$elm$html$Html$text('Проводим предварительную проверку вашего файла...'))
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('col'),
+									A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+								]),
+							_List_fromArray(
+								[
+									A5(
+									$author$project$Component$MessageBox$view,
+									$author$project$Component$MessageBox$None,
+									true,
+									$elm$core$Maybe$Nothing,
+									$elm$html$Html$text(''),
+									$elm$html$Html$text('Проводим предварительную проверку вашего файла...'))
+								]))
 						])));
 		default:
-			var result = _v0.b;
+			var result = _v0.c;
 			var restart = A2(
 				$elm$html$Html$button,
 				_List_fromArray(
@@ -32650,27 +32914,36 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('col'),
-							A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+							$elm$html$Html$Attributes$class('row center-xs')
 						]),
 					_List_fromArray(
 						[
-							A5(
-							$author$project$Component$MessageBox$view,
-							$author$project$Component$MessageBox$Success,
-							false,
-							$elm$core$Maybe$Nothing,
-							$elm$html$Html$text(''),
-							$elm$html$Html$text('Предварительная проверка завершена. Проблем не найдено.')),
 							A2(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('mt-10')
+									$elm$html$Html$Attributes$class('col'),
+									A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
 								]),
 							_List_fromArray(
 								[
-									cont('green')
+									A5(
+									$author$project$Component$MessageBox$view,
+									$author$project$Component$MessageBox$Success,
+									false,
+									$elm$core$Maybe$Nothing,
+									$elm$html$Html$text(''),
+									$elm$html$Html$text('Предварительная проверка завершена. Проблем не найдено.')),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('mt-10')
+										]),
+									_List_fromArray(
+										[
+											cont('green')
+										]))
 								]))
 						])));
 			if (result.$ === 'Ok') {
@@ -32706,40 +32979,49 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('col'),
-									A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+									$elm$html$Html$Attributes$class('row center-xs')
 								]),
 							_List_fromArray(
 								[
-									A5(
-									$author$project$Component$MessageBox$view,
-									canContinue ? $author$project$Component$MessageBox$Warning : $author$project$Component$MessageBox$Error,
-									false,
-									$elm$core$Maybe$Nothing,
-									$elm$html$Html$text(''),
-									$elm$html$Html$text(
-										canContinue ? ('Были найдены некоторые проблемы в ваших данных. ' + ('Рекомендуется ознакомиться с их списком ниже и исправить недочеты. ' + 'Тем не менее, вы можете продолжить загрузку без исправления.')) : ('Были найдены серьезные ошибки в вашем файле. Для продолжения необходимо ' + 'вначале исправить все ошибки и, желательно, все остальные недостатки.'))),
 									A2(
 									$elm$html$Html$div,
-									_List_Nil,
 									_List_fromArray(
 										[
-											restart,
-											canContinue ? cont('yellow') : $elm$html$Html$text('')
-										])),
-									A2(
-									$elm$html$Html$h3,
-									_List_Nil,
+											$elm$html$Html$Attributes$class('col'),
+											A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+										]),
 									_List_fromArray(
 										[
+											A5(
+											$author$project$Component$MessageBox$view,
+											canContinue ? $author$project$Component$MessageBox$Warning : $author$project$Component$MessageBox$Error,
+											false,
+											$elm$core$Maybe$Nothing,
+											$elm$html$Html$text(''),
 											$elm$html$Html$text(
-											'Список найденных проблем (' + ($elm$core$String$fromInt(
-												$elm$core$List$length(sorted)) + '):'))
-										])),
-									A2(
-									$elm$html$Html$div,
-									_List_Nil,
-									A2($elm$core$List$map, $author$project$Page$CoursePage$viewActValidationIssue, sorted))
+												canContinue ? ('Были найдены некоторые проблемы в ваших данных. ' + ('Рекомендуется ознакомиться с их списком ниже и исправить недочеты. ' + 'Тем не менее, вы можете продолжить загрузку без исправления.')) : ('Были найдены серьезные ошибки в вашем файле. Для продолжения необходимо ' + 'вначале исправить все ошибки и, желательно, все остальные недостатки.'))),
+											A2(
+											$elm$html$Html$div,
+											_List_Nil,
+											_List_fromArray(
+												[
+													restart,
+													canContinue ? cont('yellow') : $elm$html$Html$text('')
+												])),
+											A2(
+											$elm$html$Html$h3,
+											_List_Nil,
+											_List_fromArray(
+												[
+													$elm$html$Html$text(
+													'Список найденных проблем (' + ($elm$core$String$fromInt(
+														$elm$core$List$length(sorted)) + '):'))
+												])),
+											A2(
+											$elm$html$Html$div,
+											_List_Nil,
+											A2($elm$core$List$map, $author$project$Page$CoursePage$viewActValidationIssue, sorted))
+										]))
 								])));
 				}
 			}
@@ -33988,7 +34270,8 @@ var $author$project$Page$FrontPage$view = function (model) {
 };
 var $author$project$Page$Login$CloseMessage = {$: 'CloseMessage'};
 var $author$project$Page$Login$DoLogin = {$: 'DoLogin'};
-var $author$project$Page$Login$DoPasswordReset = {$: 'DoPasswordReset'};
+var $author$project$Page$Login$DoPasswordResetFinishStage = {$: 'DoPasswordResetFinishStage'};
+var $author$project$Page$Login$DoPasswordResetStartStage = {$: 'DoPasswordResetStartStage'};
 var $author$project$Page$Login$ModelSetPassword = function (a) {
 	return {$: 'ModelSetPassword', a: a};
 };
@@ -34246,47 +34529,80 @@ var $author$project$Page$Login$view = function (model) {
 							pw_reset
 						]));
 			case 'PasswordReset':
-				return A2(
-					$elm$html$Html$div,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$form,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('ui large form'),
-									$elm$html$Html$Events$onSubmit($author$project$Page$Login$DoPasswordReset)
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('ui stacked segment')
-										]),
-									_List_fromArray(
-										[
-											A5($author$project$Page$Login$viewField, 'text', model.username, 'Логин', 'user', $author$project$Page$Login$ModelSetUsername),
-											A2(blue_button, 'Восстановить', $author$project$Page$Login$DoPasswordReset)
-										]))
-								])),
-							back_to_login
-						]));
+				var mbt = _v0.a;
+				if (mbt.$ === 'Just') {
+					var token = mbt.a;
+					return A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$form,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('ui large form'),
+										$elm$html$Html$Events$onSubmit($author$project$Page$Login$DoPasswordResetFinishStage)
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('ui stacked segment')
+											]),
+										_List_fromArray(
+											[
+												A5($author$project$Page$Login$viewField, 'password', model.password, 'Новый пароль', 'lock', $author$project$Page$Login$ModelSetPassword),
+												A2(blue_button, 'Применить', $author$project$Page$Login$DoPasswordResetFinishStage)
+											]))
+									])),
+								back_to_login
+							]));
+				} else {
+					return A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$form,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('ui large form'),
+										$elm$html$Html$Events$onSubmit($author$project$Page$Login$DoPasswordResetStartStage)
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('ui stacked segment')
+											]),
+										_List_fromArray(
+											[
+												A5($author$project$Page$Login$viewField, 'text', model.username, 'Логин', 'user', $author$project$Page$Login$ModelSetUsername),
+												A2(blue_button, 'Восстановить', $author$project$Page$Login$DoPasswordResetStartStage)
+											]))
+									])),
+								back_to_login
+							]));
+				}
 			case 'Success':
 				var token = _v0.a.token;
 				var user = _v0.a.user;
 				var a = 'Аноним';
 				var nm = function () {
-					var _v1 = user.firstName;
-					if (_v1.$ === 'Nothing') {
+					var _v2 = user.firstName;
+					if (_v2.$ === 'Nothing') {
 						return a;
 					} else {
-						if (_v1.a === '') {
+						if (_v2.a === '') {
 							return a;
 						} else {
-							var x = _v1.a;
+							var x = _v2.a;
 							return x;
 						}
 					}
@@ -34306,7 +34622,15 @@ var $author$project$Page$Login$view = function (model) {
 			case 'LoggingIn':
 				return progress('Выполняется вход');
 			default:
-				return progress('Выполняется сброс пароля');
+				var stage = _v0.a;
+				switch (stage) {
+					case 1:
+						return progress('Выполняется запрос на сброс пароля');
+					case 2:
+						return progress('Выполняется запрос на изменение пароля');
+					default:
+						return $elm$html$Html$text('');
+				}
 		}
 	}();
 	return A2(

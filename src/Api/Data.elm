@@ -384,6 +384,7 @@ type alias File =
 
 type alias ImportForCourse =
     { data : String
+    , sep : String
     , courseId : Uuid
     }
 
@@ -1064,6 +1065,7 @@ encodeImportForCoursePairs model =
     let
         pairs =
             [ encode "data" Json.Encode.string model.data
+            , encode "sep" Json.Encode.string model.sep
             , encode "course_id" Uuid.encode model.courseId
             ]
     in
@@ -1820,6 +1822,7 @@ importForCourseDecoder : Json.Decode.Decoder ImportForCourse
 importForCourseDecoder =
     Json.Decode.succeed ImportForCourse
         |> decode "data" Json.Decode.string
+        |> decode "sep" Json.Decode.string
         |> decode "course_id" Uuid.decoder
 
 

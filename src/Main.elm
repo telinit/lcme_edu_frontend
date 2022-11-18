@@ -14,8 +14,10 @@ import Page.MarksCourse as MarksCourse
 import Page.MarksStudent as MarksStudent
 import Page.NotFound as NotFound
 import Page.UserProfile as PageUserProfile
+import Task
 import Url exposing (Url)
-import Url.Parser exposing ((</>), map, oneOf, parse, s, string, top)
+import Url.Parser exposing ((</>), (<?>), map, oneOf, parse, query, s, string, top)
+import Url.Parser.Query as Query
 import Util exposing (Either(..), either_map)
 import Uuid exposing (Uuid)
 
@@ -78,6 +80,7 @@ type ParsedUrl
     | UrlProfileOfUser Uuid
     | UrlMessages
     | UrlNews
+    | UrlPasswordReset (Maybe String)
 
 
 type Msg
@@ -100,6 +103,7 @@ parse_url url =
         (parse
             (oneOf
                 [ map UrlPageFront top
+                , map UrlPasswordReset (s "login" </> s "password_reset" <?> Query.string "token")
                 , map UrlLogin (s "login")
                 , map UrlLogout (s "logout")
                 , map UrlCourseList (s "courses")
@@ -126,7 +130,12 @@ init { token } url key =
       , page = PageBlank
       , layout = LayoutNone
       }
-    , Cmd.batch [ Nav.pushUrl key "/login" ]
+    , case parse_url url of
+        UrlPasswordReset _ ->
+            Task.perform identity <| Task.succeed (MsgUrlChanged url)
+
+        _ ->
+            Nav.pushUrl key "/login"
     )
 
 
@@ -317,6 +326,13 @@ update msg model =
 
                         ( UrlNews, Right token ) ->
                             ( { model | page = PageBlank }, Cmd.none )
+
+                        ( UrlPasswordReset (Just token), _ ) ->
+                            let
+                                ( m, c ) =
+                                    Login.init_password_reset_fin token
+                            in
+                            Debug.log "UrlPasswordReset" ( { model | page = PageLogin m, layout = LayoutNone }, Cmd.map MsgPageLogin c )
 
                         ( _, _ ) ->
                             ( { model | page = PageBlank }, Cmd.none )
