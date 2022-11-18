@@ -383,9 +383,6 @@ validateActivityCSV sep data =
 
                 validateCell i k v =
                     let
-                        _ =
-                            Debug.log "validateCell" ( i, k, v )
-
                         tv =
                             String.trim v
 

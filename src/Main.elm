@@ -332,7 +332,7 @@ update msg model =
                                 ( m, c ) =
                                     Login.init_password_reset_fin token
                             in
-                            Debug.log "UrlPasswordReset" ( { model | page = PageLogin m, layout = LayoutNone }, Cmd.map MsgPageLogin c )
+                            ( { model | page = PageLogin m, layout = LayoutNone }, Cmd.map MsgPageLogin c )
 
                         ( _, _ ) ->
                             ( { model | page = PageBlank }, Cmd.none )

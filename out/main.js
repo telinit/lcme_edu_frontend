@@ -10553,7 +10553,6 @@ var $author$project$Page$Login$init_password_reset_fin = function (reset_token) 
 		$elm$core$Platform$Cmd$none);
 };
 var $elm$browser$Browser$Navigation$load = _Browser_load;
-var $elm$core$Debug$log = _Debug_log;
 var $author$project$Page$CourseListPage$Completed = F2(
 	function (a, b) {
 		return {$: 'Completed', a: a, b: b};
@@ -12820,8 +12819,8 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 				var validateInt = F3(
 					function (i, k, v) {
 						var tv = $elm$core$String$trim(v);
-						var _v6 = $elm$core$String$toInt(tv);
-						if (_v6.$ === 'Just') {
+						var _v5 = $elm$core$String$toInt(tv);
+						if (_v5.$ === 'Just') {
 							return _List_Nil;
 						} else {
 							return _List_fromArray(
@@ -12856,10 +12855,6 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 								row: $elm$core$Maybe$Just(row_num)
 							}
 							]) : _List_Nil;
-						var _v1 = A2(
-							$elm$core$Debug$log,
-							'validateCell',
-							_Utils_Tuple3(i, k, v));
 						return _Utils_ap(
 							extraWS,
 							function () {
@@ -12873,10 +12868,10 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 											A2($elm$core$String$split, '.', tv));
 										if ((((((parts.b && (parts.a.$ === 'Just')) && parts.b.b) && (parts.b.a.$ === 'Just')) && parts.b.b.b) && (parts.b.b.a.$ === 'Just')) && (!parts.b.b.b.b)) {
 											var d = parts.a.a;
-											var _v4 = parts.b;
-											var m = _v4.a.a;
-											var _v5 = _v4.b;
-											var y = _v5.a.a;
+											var _v3 = parts.b;
+											var m = _v3.a.a;
+											var _v4 = _v3.b;
+											var y = _v4.a.a;
 											var ey = (y < 1990) ? _List_fromArray(
 												[
 													{
@@ -15944,17 +15939,14 @@ var $author$project$Main$update = F2(
 										var _v31 = $author$project$Page$Login$init_password_reset_fin(token);
 										var m = _v31.a;
 										var c = _v31.b;
-										return A2(
-											$elm$core$Debug$log,
-											'UrlPasswordReset',
-											_Utils_Tuple2(
-												_Utils_update(
-													model,
-													{
-														layout: $author$project$Main$LayoutNone,
-														page: $author$project$Main$PageLogin(m)
-													}),
-												A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageLogin, c)));
+										return _Utils_Tuple2(
+											_Utils_update(
+												model,
+												{
+													layout: $author$project$Main$LayoutNone,
+													page: $author$project$Main$PageLogin(m)
+												}),
+											A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageLogin, c));
 									} else {
 										break _v4$14;
 									}
