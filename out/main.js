@@ -8198,7 +8198,7 @@ var $author$project$Api$request = F7(
 	function (method, path, pathParams, queryParams, headerParams, body, decoder) {
 		return $author$project$Api$Request(
 			{
-				basePath: (!1) ? 'https://edu.lnmo.ru/api' : 'http://edu.lcme/api',
+				basePath: 'http://edu.lcme/api',
 				body: A2(
 					$elm$core$Maybe$withDefault,
 					$elm$http$Http$emptyBody,
@@ -10725,16 +10725,18 @@ var $author$project$Page$CourseListPage$update = F2(
 			}
 		}
 	});
-var $author$project$Page$CoursePage$ActivityImportStateError = function (a) {
-	return {$: 'ActivityImportStateError', a: a};
-};
 var $author$project$Page$CoursePage$ActivityImportStateFileSelection = function (a) {
 	return {$: 'ActivityImportStateFileSelection', a: a};
 };
-var $author$project$Page$CoursePage$ActivityImportStateInProgress = {$: 'ActivityImportStateInProgress'};
-var $author$project$Page$CoursePage$ActivityImportStateSuccess = function (a) {
-	return {$: 'ActivityImportStateSuccess', a: a};
+var $author$project$Page$CoursePage$ActivityImportStateFinished = function (a) {
+	return {$: 'ActivityImportStateFinished', a: a};
 };
+var $author$project$Page$CoursePage$ActivityImportStateInProgress = {$: 'ActivityImportStateInProgress'};
+var $author$project$Page$CoursePage$ActivityImportStateValidationFinished = F2(
+	function (a, b) {
+		return {$: 'ActivityImportStateValidationFinished', a: a, b: b};
+	});
+var $author$project$Page$CoursePage$ActivityImportStateValidationInProgress = {$: 'ActivityImportStateValidationInProgress'};
 var $author$project$Page$CoursePage$AddFin = {$: 'AddFin'};
 var $author$project$Page$CoursePage$AddGen = {$: 'AddGen'};
 var $author$project$Page$CoursePage$AddNone = {$: 'AddNone'};
@@ -10753,6 +10755,9 @@ var $author$project$Page$CoursePage$FetchFailed = function (a) {
 };
 var $author$project$Page$CoursePage$MsgActivitiesImportFinished = function (a) {
 	return {$: 'MsgActivitiesImportFinished', a: a};
+};
+var $author$project$Page$CoursePage$MsgActivityImportGotCSVData = function (a) {
+	return {$: 'MsgActivityImportGotCSVData', a: a};
 };
 var $author$project$Page$CoursePage$MsgCourseSaveError = function (a) {
 	return {$: 'MsgCourseSaveError', a: a};
@@ -11968,6 +11973,17 @@ var $author$project$Util$list_insert_at = F3(
 		}
 		return A2($elm$core$List$cons, x, l);
 	});
+var $elm$core$Result$map = F2(
+	function (func, ra) {
+		if (ra.$ === 'Ok') {
+			var a = ra.a;
+			return $elm$core$Result$Ok(
+				func(a));
+		} else {
+			var e = ra.a;
+			return $elm$core$Result$Err(e);
+		}
+	});
 var $author$project$Util$maybeFilter = F2(
 	function (pred, maybe) {
 		if (maybe.$ === 'Just') {
@@ -12372,6 +12388,652 @@ var $author$project$Component$FileInput$update = F2(
 				$elm$core$Platform$Cmd$none);
 		}
 	});
+var $author$project$Page$CoursePage$IssueKindError = {$: 'IssueKindError'};
+var $author$project$Page$CoursePage$IssueKindNotice = {$: 'IssueKindNotice'};
+var $author$project$Page$CoursePage$IssueKindWarning = {$: 'IssueKindWarning'};
+var $elm$core$Dict$diff = F2(
+	function (t1, t2) {
+		return A3(
+			$elm$core$Dict$foldl,
+			F3(
+				function (k, v, t) {
+					return A2($elm$core$Dict$remove, k, t);
+				}),
+			t1,
+			t2);
+	});
+var $elm$core$Set$diff = F2(
+	function (_v0, _v1) {
+		var dict1 = _v0.a;
+		var dict2 = _v1.a;
+		return $elm$core$Set$Set_elm_builtin(
+			A2($elm$core$Dict$diff, dict1, dict2));
+	});
+var $elm$core$List$map3 = _List_map3;
+var $elm$core$Set$member = F2(
+	function (key, _v0) {
+		var dict = _v0.a;
+		return A2($elm$core$Dict$member, key, dict);
+	});
+var $samuelstevens$elm_csv$Helper$Initial = {$: 'Initial'};
+var $elm$core$String$reverse = _String_reverse;
+var $samuelstevens$elm_csv$Helper$flipRowAndText = function (row) {
+	return A2(
+		$elm$core$List$map,
+		$elm$core$String$reverse,
+		$elm$core$List$reverse(row));
+};
+var $samuelstevens$elm_csv$Helper$flipRows = function (rows) {
+	return A2(
+		$elm$core$List$map,
+		$samuelstevens$elm_csv$Helper$flipRowAndText,
+		$elm$core$List$reverse(rows));
+};
+var $samuelstevens$elm_csv$Helper$CheckDoubleQuote = {$: 'CheckDoubleQuote'};
+var $samuelstevens$elm_csv$Helper$Escaped = {$: 'Escaped'};
+var $samuelstevens$elm_csv$Helper$Field = {$: 'Field'};
+var $samuelstevens$elm_csv$Helper$Invalid = {$: 'Invalid'};
+var $samuelstevens$elm_csv$Helper$Standard = {$: 'Standard'};
+var $samuelstevens$elm_csv$Helper$nextState = F5(
+	function (state, remaining, field, row, finished) {
+		nextState:
+		while (true) {
+			switch (state.$) {
+				case 'Initial':
+					var $temp$state = $samuelstevens$elm_csv$Helper$Field,
+						$temp$remaining = remaining,
+						$temp$field = '',
+						$temp$row = _List_Nil,
+						$temp$finished = _List_Nil;
+					state = $temp$state;
+					remaining = $temp$remaining;
+					field = $temp$field;
+					row = $temp$row;
+					finished = $temp$finished;
+					continue nextState;
+				case 'Field':
+					var _v1 = $elm$core$String$uncons(remaining);
+					if (_v1.$ === 'Just') {
+						var _v2 = _v1.a;
+						var ch = _v2.a;
+						var rest = _v2.b;
+						switch (ch.valueOf()) {
+							case ',':
+								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
+									$temp$remaining = rest,
+									$temp$field = '',
+									$temp$row = A2($elm$core$List$cons, '', row),
+									$temp$finished = finished;
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+							case '\"':
+								var $temp$state = $samuelstevens$elm_csv$Helper$Escaped,
+									$temp$remaining = rest,
+									$temp$field = '',
+									$temp$row = row,
+									$temp$finished = finished;
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+							case '\u000D':
+								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
+									$temp$remaining = rest,
+									$temp$field = '',
+									$temp$row = row,
+									$temp$finished = finished;
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+							case '\n':
+								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
+									$temp$remaining = rest,
+									$temp$field = '',
+									$temp$row = _List_Nil,
+									$temp$finished = A2(
+									$elm$core$List$cons,
+									A2($elm$core$List$cons, field, row),
+									finished);
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+							default:
+								var $temp$state = $samuelstevens$elm_csv$Helper$Standard,
+									$temp$remaining = rest,
+									$temp$field = $elm$core$String$fromChar(ch),
+									$temp$row = row,
+									$temp$finished = finished;
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+						}
+					} else {
+						return $elm$core$Result$Ok(finished);
+					}
+				case 'Standard':
+					var _v4 = $elm$core$String$uncons(remaining);
+					if (_v4.$ === 'Just') {
+						var _v5 = _v4.a;
+						var ch = _v5.a;
+						var rest = _v5.b;
+						switch (ch.valueOf()) {
+							case ',':
+								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
+									$temp$remaining = rest,
+									$temp$field = '',
+									$temp$row = A2($elm$core$List$cons, field, row),
+									$temp$finished = finished;
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+							case '\n':
+								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
+									$temp$remaining = rest,
+									$temp$field = '',
+									$temp$row = _List_Nil,
+									$temp$finished = A2(
+									$elm$core$List$cons,
+									A2($elm$core$List$cons, field, row),
+									finished);
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+							case '\u000D':
+								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
+									$temp$remaining = rest,
+									$temp$field = field,
+									$temp$row = row,
+									$temp$finished = finished;
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+							default:
+								var $temp$state = $samuelstevens$elm_csv$Helper$Standard,
+									$temp$remaining = rest,
+									$temp$field = A2($elm$core$String$cons, ch, field),
+									$temp$row = row,
+									$temp$finished = finished;
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+						}
+					} else {
+						return $elm$core$Result$Ok(
+							A2(
+								$elm$core$List$cons,
+								A2($elm$core$List$cons, field, row),
+								finished));
+					}
+				case 'CheckDoubleQuote':
+					var _v7 = $elm$core$String$uncons(remaining);
+					if (_v7.$ === 'Just') {
+						var _v8 = _v7.a;
+						var ch = _v8.a;
+						var rest = _v8.b;
+						switch (ch.valueOf()) {
+							case '\"':
+								var $temp$state = $samuelstevens$elm_csv$Helper$Escaped,
+									$temp$remaining = rest,
+									$temp$field = A2(
+									$elm$core$String$cons,
+									_Utils_chr('\"'),
+									field),
+									$temp$row = row,
+									$temp$finished = finished;
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+							case ',':
+								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
+									$temp$remaining = rest,
+									$temp$field = '',
+									$temp$row = A2($elm$core$List$cons, field, row),
+									$temp$finished = finished;
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+							case '\n':
+								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
+									$temp$remaining = rest,
+									$temp$field = '',
+									$temp$row = _List_Nil,
+									$temp$finished = A2(
+									$elm$core$List$cons,
+									A2($elm$core$List$cons, field, row),
+									finished);
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+							case '\u000D':
+								var $temp$state = $samuelstevens$elm_csv$Helper$Field,
+									$temp$remaining = rest,
+									$temp$field = field,
+									$temp$row = row,
+									$temp$finished = finished;
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+							default:
+								var $temp$state = $samuelstevens$elm_csv$Helper$Invalid,
+									$temp$remaining = rest,
+									$temp$field = '',
+									$temp$row = A2($elm$core$List$cons, field, row),
+									$temp$finished = finished;
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+						}
+					} else {
+						return $elm$core$Result$Ok(
+							A2(
+								$elm$core$List$cons,
+								A2($elm$core$List$cons, field, row),
+								finished));
+					}
+				case 'Escaped':
+					var _v10 = $elm$core$String$uncons(remaining);
+					if (_v10.$ === 'Just') {
+						var _v11 = _v10.a;
+						var ch = _v11.a;
+						var rest = _v11.b;
+						switch (ch.valueOf()) {
+							case ',':
+								var $temp$state = $samuelstevens$elm_csv$Helper$Escaped,
+									$temp$remaining = rest,
+									$temp$field = A2(
+									$elm$core$String$cons,
+									_Utils_chr(','),
+									field),
+									$temp$row = row,
+									$temp$finished = finished;
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+							case '\"':
+								var $temp$state = $samuelstevens$elm_csv$Helper$CheckDoubleQuote,
+									$temp$remaining = rest,
+									$temp$field = field,
+									$temp$row = row,
+									$temp$finished = finished;
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+							default:
+								var $temp$state = $samuelstevens$elm_csv$Helper$Escaped,
+									$temp$remaining = rest,
+									$temp$field = A2($elm$core$String$cons, ch, field),
+									$temp$row = row,
+									$temp$finished = finished;
+								state = $temp$state;
+								remaining = $temp$remaining;
+								field = $temp$field;
+								row = $temp$row;
+								finished = $temp$finished;
+								continue nextState;
+						}
+					} else {
+						var $temp$state = $samuelstevens$elm_csv$Helper$Invalid,
+							$temp$remaining = '',
+							$temp$field = '',
+							$temp$row = A2($elm$core$List$cons, field, row),
+							$temp$finished = finished;
+						state = $temp$state;
+						remaining = $temp$remaining;
+						field = $temp$field;
+						row = $temp$row;
+						finished = $temp$finished;
+						continue nextState;
+					}
+				default:
+					return $elm$core$Result$Err(remaining);
+			}
+		}
+	});
+var $samuelstevens$elm_csv$Csv$parseRows = function (str) {
+	var _v0 = A5($samuelstevens$elm_csv$Helper$nextState, $samuelstevens$elm_csv$Helper$Initial, str, '', _List_Nil, _List_Nil);
+	if (_v0.$ === 'Err') {
+		var err = _v0.a;
+		return $elm$core$Result$Err(err);
+	} else {
+		var rows = _v0.a;
+		return $elm$core$Result$Ok(
+			$samuelstevens$elm_csv$Helper$flipRows(rows));
+	}
+};
+var $author$project$Page$CoursePage$validateActivityCSV = function (data) {
+	var validateHeaderRow = function (fields) {
+		if (!fields.b) {
+			return _List_fromArray(
+				[
+					{
+					col: $elm$core$Maybe$Nothing,
+					kind: $author$project$Page$CoursePage$IssueKindError,
+					msg: 'Не обнаружен заголовок. Возможно, ваш файл пустой или пуста первая строка.',
+					row: $elm$core$Maybe$Just(1)
+				}
+				]);
+		} else {
+			var trimmedFields = A2($elm$core$List$map, $elm$core$String$trim, fields);
+			var requiredFields = $elm$core$Set$fromList(
+				_List_fromArray(
+					['Номер', 'Дата', 'Тема', 'Ключевое слово', 'Раздел', 'ФГОС', 'Раздел научной дисциплины', 'Форма занятия', 'Материалы урока', 'Домашнее задание', 'Количество оценок', 'Часы']));
+			var fieldsWithExtraWS = A2(
+				$elm$core$List$filterMap,
+				$elm$core$Basics$identity,
+				A2(
+					$elm$core$List$indexedMap,
+					F2(
+						function (i, f) {
+							return (!_Utils_eq(
+								f,
+								$elm$core$String$trim(f))) ? $elm$core$Maybe$Just(
+								{
+									col: $elm$core$Maybe$Just(i + 1),
+									kind: $author$project$Page$CoursePage$IssueKindWarning,
+									msg: 'Лишние пробельные символы в поле \'' + (f + '\''),
+									row: $elm$core$Maybe$Just(1)
+								}) : $elm$core$Maybe$Nothing;
+						}),
+					fields));
+			var extraWarnings = A2(
+				$elm$core$List$filterMap,
+				$elm$core$Basics$identity,
+				A2(
+					$elm$core$List$indexedMap,
+					F2(
+						function (c, fieldName) {
+							return A2(
+								$elm$core$Set$member,
+								$elm$core$String$trim(fieldName),
+								requiredFields) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
+								{
+									col: $elm$core$Maybe$Just(c + 1),
+									kind: $author$project$Page$CoursePage$IssueKindWarning,
+									msg: 'Обнаружено лишнее поле \'' + (fieldName + '\''),
+									row: $elm$core$Maybe$Just(1)
+								});
+						}),
+					fields));
+			var actualFields = $elm$core$Set$fromList(trimmedFields);
+			var missingFields = $elm$core$Set$toList(
+				A2($elm$core$Set$diff, requiredFields, actualFields));
+			var missingErrors = A2(
+				$elm$core$List$map,
+				function (fieldName) {
+					return {
+						col: $elm$core$Maybe$Nothing,
+						kind: $author$project$Page$CoursePage$IssueKindError,
+						msg: 'Не обнаружено обязательное поле \'' + (fieldName + '\''),
+						row: $elm$core$Maybe$Just(1)
+					};
+				},
+				missingFields);
+			return _Utils_ap(missingErrors, extraWarnings);
+		}
+	};
+	var validateBodyRow = F3(
+		function (row_num, header, fields) {
+			var validateInt = F3(
+				function (i, k, v) {
+					var tv = $elm$core$String$trim(v);
+					var _v7 = $elm$core$String$toInt(tv);
+					if (_v7.$ === 'Just') {
+						return _List_Nil;
+					} else {
+						return _List_fromArray(
+							[
+								{
+								col: $elm$core$Maybe$Just(i),
+								kind: $author$project$Page$CoursePage$IssueKindError,
+								msg: 'Значение в поле \'' + (k + ('\' не является целым числом: \'' + (v + '\''))),
+								row: $elm$core$Maybe$Just(row_num)
+							}
+							]);
+					}
+				});
+			var validateCell = F3(
+				function (i, k, v) {
+					var tv = $elm$core$String$trim(v);
+					var extraWS = (!_Utils_eq(v, tv)) ? _List_fromArray(
+						[
+							{
+							col: $elm$core$Maybe$Just(i),
+							kind: $author$project$Page$CoursePage$IssueKindWarning,
+							msg: 'Лишние пробелы в ячейке',
+							row: $elm$core$Maybe$Just(row_num)
+						}
+						]) : _List_Nil;
+					var emptyValue = (tv === '') ? _List_fromArray(
+						[
+							{
+							col: $elm$core$Maybe$Just(i),
+							kind: $author$project$Page$CoursePage$IssueKindWarning,
+							msg: 'Не указано значение поля \'' + (k + '\''),
+							row: $elm$core$Maybe$Just(row_num)
+						}
+						]) : _List_Nil;
+					return _Utils_ap(
+						extraWS,
+						function () {
+							switch (k) {
+								case 'Номер':
+									return A3(validateInt, i, k, v);
+								case 'Дата':
+									var parts = A2(
+										$elm$core$List$map,
+										$elm$core$String$toInt,
+										A2($elm$core$String$split, '.', tv));
+									if ((((((parts.b && (parts.a.$ === 'Just')) && parts.b.b) && (parts.b.a.$ === 'Just')) && parts.b.b.b) && (parts.b.b.a.$ === 'Just')) && (!parts.b.b.b.b)) {
+										var d = parts.a.a;
+										var _v5 = parts.b;
+										var m = _v5.a.a;
+										var _v6 = _v5.b;
+										var y = _v6.a.a;
+										var ey = (y < 1990) ? _List_fromArray(
+											[
+												{
+												col: $elm$core$Maybe$Just(i),
+												kind: $author$project$Page$CoursePage$IssueKindError,
+												msg: 'Некорректное значение года в дате',
+												row: $elm$core$Maybe$Just(row_num)
+											}
+											]) : _List_Nil;
+										var em = ((m < 1) || (m > 12)) ? _List_fromArray(
+											[
+												{
+												col: $elm$core$Maybe$Just(i),
+												kind: $author$project$Page$CoursePage$IssueKindError,
+												msg: 'Некорректное значение месяца в дате',
+												row: $elm$core$Maybe$Just(row_num)
+											}
+											]) : _List_Nil;
+										var ed = ((d < 1) || (d > 31)) ? _List_fromArray(
+											[
+												{
+												col: $elm$core$Maybe$Just(i),
+												kind: $author$project$Page$CoursePage$IssueKindError,
+												msg: 'Некорректное значение числа в дате',
+												row: $elm$core$Maybe$Just(row_num)
+											}
+											]) : _List_Nil;
+										return _Utils_ap(
+											ed,
+											_Utils_ap(em, ey));
+									} else {
+										return _List_fromArray(
+											[
+												{
+												col: $elm$core$Maybe$Just(i),
+												kind: $author$project$Page$CoursePage$IssueKindError,
+												msg: 'Некорректное значение даты',
+												row: $elm$core$Maybe$Just(row_num)
+											}
+											]);
+									}
+								case 'Тема':
+									return (tv === '') ? _List_fromArray(
+										[
+											{
+											col: $elm$core$Maybe$Just(i),
+											kind: $author$project$Page$CoursePage$IssueKindError,
+											msg: 'Не указана тема',
+											row: $elm$core$Maybe$Just(row_num)
+										}
+										]) : _List_Nil;
+								case 'Ключевое слово':
+									return (tv === '') ? emptyValue : (($elm$core$String$length(tv) > 50) ? _List_fromArray(
+										[
+											{
+											col: $elm$core$Maybe$Just(i),
+											kind: $author$project$Page$CoursePage$IssueKindWarning,
+											msg: 'Ключевое слово слишком длинное (>50 символов)',
+											row: $elm$core$Maybe$Just(row_num)
+										}
+										]) : _List_Nil);
+								case 'Раздел':
+									return emptyValue;
+								case 'ФГОС':
+									return A2(
+										$elm$core$List$member,
+										$elm$core$String$toLower(tv),
+										_List_fromArray(
+											['да', 'нет'])) ? _List_Nil : _List_fromArray(
+										[
+											{
+											col: $elm$core$Maybe$Just(i),
+											kind: $author$project$Page$CoursePage$IssueKindError,
+											msg: 'Значение должно быть одно из: Да, Нет',
+											row: $elm$core$Maybe$Just(row_num)
+										}
+										]);
+								case 'Раздел научной дисциплины':
+									return emptyValue;
+								case 'Форма занятия':
+									return emptyValue;
+								case 'Материалы урока':
+									return emptyValue;
+								case 'Домашнее задание':
+									return emptyValue;
+								case 'Количество оценок':
+									return A3(validateInt, i, k, v);
+								case 'Часы':
+									return A3(validateInt, i, k, v);
+								default:
+									return _List_Nil;
+							}
+						}());
+				});
+			return $elm$core$List$concat(
+				A4(
+					$elm$core$List$map3,
+					validateCell,
+					A2(
+						$elm$core$List$range,
+						1,
+						$elm$core$List$length(fields)),
+					header,
+					fields));
+		});
+	var parsed = $samuelstevens$elm_csv$Csv$parseRows(data);
+	var hasErrors = $elm$core$List$any(
+		function (i) {
+			return _Utils_eq(i.kind, $author$project$Page$CoursePage$IssueKindError);
+		});
+	if (parsed.$ === 'Ok') {
+		var val = parsed.a;
+		if (!val.b) {
+			return _List_fromArray(
+				[
+					{col: $elm$core$Maybe$Nothing, kind: $author$project$Page$CoursePage$IssueKindError, msg: 'Пустой файл.', row: $elm$core$Maybe$Nothing}
+				]);
+		} else {
+			var header = val.a;
+			var body = val.b;
+			var trimmedHeader = A2($elm$core$List$map, $elm$core$String$trim, header);
+			var headerErrors = validateHeaderRow(header);
+			if (hasErrors(headerErrors)) {
+				return headerErrors;
+			} else {
+				if (!body.b) {
+					return A2(
+						$elm$core$List$cons,
+						{col: $elm$core$Maybe$Nothing, kind: $author$project$Page$CoursePage$IssueKindNotice, msg: 'Нет строк для импорта.', row: $elm$core$Maybe$Nothing},
+						headerErrors);
+				} else {
+					var bodyErrors = A2(
+						$elm$core$List$indexedMap,
+						function (i) {
+							return A2(validateBodyRow, i + 2, trimmedHeader);
+						},
+						body);
+					return _Utils_ap(
+						headerErrors,
+						$elm$core$List$concat(bodyErrors));
+				}
+			}
+		}
+	} else {
+		var error = parsed.a;
+		return _List_fromArray(
+			[
+				{
+				col: $elm$core$Maybe$Nothing,
+				kind: $author$project$Page$CoursePage$IssueKindError,
+				msg: 'Ошибка при разборе CSV-файла около символа с номером ' + ($elm$core$String$fromInt(
+					$elm$core$String$length(data) - $elm$core$String$length(error)) + '. Ваш файл пуст, поврежден, неправильно сохранен (неверная кодировка или еще что-то...) или вовсе не является CSV файлом.'),
+				row: $elm$core$Maybe$Nothing
+			}
+			]);
+	}
+};
 var $author$project$Util$zip = $elm$core$List$map2($elm$core$Tuple$pair);
 var $author$project$Page$CoursePage$update = F2(
 	function (msg, model) {
@@ -12382,13 +13044,13 @@ var $author$project$Page$CoursePage$update = F2(
 					return $.order;
 				},
 				course.activities);
-			var _v60 = $elm$core$List$unzip(
+			var _v61 = $elm$core$List$unzip(
 				A2(
 					$elm$core$List$map,
 					$author$project$Component$Activity$init_from_activity(model.token),
 					activities));
-			var ms = _v60.a;
-			var cs = _v60.b;
+			var ms = _v61.a;
+			var cs = _v61.b;
 			var len = $elm$core$List$length(ms);
 			var id_range = A2($elm$core$List$range, model.activity_component_pk, (model.activity_component_pk + len) - 1);
 			var pairs_id_cmd = A2($author$project$Util$zip, id_range, cs);
@@ -12409,9 +13071,9 @@ var $author$project$Page$CoursePage$update = F2(
 				$elm$core$Platform$Cmd$batch(
 					A2(
 						$elm$core$List$map,
-						function (_v61) {
-							var id = _v61.a;
-							var c_ = _v61.b;
+						function (_v62) {
+							var id = _v62.a;
+							var c_ = _v62.b;
 							return A2(
 								$elm$core$Platform$Cmd$map,
 								$author$project$Page$CoursePage$MsgActivity(id),
@@ -12420,7 +13082,7 @@ var $author$project$Page$CoursePage$update = F2(
 						pairs_id_cmd)));
 		};
 		var _v0 = _Utils_Tuple2(msg, model.state);
-		_v0$20:
+		_v0$21:
 		while (true) {
 			switch (_v0.a.$) {
 				case 'MsgFetch':
@@ -12455,7 +13117,7 @@ var $author$project$Page$CoursePage$update = F2(
 								A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
 						}
 					} else {
-						break _v0$20;
+						break _v0$21;
 					}
 				case 'MsgClickMembers':
 					var _v4 = _v0.a;
@@ -12487,7 +13149,7 @@ var $author$project$Page$CoursePage$update = F2(
 										}))),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$20;
+						break _v0$21;
 					}
 				case 'MsgActivity':
 					if (_v0.b.$ === 'FetchDone') {
@@ -12602,7 +13264,7 @@ var $author$project$Page$CoursePage$update = F2(
 							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					} else {
-						break _v0$20;
+						break _v0$21;
 					}
 				case 'MsgOnClickAddGen':
 					var _v15 = _v0.a;
@@ -12862,7 +13524,7 @@ var $author$project$Page$CoursePage$update = F2(
 										c));
 							}
 						} else {
-							break _v0$20;
+							break _v0$21;
 						}
 					}
 				case 'MsgOnClickEditCancel':
@@ -12877,7 +13539,7 @@ var $author$project$Page$CoursePage$update = F2(
 							A2($author$project$Page$CoursePage$setEditMode, false, m),
 							c);
 					} else {
-						break _v0$20;
+						break _v0$21;
 					}
 				case 'MsgOnClickSave':
 					if (_v0.b.$ === 'FetchDone') {
@@ -12945,7 +13607,7 @@ var $author$project$Page$CoursePage$update = F2(
 											A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, course.id)),
 										{create: create, update: update_}))));
 					} else {
-						break _v0$20;
+						break _v0$21;
 					}
 				case 'MsgCourseSaveError':
 					if (_v0.b.$ === 'FetchDone') {
@@ -12961,7 +13623,7 @@ var $author$project$Page$CoursePage$update = F2(
 								}),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$20;
+						break _v0$21;
 					}
 				case 'MsgCourseSaved':
 					if (_v0.b.$ === 'FetchDone') {
@@ -12983,7 +13645,7 @@ var $author$project$Page$CoursePage$update = F2(
 							A2($author$project$Page$CoursePage$setEditMode, false, m),
 							c);
 					} else {
-						break _v0$20;
+						break _v0$21;
 					}
 				case 'MsgOnClickImportActivities':
 					var _v50 = _v0.a;
@@ -13016,29 +13678,47 @@ var $author$project$Page$CoursePage$update = F2(
 						var _v54 = A2($author$project$Component$FileInput$update, msg_, model_);
 						var m = _v54.a;
 						var c = _v54.b;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									activity_import_state: $author$project$Page$CoursePage$ActivityImportStateFileSelection(m)
-								}),
-							A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFileInputImport, c));
+						if (msg_.$ === 'MsgFileSelected') {
+							var f = msg_.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{activity_import_state: $author$project$Page$CoursePage$ActivityImportStateValidationInProgress}),
+								$elm$core$Platform$Cmd$batch(
+									_List_fromArray(
+										[
+											A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFileInputImport, c),
+											A2(
+											$elm$core$Task$perform,
+											$author$project$Page$CoursePage$MsgActivityImportGotCSVData,
+											$elm$file$File$toString(f))
+										])));
+						} else {
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										activity_import_state: $author$project$Page$CoursePage$ActivityImportStateFileSelection(m)
+									}),
+								A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFileInputImport, c));
+						}
 					} else {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					}
 				case 'MsgOnClickActivitiesImport':
 					if (_v0.b.$ === 'FetchDone') {
-						var _v55 = _v0.a;
-						var _v56 = _v0.b;
-						var course = _v56.a;
-						var _v57 = model.activity_import_state;
-						switch (_v57.$) {
+						var _v56 = _v0.a;
+						var _v57 = _v0.b;
+						var course = _v57.a;
+						var _v58 = model.activity_import_state;
+						switch (_v58.$) {
 							case 'ActivityImportStateFileSelection':
-								var model_ = _v57.a;
-								var _v58 = _Utils_Tuple2(model_.file, course.id);
-								if ((_v58.a.$ === 'Just') && (_v58.b.$ === 'Just')) {
-									var file = _v58.a.a;
-									var cid = _v58.b.a;
+								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+							case 'ActivityImportStateValidationFinished':
+								var csv_data = _v58.a;
+								var _v59 = course.id;
+								if (_v59.$ === 'Just') {
+									var cid = _v59.a;
 									return _Utils_Tuple2(
 										_Utils_update(
 											model,
@@ -13049,56 +13729,57 @@ var $author$project$Page$CoursePage$update = F2(
 											A2(
 												$elm$core$Task$mapError,
 												$author$project$Util$httpErrorToString,
-												A2(
-													$elm$core$Task$andThen,
-													function (csv) {
-														return A4(
-															$author$project$Api$ext_task,
-															$elm$core$Basics$identity,
-															model.token,
-															_List_Nil,
-															$author$project$Api$Request$Activity$activityImportForCourse(
-																{courseId: cid, data: csv}));
-													},
-													$elm$file$File$toString(file)))));
+												A4(
+													$author$project$Api$ext_task,
+													$elm$core$Basics$identity,
+													model.token,
+													_List_Nil,
+													$author$project$Api$Request$Activity$activityImportForCourse(
+														{courseId: cid, data: csv_data})))));
 								} else {
 									return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 								}
-							case 'ActivityImportStateSuccess':
-								var status = _v57.a;
-								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-							case 'ActivityImportStateError':
-								var err = _v57.a;
+							case 'ActivityImportStateFinished':
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 							default:
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					} else {
-						break _v0$20;
+						break _v0$21;
 					}
-				default:
+				case 'MsgActivitiesImportFinished':
 					var res = _v0.a.a;
-					if (res.$ === 'Ok') {
-						var v = res.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									activity_import_state: $author$project$Page$CoursePage$ActivityImportStateSuccess(
-										'Записей создано: ' + $elm$core$String$fromInt(
-											$elm$core$List$length(v.objects)))
-								}),
-							$elm$core$Platform$Cmd$none);
-					} else {
-						var e = res.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									activity_import_state: $author$project$Page$CoursePage$ActivityImportStateError(e)
-								}),
-							$elm$core$Platform$Cmd$none);
-					}
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								activity_import_state: $author$project$Page$CoursePage$ActivityImportStateFinished(
+									A2(
+										$elm$core$Result$map,
+										function (v) {
+											return 'Записей создано: ' + $elm$core$String$fromInt(
+												$elm$core$List$length(v.objects));
+										},
+										res))
+							}),
+						$elm$core$Platform$Cmd$none);
+				default:
+					var data = _v0.a.a;
+					var val_res = $author$project$Page$CoursePage$validateActivityCSV(data);
+					var res = function () {
+						if (!val_res.b) {
+							return $elm$core$Result$Ok(_Utils_Tuple0);
+						} else {
+							return $elm$core$Result$Err(val_res);
+						}
+					}();
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								activity_import_state: A2($author$project$Page$CoursePage$ActivityImportStateValidationFinished, data, res)
+							}),
+						$elm$core$Platform$Cmd$none);
 			}
 		}
 		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -16544,17 +17225,6 @@ var $jxxcarlson$elm_markdown$BlockType$deleteLangPrefix = F2(
 			str);
 	});
 var $elm$html$Html$hr = _VirtualDom_node('hr');
-var $elm$core$Result$map = F2(
-	function (func, ra) {
-		if (ra.$ === 'Ok') {
-			var a = ra.a;
-			return $elm$core$Result$Ok(
-				func(a));
-		} else {
-			var e = ra.a;
-			return $elm$core$Result$Err(e);
-		}
-	});
 var $jxxcarlson$elm_markdown$Markdown$Render$marginOfLevel = function (level) {
 	return A2(
 		$elm$html$Html$Attributes$style,
@@ -17122,11 +17792,6 @@ var $pablohirafuji$elm_syntax_highlight$SyntaxHighlight$Language$Helpers$chompIf
 var $pablohirafuji$elm_syntax_highlight$SyntaxHighlight$Language$Css$atRuleKeywordSet = $elm$core$Set$fromList(
 	_List_fromArray(
 		['and', 'or', 'not', 'only']));
-var $elm$core$Set$member = F2(
-	function (key, _v0) {
-		var dict = _v0.a;
-		return A2($elm$core$Dict$member, key, dict);
-	});
 var $pablohirafuji$elm_syntax_highlight$SyntaxHighlight$Language$Css$isAtRuleKeyword = function (n) {
 	return A2($elm$core$Set$member, n, $pablohirafuji$elm_syntax_highlight$SyntaxHighlight$Language$Css$atRuleKeywordSet);
 };
@@ -31283,6 +31948,7 @@ var $author$project$Component$Modal$view = F6(
 var $author$project$Page$CoursePage$MsgOnClickActivitiesImport = {$: 'MsgOnClickActivitiesImport'};
 var $author$project$Component$MessageBox$None = {$: 'None'};
 var $author$project$Component$MessageBox$Success = {$: 'Success'};
+var $author$project$Component$MessageBox$Warning = {$: 'Warning'};
 var $elm$html$Html$ul = _VirtualDom_node('ul');
 var $author$project$Component$FileInput$MsgDoSelectFile = {$: 'MsgDoSelectFile'};
 var $elm$core$Basics$pow = _Basics_pow;
@@ -31409,6 +32075,148 @@ var $author$project$Component$FileInput$view = function (model) {
 						sel)
 					]))
 			]));
+};
+var $author$project$Page$CoursePage$viewActValidationIssue = function (issue) {
+	var row = A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('ml-10')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'font-size', '8pt'),
+						A2($elm$html$Html$Attributes$style, 'color', '#999')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Строка')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						A2(
+							$elm$core$Maybe$withDefault,
+							'-',
+							A2($elm$core$Maybe$map, $elm$core$String$fromInt, issue.row)))
+					]))
+			]));
+	var kindStr = function () {
+		var _v1 = issue.kind;
+		switch (_v1.$) {
+			case 'IssueKindWarning':
+				return 'Предупреждение';
+			case 'IssueKindError':
+				return 'Ошибка';
+			default:
+				return 'Замечание';
+		}
+	}();
+	var msg = A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('ml-10 col-xs start-xs')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'font-size', '8pt'),
+						A2($elm$html$Html$Attributes$style, 'color', '#999')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(kindStr)
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(issue.msg)
+					]))
+			]));
+	var icon = function () {
+		var _v0 = issue.kind;
+		switch (_v0.$) {
+			case 'IssueKindWarning':
+				return A2(
+					$elm$html$Html$i,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('exclamation triangle icon'),
+							A2($elm$html$Html$Attributes$style, 'color', '#fbbd08')
+						]),
+					_List_Nil);
+			case 'IssueKindError':
+				return A2(
+					$elm$html$Html$i,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('minus circle icon'),
+							A2($elm$html$Html$Attributes$style, 'color', '#db2828')
+						]),
+					_List_Nil);
+			default:
+				return A2(
+					$elm$html$Html$i,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('info icon'),
+							A2($elm$html$Html$Attributes$style, 'color', '#2185d0')
+						]),
+					_List_Nil);
+		}
+	}();
+	var col = A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('ml-10')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'font-size', '8pt'),
+						A2($elm$html$Html$Attributes$style, 'color', '#999')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Столбец')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						A2(
+							$elm$core$Maybe$withDefault,
+							'-',
+							A2($elm$core$Maybe$map, $elm$core$String$fromInt, issue.col)))
+					]))
+			]));
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('row center-xs middle-xs ui segment')
+			]),
+		_List_fromArray(
+			[icon, row, col, msg]));
 };
 var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 	var form = function (state) {
@@ -31713,9 +32521,131 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 							$elm$html$Html$text(''),
 							$elm$html$Html$text('Выполняется импорт'))
 						])));
-		case 'ActivityImportStateSuccess':
-			var msg = _v0.a;
+		case 'ActivityImportStateFinished':
+			var res = _v0.a;
+			if (res.$ === 'Ok') {
+				var msg = res.a;
+				return form(
+					A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('col'),
+								A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+							]),
+						_List_fromArray(
+							[
+								A5(
+								$author$project$Component$MessageBox$view,
+								$author$project$Component$MessageBox$Success,
+								false,
+								$elm$core$Maybe$Nothing,
+								$elm$html$Html$text(''),
+								$elm$html$Html$text('Импорт успешно завершен: ' + msg))
+							])));
+			} else {
+				var err = res.a;
+				return form(
+					A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('col'),
+								A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+							]),
+						_List_fromArray(
+							[
+								A5(
+								$author$project$Component$MessageBox$view,
+								$author$project$Component$MessageBox$Error,
+								false,
+								$elm$core$Maybe$Nothing,
+								$elm$html$Html$text(''),
+								A2(
+									$elm$html$Html$div,
+									_List_Nil,
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_Nil,
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Импорт выполнен с ошибкой: ')
+												])),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('ml-10')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text(err)
+												]))
+										])))
+							])));
+			}
+		case 'ActivityImportStateValidationInProgress':
 			return form(
+				A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('col'),
+							A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+						]),
+					_List_fromArray(
+						[
+							A5(
+							$author$project$Component$MessageBox$view,
+							$author$project$Component$MessageBox$None,
+							true,
+							$elm$core$Maybe$Nothing,
+							$elm$html$Html$text(''),
+							$elm$html$Html$text('Проводим предварительную проверку вашего файла...'))
+						])));
+		default:
+			var result = _v0.b;
+			var restart = A2(
+				$elm$html$Html$button,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('ui button primary'),
+						$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickImportActivities)
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$i,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('undo icon')
+							]),
+						_List_Nil),
+						$elm$html$Html$text('Начать сначала')
+					]));
+			var cont = function (color_class) {
+				return A2(
+					$elm$html$Html$button,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('ui button ' + color_class),
+							$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickActivitiesImport)
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$i,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('play icon')
+								]),
+							_List_Nil),
+							$elm$html$Html$text('Продолжить импорт')
+						]));
+			};
+			var succ = form(
 				A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -31731,50 +32661,88 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 							false,
 							$elm$core$Maybe$Nothing,
 							$elm$html$Html$text(''),
-							$elm$html$Html$text('Импорт успешно завершен: ' + msg))
-						])));
-		default:
-			var err = _v0.a;
-			return form(
-				A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('col'),
-							A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
-						]),
-					_List_fromArray(
-						[
-							A5(
-							$author$project$Component$MessageBox$view,
-							$author$project$Component$MessageBox$Error,
-							false,
-							$elm$core$Maybe$Nothing,
-							$elm$html$Html$text(''),
+							$elm$html$Html$text('Предварительная проверка завершена. Проблем не найдено.')),
 							A2(
-								$elm$html$Html$div,
-								_List_Nil,
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$div,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Импорт выполнен с ошибкой: ')
-											])),
-										A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('ml-10')
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text(err)
-											]))
-									])))
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('mt-10')
+								]),
+							_List_fromArray(
+								[
+									cont('green')
+								]))
 						])));
+			if (result.$ === 'Ok') {
+				return succ;
+			} else {
+				var data = result.a;
+				var valKindToInt = function (kind) {
+					switch (kind.$) {
+						case 'IssueKindWarning':
+							return 1;
+						case 'IssueKindError':
+							return 0;
+						default:
+							return 2;
+					}
+				};
+				var sorted = A2(
+					$elm$core$List$sortBy,
+					A2(
+						$elm$core$Basics$composeR,
+						function ($) {
+							return $.kind;
+						},
+						valKindToInt),
+					data);
+				if (!sorted.b) {
+					return succ;
+				} else {
+					var hd = sorted.a;
+					var canContinue = !_Utils_eq(hd.kind, $author$project$Page$CoursePage$IssueKindError);
+					return form(
+						A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('col'),
+									A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+								]),
+							_List_fromArray(
+								[
+									A5(
+									$author$project$Component$MessageBox$view,
+									canContinue ? $author$project$Component$MessageBox$Warning : $author$project$Component$MessageBox$Error,
+									false,
+									$elm$core$Maybe$Nothing,
+									$elm$html$Html$text(''),
+									$elm$html$Html$text(
+										canContinue ? ('Были найдены некоторые проблемы в ваших данных. ' + ('Рекомендуется ознакомиться с их списком ниже и исправить недочеты. ' + 'Тем не менее, вы можете продолжить загрузку без исправления.')) : ('Были найдены серьезные ошибки в вашем файле. Для продолжения необходимо ' + 'вначале исправить все ошибки и, желательно, все остальные недостатки.'))),
+									A2(
+									$elm$html$Html$div,
+									_List_Nil,
+									_List_fromArray(
+										[
+											restart,
+											canContinue ? cont('yellow') : $elm$html$Html$text('')
+										])),
+									A2(
+									$elm$html$Html$h3,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(
+											'Список найденных проблем (' + ($elm$core$String$fromInt(
+												$elm$core$List$length(sorted)) + '):'))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_Nil,
+									A2($elm$core$List$map, $author$project$Page$CoursePage$viewActValidationIssue, sorted))
+								])));
+				}
+			}
 	}
 };
 var $author$project$Page$CoursePage$viewCourse = F3(
@@ -32670,7 +33638,6 @@ var $author$project$Page$FatalError$view = function (data) {
 					]))
 			]));
 };
-var $author$project$Component$MessageBox$Warning = {$: 'Warning'};
 var $author$project$Page$FrontPage$greetTOD = function (timeOfDay) {
 	switch (timeOfDay.$) {
 		case 'Morning':

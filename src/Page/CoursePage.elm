@@ -10,6 +10,7 @@ import Component.MessageBox as MessageBox exposing (Type(..))
 import Component.Misc exposing (user_link)
 import Component.Modal as Modal
 import Component.MultiTask as MultiTask exposing (Msg(..))
+import Csv
 import Dict exposing (Dict)
 import File
 import File.Download
@@ -17,6 +18,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http exposing (Error(..))
+import List exposing (filterMap)
 import Page.CourseListPage exposing (empty_to_nothing)
 import Set
 import String exposing (trim)
@@ -69,18 +71,34 @@ type Msg
     | MsgFileInputImport FI.Msg
     | MsgOnClickActivitiesImport
     | MsgActivitiesImportFinished (Result String ImportForCourseResult)
+    | MsgActivityImportGotCSVData String
 
 
 type FetchResult
     = ResCourse CourseDeep
 
 
+type IssueKind
+    = IssueKindWarning
+    | IssueKindError
+    | IssueKindNotice
+
+
+type alias ActivityCSVValidationIssue =
+    { kind : IssueKind
+    , row : Maybe Int
+    , col : Maybe Int
+    , msg : String
+    }
+
+
 type ActivityImportState
     = ActivityImportStateNone
     | ActivityImportStateFileSelection FI.Model
+    | ActivityImportStateValidationInProgress
+    | ActivityImportStateValidationFinished String (Result (List ActivityCSVValidationIssue) ())
     | ActivityImportStateInProgress
-    | ActivityImportStateSuccess String
-    | ActivityImportStateError String
+    | ActivityImportStateFinished (Result String String)
 
 
 type alias Model =
@@ -245,6 +263,333 @@ setEditMode edt model =
             else
                 EditOff
     }
+
+
+validateActivityCSV : String -> List ActivityCSVValidationIssue
+validateActivityCSV data =
+    let
+        hasErrors =
+            List.any (\i -> i.kind == IssueKindError)
+
+        parsed =
+            Csv.parseRows data
+
+        validateHeaderRow : List String -> List ActivityCSVValidationIssue
+        validateHeaderRow fields =
+            case fields of
+                [] ->
+                    [ { kind = IssueKindError
+                      , row = Just 1
+                      , col = Nothing
+                      , msg = "Не обнаружен заголовок. Возможно, ваш файл пустой или пуста первая строка."
+                      }
+                    ]
+
+                _ ->
+                    let
+                        trimmedFields =
+                            List.map String.trim fields
+
+                        fieldsWithExtraWS =
+                            List.filterMap identity <|
+                                List.indexedMap
+                                    (\i f ->
+                                        if f /= String.trim f then
+                                            Just
+                                                { kind = IssueKindWarning
+                                                , row = Just 1
+                                                , col = Just (i + 1)
+                                                , msg = "Лишние пробельные символы в поле '" ++ f ++ "'"
+                                                }
+
+                                        else
+                                            Nothing
+                                    )
+                                    fields
+
+                        requiredFields =
+                            Set.fromList
+                                [ "Номер"
+                                , "Дата"
+                                , "Тема"
+                                , "Ключевое слово"
+                                , "Раздел"
+                                , "ФГОС"
+                                , "Раздел научной дисциплины"
+                                , "Форма занятия"
+                                , "Материалы урока"
+                                , "Домашнее задание"
+                                , "Количество оценок"
+                                , "Часы"
+                                ]
+
+                        actualFields =
+                            Set.fromList trimmedFields
+
+                        missingFields =
+                            Set.toList <| Set.diff requiredFields actualFields
+
+                        missingErrors =
+                            List.map
+                                (\fieldName ->
+                                    { kind = IssueKindError
+                                    , row = Just 1
+                                    , col = Nothing
+                                    , msg = "Не обнаружено обязательное поле '" ++ fieldName ++ "'"
+                                    }
+                                )
+                                missingFields
+
+                        extraWarnings =
+                            List.filterMap identity <|
+                                List.indexedMap
+                                    (\c fieldName ->
+                                        if Set.member (String.trim fieldName) requiredFields then
+                                            Nothing
+
+                                        else
+                                            Just
+                                                { kind = IssueKindWarning
+                                                , row = Just 1
+                                                , col = Just (c + 1)
+                                                , msg = "Обнаружено лишнее поле '" ++ fieldName ++ "'"
+                                                }
+                                    )
+                                    fields
+                    in
+                    missingErrors ++ extraWarnings
+
+        validateBodyRow : Int -> List String -> List String -> List ActivityCSVValidationIssue
+        validateBodyRow row_num header fields =
+            let
+                validateInt i k v =
+                    let
+                        tv =
+                            String.trim v
+                    in
+                    case String.toInt tv of
+                        Just _ ->
+                            []
+
+                        Nothing ->
+                            [ { kind = IssueKindError
+                              , row = Just row_num
+                              , col = Just i
+                              , msg = "Значение в поле '" ++ k ++ "' не является целым числом: '" ++ v ++ "'"
+                              }
+                            ]
+
+                validateCell i k v =
+                    let
+                        tv =
+                            String.trim v
+
+                        extraWS =
+                            if v /= tv then
+                                [ { kind = IssueKindWarning
+                                  , row = Just row_num
+                                  , col = Just i
+                                  , msg = "Лишние пробелы в ячейке"
+                                  }
+                                ]
+
+                            else
+                                []
+
+                        emptyValue =
+                            if tv == "" then
+                                [ { kind = IssueKindWarning
+                                  , row = Just row_num
+                                  , col = Just i
+                                  , msg = "Не указано значение поля '" ++ k ++ "'"
+                                  }
+                                ]
+
+                            else
+                                []
+                    in
+                    extraWS
+                        ++ (case k of
+                                "Номер" ->
+                                    validateInt i k v
+
+                                "Дата" ->
+                                    let
+                                        parts =
+                                            List.map String.toInt <| String.split "." tv
+                                    in
+                                    case parts of
+                                        [ Just d, Just m, Just y ] ->
+                                            let
+                                                ed =
+                                                    if d < 1 || d > 31 then
+                                                        [ { kind = IssueKindError
+                                                          , row = Just row_num
+                                                          , col = Just i
+                                                          , msg = "Некорректное значение числа в дате"
+                                                          }
+                                                        ]
+
+                                                    else
+                                                        []
+
+                                                em =
+                                                    if m < 1 || m > 12 then
+                                                        [ { kind = IssueKindError
+                                                          , row = Just row_num
+                                                          , col = Just i
+                                                          , msg = "Некорректное значение месяца в дате"
+                                                          }
+                                                        ]
+
+                                                    else
+                                                        []
+
+                                                ey =
+                                                    if y < 1990 then
+                                                        [ { kind = IssueKindError
+                                                          , row = Just row_num
+                                                          , col = Just i
+                                                          , msg = "Некорректное значение года в дате"
+                                                          }
+                                                        ]
+
+                                                    else
+                                                        []
+                                            in
+                                            ed ++ em ++ ey
+
+                                        _ ->
+                                            [ { kind = IssueKindError
+                                              , row = Just row_num
+                                              , col = Just i
+                                              , msg = "Некорректное значение даты"
+                                              }
+                                            ]
+
+                                "Тема" ->
+                                    if tv == "" then
+                                        [ { kind = IssueKindError
+                                          , row = Just row_num
+                                          , col = Just i
+                                          , msg = "Не указана тема"
+                                          }
+                                        ]
+
+                                    else
+                                        []
+
+                                "Ключевое слово" ->
+                                    if tv == "" then
+                                        emptyValue
+
+                                    else if String.length tv > 50 then
+                                        [ { kind = IssueKindWarning
+                                          , row = Just row_num
+                                          , col = Just i
+                                          , msg = "Ключевое слово слишком длинное (>50 символов)"
+                                          }
+                                        ]
+
+                                    else
+                                        []
+
+                                "Раздел" ->
+                                    emptyValue
+
+                                "ФГОС" ->
+                                    if List.member (String.toLower tv) [ "да", "нет" ] then
+                                        []
+
+                                    else
+                                        [ { kind = IssueKindError
+                                          , row = Just row_num
+                                          , col = Just i
+                                          , msg = "Значение должно быть одно из: Да, Нет"
+                                          }
+                                        ]
+
+                                "Раздел научной дисциплины" ->
+                                    emptyValue
+
+                                "Форма занятия" ->
+                                    emptyValue
+
+                                "Материалы урока" ->
+                                    emptyValue
+
+                                "Домашнее задание" ->
+                                    emptyValue
+
+                                "Количество оценок" ->
+                                    validateInt i k v
+
+                                "Часы" ->
+                                    validateInt i k v
+
+                                _ ->
+                                    []
+                           )
+            in
+            -- TODO: compare lengths of 'header' and 'fields'
+            List.concat <|
+                List.map3
+                    validateCell
+                    (List.range 1 (List.length fields))
+                    header
+                    fields
+    in
+    case parsed of
+        Ok val ->
+            case val of
+                [] ->
+                    [ { kind = IssueKindError
+                      , row = Nothing
+                      , col = Nothing
+                      , msg =
+                            "Пустой файл."
+                      }
+                    ]
+
+                header :: body ->
+                    let
+                        headerErrors =
+                            validateHeaderRow header
+
+                        trimmedHeader =
+                            List.map String.trim header
+                    in
+                    if hasErrors headerErrors then
+                        headerErrors
+
+                    else
+                        case body of
+                            [] ->
+                                { kind = IssueKindNotice
+                                , row = Nothing
+                                , col = Nothing
+                                , msg =
+                                    "Нет строк для импорта."
+                                }
+                                    :: headerErrors
+
+                            _ ->
+                                let
+                                    bodyErrors =
+                                        List.indexedMap (\i -> validateBodyRow (i + 2) trimmedHeader) body
+                                in
+                                headerErrors ++ List.concat bodyErrors
+
+        Err error ->
+            [ { kind = IssueKindError
+              , row = Nothing
+              , col = Nothing
+              , msg =
+                    "Ошибка при разборе CSV-файла около символа с номером "
+                        ++ String.fromInt (String.length data - String.length error)
+                        ++ ". Ваш файл пуст, поврежден, неправильно сохранен (неверная кодировка или еще что-то...) или вовсе не является CSV файлом."
+              }
+            ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -651,25 +996,36 @@ update msg model =
                         ( m, c ) =
                             FI.update msg_ model_
                     in
-                    ( { model | activity_import_state = ActivityImportStateFileSelection m }, Cmd.map MsgFileInputImport c )
+                    case msg_ of
+                        FI.MsgFileSelected f ->
+                            ( { model
+                                | activity_import_state = ActivityImportStateValidationInProgress
+                              }
+                            , Cmd.batch
+                                [ Cmd.map MsgFileInputImport c
+                                , Task.perform MsgActivityImportGotCSVData <| File.toString f
+                                ]
+                            )
+
+                        _ ->
+                            ( { model | activity_import_state = ActivityImportStateFileSelection m }, Cmd.map MsgFileInputImport c )
 
                 _ ->
                     ( model, Cmd.none )
 
         ( MsgOnClickActivitiesImport, FetchDone course _ ) ->
             case model.activity_import_state of
-                ActivityImportStateFileSelection model_ ->
-                    case ( model_.file, course.id ) of
-                        ( Just file, Just cid ) ->
+                ActivityImportStateFileSelection _ ->
+                    ( model, Cmd.none )
+
+                ActivityImportStateValidationFinished csv_data _ ->
+                    case course.id of
+                        Just cid ->
                             ( { model
                                 | activity_import_state = ActivityImportStateInProgress
                               }
-                            , File.toString file
-                                |> Task.andThen
-                                    (\csv ->
-                                        ext_task identity model.token [] <|
-                                            activityImportForCourse { data = csv, courseId = cid }
-                                    )
+                            , activityImportForCourse { data = csv_data, courseId = cid }
+                                |> ext_task identity model.token []
                                 |> Task.mapError httpErrorToString
                                 |> Task.attempt MsgActivitiesImportFinished
                             )
@@ -677,32 +1033,93 @@ update msg model =
                         _ ->
                             ( model, Cmd.none )
 
-                ActivityImportStateSuccess status ->
-                    ( model, Cmd.none )
-
-                ActivityImportStateError err ->
+                ActivityImportStateFinished _ ->
                     ( model, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
 
         ( MsgActivitiesImportFinished res, _ ) ->
-            case res of
-                Ok v ->
-                    ( { model
-                        | activity_import_state =
-                            ActivityImportStateSuccess <|
-                                "Записей создано: "
-                                    ++ (String.fromInt <| List.length v.objects)
-                      }
-                    , Cmd.none
-                    )
+            ( { model
+                | activity_import_state =
+                    ActivityImportStateFinished <|
+                        Result.map
+                            (\v ->
+                                "Записей создано: " ++ (String.fromInt <| List.length v.objects)
+                            )
+                            res
+              }
+            , Cmd.none
+            )
 
-                Err e ->
-                    ( { model | activity_import_state = ActivityImportStateError e }, Cmd.none )
+        ( MsgActivityImportGotCSVData data, _ ) ->
+            let
+                val_res =
+                    validateActivityCSV data
+
+                res =
+                    case val_res of
+                        [] ->
+                            Ok ()
+
+                        _ ->
+                            Err val_res
+            in
+            ( { model | activity_import_state = ActivityImportStateValidationFinished data res }, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )
+
+
+viewActValidationIssue : ActivityCSVValidationIssue -> Html Msg
+viewActValidationIssue issue =
+    let
+        icon =
+            case issue.kind of
+                IssueKindWarning ->
+                    i [ class "exclamation triangle icon", style "color" "#fbbd08" ] []
+
+                IssueKindError ->
+                    i [ class "minus circle icon", style "color" "#db2828" ] []
+
+                IssueKindNotice ->
+                    i [ class "info icon", style "color" "#2185d0" ] []
+
+        kindStr =
+            case issue.kind of
+                IssueKindWarning ->
+                    "Предупреждение"
+
+                IssueKindError ->
+                    "Ошибка"
+
+                IssueKindNotice ->
+                    "Замечание"
+
+        row =
+            div [ class "ml-10" ]
+                [ div [ style "font-size" "8pt", style "color" "#999" ] [ text "Строка" ]
+                , div [] [ text <| Maybe.withDefault "-" <| Maybe.map String.fromInt issue.row ]
+                ]
+
+        col =
+            div [ class "ml-10" ]
+                [ div [ style "font-size" "8pt", style "color" "#999" ] [ text "Столбец" ]
+                , div [] [ text <| Maybe.withDefault "-" <| Maybe.map String.fromInt issue.col ]
+                ]
+
+        msg =
+            div [ class "ml-10 col-xs start-xs" ]
+                [ div [ style "font-size" "8pt", style "color" "#999" ] [ text kindStr ]
+                , div [] [ text issue.msg ]
+                ]
+    in
+    div [ class "row center-xs middle-xs ui segment" ]
+        [ icon
+        , row
+        , col
+        , msg
+        ]
 
 
 viewActivitiesImport : Model -> Html Msg
@@ -756,7 +1173,11 @@ viewActivitiesImport model =
                                 MsgFileInputImport
                               <|
                                 FI.view m
-                            , button [ class "ui button green", onClick MsgOnClickActivitiesImport ] [ text "Начать импорт" ]
+                            , button
+                                [ class "ui button green"
+                                , onClick MsgOnClickActivitiesImport
+                                ]
+                                [ text "Начать импорт" ]
                             ]
 
                 Nothing ->
@@ -782,31 +1203,127 @@ viewActivitiesImport model =
                         (text "Выполняется импорт")
                     ]
 
-        ActivityImportStateSuccess msg ->
+        ActivityImportStateFinished res ->
+            case res of
+                Ok msg ->
+                    form <|
+                        div [ class "col", style "display" "inline-block" ]
+                            [ MessageBox.view
+                                MessageBox.Success
+                                False
+                                Nothing
+                                (text "")
+                                (text <| "Импорт успешно завершен: " ++ msg)
+                            ]
+
+                Err err ->
+                    form <|
+                        div [ class "col", style "display" "inline-block" ]
+                            [ MessageBox.view
+                                MessageBox.Error
+                                False
+                                Nothing
+                                (text "")
+                              <|
+                                div []
+                                    [ div [] [ text "Импорт выполнен с ошибкой: " ]
+                                    , div [ class "ml-10" ] [ text err ]
+                                    ]
+                            ]
+
+        ActivityImportStateValidationInProgress ->
             form <|
                 div [ class "col", style "display" "inline-block" ]
                     [ MessageBox.view
-                        MessageBox.Success
-                        False
+                        MessageBox.None
+                        True
                         Nothing
                         (text "")
-                        (text <| "Импорт успешно завершен: " ++ msg)
+                        (text <| "Проводим предварительную проверку вашего файла...")
                     ]
 
-        ActivityImportStateError err ->
-            form <|
-                div [ class "col", style "display" "inline-block" ]
-                    [ MessageBox.view
-                        MessageBox.Error
-                        False
-                        Nothing
-                        (text "")
-                      <|
-                        div []
-                            [ div [] [ text "Импорт выполнен с ошибкой: " ]
-                            , div [ class "ml-10" ] [ text err ]
+        ActivityImportStateValidationFinished _ result ->
+            let
+                cont color_class =
+                    button [ class <| "ui button " ++ color_class, onClick MsgOnClickActivitiesImport ] [ i [ class "play icon" ] [], text "Продолжить импорт" ]
+
+                restart =
+                    button [ class "ui button primary", onClick MsgOnClickImportActivities ] [ i [ class "undo icon" ] [], text "Начать сначала" ]
+
+                succ =
+                    form <|
+                        div [ class "col", style "display" "inline-block" ]
+                            [ MessageBox.view
+                                MessageBox.Success
+                                False
+                                Nothing
+                                (text "")
+                                (text <| "Предварительная проверка завершена. Проблем не найдено.")
+                            , div [ class "mt-10" ] [ cont "green" ]
                             ]
-                    ]
+            in
+            case result of
+                Ok _ ->
+                    succ
+
+                Err data ->
+                    let
+                        valKindToInt kind =
+                            case kind of
+                                IssueKindWarning ->
+                                    1
+
+                                IssueKindError ->
+                                    0
+
+                                IssueKindNotice ->
+                                    2
+
+                        sorted =
+                            List.sortBy (.kind >> valKindToInt) data
+                    in
+                    case sorted of
+                        [] ->
+                            succ
+
+                        hd :: _ ->
+                            let
+                                canContinue =
+                                    hd.kind /= IssueKindError
+                            in
+                            form <|
+                                div [ class "col", style "display" "inline-block" ]
+                                    [ MessageBox.view
+                                        (if canContinue then
+                                            MessageBox.Warning
+
+                                         else
+                                            MessageBox.Error
+                                        )
+                                        False
+                                        Nothing
+                                        (text "")
+                                        (text <|
+                                            if canContinue then
+                                                "Были найдены некоторые проблемы в ваших данных. "
+                                                    ++ "Рекомендуется ознакомиться с их списком ниже и исправить недочеты. "
+                                                    ++ "Тем не менее, вы можете продолжить загрузку без исправления."
+
+                                            else
+                                                "Были найдены серьезные ошибки в вашем файле. Для продолжения необходимо "
+                                                    ++ "вначале исправить все ошибки и, желательно, все остальные недостатки."
+                                        )
+                                    , div []
+                                        [ restart
+                                        , if canContinue then
+                                            cont "yellow"
+
+                                          else
+                                            text ""
+                                        ]
+                                    , h3 [] [ text <| "Список найденных проблем (" ++ String.fromInt (List.length sorted) ++ "):" ]
+                                    , div [] <| List.map viewActValidationIssue sorted
+                                    ]
 
 
 viewCourse : CourseDeep -> List ( Int, CA.Model ) -> Model -> Html Msg
