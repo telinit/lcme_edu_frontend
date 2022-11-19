@@ -74,6 +74,10 @@ type Msg
     | MsgActivitiesImportFinished (Result String ImportForCourseResult)
     | MsgActivityImportGotCSVData Char String
     | MsgOnClickToggleActivityImportSettings
+    | MsgOnInputActivityPrimitiveImport String
+    | MsgOnClickActivityPrimitiveImport
+    | MsgOnClickOpenPrimitiveActImport
+    | MsgCloseActivitiesImportPrimitive
 
 
 type FetchResult
@@ -114,6 +118,7 @@ type alias Model =
     , teaching_here : Bool
     , activity_component_pk : Int
     , activity_import_state : ActivityImportState
+    , activity_primitive_import : Maybe String
     }
 
 
@@ -149,6 +154,7 @@ init token course_id user =
       , teaching_here = False
       , activity_component_pk = 0
       , activity_import_state = ActivityImportStateNone
+      , activity_primitive_import = Nothing
       }
     , Cmd.map MsgFetch c
     )
@@ -1073,6 +1079,84 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        ( MsgOnInputActivityPrimitiveImport v, _ ) ->
+            ( { model | activity_primitive_import = Just v }, Cmd.none )
+
+        ( MsgOnClickActivityPrimitiveImport, FetchDone c la ) ->
+            let
+                new_act : Int -> String -> Maybe Activity
+                new_act i t =
+                    Maybe.map
+                        (\cid ->
+                            { id = Nothing
+                            , createdAt = Nothing
+                            , updatedAt = Nothing
+                            , title = t
+                            , lessonType = Nothing
+                            , keywords = Nothing
+                            , isHidden = Just False
+                            , marksLimit = Just 2
+                            , hours = Just 1
+                            , fgosComplient = Just False
+                            , order = i
+                            , date = Nothing
+                            , group = Nothing
+                            , scientificTopic = Nothing
+                            , body = Nothing
+                            , dueDate = Nothing
+                            , link = Nothing
+                            , embed = Nothing
+                            , finalType = Nothing
+                            , contentType = Just ActivityContentTypeGEN
+                            , course = cid
+                            , files = Nothing
+                            , linkedActivity = Nothing
+                            , submittable = Just False
+                            }
+                        )
+                        c.id
+
+                topics =
+                    List.filter ((/=) "") <|
+                        List.map String.trim <|
+                            String.lines <|
+                                Maybe.withDefault "" <|
+                                    model.activity_primitive_import
+
+                maxOrder =
+                    Maybe.withDefault 0 <| List.maximum <| List.map (Tuple.second >> CA.getOrder) la
+
+                lenTopics =
+                    List.length topics
+
+                listOrder =
+                    List.range (maxOrder + 1) (maxOrder + lenTopics)
+
+                listPK =
+                    List.range model.activity_component_pk (model.activity_component_pk + lenTopics - 1)
+
+                ( lm, lc ) =
+                    List.unzip <|
+                        List.filterMap identity <|
+                            List.map2
+                                (\i t -> Maybe.map (CA.init_from_activity model.token) <| new_act i t)
+                                listOrder
+                                topics
+            in
+            ( { model
+                | state = FetchDone c <| la ++ zip listPK (List.map (CA.setEditable True) lm)
+                , activity_component_pk = model.activity_component_pk + lenTopics
+                , activity_primitive_import = Nothing
+              }
+            , Cmd.batch <| List.map2 (\k c_ -> Cmd.map (MsgActivity k) c_) listPK lc
+            )
+
+        ( MsgOnClickOpenPrimitiveActImport, _ ) ->
+            ( { model | activity_primitive_import = Just "" }, Cmd.none )
+
+        ( MsgCloseActivitiesImportPrimitive, _ ) ->
+            ( { model | activity_primitive_import = Nothing }, Cmd.none )
+
         ( _, _ ) ->
             ( model, Cmd.none )
 
@@ -1128,6 +1212,54 @@ viewActValidationIssue issue =
         ]
 
 
+viewPrimitiveImport : Model -> Html Msg
+viewPrimitiveImport model =
+    div []
+        [ p []
+            [ text "Данная форма предназначена для быстрого создания тем из списка. Темы создаются со следующими параметрами:"
+            ]
+        , ol []
+            [ ol []
+                [ li [] [ strong [] [ text "Тип" ], text " - тема" ]
+                , li [] [ strong [] [ text "Номер" ], text " - автоматически увеличивающийся, начиная с последнего существующего." ]
+                , li [] [ strong [] [ text "Дата" ], text " - не задана" ]
+                , li [] [ strong [] [ text "Тема" ], text " - название темы" ]
+                , li [] [ strong [] [ text "Ключевое слово" ], text " - не задано" ]
+                , li [] [ strong [] [ text "Раздел" ], text " - не задано" ]
+                , li [] [ strong [] [ text "ФГОС" ], text " - Нет" ]
+                , li [] [ strong [] [ text "Раздел научной дисциплины" ], text " - не задано" ]
+                , li [] [ strong [] [ text "Форма занятия" ], text " - не задано" ]
+                , li [] [ strong [] [ text "Материалы урока" ], text " - не задано" ]
+                , li [] [ strong [] [ text "Домашнее задание" ], text " - не задано" ]
+                , li [] [ strong [] [ text "Количество оценок" ], text " - 2" ]
+                , li [] [ strong [] [ text "Часы" ], text " - 1" ]
+                ]
+            ]
+        , p []
+            [ text "Введите список тем в поле ниже - по одной теме на строку. Пустые строки будут проигнорированы. Не забудьте "
+            , strong [] [ text "сохранить " ]
+            , text "изменения на странице курса."
+            ]
+        , div [ class "row center-xs" ]
+            [ div [ class "col-xs-12 center-xs" ]
+                [ div [ class "row ui form field" ]
+                    [ textarea
+                        [ value <| Maybe.withDefault "" model.activity_primitive_import
+                        , onInput MsgOnInputActivityPrimitiveImport
+                        ]
+                        []
+                    ]
+                , div [ class "row center-xs mt-10" ]
+                    [ button [ class "ui button green", onClick MsgOnClickActivityPrimitiveImport ]
+                        [ i [ class "plus icon" ] []
+                        , text "Добавить"
+                        ]
+                    ]
+                ]
+            ]
+        ]
+
+
 viewActivitiesImport : Model -> Html Msg
 viewActivitiesImport model =
     let
@@ -1174,7 +1306,7 @@ viewActivitiesImport model =
             form <|
                 div []
                     [ div [ class "row between-xs" ]
-                        [ h3 [] [ text "Настройки импорта" ]
+                        [ h3 [] [ text "Данные импорта" ]
                         , button [ class "ui button", onClick MsgOnClickToggleActivityImportSettings ]
                             [ i [ class "cog icon" ] []
                             , text "Настройки"
@@ -1578,7 +1710,11 @@ viewCourse courseRead components_activity model =
                                 [ text "Импорт: " ]
                             , button [ class "ui button green", onClick MsgOnClickImportActivities ]
                                 [ i [ class "file icon" ] []
-                                , text "CSV"
+                                , text "CSV КТП"
+                                ]
+                            , button [ class "ui button green", onClick MsgOnClickOpenPrimitiveActImport ]
+                                [ i [ class "bars icon" ] []
+                                , text "Список тем"
                                 ]
                             ]
                         ]
@@ -1682,11 +1818,25 @@ viewCourse courseRead components_activity model =
                 _ ->
                     Modal.view
                         "activities_import"
-                        "Импорт тем"
+                        "Импорт тем (КТП)"
                         (viewActivitiesImport model)
                         MsgCloseActivitiesImport
                         [ ( "Закрыть", MsgCloseActivitiesImport ) ]
                         True
+
+        modal_activities_import_primitive =
+            case model.activity_primitive_import of
+                Just _ ->
+                    Modal.view
+                        "activities_import_primitive"
+                        "Импорт тем (список)"
+                        (viewPrimitiveImport model)
+                        MsgCloseActivitiesImportPrimitive
+                        [ ( "Закрыть", MsgCloseActivitiesImportPrimitive ) ]
+                        True
+
+                _ ->
+                    text ""
 
         activities_title =
             h1 [ class "row between-xs" ]
@@ -1712,6 +1862,7 @@ viewCourse courseRead components_activity model =
     div [ style "padding-bottom" "3em" ]
         [ modal_members model.show_members
         , modal_activities_import model.activity_import_state
+        , modal_activities_import_primitive
         , breadcrumbs
         , header
         , activities_title

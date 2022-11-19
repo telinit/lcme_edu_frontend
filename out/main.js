@@ -9784,6 +9784,7 @@ var $author$project$Page$CoursePage$init = F3(
 			{
 				activity_component_pk: 0,
 				activity_import_state: $author$project$Page$CoursePage$ActivityImportStateNone,
+				activity_primitive_import: $elm$core$Maybe$Nothing,
 				edit_mode: $author$project$Page$CoursePage$EditOff,
 				is_staff: !$elm$core$Set$isEmpty(
 					A2(
@@ -12040,6 +12041,7 @@ var $author$project$Component$Activity$init_from_activity = F2(
 						[$author$project$Component$Activity$doGenID, $author$project$Component$Activity$doGetTZ])));
 		}
 	});
+var $elm$core$String$lines = _String_lines;
 var $author$project$Util$list_insert_at = F3(
 	function (i, x, l) {
 		var _v0 = _Utils_Tuple2(i, l);
@@ -12078,6 +12080,16 @@ var $elm$core$Result$map = F2(
 			return $elm$core$Result$Err(e);
 		}
 	});
+var $elm$core$List$maximum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
 var $author$project$Util$maybeFilter = F2(
 	function (pred, maybe) {
 		if (maybe.$ === 'Just') {
@@ -12145,6 +12157,7 @@ var $author$project$Page$CoursePage$setModified = F2(
 	});
 var $elm$core$List$sortBy = _List_sortBy;
 var $elm$file$File$toString = _File_toString;
+var $elm$core$String$trim = _String_trim;
 var $elm$core$List$unzip = function (pairs) {
 	var step = F2(
 		function (_v0, _v1) {
@@ -12217,7 +12230,6 @@ var $author$project$Component$Activity$setError = F2(
 				state: $author$project$Component$Activity$StateError(err)
 			});
 	});
-var $elm$core$String$trim = _String_trim;
 var $author$project$Component$Select$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -13016,13 +13028,13 @@ var $author$project$Page$CoursePage$update = F2(
 					return $.order;
 				},
 				course.activities);
-			var _v65 = $elm$core$List$unzip(
+			var _v70 = $elm$core$List$unzip(
 				A2(
 					$elm$core$List$map,
 					$author$project$Component$Activity$init_from_activity(model.token),
 					activities));
-			var ms = _v65.a;
-			var cs = _v65.b;
+			var ms = _v70.a;
+			var cs = _v70.b;
 			var len = $elm$core$List$length(ms);
 			var id_range = A2($elm$core$List$range, model.activity_component_pk, (model.activity_component_pk + len) - 1);
 			var pairs_id_cmd = A2($author$project$Util$zip, id_range, cs);
@@ -13043,9 +13055,9 @@ var $author$project$Page$CoursePage$update = F2(
 				$elm$core$Platform$Cmd$batch(
 					A2(
 						$elm$core$List$map,
-						function (_v66) {
-							var id = _v66.a;
-							var c_ = _v66.b;
+						function (_v71) {
+							var id = _v71.a;
+							var c_ = _v71.b;
 							return A2(
 								$elm$core$Platform$Cmd$map,
 								$author$project$Page$CoursePage$MsgActivity(id),
@@ -13054,7 +13066,7 @@ var $author$project$Page$CoursePage$update = F2(
 						pairs_id_cmd)));
 		};
 		var _v0 = _Utils_Tuple2(msg, model.state);
-		_v0$23:
+		_v0$27:
 		while (true) {
 			switch (_v0.a.$) {
 				case 'MsgFetch':
@@ -13089,7 +13101,7 @@ var $author$project$Page$CoursePage$update = F2(
 								A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
 						}
 					} else {
-						break _v0$23;
+						break _v0$27;
 					}
 				case 'MsgClickMembers':
 					var _v4 = _v0.a;
@@ -13121,7 +13133,7 @@ var $author$project$Page$CoursePage$update = F2(
 										}))),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$23;
+						break _v0$27;
 					}
 				case 'MsgActivity':
 					if (_v0.b.$ === 'FetchDone') {
@@ -13236,7 +13248,7 @@ var $author$project$Page$CoursePage$update = F2(
 							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					} else {
-						break _v0$23;
+						break _v0$27;
 					}
 				case 'MsgOnClickAddGen':
 					var _v15 = _v0.a;
@@ -13496,7 +13508,7 @@ var $author$project$Page$CoursePage$update = F2(
 										c));
 							}
 						} else {
-							break _v0$23;
+							break _v0$27;
 						}
 					}
 				case 'MsgOnClickEditCancel':
@@ -13511,7 +13523,7 @@ var $author$project$Page$CoursePage$update = F2(
 							A2($author$project$Page$CoursePage$setEditMode, false, m),
 							c);
 					} else {
-						break _v0$23;
+						break _v0$27;
 					}
 				case 'MsgOnClickSave':
 					if (_v0.b.$ === 'FetchDone') {
@@ -13579,7 +13591,7 @@ var $author$project$Page$CoursePage$update = F2(
 											A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, course.id)),
 										{create: create, update: update_}))));
 					} else {
-						break _v0$23;
+						break _v0$27;
 					}
 				case 'MsgCourseSaveError':
 					if (_v0.b.$ === 'FetchDone') {
@@ -13595,7 +13607,7 @@ var $author$project$Page$CoursePage$update = F2(
 								}),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$23;
+						break _v0$27;
 					}
 				case 'MsgCourseSaved':
 					if (_v0.b.$ === 'FetchDone') {
@@ -13617,7 +13629,7 @@ var $author$project$Page$CoursePage$update = F2(
 							A2($author$project$Page$CoursePage$setEditMode, false, m),
 							c);
 					} else {
-						break _v0$23;
+						break _v0$27;
 					}
 				case 'MsgOnClickImportActivities':
 					var _v50 = _v0.a;
@@ -13731,7 +13743,7 @@ var $author$project$Page$CoursePage$update = F2(
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					} else {
-						break _v0$23;
+						break _v0$27;
 					}
 				case 'MsgActivitiesImportFinished':
 					var res = _v0.a.a;
@@ -13784,7 +13796,7 @@ var $author$project$Page$CoursePage$update = F2(
 					} else {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					}
-				default:
+				case 'MsgOnClickToggleActivityImportSettings':
 					var _v63 = _v0.a;
 					var _v64 = model.activity_import_state;
 					if (_v64.$ === 'ActivityImportStateDataInput') {
@@ -13801,6 +13813,141 @@ var $author$project$Page$CoursePage$update = F2(
 					} else {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					}
+				case 'MsgOnInputActivityPrimitiveImport':
+					var v = _v0.a.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								activity_primitive_import: $elm$core$Maybe$Just(v)
+							}),
+						$elm$core$Platform$Cmd$none);
+				case 'MsgOnClickActivityPrimitiveImport':
+					if (_v0.b.$ === 'FetchDone') {
+						var _v65 = _v0.a;
+						var _v66 = _v0.b;
+						var c = _v66.a;
+						var la = _v66.b;
+						var topics = A2(
+							$elm$core$List$filter,
+							$elm$core$Basics$neq(''),
+							A2(
+								$elm$core$List$map,
+								$elm$core$String$trim,
+								$elm$core$String$lines(
+									A2($elm$core$Maybe$withDefault, '', model.activity_primitive_import))));
+						var new_act = F2(
+							function (i, t) {
+								return A2(
+									$elm$core$Maybe$map,
+									function (cid) {
+										return {
+											body: $elm$core$Maybe$Nothing,
+											contentType: $elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeGEN),
+											course: cid,
+											createdAt: $elm$core$Maybe$Nothing,
+											date: $elm$core$Maybe$Nothing,
+											dueDate: $elm$core$Maybe$Nothing,
+											embed: $elm$core$Maybe$Nothing,
+											fgosComplient: $elm$core$Maybe$Just(false),
+											files: $elm$core$Maybe$Nothing,
+											finalType: $elm$core$Maybe$Nothing,
+											group: $elm$core$Maybe$Nothing,
+											hours: $elm$core$Maybe$Just(1),
+											id: $elm$core$Maybe$Nothing,
+											isHidden: $elm$core$Maybe$Just(false),
+											keywords: $elm$core$Maybe$Nothing,
+											lessonType: $elm$core$Maybe$Nothing,
+											link: $elm$core$Maybe$Nothing,
+											linkedActivity: $elm$core$Maybe$Nothing,
+											marksLimit: $elm$core$Maybe$Just(2),
+											order: i,
+											scientificTopic: $elm$core$Maybe$Nothing,
+											submittable: $elm$core$Maybe$Just(false),
+											title: t,
+											updatedAt: $elm$core$Maybe$Nothing
+										};
+									},
+									c.id);
+							});
+						var maxOrder = A2(
+							$elm$core$Maybe$withDefault,
+							0,
+							$elm$core$List$maximum(
+								A2(
+									$elm$core$List$map,
+									A2($elm$core$Basics$composeR, $elm$core$Tuple$second, $author$project$Component$Activity$getOrder),
+									la)));
+						var lenTopics = $elm$core$List$length(topics);
+						var listOrder = A2($elm$core$List$range, maxOrder + 1, maxOrder + lenTopics);
+						var listPK = A2($elm$core$List$range, model.activity_component_pk, (model.activity_component_pk + lenTopics) - 1);
+						var _v67 = $elm$core$List$unzip(
+							A2(
+								$elm$core$List$filterMap,
+								$elm$core$Basics$identity,
+								A3(
+									$elm$core$List$map2,
+									F2(
+										function (i, t) {
+											return A2(
+												$elm$core$Maybe$map,
+												$author$project$Component$Activity$init_from_activity(model.token),
+												A2(new_act, i, t));
+										}),
+									listOrder,
+									topics)));
+						var lm = _v67.a;
+						var lc = _v67.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									activity_component_pk: model.activity_component_pk + lenTopics,
+									activity_primitive_import: $elm$core$Maybe$Nothing,
+									state: A2(
+										$author$project$Page$CoursePage$FetchDone,
+										c,
+										_Utils_ap(
+											la,
+											A2(
+												$author$project$Util$zip,
+												listPK,
+												A2(
+													$elm$core$List$map,
+													$author$project$Component$Activity$setEditable(true),
+													lm))))
+								}),
+							$elm$core$Platform$Cmd$batch(
+								A3(
+									$elm$core$List$map2,
+									F2(
+										function (k, c_) {
+											return A2(
+												$elm$core$Platform$Cmd$map,
+												$author$project$Page$CoursePage$MsgActivity(k),
+												c_);
+										}),
+									listPK,
+									lc)));
+					} else {
+						break _v0$27;
+					}
+				case 'MsgOnClickOpenPrimitiveActImport':
+					var _v68 = _v0.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								activity_primitive_import: $elm$core$Maybe$Just('')
+							}),
+						$elm$core$Platform$Cmd$none);
+				default:
+					var _v69 = _v0.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{activity_primitive_import: $elm$core$Maybe$Nothing}),
+						$elm$core$Platform$Cmd$none);
 			}
 		}
 		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -14650,16 +14797,6 @@ var $author$project$Util$index_by = F2(
 				},
 				list));
 	});
-var $elm$core$List$maximum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(
-			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $elm$core$List$repeatHelp = F3(
 	function (result, n, value) {
 		repeatHelp:
@@ -17077,6 +17214,7 @@ var $author$project$Component$MessageBox$view = F5(
 	});
 var $author$project$Page$CoursePage$MsgClickMembers = {$: 'MsgClickMembers'};
 var $author$project$Page$CoursePage$MsgCloseActivitiesImport = {$: 'MsgCloseActivitiesImport'};
+var $author$project$Page$CoursePage$MsgCloseActivitiesImportPrimitive = {$: 'MsgCloseActivitiesImportPrimitive'};
 var $author$project$Page$CoursePage$MsgCloseMembers = {$: 'MsgCloseMembers'};
 var $author$project$Page$CoursePage$MsgOnClickAddFin = {$: 'MsgOnClickAddFin'};
 var $author$project$Page$CoursePage$MsgOnClickAddGen = {$: 'MsgOnClickAddGen'};
@@ -17085,6 +17223,7 @@ var $author$project$Page$CoursePage$MsgOnClickAddTxt = {$: 'MsgOnClickAddTxt'};
 var $author$project$Page$CoursePage$MsgOnClickEdit = {$: 'MsgOnClickEdit'};
 var $author$project$Page$CoursePage$MsgOnClickEditCancel = {$: 'MsgOnClickEditCancel'};
 var $author$project$Page$CoursePage$MsgOnClickImportActivities = {$: 'MsgOnClickImportActivities'};
+var $author$project$Page$CoursePage$MsgOnClickOpenPrimitiveActImport = {$: 'MsgOnClickOpenPrimitiveActImport'};
 var $author$project$Page$CoursePage$MsgOnClickSave = {$: 'MsgOnClickSave'};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$Attributes$classList = function (classes) {
@@ -26894,7 +27033,6 @@ var $jxxcarlson$elm_markdown$Markdown$Parse$T = function (a) {
 	return {$: 'T', a: a};
 };
 var $jxxcarlson$elm_markdown$BlockType$Verbatim = {$: 'Verbatim'};
-var $elm$core$String$lines = _String_lines;
 var $jxxcarlson$elm_markdown$MDInline$BoldText = function (a) {
 	return {$: 'BoldText', a: a};
 };
@@ -32604,7 +32742,7 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 									_List_Nil,
 									_List_fromArray(
 										[
-											$elm$html$Html$text('Настройки импорта')
+											$elm$html$Html$text('Данные импорта')
 										])),
 									A2(
 									$elm$html$Html$button,
@@ -33019,8 +33157,318 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 			}
 	}
 };
+var $author$project$Page$CoursePage$MsgOnClickActivityPrimitiveImport = {$: 'MsgOnClickActivityPrimitiveImport'};
+var $author$project$Page$CoursePage$MsgOnInputActivityPrimitiveImport = function (a) {
+	return {$: 'MsgOnInputActivityPrimitiveImport', a: a};
+};
+var $elm$html$Html$ol = _VirtualDom_node('ol');
+var $author$project$Page$CoursePage$viewPrimitiveImport = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$p,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Данная форма предназначена для быстрого создания тем из списка. Темы создаются со следующими параметрами:')
+					])),
+				A2(
+				$elm$html$Html$ol,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$ol,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Тип')
+											])),
+										$elm$html$Html$text(' - тема')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Номер')
+											])),
+										$elm$html$Html$text(' - автоматически увеличивающийся, начиная с последнего существующего.')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Дата')
+											])),
+										$elm$html$Html$text(' - не задана')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Тема')
+											])),
+										$elm$html$Html$text(' - название темы')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Ключевое слово')
+											])),
+										$elm$html$Html$text(' - не задано')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Раздел')
+											])),
+										$elm$html$Html$text(' - не задано')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('ФГОС')
+											])),
+										$elm$html$Html$text(' - Нет')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Раздел научной дисциплины')
+											])),
+										$elm$html$Html$text(' - не задано')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Форма занятия')
+											])),
+										$elm$html$Html$text(' - не задано')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Материалы урока')
+											])),
+										$elm$html$Html$text(' - не задано')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Домашнее задание')
+											])),
+										$elm$html$Html$text(' - не задано')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Количество оценок')
+											])),
+										$elm$html$Html$text(' - 2')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Часы')
+											])),
+										$elm$html$Html$text(' - 1')
+									]))
+							]))
+					])),
+				A2(
+				$elm$html$Html$p,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Введите список тем в поле ниже - по одной теме на строку. Пустые строки будут проигнорированы. Не забудьте '),
+						A2(
+						$elm$html$Html$strong,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('сохранить ')
+							])),
+						$elm$html$Html$text('изменения на странице курса.')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('row center-xs')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('col-xs-12 center-xs')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('row ui form field')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$textarea,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$value(
+												A2($elm$core$Maybe$withDefault, '', model.activity_primitive_import)),
+												$elm$html$Html$Events$onInput($author$project$Page$CoursePage$MsgOnInputActivityPrimitiveImport)
+											]),
+										_List_Nil)
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('row center-xs mt-10')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$button,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('ui button green'),
+												$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickActivityPrimitiveImport)
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$i,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('plus icon')
+													]),
+												_List_Nil),
+												$elm$html$Html$text('Добавить')
+											]))
+									]))
+							]))
+					]))
+			]));
+};
 var $author$project$Page$CoursePage$viewCourse = F3(
 	function (courseRead, components_activity, model) {
+		var modal_activities_import_primitive = function () {
+			var _v12 = model.activity_primitive_import;
+			if (_v12.$ === 'Just') {
+				return A6(
+					$author$project$Component$Modal$view,
+					'activities_import_primitive',
+					'Импорт тем (список)',
+					$author$project$Page$CoursePage$viewPrimitiveImport(model),
+					$author$project$Page$CoursePage$MsgCloseActivitiesImportPrimitive,
+					_List_fromArray(
+						[
+							_Utils_Tuple2('Закрыть', $author$project$Page$CoursePage$MsgCloseActivitiesImportPrimitive)
+						]),
+					true);
+			} else {
+				return $elm$html$Html$text('');
+			}
+		}();
 		var modal_activities_import = function (m) {
 			if (m.$ === 'ActivityImportStateNone') {
 				return $elm$html$Html$text('');
@@ -33028,7 +33476,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 				return A6(
 					$author$project$Component$Modal$view,
 					'activities_import',
-					'Импорт тем',
+					'Импорт тем (КТП)',
 					$author$project$Page$CoursePage$viewActivitiesImport(model),
 					$author$project$Page$CoursePage$MsgCloseActivitiesImport,
 					_List_fromArray(
@@ -33715,7 +34163,25 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 													$elm$html$Html$Attributes$class('file icon')
 												]),
 											_List_Nil),
-											$elm$html$Html$text('CSV')
+											$elm$html$Html$text('CSV КТП')
+										])),
+									A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('ui button green'),
+											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickOpenPrimitiveActImport)
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$i,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('bars icon')
+												]),
+											_List_Nil),
+											$elm$html$Html$text('Список тем')
 										]))
 								]))
 						]))
@@ -33824,6 +34290,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 				[
 					modal_members(model.show_members),
 					modal_activities_import(model.activity_import_state),
+					modal_activities_import_primitive,
 					breadcrumbs,
 					header,
 					activities_title,
