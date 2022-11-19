@@ -160,16 +160,15 @@ view map_msg model html =
                     ([ div [ class "item" ] [] ] ++ menu items ++ right_menu profile True)
                 ]
     in
-    div [ id "modal_context", class "mr-20" ]
-        [ div
-            [ class "ui container"
-            , id "main_container"
-            ]
-            [ Html.map map_msg <| make_header_pc profile items
-            , Html.map map_msg <| header_mobile
-            , Html.map map_msg <| sidebar
-            , html
-            ]
+    div
+        [ class "ui container"
+        , id "main_container"
+        , style "margin-left" "0"
+        ]
+        [ Html.map map_msg <| make_header_pc profile items
+        , Html.map map_msg <| header_mobile
+        , Html.map map_msg <| sidebar
+        , html
         ]
 
 

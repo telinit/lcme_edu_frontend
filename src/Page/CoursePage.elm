@@ -1218,22 +1218,20 @@ viewPrimitiveImport model =
         [ p []
             [ text "Данная форма предназначена для быстрого создания тем из списка. Темы создаются со следующими параметрами:"
             ]
-        , ol []
-            [ ol []
-                [ li [] [ strong [] [ text "Тип" ], text " - тема" ]
-                , li [] [ strong [] [ text "Номер" ], text " - автоматически увеличивающийся, начиная с последнего существующего." ]
-                , li [] [ strong [] [ text "Дата" ], text " - не задана" ]
-                , li [] [ strong [] [ text "Тема" ], text " - название темы" ]
-                , li [] [ strong [] [ text "Ключевое слово" ], text " - не задано" ]
-                , li [] [ strong [] [ text "Раздел" ], text " - не задано" ]
-                , li [] [ strong [] [ text "ФГОС" ], text " - Нет" ]
-                , li [] [ strong [] [ text "Раздел научной дисциплины" ], text " - не задано" ]
-                , li [] [ strong [] [ text "Форма занятия" ], text " - не задано" ]
-                , li [] [ strong [] [ text "Материалы урока" ], text " - не задано" ]
-                , li [] [ strong [] [ text "Домашнее задание" ], text " - не задано" ]
-                , li [] [ strong [] [ text "Количество оценок" ], text " - 2" ]
-                , li [] [ strong [] [ text "Часы" ], text " - 1" ]
-                ]
+        , ul []
+            [ li [] [ strong [] [ text "Тип" ], text " - тема" ]
+            , li [] [ strong [] [ text "Номер" ], text " - автоматически увеличивающийся, начиная с последнего существующего." ]
+            , li [] [ strong [] [ text "Дата" ], text " - не задана" ]
+            , li [] [ strong [] [ text "Тема" ], text " - название темы" ]
+            , li [] [ strong [] [ text "Ключевое слово" ], text " - не задано" ]
+            , li [] [ strong [] [ text "Раздел" ], text " - не задано" ]
+            , li [] [ strong [] [ text "ФГОС" ], text " - Нет" ]
+            , li [] [ strong [] [ text "Раздел научной дисциплины" ], text " - не задано" ]
+            , li [] [ strong [] [ text "Форма занятия" ], text " - не задано" ]
+            , li [] [ strong [] [ text "Материалы урока" ], text " - не задано" ]
+            , li [] [ strong [] [ text "Домашнее задание" ], text " - не задано" ]
+            , li [] [ strong [] [ text "Количество оценок" ], text " - 2" ]
+            , li [] [ strong [] [ text "Часы" ], text " - 1" ]
             ]
         , p []
             [ text "Введите список тем в поле ниже - по одной теме на строку. Пустые строки будут проигнорированы. Не забудьте "
@@ -1246,6 +1244,7 @@ viewPrimitiveImport model =
                     [ textarea
                         [ value <| Maybe.withDefault "" model.activity_primitive_import
                         , onInput MsgOnInputActivityPrimitiveImport
+                        , rows 20
                         ]
                         []
                     ]
@@ -1628,7 +1627,7 @@ viewCourse courseRead components_activity model =
                 ]
                 [ div
                     [ class "col-sm-3 col-xs center-xs"
-                    , style "margin-right" "1em"
+                   -- , style "margin-right" "1em"
                     , style "min-width" "300px"
                     , style "max-width" "300px"
                     ]
@@ -1641,16 +1640,16 @@ viewCourse courseRead components_activity model =
                         ]
                         []
                     ]
-                , div [ class "col-sm between-xs row start-xs", style "margin" "1em", style "flex-flow" "column nowrap" ]
+                , div [ class "col-sm between-xs row start-xs", style "flex-flow" "column nowrap" ]
                     [ div []
-                        [ div [ class "row between-xs middle-xs", style "margin-bottom" "0.5em" ]
+                        [ div [ class "row between-md center-xs", style "margin-bottom" "0.5em" ]
                             [ h1
                                 [ class "col"
                                 , style "margin" "0"
                                 ]
                                 [ text courseRead.title ]
                             , div
-                                [ class "col"
+                                [ class "col ml-10"
                                 ]
                                 buttons
                             ]
@@ -1839,7 +1838,7 @@ viewCourse courseRead components_activity model =
                     text ""
 
         activities_title =
-            h1 [ class "row between-xs" ]
+            h1 [ class "row between-xs ml-10 mr-10" ]
                 [ text "Содержание"
                 , div []
                     [ if model.is_staff || model.teaching_here then

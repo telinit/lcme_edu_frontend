@@ -16627,28 +16627,19 @@ var $author$project$Page$DefaultLayout$view = F3(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$id('modal_context'),
-					$elm$html$Html$Attributes$class('mr-20')
+					$elm$html$Html$Attributes$class('ui container'),
+					$elm$html$Html$Attributes$id('main_container'),
+					A2($elm$html$Html$Attributes$style, 'margin-left', '0')
 				]),
 			_List_fromArray(
 				[
 					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('ui container'),
-							$elm$html$Html$Attributes$id('main_container')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$map,
-							map_msg,
-							A2($author$project$Page$DefaultLayout$make_header_pc, profile, items)),
-							A2($elm$html$Html$map, map_msg, $author$project$Page$DefaultLayout$header_mobile),
-							A2($elm$html$Html$map, map_msg, sidebar),
-							html
-						]))
+					$elm$html$Html$map,
+					map_msg,
+					A2($author$project$Page$DefaultLayout$make_header_pc, profile, items)),
+					A2($elm$html$Html$map, map_msg, $author$project$Page$DefaultLayout$header_mobile),
+					A2($elm$html$Html$map, map_msg, sidebar),
+					html
 				]));
 	});
 var $author$project$Main$viewLayout = F2(
@@ -33161,7 +33152,12 @@ var $author$project$Page$CoursePage$MsgOnClickActivityPrimitiveImport = {$: 'Msg
 var $author$project$Page$CoursePage$MsgOnInputActivityPrimitiveImport = function (a) {
 	return {$: 'MsgOnInputActivityPrimitiveImport', a: a};
 };
-var $elm$html$Html$ol = _VirtualDom_node('ol');
+var $elm$html$Html$Attributes$rows = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'rows',
+		$elm$core$String$fromInt(n));
+};
 var $author$project$Page$CoursePage$viewPrimitiveImport = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -33176,197 +33172,191 @@ var $author$project$Page$CoursePage$viewPrimitiveImport = function (model) {
 						$elm$html$Html$text('Данная форма предназначена для быстрого создания тем из списка. Темы создаются со следующими параметрами:')
 					])),
 				A2(
-				$elm$html$Html$ol,
+				$elm$html$Html$ul,
 				_List_Nil,
 				_List_fromArray(
 					[
 						A2(
-						$elm$html$Html$ol,
+						$elm$html$Html$li,
 						_List_Nil,
 						_List_fromArray(
 							[
 								A2(
-								$elm$html$Html$li,
+								$elm$html$Html$strong,
 								_List_Nil,
 								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$strong,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Тип')
-											])),
-										$elm$html$Html$text(' - тема')
+										$elm$html$Html$text('Тип')
 									])),
+								$elm$html$Html$text(' - тема')
+							])),
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
 								A2(
-								$elm$html$Html$li,
+								$elm$html$Html$strong,
 								_List_Nil,
 								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$strong,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Номер')
-											])),
-										$elm$html$Html$text(' - автоматически увеличивающийся, начиная с последнего существующего.')
+										$elm$html$Html$text('Номер')
 									])),
+								$elm$html$Html$text(' - автоматически увеличивающийся, начиная с последнего существующего.')
+							])),
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
 								A2(
-								$elm$html$Html$li,
+								$elm$html$Html$strong,
 								_List_Nil,
 								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$strong,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Дата')
-											])),
-										$elm$html$Html$text(' - не задана')
+										$elm$html$Html$text('Дата')
 									])),
+								$elm$html$Html$text(' - не задана')
+							])),
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
 								A2(
-								$elm$html$Html$li,
+								$elm$html$Html$strong,
 								_List_Nil,
 								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$strong,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Тема')
-											])),
-										$elm$html$Html$text(' - название темы')
+										$elm$html$Html$text('Тема')
 									])),
+								$elm$html$Html$text(' - название темы')
+							])),
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
 								A2(
-								$elm$html$Html$li,
+								$elm$html$Html$strong,
 								_List_Nil,
 								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$strong,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Ключевое слово')
-											])),
-										$elm$html$Html$text(' - не задано')
+										$elm$html$Html$text('Ключевое слово')
 									])),
+								$elm$html$Html$text(' - не задано')
+							])),
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
 								A2(
-								$elm$html$Html$li,
+								$elm$html$Html$strong,
 								_List_Nil,
 								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$strong,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Раздел')
-											])),
-										$elm$html$Html$text(' - не задано')
+										$elm$html$Html$text('Раздел')
 									])),
+								$elm$html$Html$text(' - не задано')
+							])),
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
 								A2(
-								$elm$html$Html$li,
+								$elm$html$Html$strong,
 								_List_Nil,
 								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$strong,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('ФГОС')
-											])),
-										$elm$html$Html$text(' - Нет')
+										$elm$html$Html$text('ФГОС')
 									])),
+								$elm$html$Html$text(' - Нет')
+							])),
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
 								A2(
-								$elm$html$Html$li,
+								$elm$html$Html$strong,
 								_List_Nil,
 								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$strong,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Раздел научной дисциплины')
-											])),
-										$elm$html$Html$text(' - не задано')
+										$elm$html$Html$text('Раздел научной дисциплины')
 									])),
+								$elm$html$Html$text(' - не задано')
+							])),
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
 								A2(
-								$elm$html$Html$li,
+								$elm$html$Html$strong,
 								_List_Nil,
 								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$strong,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Форма занятия')
-											])),
-										$elm$html$Html$text(' - не задано')
+										$elm$html$Html$text('Форма занятия')
 									])),
+								$elm$html$Html$text(' - не задано')
+							])),
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
 								A2(
-								$elm$html$Html$li,
+								$elm$html$Html$strong,
 								_List_Nil,
 								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$strong,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Материалы урока')
-											])),
-										$elm$html$Html$text(' - не задано')
+										$elm$html$Html$text('Материалы урока')
 									])),
+								$elm$html$Html$text(' - не задано')
+							])),
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
 								A2(
-								$elm$html$Html$li,
+								$elm$html$Html$strong,
 								_List_Nil,
 								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$strong,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Домашнее задание')
-											])),
-										$elm$html$Html$text(' - не задано')
+										$elm$html$Html$text('Домашнее задание')
 									])),
+								$elm$html$Html$text(' - не задано')
+							])),
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
 								A2(
-								$elm$html$Html$li,
+								$elm$html$Html$strong,
 								_List_Nil,
 								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$strong,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Количество оценок')
-											])),
-										$elm$html$Html$text(' - 2')
+										$elm$html$Html$text('Количество оценок')
 									])),
+								$elm$html$Html$text(' - 2')
+							])),
+						A2(
+						$elm$html$Html$li,
+						_List_Nil,
+						_List_fromArray(
+							[
 								A2(
-								$elm$html$Html$li,
+								$elm$html$Html$strong,
 								_List_Nil,
 								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$strong,
-										_List_Nil,
-										_List_fromArray(
-											[
-												$elm$html$Html$text('Часы')
-											])),
-										$elm$html$Html$text(' - 1')
-									]))
+										$elm$html$Html$text('Часы')
+									])),
+								$elm$html$Html$text(' - 1')
 							]))
 					])),
 				A2(
@@ -33414,7 +33404,8 @@ var $author$project$Page$CoursePage$viewPrimitiveImport = function (model) {
 											[
 												$elm$html$Html$Attributes$value(
 												A2($elm$core$Maybe$withDefault, '', model.activity_primitive_import)),
-												$elm$html$Html$Events$onInput($author$project$Page$CoursePage$MsgOnInputActivityPrimitiveImport)
+												$elm$html$Html$Events$onInput($author$project$Page$CoursePage$MsgOnInputActivityPrimitiveImport),
+												$elm$html$Html$Attributes$rows(20)
 											]),
 										_List_Nil)
 									])),
@@ -33843,7 +33834,6 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 						_List_fromArray(
 							[
 								$elm$html$Html$Attributes$class('col-sm-3 col-xs center-xs'),
-								A2($elm$html$Html$Attributes$style, 'margin-right', '1em'),
 								A2($elm$html$Html$Attributes$style, 'min-width', '300px'),
 								A2($elm$html$Html$Attributes$style, 'max-width', '300px')
 							]),
@@ -33866,7 +33856,6 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 						_List_fromArray(
 							[
 								$elm$html$Html$Attributes$class('col-sm between-xs row start-xs'),
-								A2($elm$html$Html$Attributes$style, 'margin', '1em'),
 								A2($elm$html$Html$Attributes$style, 'flex-flow', 'column nowrap')
 							]),
 						_List_fromArray(
@@ -33880,7 +33869,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 										$elm$html$Html$div,
 										_List_fromArray(
 											[
-												$elm$html$Html$Attributes$class('row between-xs middle-xs'),
+												$elm$html$Html$Attributes$class('row between-md center-xs'),
 												A2($elm$html$Html$Attributes$style, 'margin-bottom', '0.5em')
 											]),
 										_List_fromArray(
@@ -33900,7 +33889,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 												$elm$html$Html$div,
 												_List_fromArray(
 													[
-														$elm$html$Html$Attributes$class('col')
+														$elm$html$Html$Attributes$class('col ml-10')
 													]),
 												buttons)
 											])),
@@ -34190,7 +34179,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 			$elm$html$Html$h1,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('row between-xs')
+					$elm$html$Html$Attributes$class('row between-xs ml-10 mr-10')
 				]),
 			_List_fromArray(
 				[
