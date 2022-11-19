@@ -29394,7 +29394,7 @@ var $author$project$Component$Activity$viewRead = function (model) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('text container segment ui'),
+								$elm$html$Html$Attributes$class('text container segment ui col-xs'),
 								A2($elm$html$Html$Attributes$style, 'padding', '10px 15px'),
 								A2($elm$html$Html$Attributes$style, 'background-color', bg),
 								A2($elm$html$Html$Attributes$style, 'overflow', 'hidden')

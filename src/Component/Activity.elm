@@ -383,7 +383,7 @@ viewRead model =
                     ++ List.map (Uuid.toString >> id) (List.filterMap identity [ model.internal_id ])
                 )
                 [ div
-                    [ class "text container segment ui"
+                    [ class "text container segment ui col-xs"
                     , style "padding" "10px 15px"
                     , style "background-color" bg
                     , style "overflow" "hidden"
