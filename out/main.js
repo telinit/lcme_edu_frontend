@@ -33310,7 +33310,36 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 										false,
 										$elm$core$Maybe$Nothing,
 										$elm$html$Html$text(''),
-										$elm$html$Html$text('Импорт успешно завершен: ' + msg))
+										$elm$html$Html$text('Импорт успешно завершен: ' + msg)),
+										A2(
+										$elm$html$Html$button,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('ui button primary'),
+												$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickImportActivities)
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$i,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('undo icon')
+													]),
+												_List_Nil),
+												$elm$html$Html$text('Начать сначала')
+											])),
+										A2(
+										$elm$html$Html$button,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('ui button green'),
+												$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgCourseSaved)
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Перезагрузить курс')
+											]))
 									]))
 							])));
 			} else {

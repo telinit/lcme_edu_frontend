@@ -1408,6 +1408,13 @@ viewActivitiesImport model =
                                     Nothing
                                     (text "")
                                     (text <| "Импорт успешно завершен: " ++ msg)
+                                , button [ class "ui button primary", onClick MsgOnClickImportActivities ]
+                                    [ i [ class "undo icon" ] []
+                                    , text "Начать сначала"
+                                    ]
+                                , button [ class "ui button green", onClick MsgCourseSaved ]
+                                    [ text "Перезагрузить курс"
+                                    ]
                                 ]
                             ]
 
