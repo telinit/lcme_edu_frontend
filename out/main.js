@@ -12499,6 +12499,13 @@ var $author$project$Component$FileInput$update = F2(
 var $author$project$Page$CoursePage$IssueKindError = {$: 'IssueKindError'};
 var $author$project$Page$CoursePage$IssueKindNotice = {$: 'IssueKindNotice'};
 var $author$project$Page$CoursePage$IssueKindWarning = {$: 'IssueKindWarning'};
+var $elm$core$List$all = F2(
+	function (isOkay, list) {
+		return !A2(
+			$elm$core$List$any,
+			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
+			list);
+	});
 var $elm$core$Dict$diff = F2(
 	function (t1, t2) {
 		return A3(
@@ -12523,238 +12530,530 @@ var $elm$core$Set$member = F2(
 		var dict = _v0.a;
 		return A2($elm$core$Dict$member, key, dict);
 	});
-var $jonoabroad$commatosed$Csv$appendCharacter = F2(
-	function (c, s) {
-		var _char = $elm$core$String$fromChar(c);
-		var update = function () {
-			var _v0 = s.cValue;
-			if (_v0.$ === 'Nothing') {
-				return $elm$core$Maybe$Just(_char);
-			} else {
-				var cV = _v0.a;
-				return $elm$core$Maybe$Just(
-					_Utils_ap(cV, _char));
-			}
-		}();
-		return _Utils_update(
-			s,
-			{cValue: update});
-	});
-var $jonoabroad$commatosed$Csv$handleSeparator = F2(
-	function (end, s) {
-		var fRow = F2(
-			function (mv, mr) {
-				var _v0 = _Utils_Tuple2(mv, mr);
-				if (_v0.a.$ === 'Nothing') {
-					if (_v0.b.$ === 'Nothing') {
-						var _v1 = _v0.a;
-						var _v2 = _v0.b;
-						if (end) {
-							return $elm$core$Maybe$Nothing;
+var $BrianHicks$elm_csv$Csv$Parser$AdditionalCharactersAfterClosingQuote = function (a) {
+	return {$: 'AdditionalCharactersAfterClosingQuote', a: a};
+};
+var $BrianHicks$elm_csv$Csv$Parser$SourceEndedWithoutClosingQuote = function (a) {
+	return {$: 'SourceEndedWithoutClosingQuote', a: a};
+};
+var $BrianHicks$elm_csv$Csv$Parser$parse = F2(
+	function (config, source) {
+		var finalLength = $elm$core$String$length(source);
+		var parseQuotedField = F4(
+			function (isFieldSeparator, soFar, startOffset, endOffset) {
+				parseQuotedField:
+				while (true) {
+					if ((endOffset - finalLength) >= 0) {
+						return $elm$core$Result$Err($BrianHicks$elm_csv$Csv$Parser$SourceEndedWithoutClosingQuote);
+					} else {
+						if (A3($elm$core$String$slice, endOffset, endOffset + 1, source) === '\"') {
+							var segment = A3($elm$core$String$slice, startOffset, endOffset, source);
+							if (((endOffset + 1) - finalLength) >= 0) {
+								return $elm$core$Result$Ok(
+									_Utils_Tuple3(
+										_Utils_ap(soFar, segment),
+										endOffset + 1,
+										false));
+							} else {
+								var next = A3($elm$core$String$slice, endOffset + 1, endOffset + 2, source);
+								if (next === '\"') {
+									var newPos = endOffset + 2;
+									var $temp$isFieldSeparator = isFieldSeparator,
+										$temp$soFar = soFar + (segment + '\"'),
+										$temp$startOffset = newPos,
+										$temp$endOffset = newPos;
+									isFieldSeparator = $temp$isFieldSeparator;
+									soFar = $temp$soFar;
+									startOffset = $temp$startOffset;
+									endOffset = $temp$endOffset;
+									continue parseQuotedField;
+								} else {
+									if (isFieldSeparator(next)) {
+										return $elm$core$Result$Ok(
+											_Utils_Tuple3(
+												_Utils_ap(soFar, segment),
+												endOffset + 2,
+												false));
+									} else {
+										if (next === '\n') {
+											return $elm$core$Result$Ok(
+												_Utils_Tuple3(
+													_Utils_ap(soFar, segment),
+													endOffset + 2,
+													true));
+										} else {
+											if ((next === '\u000D') && (A3($elm$core$String$slice, endOffset + 2, endOffset + 3, source) === '\n')) {
+												return $elm$core$Result$Ok(
+													_Utils_Tuple3(
+														_Utils_ap(soFar, segment),
+														endOffset + 3,
+														true));
+											} else {
+												return $elm$core$Result$Err($BrianHicks$elm_csv$Csv$Parser$AdditionalCharactersAfterClosingQuote);
+											}
+										}
+									}
+								}
+							}
 						} else {
-							return $elm$core$Maybe$Just(
-								_List_fromArray(
-									['']));
+							var $temp$isFieldSeparator = isFieldSeparator,
+								$temp$soFar = soFar,
+								$temp$startOffset = startOffset,
+								$temp$endOffset = endOffset + 1;
+							isFieldSeparator = $temp$isFieldSeparator;
+							soFar = $temp$soFar;
+							startOffset = $temp$startOffset;
+							endOffset = $temp$endOffset;
+							continue parseQuotedField;
 						}
-					} else {
-						var _v5 = _v0.a;
-						var r = _v0.b.a;
-						return $elm$core$Maybe$Just(
-							A2($elm$core$List$cons, '', r));
-					}
-				} else {
-					if (_v0.b.$ === 'Nothing') {
-						var v = _v0.a.a;
-						var _v4 = _v0.b;
-						return $elm$core$Maybe$Just(
-							_List_fromArray(
-								[v]));
-					} else {
-						var v = _v0.a.a;
-						var r = _v0.b.a;
-						return $elm$core$Maybe$Just(
-							A2($elm$core$List$cons, v, r));
 					}
 				}
 			});
-		var nRow = A2(fRow, s.cValue, s.cRow);
-		return _Utils_update(
-			s,
-			{cRow: nRow, cValue: $elm$core$Maybe$Nothing});
-	});
-var $jonoabroad$commatosed$Csv$handleCharacter = F2(
-	function (c, s) {
-		return (_Utils_eq(c, s.separator) && (!s.inQuote)) ? A2($jonoabroad$commatosed$Csv$handleSeparator, false, s) : A2($jonoabroad$commatosed$Csv$appendCharacter, c, s);
-	});
-var $jonoabroad$commatosed$Csv$handleNewLine = F2(
-	function (_char, s) {
-		if (s.inQuote) {
-			return A2($jonoabroad$commatosed$Csv$appendCharacter, _char, s);
-		} else {
-			var nContent = function () {
-				var _v0 = _Utils_Tuple2(s.cValue, s.cRow);
-				if (_v0.a.$ === 'Nothing') {
-					if (_v0.b.$ === 'Nothing') {
-						var _v1 = _v0.a;
-						var _v2 = _v0.b;
-						return s.content;
-					} else {
-						var _v4 = _v0.a;
-						var r = _v0.b.a;
-						return A2(
-							$elm$core$List$cons,
+		var parseComma = F4(
+			function (row, rows, startOffset, endOffset) {
+				parseComma:
+				while (true) {
+					if ((endOffset - finalLength) >= 0) {
+						var finalField = A3($elm$core$String$slice, startOffset, endOffset, source);
+						return ((finalField === '') && _Utils_eq(row, _List_Nil)) ? $elm$core$Result$Ok(
+							$elm$core$List$reverse(rows)) : $elm$core$Result$Ok(
 							$elm$core$List$reverse(
-								A2($elm$core$List$cons, '', r)),
-							s.content);
-					}
-				} else {
-					if (_v0.b.$ === 'Nothing') {
-						var c = _v0.a.a;
-						var _v3 = _v0.b;
-						return A2(
-							$elm$core$List$cons,
-							_List_fromArray(
-								[c]),
-							s.content);
+								A2(
+									$elm$core$List$cons,
+									$elm$core$List$reverse(
+										A2($elm$core$List$cons, finalField, row)),
+									rows)));
 					} else {
-						var c = _v0.a.a;
-						var r = _v0.b.a;
-						var nRow = $elm$core$List$reverse(
-							A2($elm$core$List$cons, c, r));
-						return A2($elm$core$List$cons, nRow, s.content);
+						var first = A3($elm$core$String$slice, endOffset, endOffset + 1, source);
+						if (first === ',') {
+							var newPos = endOffset + 1;
+							var $temp$row = A2(
+								$elm$core$List$cons,
+								A3($elm$core$String$slice, startOffset, endOffset, source),
+								row),
+								$temp$rows = rows,
+								$temp$startOffset = newPos,
+								$temp$endOffset = newPos;
+							row = $temp$row;
+							rows = $temp$rows;
+							startOffset = $temp$startOffset;
+							endOffset = $temp$endOffset;
+							continue parseComma;
+						} else {
+							if (first === '\n') {
+								var newPos = endOffset + 1;
+								var $temp$row = _List_Nil,
+									$temp$rows = A2(
+									$elm$core$List$cons,
+									$elm$core$List$reverse(
+										A2(
+											$elm$core$List$cons,
+											A3($elm$core$String$slice, startOffset, endOffset, source),
+											row)),
+									rows),
+									$temp$startOffset = newPos,
+									$temp$endOffset = newPos;
+								row = $temp$row;
+								rows = $temp$rows;
+								startOffset = $temp$startOffset;
+								endOffset = $temp$endOffset;
+								continue parseComma;
+							} else {
+								if ((first === '\u000D') && (A3($elm$core$String$slice, endOffset + 1, endOffset + 2, source) === '\n')) {
+									var newPos = endOffset + 2;
+									var $temp$row = _List_Nil,
+										$temp$rows = A2(
+										$elm$core$List$cons,
+										$elm$core$List$reverse(
+											A2(
+												$elm$core$List$cons,
+												A3($elm$core$String$slice, startOffset, endOffset, source),
+												row)),
+										rows),
+										$temp$startOffset = newPos,
+										$temp$endOffset = newPos;
+									row = $temp$row;
+									rows = $temp$rows;
+									startOffset = $temp$startOffset;
+									endOffset = $temp$endOffset;
+									continue parseComma;
+								} else {
+									if (first === '\"') {
+										var newPos = endOffset + 1;
+										var _v0 = A4(
+											parseQuotedField,
+											function (c) {
+												return c === ',';
+											},
+											'',
+											newPos,
+											newPos);
+										if (_v0.$ === 'Ok') {
+											var _v1 = _v0.a;
+											var value = _v1.a;
+											var afterQuotedField = _v1.b;
+											var rowEnded = _v1.c;
+											if (_Utils_cmp(afterQuotedField, finalLength) > -1) {
+												return $elm$core$Result$Ok(
+													$elm$core$List$reverse(
+														A2(
+															$elm$core$List$cons,
+															$elm$core$List$reverse(
+																A2($elm$core$List$cons, value, row)),
+															rows)));
+											} else {
+												if (rowEnded) {
+													var $temp$row = _List_Nil,
+														$temp$rows = A2(
+														$elm$core$List$cons,
+														$elm$core$List$reverse(
+															A2($elm$core$List$cons, value, row)),
+														rows),
+														$temp$startOffset = afterQuotedField,
+														$temp$endOffset = afterQuotedField;
+													row = $temp$row;
+													rows = $temp$rows;
+													startOffset = $temp$startOffset;
+													endOffset = $temp$endOffset;
+													continue parseComma;
+												} else {
+													var $temp$row = A2($elm$core$List$cons, value, row),
+														$temp$rows = rows,
+														$temp$startOffset = afterQuotedField,
+														$temp$endOffset = afterQuotedField;
+													row = $temp$row;
+													rows = $temp$rows;
+													startOffset = $temp$startOffset;
+													endOffset = $temp$endOffset;
+													continue parseComma;
+												}
+											}
+										} else {
+											var problem = _v0.a;
+											return $elm$core$Result$Err(
+												problem(
+													$elm$core$List$length(rows) + 1));
+										}
+									} else {
+										var $temp$row = row,
+											$temp$rows = rows,
+											$temp$startOffset = startOffset,
+											$temp$endOffset = endOffset + 1;
+										row = $temp$row;
+										rows = $temp$rows;
+										startOffset = $temp$startOffset;
+										endOffset = $temp$endOffset;
+										continue parseComma;
+									}
+								}
+							}
+						}
 					}
 				}
-			}();
-			return _Utils_update(
-				s,
-				{cRow: $elm$core$Maybe$Nothing, cValue: $elm$core$Maybe$Nothing, content: nContent});
-		}
-	});
-var $jonoabroad$commatosed$Csv$inQuote = function (state) {
-	var _v0 = state.previousChar;
-	if (_v0.$ === 'Nothing') {
-		return _Utils_update(
-			state,
-			{inQuote: false});
-	} else {
-		var ch = _v0.a;
-		if (_Utils_eq(
-			ch,
-			_Utils_chr('\"')) || _Utils_eq(
-			ch,
-			_Utils_chr('\\'))) {
-			var nV = A2(
-				$elm$core$Maybe$map,
-				function (v) {
-					return v + '\"';
-				},
-				state.cValue);
-			return _Utils_update(
-				state,
-				{cValue: nV, inQuote: false});
-		} else {
-			return _Utils_update(
-				state,
-				{inQuote: false});
-		}
-	}
-};
-var $jonoabroad$commatosed$Csv$outQuote = function (state) {
-	var _v0 = state.previousChar;
-	if (_v0.$ === 'Nothing') {
-		return _Utils_update(
-			state,
-			{inQuote: true});
-	} else {
-		var prev = _v0.a;
-		if (_Utils_eq(
-			prev,
-			_Utils_chr('\"')) || _Utils_eq(
-			prev,
-			_Utils_chr('\\'))) {
-			var _v1 = state.cValue;
-			if (_v1.$ === 'Nothing') {
-				return state;
-			} else {
-				var cv = _v1.a;
-				var trimmed = A3($elm$core$String$slice, 0, -1, cv);
-				var ncVale = trimmed + '\"';
-				return _Utils_update(
-					state,
-					{
-						cValue: $elm$core$Maybe$Just(ncVale)
-					});
-			}
-		} else {
-			return _Utils_update(
-				state,
-				{inQuote: true});
-		}
-	}
-};
-var $jonoabroad$commatosed$Csv$handleQuote = function (state) {
-	var _v0 = state.inQuote;
-	if (_v0) {
-		return $jonoabroad$commatosed$Csv$inQuote(state);
-	} else {
-		return $jonoabroad$commatosed$Csv$outQuote(state);
-	}
-};
-var $jonoabroad$commatosed$Csv$accumulator = F2(
-	function (current, state) {
-		var newState = function () {
-			switch (current.valueOf()) {
-				case '\"':
-					return $jonoabroad$commatosed$Csv$handleQuote(state);
-				case '\u000D':
-					return A2($jonoabroad$commatosed$Csv$handleNewLine, current, state);
-				case '\n':
-					return A2($jonoabroad$commatosed$Csv$handleNewLine, current, state);
-				default:
-					return A2($jonoabroad$commatosed$Csv$handleCharacter, current, state);
-			}
-		}();
-		return _Utils_update(
-			newState,
-			{
-				previousChar: $elm$core$Maybe$Just(current)
 			});
-	});
-var $elm$core$String$foldl = _String_foldl;
-var $jonoabroad$commatosed$Csv$start = function (s) {
-	return {cRow: $elm$core$Maybe$Nothing, cValue: $elm$core$Maybe$Nothing, content: _List_Nil, inQuote: false, previousChar: $elm$core$Maybe$Nothing, separator: s};
-};
-var $jonoabroad$commatosed$Csv$splitWith = F2(
-	function (separator, raw) {
-		var state = A3(
-			$elm$core$String$foldl,
-			$jonoabroad$commatosed$Csv$accumulator,
-			$jonoabroad$commatosed$Csv$start(separator),
-			raw);
-		var ss = A2($jonoabroad$commatosed$Csv$handleSeparator, true, state);
-		var sRow = A2(
-			$elm$core$Maybe$map,
-			function (a) {
-				return A2(
-					$elm$core$List$cons,
-					$elm$core$List$reverse(a),
-					ss.content);
+		var parseHelp = F5(
+			function (isFieldSeparator, row, rows, startOffset, endOffset) {
+				parseHelp:
+				while (true) {
+					if ((endOffset - finalLength) >= 0) {
+						var finalField = A3($elm$core$String$slice, startOffset, endOffset, source);
+						return ((finalField === '') && _Utils_eq(row, _List_Nil)) ? $elm$core$Result$Ok(
+							$elm$core$List$reverse(rows)) : $elm$core$Result$Ok(
+							$elm$core$List$reverse(
+								A2(
+									$elm$core$List$cons,
+									$elm$core$List$reverse(
+										A2($elm$core$List$cons, finalField, row)),
+									rows)));
+					} else {
+						var first = A3($elm$core$String$slice, endOffset, endOffset + 1, source);
+						if (isFieldSeparator(first)) {
+							var newPos = endOffset + 1;
+							var $temp$isFieldSeparator = isFieldSeparator,
+								$temp$row = A2(
+								$elm$core$List$cons,
+								A3($elm$core$String$slice, startOffset, endOffset, source),
+								row),
+								$temp$rows = rows,
+								$temp$startOffset = newPos,
+								$temp$endOffset = newPos;
+							isFieldSeparator = $temp$isFieldSeparator;
+							row = $temp$row;
+							rows = $temp$rows;
+							startOffset = $temp$startOffset;
+							endOffset = $temp$endOffset;
+							continue parseHelp;
+						} else {
+							if (first === '\n') {
+								var newPos = endOffset + 1;
+								var $temp$isFieldSeparator = isFieldSeparator,
+									$temp$row = _List_Nil,
+									$temp$rows = A2(
+									$elm$core$List$cons,
+									$elm$core$List$reverse(
+										A2(
+											$elm$core$List$cons,
+											A3($elm$core$String$slice, startOffset, endOffset, source),
+											row)),
+									rows),
+									$temp$startOffset = newPos,
+									$temp$endOffset = newPos;
+								isFieldSeparator = $temp$isFieldSeparator;
+								row = $temp$row;
+								rows = $temp$rows;
+								startOffset = $temp$startOffset;
+								endOffset = $temp$endOffset;
+								continue parseHelp;
+							} else {
+								if ((first === '\u000D') && (A3($elm$core$String$slice, endOffset + 1, endOffset + 2, source) === '\n')) {
+									var newPos = endOffset + 2;
+									var $temp$isFieldSeparator = isFieldSeparator,
+										$temp$row = _List_Nil,
+										$temp$rows = A2(
+										$elm$core$List$cons,
+										$elm$core$List$reverse(
+											A2(
+												$elm$core$List$cons,
+												A3($elm$core$String$slice, startOffset, endOffset, source),
+												row)),
+										rows),
+										$temp$startOffset = newPos,
+										$temp$endOffset = newPos;
+									isFieldSeparator = $temp$isFieldSeparator;
+									row = $temp$row;
+									rows = $temp$rows;
+									startOffset = $temp$startOffset;
+									endOffset = $temp$endOffset;
+									continue parseHelp;
+								} else {
+									if (first === '\"') {
+										var newPos = endOffset + 1;
+										var _v2 = A4(parseQuotedField, isFieldSeparator, '', newPos, newPos);
+										if (_v2.$ === 'Ok') {
+											var _v3 = _v2.a;
+											var value = _v3.a;
+											var afterQuotedField = _v3.b;
+											var rowEnded = _v3.c;
+											if (_Utils_cmp(afterQuotedField, finalLength) > -1) {
+												return $elm$core$Result$Ok(
+													$elm$core$List$reverse(
+														A2(
+															$elm$core$List$cons,
+															$elm$core$List$reverse(
+																A2($elm$core$List$cons, value, row)),
+															rows)));
+											} else {
+												if (rowEnded) {
+													var $temp$isFieldSeparator = isFieldSeparator,
+														$temp$row = _List_Nil,
+														$temp$rows = A2(
+														$elm$core$List$cons,
+														$elm$core$List$reverse(
+															A2($elm$core$List$cons, value, row)),
+														rows),
+														$temp$startOffset = afterQuotedField,
+														$temp$endOffset = afterQuotedField;
+													isFieldSeparator = $temp$isFieldSeparator;
+													row = $temp$row;
+													rows = $temp$rows;
+													startOffset = $temp$startOffset;
+													endOffset = $temp$endOffset;
+													continue parseHelp;
+												} else {
+													var $temp$isFieldSeparator = isFieldSeparator,
+														$temp$row = A2($elm$core$List$cons, value, row),
+														$temp$rows = rows,
+														$temp$startOffset = afterQuotedField,
+														$temp$endOffset = afterQuotedField;
+													isFieldSeparator = $temp$isFieldSeparator;
+													row = $temp$row;
+													rows = $temp$rows;
+													startOffset = $temp$startOffset;
+													endOffset = $temp$endOffset;
+													continue parseHelp;
+												}
+											}
+										} else {
+											var problem = _v2.a;
+											return $elm$core$Result$Err(
+												problem(
+													$elm$core$List$length(rows) + 1));
+										}
+									} else {
+										var $temp$isFieldSeparator = isFieldSeparator,
+											$temp$row = row,
+											$temp$rows = rows,
+											$temp$startOffset = startOffset,
+											$temp$endOffset = endOffset + 1;
+										isFieldSeparator = $temp$isFieldSeparator;
+										row = $temp$row;
+										rows = $temp$rows;
+										startOffset = $temp$startOffset;
+										endOffset = $temp$endOffset;
+										continue parseHelp;
+									}
+								}
+							}
+						}
+					}
+				}
+			});
+		var parseSemicolon = F4(
+			function (row, rows, startOffset, endOffset) {
+				parseSemicolon:
+				while (true) {
+					if ((endOffset - finalLength) >= 0) {
+						var finalField = A3($elm$core$String$slice, startOffset, endOffset, source);
+						return ((finalField === '') && _Utils_eq(row, _List_Nil)) ? $elm$core$Result$Ok(
+							$elm$core$List$reverse(rows)) : $elm$core$Result$Ok(
+							$elm$core$List$reverse(
+								A2(
+									$elm$core$List$cons,
+									$elm$core$List$reverse(
+										A2($elm$core$List$cons, finalField, row)),
+									rows)));
+					} else {
+						var first = A3($elm$core$String$slice, endOffset, endOffset + 1, source);
+						if (first === ';') {
+							var newPos = endOffset + 1;
+							var $temp$row = A2(
+								$elm$core$List$cons,
+								A3($elm$core$String$slice, startOffset, endOffset, source),
+								row),
+								$temp$rows = rows,
+								$temp$startOffset = newPos,
+								$temp$endOffset = newPos;
+							row = $temp$row;
+							rows = $temp$rows;
+							startOffset = $temp$startOffset;
+							endOffset = $temp$endOffset;
+							continue parseSemicolon;
+						} else {
+							if (first === '\n') {
+								var newPos = endOffset + 1;
+								var $temp$row = _List_Nil,
+									$temp$rows = A2(
+									$elm$core$List$cons,
+									$elm$core$List$reverse(
+										A2(
+											$elm$core$List$cons,
+											A3($elm$core$String$slice, startOffset, endOffset, source),
+											row)),
+									rows),
+									$temp$startOffset = newPos,
+									$temp$endOffset = newPos;
+								row = $temp$row;
+								rows = $temp$rows;
+								startOffset = $temp$startOffset;
+								endOffset = $temp$endOffset;
+								continue parseSemicolon;
+							} else {
+								if ((first === '\u000D') && (A3($elm$core$String$slice, endOffset + 1, endOffset + 2, source) === '\n')) {
+									var newPos = endOffset + 2;
+									var $temp$row = _List_Nil,
+										$temp$rows = A2(
+										$elm$core$List$cons,
+										$elm$core$List$reverse(
+											A2(
+												$elm$core$List$cons,
+												A3($elm$core$String$slice, startOffset, endOffset, source),
+												row)),
+										rows),
+										$temp$startOffset = newPos,
+										$temp$endOffset = newPos;
+									row = $temp$row;
+									rows = $temp$rows;
+									startOffset = $temp$startOffset;
+									endOffset = $temp$endOffset;
+									continue parseSemicolon;
+								} else {
+									if (first === '\"') {
+										var newPos = endOffset + 1;
+										var _v4 = A4(
+											parseQuotedField,
+											function (c) {
+												return c === ';';
+											},
+											'',
+											newPos,
+											newPos);
+										if (_v4.$ === 'Ok') {
+											var _v5 = _v4.a;
+											var value = _v5.a;
+											var afterQuotedField = _v5.b;
+											var rowEnded = _v5.c;
+											if (_Utils_cmp(afterQuotedField, finalLength) > -1) {
+												return $elm$core$Result$Ok(
+													$elm$core$List$reverse(
+														A2(
+															$elm$core$List$cons,
+															$elm$core$List$reverse(
+																A2($elm$core$List$cons, value, row)),
+															rows)));
+											} else {
+												if (rowEnded) {
+													var $temp$row = _List_Nil,
+														$temp$rows = A2(
+														$elm$core$List$cons,
+														$elm$core$List$reverse(
+															A2($elm$core$List$cons, value, row)),
+														rows),
+														$temp$startOffset = afterQuotedField,
+														$temp$endOffset = afterQuotedField;
+													row = $temp$row;
+													rows = $temp$rows;
+													startOffset = $temp$startOffset;
+													endOffset = $temp$endOffset;
+													continue parseSemicolon;
+												} else {
+													var $temp$row = A2($elm$core$List$cons, value, row),
+														$temp$rows = rows,
+														$temp$startOffset = afterQuotedField,
+														$temp$endOffset = afterQuotedField;
+													row = $temp$row;
+													rows = $temp$rows;
+													startOffset = $temp$startOffset;
+													endOffset = $temp$endOffset;
+													continue parseSemicolon;
+												}
+											}
+										} else {
+											var problem = _v4.a;
+											return $elm$core$Result$Err(
+												problem(
+													$elm$core$List$length(rows) + 1));
+										}
+									} else {
+										var $temp$row = row,
+											$temp$rows = rows,
+											$temp$startOffset = startOffset,
+											$temp$endOffset = endOffset + 1;
+										row = $temp$row;
+										rows = $temp$rows;
+										startOffset = $temp$startOffset;
+										endOffset = $temp$endOffset;
+										continue parseSemicolon;
+									}
+								}
+							}
+						}
+					}
+				}
+			});
+		var fieldSeparator = $elm$core$String$fromChar(config.fieldSeparator);
+		return $elm$core$String$isEmpty(source) ? $elm$core$Result$Ok(_List_Nil) : (_Utils_eq(
+			config.fieldSeparator,
+			_Utils_chr(',')) ? A4(parseComma, _List_Nil, _List_Nil, 0, 0) : (_Utils_eq(
+			config.fieldSeparator,
+			_Utils_chr(';')) ? A4(parseSemicolon, _List_Nil, _List_Nil, 0, 0) : A5(
+			parseHelp,
+			function (s) {
+				return _Utils_eq(s, fieldSeparator);
 			},
-			ss.cRow);
-		var nContent = A2($elm$core$Maybe$withDefault, ss.content, sRow);
-		return nContent;
-	});
-var $jonoabroad$commatosed$Csv$parseWith = F2(
-	function (separator, raw) {
-		var values = $elm$core$List$reverse(
-			A2($jonoabroad$commatosed$Csv$splitWith, separator, raw));
-		if (!values.b) {
-			return {headers: _List_Nil, records: _List_Nil};
-		} else {
-			var x = values.a;
-			var xs = values.b;
-			return {headers: x, records: xs};
-		}
+			_List_Nil,
+			_List_Nil,
+			0,
+			0)));
 	});
 var $author$project$Page$CoursePage$validateActivityCSV = F2(
 	function (sep, data) {
@@ -12833,8 +13132,8 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 				var validateInt = F3(
 					function (i, k, v) {
 						var tv = $elm$core$String$trim(v);
-						var _v5 = $elm$core$String$toInt(tv);
-						if (_v5.$ === 'Just') {
+						var _v8 = $elm$core$String$toInt(tv);
+						if (_v8.$ === 'Just') {
 							return _List_Nil;
 						} else {
 							return _List_fromArray(
@@ -12882,10 +13181,10 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 											A2($elm$core$String$split, '.', tv));
 										if ((((((parts.b && (parts.a.$ === 'Just')) && parts.b.b) && (parts.b.a.$ === 'Just')) && parts.b.b.b) && (parts.b.b.a.$ === 'Just')) && (!parts.b.b.b.b)) {
 											var d = parts.a.a;
-											var _v3 = parts.b;
-											var m = _v3.a.a;
-											var _v4 = _v3.b;
-											var y = _v4.a.a;
+											var _v6 = parts.b;
+											var m = _v6.a.a;
+											var _v7 = _v6.b;
+											var y = _v7.a.a;
 											var ey = (y < 1990) ? _List_fromArray(
 												[
 													{
@@ -12980,7 +13279,18 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 								}
 							}());
 					});
-				return $elm$core$List$concat(
+				return A2(
+					$elm$core$List$all,
+					$elm$core$Basics$eq(''),
+					A2($elm$core$List$map, $elm$core$String$trim, fields)) ? _List_fromArray(
+					[
+						{
+						col: $elm$core$Maybe$Nothing,
+						kind: $author$project$Page$CoursePage$IssueKindWarning,
+						msg: 'Пустая строка',
+						row: $elm$core$Maybe$Just(row_num)
+					}
+					]) : $elm$core$List$concat(
 					A4(
 						$elm$core$List$map3,
 						validateCell,
@@ -12991,32 +13301,71 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 						header,
 						fields));
 			});
-		var parsed = A2($jonoabroad$commatosed$Csv$parseWith, sep, data);
+		var parsed = A2(
+			$BrianHicks$elm_csv$Csv$Parser$parse,
+			{fieldSeparator: sep},
+			data);
 		var hasErrors = $elm$core$List$any(
 			function (i) {
 				return _Utils_eq(i.kind, $author$project$Page$CoursePage$IssueKindError);
 			});
-		var trimmedHeader = A2($elm$core$List$map, $elm$core$String$trim, parsed.headers);
-		var headerErrors = validateHeaderRow(parsed.headers);
-		if (hasErrors(headerErrors)) {
-			return headerErrors;
-		} else {
-			var _v0 = parsed.records;
-			if (!_v0.b) {
-				return A2(
-					$elm$core$List$cons,
-					{col: $elm$core$Maybe$Nothing, kind: $author$project$Page$CoursePage$IssueKindNotice, msg: 'Нет строк для импорта.', row: $elm$core$Maybe$Nothing},
-					headerErrors);
+		if (parsed.$ === 'Ok') {
+			var res = parsed.a;
+			if (!res.b) {
+				return _List_fromArray(
+					[
+						{col: $elm$core$Maybe$Nothing, kind: $author$project$Page$CoursePage$IssueKindNotice, msg: 'Нет данных для импорта.', row: $elm$core$Maybe$Nothing}
+					]);
 			} else {
-				var bodyErrors = A2(
-					$elm$core$List$indexedMap,
-					function (i) {
-						return A2(validateBodyRow, i + 2, trimmedHeader);
-					},
-					parsed.records);
-				return _Utils_ap(
-					headerErrors,
-					$elm$core$List$concat(bodyErrors));
+				var header = res.a;
+				var rows = res.b;
+				var trimmedHeader = A2($elm$core$List$map, $elm$core$String$trim, header);
+				var headerErrors = validateHeaderRow(header);
+				if (hasErrors(headerErrors)) {
+					return headerErrors;
+				} else {
+					if (!rows.b) {
+						return A2(
+							$elm$core$List$cons,
+							{col: $elm$core$Maybe$Nothing, kind: $author$project$Page$CoursePage$IssueKindNotice, msg: 'Нет строк для импорта.', row: $elm$core$Maybe$Nothing},
+							headerErrors);
+					} else {
+						var bodyErrors = A2(
+							$elm$core$List$indexedMap,
+							function (i) {
+								return A2(validateBodyRow, i + 2, trimmedHeader);
+							},
+							rows);
+						return _Utils_ap(
+							headerErrors,
+							$elm$core$List$concat(bodyErrors));
+					}
+				}
+			}
+		} else {
+			var e = parsed.a;
+			if (e.$ === 'SourceEndedWithoutClosingQuote') {
+				var p = e.a;
+				return _List_fromArray(
+					[
+						{
+						col: $elm$core$Maybe$Nothing,
+						kind: $author$project$Page$CoursePage$IssueKindError,
+						msg: 'Ошибка около символа ' + ($elm$core$String$fromInt(p) + ': Экранирование начато, но не знавершено'),
+						row: $elm$core$Maybe$Nothing
+					}
+					]);
+			} else {
+				var p = e.a;
+				return _List_fromArray(
+					[
+						{
+						col: $elm$core$Maybe$Nothing,
+						kind: $author$project$Page$CoursePage$IssueKindError,
+						msg: 'Ошибка около символа ' + ($elm$core$String$fromInt(p) + ': Обнаружены данные после завершенного экранирования.'),
+						row: $elm$core$Maybe$Nothing
+					}
+					]);
 			}
 		}
 	});
@@ -16598,13 +16947,6 @@ var $author$project$Page$DefaultLayout$make_header_pc = F2(
 	});
 var $elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
 var $elm$html$Html$map = $elm$virtual_dom$VirtualDom$map;
-var $elm$core$List$all = F2(
-	function (isOkay, list) {
-		return !A2(
-			$elm$core$List$any,
-			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
-			list);
-	});
 var $author$project$Util$user_has_all_roles = F2(
 	function (user, req_roles) {
 		return A2(
@@ -17082,7 +17424,8 @@ var $author$project$Page$CourseListPage$view = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$Attributes$class('ui link cards'),
-						A2($elm$html$Html$Attributes$style, 'display', 'inline-flex')
+						A2($elm$html$Html$Attributes$style, 'display', 'inline-flex'),
+						A2($elm$html$Html$Attributes$style, 'margin', '0 -50px')
 					]),
 				A2($elm$core$List$map, $author$project$Page$CourseListPage$viewCourse, cs))
 			]);

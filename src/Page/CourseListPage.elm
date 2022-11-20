@@ -160,7 +160,13 @@ view : Model -> Html Msg
 view model =
     let
         view_courses cs =
-            [ div [ class "ui link cards", style "display" "inline-flex" ] (List.map viewCourse cs) ]
+            [ div
+                [ class "ui link cards"
+                , style "display" "inline-flex"
+                , style "margin" "0 -50px"
+                ]
+                (List.map viewCourse cs)
+            ]
 
         body =
             case model.state of

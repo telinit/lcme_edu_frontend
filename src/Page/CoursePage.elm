@@ -10,7 +10,7 @@ import Component.MessageBox as MessageBox exposing (Type(..))
 import Component.Misc exposing (user_link)
 import Component.Modal as Modal
 import Component.MultiTask as MultiTask exposing (Msg(..))
-import Csv
+import Csv.Parser
 import Dict exposing (Dict)
 import File
 import File.Download
@@ -280,7 +280,7 @@ validateActivityCSV sep data =
             List.any (\i -> i.kind == IssueKindError)
 
         parsed =
-            Csv.parseWith sep data
+            Csv.Parser.parse { fieldSeparator = sep } data
 
         validateHeaderRow : List String -> List ActivityCSVValidationIssue
         validateHeaderRow fields =
@@ -545,40 +545,82 @@ validateActivityCSV sep data =
                            )
             in
             -- TODO: compare lengths of 'header' and 'fields'
-            List.concat <|
-                List.map3
-                    validateCell
-                    (List.range 1 (List.length fields))
-                    header
-                    fields
+            if List.all ((==) "") <| List.map String.trim fields then
+                [ { kind = IssueKindWarning
+                  , row = Just row_num
+                  , col = Nothing
+                  , msg = "Пустая строка"
+                  }
+                ]
+
+            else
+                List.concat <|
+                    List.map3
+                        validateCell
+                        (List.range 1 (List.length fields))
+                        header
+                        fields
     in
-    let
-        headerErrors =
-            validateHeaderRow parsed.headers
+    case parsed of
+        Ok res ->
+            case res of
+                [] ->
+                    [ { kind = IssueKindNotice
+                      , row = Nothing
+                      , col = Nothing
+                      , msg =
+                            "Нет данных для импорта."
+                      }
+                    ]
 
-        trimmedHeader =
-            List.map String.trim parsed.headers
-    in
-    if hasErrors headerErrors then
-        headerErrors
+                header :: rows ->
+                    let
+                        headerErrors =
+                            validateHeaderRow header
 
-    else
-        case parsed.records of
-            [] ->
-                { kind = IssueKindNotice
-                , row = Nothing
-                , col = Nothing
-                , msg =
-                    "Нет строк для импорта."
-                }
-                    :: headerErrors
+                        trimmedHeader =
+                            List.map String.trim header
+                    in
+                    if hasErrors headerErrors then
+                        headerErrors
 
-            _ ->
-                let
-                    bodyErrors =
-                        List.indexedMap (\i -> validateBodyRow (i + 2) trimmedHeader) parsed.records
-                in
-                headerErrors ++ List.concat bodyErrors
+                    else
+                        case rows of
+                            [] ->
+                                { kind = IssueKindNotice
+                                , row = Nothing
+                                , col = Nothing
+                                , msg =
+                                    "Нет строк для импорта."
+                                }
+                                    :: headerErrors
+
+                            _ ->
+                                let
+                                    bodyErrors =
+                                        List.indexedMap (\i -> validateBodyRow (i + 2) trimmedHeader) rows
+                                in
+                                headerErrors ++ List.concat bodyErrors
+
+        Err e ->
+            case e of
+                Csv.Parser.SourceEndedWithoutClosingQuote p ->
+                    [ { kind = IssueKindError
+                      , row = Nothing
+                      , col = Nothing
+                      , msg =
+                            "Ошибка около символа " ++ String.fromInt p ++ ": Экранирование начато, но не знавершено"
+                      }
+                    ]
+
+                Csv.Parser.AdditionalCharactersAfterClosingQuote p ->
+                    [ { kind = IssueKindError
+                      , row = Nothing
+                      , col = Nothing
+                      , msg =
+                            "Ошибка около символа " ++ String.fromInt p ++ ": Обнаружены данные после завершенного экранирования."
+                      }
+                    ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -1627,7 +1669,8 @@ viewCourse courseRead components_activity model =
                 ]
                 [ div
                     [ class "col-sm-3 col-xs center-xs"
-                   -- , style "margin-right" "1em"
+
+                    -- , style "margin-right" "1em"
                     , style "min-width" "300px"
                     , style "max-width" "300px"
                     ]
