@@ -13237,17 +13237,25 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 											}
 											]) : _List_Nil;
 									case 'Ключевое слово':
-										return (tv === '') ? emptyValue : (($elm$core$String$length(tv) > 50) ? _List_fromArray(
+										return (tv === '') ? emptyValue : (($elm$core$String$length(tv) > 255) ? _List_fromArray(
 											[
 												{
 												col: $elm$core$Maybe$Just(i),
-												kind: $author$project$Page$CoursePage$IssueKindWarning,
-												msg: 'Ключевое слово слишком длинное (>50 символов)',
+												kind: $author$project$Page$CoursePage$IssueKindError,
+												msg: 'Ключевое слово слишком длинное (>255 символов)',
 												row: $elm$core$Maybe$Just(row_num)
 											}
 											]) : _List_Nil);
 									case 'Раздел':
-										return emptyValue;
+										return ($elm$core$String$length(tv) > 255) ? _List_fromArray(
+											[
+												{
+												col: $elm$core$Maybe$Just(i),
+												kind: $author$project$Page$CoursePage$IssueKindError,
+												msg: 'Название раздела слишком длинное (>255 символов)',
+												row: $elm$core$Maybe$Just(row_num)
+											}
+											]) : emptyValue;
 									case 'ФГОС':
 										return A2(
 											$elm$core$List$member,
@@ -13257,15 +13265,31 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 											[
 												{
 												col: $elm$core$Maybe$Just(i),
-												kind: $author$project$Page$CoursePage$IssueKindError,
-												msg: 'Значение должно быть одно из: Да, Нет',
+												kind: $author$project$Page$CoursePage$IssueKindWarning,
+												msg: 'Значение должно быть одно из: Да, Нет; По умолчанию выбирается \'Нет\'. Ваше значение: \'' + (v + '\''),
 												row: $elm$core$Maybe$Just(row_num)
 											}
 											]);
 									case 'Раздел научной дисциплины':
-										return emptyValue;
+										return ($elm$core$String$length(tv) > 255) ? _List_fromArray(
+											[
+												{
+												col: $elm$core$Maybe$Just(i),
+												kind: $author$project$Page$CoursePage$IssueKindError,
+												msg: 'Название научной дисциплины слишком длинное (>255 символов)',
+												row: $elm$core$Maybe$Just(row_num)
+											}
+											]) : emptyValue;
 									case 'Форма занятия':
-										return emptyValue;
+										return ($elm$core$String$length(tv) > 255) ? _List_fromArray(
+											[
+												{
+												col: $elm$core$Maybe$Just(i),
+												kind: $author$project$Page$CoursePage$IssueKindError,
+												msg: 'Название формы занятия дисциплины слишком длинное (>255 символов)',
+												row: $elm$core$Maybe$Just(row_num)
+											}
+											]) : emptyValue;
 									case 'Материалы урока':
 										return _List_Nil;
 									case 'Домашнее задание':

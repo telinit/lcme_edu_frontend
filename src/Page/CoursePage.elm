@@ -496,11 +496,11 @@ validateActivityCSV sep data =
                                     if tv == "" then
                                         emptyValue
 
-                                    else if String.length tv > 50 then
-                                        [ { kind = IssueKindWarning
+                                    else if String.length tv > 255 then
+                                        [ { kind = IssueKindError
                                           , row = Just row_num
                                           , col = Just i
-                                          , msg = "Ключевое слово слишком длинное (>50 символов)"
+                                          , msg = "Ключевое слово слишком длинное (>255 символов)"
                                           }
                                         ]
 
@@ -508,25 +508,52 @@ validateActivityCSV sep data =
                                         []
 
                                 "Раздел" ->
-                                    emptyValue
+                                    if String.length tv > 255 then
+                                        [ { kind = IssueKindError
+                                          , row = Just row_num
+                                          , col = Just i
+                                          , msg = "Название раздела слишком длинное (>255 символов)"
+                                          }
+                                        ]
+
+                                    else
+                                        emptyValue
 
                                 "ФГОС" ->
                                     if List.member (String.toLower tv) [ "да", "нет" ] then
                                         []
 
                                     else
-                                        [ { kind = IssueKindError
+                                        [ { kind = IssueKindWarning
                                           , row = Just row_num
                                           , col = Just i
-                                          , msg = "Значение должно быть одно из: Да, Нет"
+                                          , msg = "Значение должно быть одно из: Да, Нет; По умолчанию выбирается 'Нет'. Ваше значение: '" ++ v ++ "'"
                                           }
                                         ]
 
                                 "Раздел научной дисциплины" ->
-                                    emptyValue
+                                    if String.length tv > 255 then
+                                        [ { kind = IssueKindError
+                                          , row = Just row_num
+                                          , col = Just i
+                                          , msg = "Название научной дисциплины слишком длинное (>255 символов)"
+                                          }
+                                        ]
+
+                                    else
+                                        emptyValue
 
                                 "Форма занятия" ->
-                                    emptyValue
+                                    if String.length tv > 255 then
+                                        [ { kind = IssueKindError
+                                          , row = Just row_num
+                                          , col = Just i
+                                          , msg = "Название формы занятия дисциплины слишком длинное (>255 символов)"
+                                          }
+                                        ]
+
+                                    else
+                                        emptyValue
 
                                 "Материалы урока" ->
                                     []
