@@ -10515,6 +10515,7 @@ var $author$project$Page$UserProfile$init = F3(
 			return _Utils_Tuple2(
 				{
 					current_user: current_user,
+					result_impersonation: $elm$core$Maybe$Nothing,
 					state: $author$project$Page$UserProfile$StateLoading(m),
 					state_email: $author$project$Page$UserProfile$SettingStateUnset,
 					state_password: $author$project$Page$UserProfile$SettingStateUnset,
@@ -10526,6 +10527,7 @@ var $author$project$Page$UserProfile$init = F3(
 			return _Utils_Tuple2(
 				{
 					current_user: current_user,
+					result_impersonation: $elm$core$Maybe$Nothing,
 					state: $author$project$Page$UserProfile$StateComplete(current_user),
 					state_email: A2(
 						$elm$core$Maybe$withDefault,
@@ -15446,6 +15448,9 @@ var $author$project$Page$MarksStudent$update = F2(
 			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
+var $author$project$Page$UserProfile$MsgImpersonationFinished = function (a) {
+	return {$: 'MsgImpersonationFinished', a: a};
+};
 var $author$project$Page$UserProfile$SettingStateChangeDone = {$: 'SettingStateChangeDone'};
 var $author$project$Page$UserProfile$SettingStateChangeError = function (a) {
 	return {$: 'SettingStateChangeError', a: a};
@@ -15550,46 +15555,62 @@ var $author$project$Page$UserProfile$doChangePassword = F3(
 						user_id,
 						{password: password}))));
 	});
+var $author$project$Api$Request$User$userImpersonate = function (id_path) {
+	return A7(
+		$author$project$Api$request,
+		'GET',
+		'/user/{id}/impersonate/',
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'id',
+				$elm$core$Basics$identity(id_path))
+			]),
+		_List_Nil,
+		_List_Nil,
+		$elm$core$Maybe$Nothing,
+		$elm$json$Json$Decode$succeed(_Utils_Tuple0));
+};
 var $author$project$Page$UserProfile$update = F2(
 	function (msg, model) {
 		var _v0 = _Utils_Tuple2(msg, model.state);
-		_v0$7:
+		_v0$9:
 		while (true) {
-			if (_v0.b.$ === 'StateLoading') {
-				if (_v0.a.$ === 'MsgTask') {
-					var msg_ = _v0.a.a;
-					var model_ = _v0.b.a;
-					var _v1 = A2($author$project$Component$MultiTask$update, msg_, model_);
-					var m = _v1.a;
-					var c = _v1.b;
-					if ((((msg_.$ === 'TaskFinishedAll') && msg_.a.b) && (msg_.a.a.$ === 'Ok')) && (!msg_.a.b.b)) {
-						var _v3 = msg_.a;
-						var user = _v3.a.a.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									state: $author$project$Page$UserProfile$StateComplete(user),
-									state_email: $author$project$Page$UserProfile$SettingStateShow(
-										A2($elm$core$Maybe$withDefault, '', user.email)),
-									state_password: $author$project$Page$UserProfile$SettingStateShow('')
-								}),
-							A2($elm$core$Platform$Cmd$map, $author$project$Page$UserProfile$MsgTask, c));
+			switch (_v0.a.$) {
+				case 'MsgTask':
+					if (_v0.b.$ === 'StateLoading') {
+						var msg_ = _v0.a.a;
+						var model_ = _v0.b.a;
+						var _v1 = A2($author$project$Component$MultiTask$update, msg_, model_);
+						var m = _v1.a;
+						var c = _v1.b;
+						if ((((msg_.$ === 'TaskFinishedAll') && msg_.a.b) && (msg_.a.a.$ === 'Ok')) && (!msg_.a.b.b)) {
+							var _v3 = msg_.a;
+							var user = _v3.a.a.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										state: $author$project$Page$UserProfile$StateComplete(user),
+										state_email: $author$project$Page$UserProfile$SettingStateShow(
+											A2($elm$core$Maybe$withDefault, '', user.email)),
+										state_password: $author$project$Page$UserProfile$SettingStateShow('')
+									}),
+								A2($elm$core$Platform$Cmd$map, $author$project$Page$UserProfile$MsgTask, c));
+						} else {
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										state: $author$project$Page$UserProfile$StateLoading(m)
+									}),
+								A2($elm$core$Platform$Cmd$map, $author$project$Page$UserProfile$MsgTask, c));
+						}
 					} else {
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									state: $author$project$Page$UserProfile$StateLoading(m)
-								}),
-							A2($elm$core$Platform$Cmd$map, $author$project$Page$UserProfile$MsgTask, c));
+						break _v0$9;
 					}
-				} else {
-					break _v0$7;
-				}
-			} else {
-				switch (_v0.a.$) {
-					case 'MsgChangeEmail':
+				case 'MsgChangeEmail':
+					if (_v0.b.$ === 'StateComplete') {
 						var _v4 = _v0.a;
 						var user = _v0.b.a;
 						var _v5 = model.state_email;
@@ -15622,7 +15643,11 @@ var $author$project$Page$UserProfile$update = F2(
 							default:
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
-					case 'MsgChangePassword':
+					} else {
+						break _v0$9;
+					}
+				case 'MsgChangePassword':
+					if (_v0.b.$ === 'StateComplete') {
 						var _v6 = _v0.a;
 						var user = _v0.b.a;
 						var _v7 = model.state_password;
@@ -15655,7 +15680,11 @@ var $author$project$Page$UserProfile$update = F2(
 							default:
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
-					case 'MsgNewEmailValue':
+					} else {
+						break _v0$9;
+					}
+				case 'MsgNewEmailValue':
+					if (_v0.b.$ === 'StateComplete') {
 						var val = _v0.a.a;
 						var user = _v0.b.a;
 						var _v8 = model.state_email;
@@ -15670,7 +15699,11 @@ var $author$project$Page$UserProfile$update = F2(
 						} else {
 							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
-					case 'MsgNewPasswordValue':
+					} else {
+						break _v0$9;
+					}
+				case 'MsgNewPasswordValue':
+					if (_v0.b.$ === 'StateComplete') {
 						var val = _v0.a.a;
 						var user = _v0.b.a;
 						var _v9 = model.state_password;
@@ -15685,7 +15718,11 @@ var $author$project$Page$UserProfile$update = F2(
 						} else {
 							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
-					case 'MsgChangeEmailDone':
+					} else {
+						break _v0$9;
+					}
+				case 'MsgChangeEmailDone':
+					if (_v0.b.$ === 'StateComplete') {
 						var res = _v0.a.a;
 						var user = _v0.b.a;
 						if (res.$ === 'Ok') {
@@ -15704,7 +15741,11 @@ var $author$project$Page$UserProfile$update = F2(
 									}),
 								$elm$core$Platform$Cmd$none);
 						}
-					case 'MsgChangePasswordDone':
+					} else {
+						break _v0$9;
+					}
+				case 'MsgChangePasswordDone':
+					if (_v0.b.$ === 'StateComplete') {
 						var res = _v0.a.a;
 						var user = _v0.b.a;
 						if (res.$ === 'Ok') {
@@ -15723,9 +15764,46 @@ var $author$project$Page$UserProfile$update = F2(
 									}),
 								$elm$core$Platform$Cmd$none);
 						}
-					default:
-						break _v0$7;
-				}
+					} else {
+						break _v0$9;
+					}
+				case 'MsgOnClickImpersonate':
+					if (_v0.b.$ === 'StateComplete') {
+						var _v12 = _v0.a;
+						var user = _v0.b.a;
+						return _Utils_Tuple2(
+							model,
+							A2(
+								$elm$core$Task$attempt,
+								$author$project$Page$UserProfile$MsgImpersonationFinished,
+								A4(
+									$author$project$Api$ext_task,
+									$elm$core$Basics$identity,
+									model.token,
+									_List_Nil,
+									$author$project$Api$Request$User$userImpersonate(
+										A2(
+											$elm$core$Maybe$withDefault,
+											'',
+											A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, user.id))))));
+					} else {
+						break _v0$9;
+					}
+				default:
+					var res = _v0.a.a;
+					var new_model = _Utils_update(
+						model,
+						{
+							result_impersonation: $elm$core$Maybe$Just(res)
+						});
+					if (res.$ === 'Ok') {
+						return _Utils_Tuple2(
+							new_model,
+							$elm$browser$Browser$Navigation$load('/login'));
+					} else {
+						var error = res.a;
+						return _Utils_Tuple2(new_model, $elm$core$Platform$Cmd$none);
+					}
 			}
 		}
 		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -33869,7 +33947,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 										$elm$html$Html$div,
 										_List_fromArray(
 											[
-												$elm$html$Html$Attributes$class('row between-md center-xs'),
+												$elm$html$Html$Attributes$class('ml-10 mr-10 row between-md center-xs'),
 												A2($elm$html$Html$Attributes$style, 'margin-bottom', '0.5em')
 											]),
 										_List_fromArray(
@@ -35993,6 +36071,7 @@ var $author$project$Page$NotFound$view = A2(
 						]))
 				]))
 		]));
+var $author$project$Page$UserProfile$MsgOnClickImpersonate = {$: 'MsgOnClickImpersonate'};
 var $elm$html$Html$Attributes$height = function (n) {
 	return A2(
 		_VirtualDom_attribute,
@@ -36706,6 +36785,41 @@ var $author$project$Page$UserProfile$view = function (model) {
 				_Utils_ap(user.children, user.parents)));
 		var show_children = is_staff_or_own_page || is_related;
 		var show_parents = is_staff_or_own_page || is_related;
+		var is_admin = A2(
+			$author$project$Util$user_has_any_role,
+			model.current_user,
+			_List_fromArray(
+				['admin']));
+		var impersonation_icon = function () {
+			var _v2 = model.result_impersonation;
+			if (_v2.$ === 'Just') {
+				if (_v2.a.$ === 'Ok') {
+					return A2(
+						$elm$html$Html$i,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('check icon')
+							]),
+						_List_Nil);
+				} else {
+					return A2(
+						$elm$html$Html$i,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('x icon')
+							]),
+						_List_Nil);
+				}
+			} else {
+				return A2(
+					$elm$html$Html$i,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('key icon')
+						]),
+					_List_Nil);
+			}
+		}();
 		var fio = $author$project$Util$user_full_name(
 			$author$project$Util$user_deep_to_shallow(user));
 		var education = A2(
@@ -36748,12 +36862,34 @@ var $author$project$Page$UserProfile$view = function (model) {
 									$elm$html$Html$img,
 									_List_fromArray(
 										[
+											$elm$html$Html$Attributes$class('row center-xs'),
 											$elm$html$Html$Attributes$src(
 											A2($elm$core$Maybe$withDefault, '/img/user.png', user.avatar)),
 											$elm$html$Html$Attributes$width(300),
 											$elm$html$Html$Attributes$height(300)
 										]),
-									_List_Nil)
+									_List_Nil),
+									(is_admin && (!_Utils_eq(user.id, model.current_user.id))) ? A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row center-xs')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$button,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('ui button'),
+													$elm$html$Html$Events$onClick($author$project$Page$UserProfile$MsgOnClickImpersonate)
+												]),
+											_List_fromArray(
+												[
+													impersonation_icon,
+													$elm$html$Html$text('Зайти от имени пользователя')
+												]))
+										])) : $elm$html$Html$text('')
 								])),
 							A2(
 							$elm$html$Html$div,
@@ -36880,7 +37016,13 @@ var $author$project$Page$UserProfile$view = function (model) {
 																				]))
 																		]) : A2(
 																		$elm$core$List$map,
-																		$author$project$Component$Misc$user_link($elm$core$Maybe$Nothing),
+																		A2(
+																			$elm$core$Basics$composeR,
+																			$author$project$Component$Misc$user_link($elm$core$Maybe$Nothing),
+																			A2(
+																				$elm$core$Basics$composeR,
+																				$elm$core$List$singleton,
+																				$elm$html$Html$div(_List_Nil))),
 																		user.parents))
 																]))
 														])) : $elm$html$Html$text(''),
@@ -36927,7 +37069,13 @@ var $author$project$Page$UserProfile$view = function (model) {
 																				]))
 																		]) : A2(
 																		$elm$core$List$map,
-																		$author$project$Component$Misc$user_link($elm$core$Maybe$Nothing),
+																		A2(
+																			$elm$core$Basics$composeR,
+																			$author$project$Component$Misc$user_link($elm$core$Maybe$Nothing),
+																			A2(
+																				$elm$core$Basics$composeR,
+																				$elm$core$List$singleton,
+																				$elm$html$Html$div(_List_Nil))),
 																		user.children))
 																]))
 														])) : $elm$html$Html$text(''),

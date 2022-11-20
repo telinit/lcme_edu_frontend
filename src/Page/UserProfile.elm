@@ -2,13 +2,14 @@ module Page.UserProfile exposing (..)
 
 import Api exposing (ext_task)
 import Api.Data exposing (EducationShallow, UserDeep)
-import Api.Request.User exposing (userGetDeep, userSetEmail, userSetPassword)
+import Api.Request.User exposing (userGetDeep, userImpersonate, userSetEmail, userSetPassword)
+import Browser.Navigation as Url
 import Component.Misc exposing (user_link)
 import Component.MultiTask as MT exposing (Msg(..))
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
-import Http
+import Http exposing (Error)
 import Task
 import Time
 import Util exposing (httpErrorToString, link_span, posixToFullDate, user_deep_to_shallow, user_full_name, user_has_any_role)
@@ -32,6 +33,8 @@ type Msg
     | MsgChangePassword
     | MsgChangeEmailDone (Result String ())
     | MsgChangePasswordDone (Result String ())
+    | MsgOnClickImpersonate
+    | MsgImpersonationFinished (Result Error ())
 
 
 type TaskResult
@@ -50,6 +53,7 @@ type alias Model =
     , user_id : Maybe Uuid
     , state_email : SettingState
     , state_password : SettingState
+    , result_impersonation : Maybe (Result Error ())
     }
 
 
@@ -89,6 +93,7 @@ init token current_user profile_id =
               , user_id = Just uid
               , state_email = SettingStateUnset
               , state_password = SettingStateUnset
+              , result_impersonation = Nothing
               }
             , Cmd.map MsgTask c
             )
@@ -100,6 +105,7 @@ init token current_user profile_id =
               , user_id = current_user.id
               , state_email = Maybe.withDefault SettingStateUnset <| Maybe.map SettingStateShow current_user.email
               , state_password = SettingStateShow ""
+              , result_impersonation = Nothing
               }
             , Cmd.none
             )
@@ -186,6 +192,27 @@ update msg model =
 
                 Err e ->
                     ( { model | state_password = SettingStateChangeError e }, Cmd.none )
+
+        ( MsgOnClickImpersonate, StateComplete user ) ->
+            ( model
+            , Task.attempt MsgImpersonationFinished <|
+                ext_task identity model.token [] <|
+                    userImpersonate <|
+                        Maybe.withDefault "" <|
+                            Maybe.map Uuid.toString user.id
+            )
+
+        ( MsgImpersonationFinished res, _ ) ->
+            let
+                new_model =
+                    { model | result_impersonation = Just res }
+            in
+            case res of
+                Ok _ ->
+                    ( new_model, Url.load "/login" )
+
+                Err error ->
+                    ( new_model, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -449,6 +476,9 @@ view model =
                     Maybe.withDefault (text "") <|
                         Maybe.map (List.map viewRole >> div []) user.roles
 
+                is_admin =
+                    user_has_any_role model.current_user [ "admin" ]
+
                 is_staff_or_own_page =
                     user_has_any_role model.current_user [ "staff", "admin" ] || model.current_user.id == user.id
 
@@ -471,11 +501,38 @@ view model =
 
                 education =
                     List.map viewEducation <| List.sortBy (.started >> Time.posixToMillis) user.education
+
+                impersonation_icon =
+                    case model.result_impersonation of
+                        Just (Ok _) ->
+                            i [ class "check icon" ] []
+
+                        Just (Err _) ->
+                            i [ class "x icon" ] []
+
+                        Nothing ->
+                            i [ class "key icon" ] []
             in
             div [ class "ml-10 mr-10" ]
                 [ div [ class "row center-xs start-md" ]
                     [ div [ class "col m-10" ]
-                        [ img [ src <| Maybe.withDefault "/img/user.png" user.avatar, width 300, height 300 ] []
+                        [ img
+                            [ class "row center-xs"
+                            , src <| Maybe.withDefault "/img/user.png" user.avatar
+                            , width 300
+                            , height 300
+                            ]
+                            []
+                        , if is_admin && user.id /= model.current_user.id then
+                            div [ class "row center-xs" ]
+                                [ button [ class "ui button", onClick MsgOnClickImpersonate ]
+                                    [ impersonation_icon
+                                    , text "Зайти от имени пользователя"
+                                    ]
+                                ]
+
+                          else
+                            text ""
                         ]
                     , div [ class "col-xs-12 col-md-8 m-10" ]
                         [ h1 [] [ text fio ]
@@ -514,7 +571,7 @@ view model =
                                                     [ span [] [ text "(нет)" ] ]
 
                                                  else
-                                                    List.map (user_link Nothing) user.parents
+                                                    List.map (user_link Nothing >> List.singleton >> div []) user.parents
                                                 )
                                             ]
                                         ]
@@ -536,7 +593,7 @@ view model =
                                                     [ span [] [ text "(нет)" ] ]
 
                                                  else
-                                                    List.map (user_link Nothing) user.children
+                                                    List.map (user_link Nothing >> List.singleton >> div []) user.children
                                                 )
                                             ]
                                         ]

@@ -1642,7 +1642,7 @@ viewCourse courseRead components_activity model =
                     ]
                 , div [ class "col-sm between-xs row start-xs", style "flex-flow" "column nowrap" ]
                     [ div []
-                        [ div [ class "row between-md center-xs", style "margin-bottom" "0.5em" ]
+                        [ div [ class "ml-10 mr-10 row between-md center-xs", style "margin-bottom" "0.5em" ]
                             [ h1
                                 [ class "col"
                                 , style "margin" "0"

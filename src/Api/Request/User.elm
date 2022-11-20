@@ -18,6 +18,7 @@ module Api.Request.User exposing
     ( userCreate
     , userDelete
     , userGetDeep
+    , userImpersonate
     , userList
     , userLogin
     , userLogout
@@ -73,6 +74,18 @@ userGetDeep id_path =
         []
         Nothing
         Api.Data.userDeepDecoder
+
+
+userImpersonate : String -> Api.Request ()
+userImpersonate id_path =
+    Api.request
+        "GET"
+        "/user/{id}/impersonate/"
+        [ ( "id", identity id_path ) ]
+        []
+        []
+        Nothing
+        (Json.Decode.succeed ())
 
 
 userList : Api.Request (List Api.Data.UserShallow)
