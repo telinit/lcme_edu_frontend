@@ -36131,6 +36131,8 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$Attributes$class('ui container segment'),
+						A2($elm$html$Html$Attributes$style, 'height', '50px'),
+						A2($elm$html$Html$Attributes$style, 'margin-bottom', '10px'),
 						A2($elm$html$Html$Attributes$style, 'background-color', '#EEE')
 					]),
 				_List_fromArray(
@@ -36222,9 +36224,10 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 					[
 						$elm$html$Html$Attributes$class('ui celled striped unstackable table'),
 						A2($elm$html$Html$Attributes$style, 'max-width', '100%'),
-						A2($elm$html$Html$Attributes$style, 'max-height', '100%'),
+						A2($elm$html$Html$Attributes$style, 'max-height', 'calc(100% - 60px)'),
 						A2($elm$html$Html$Attributes$style, 'display', 'block'),
-						A2($elm$html$Html$Attributes$style, 'overflow', 'scroll')
+						A2($elm$html$Html$Attributes$style, 'overflow', 'scroll'),
+						A2($elm$html$Html$Attributes$style, 'margin-top', '10px')
 					]),
 				_Utils_ap(
 					_List_fromArray(

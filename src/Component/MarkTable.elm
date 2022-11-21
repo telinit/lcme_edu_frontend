@@ -955,6 +955,8 @@ viewTable model =
         ]
         [ div
             [ class "ui container segment"
+            , style "height" "50px"
+            , style "margin-bottom" "10px"
             , style "background-color" "#EEE"
             ]
             [ div [ class "row between-xs" ]
@@ -974,9 +976,10 @@ viewTable model =
         , table
             [ class "ui celled striped unstackable table"
             , style "max-width" "100%"
-            , style "max-height" "100%"
+            , style "max-height" "calc(100% - 60px)"
             , style "display" "block"
             , style "overflow" "scroll"
+            , style "margin-top" "10px"
             ]
             ((++) [ viewTableHeader model ] <| L.indexedMap (viewTableRow model.stickyCol1) <| zip model.rows model.cells)
         ]
