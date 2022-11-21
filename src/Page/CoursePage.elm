@@ -397,7 +397,7 @@ validateActivityCSV sep data =
                                 [ { kind = IssueKindWarning
                                   , row = Just row_num
                                   , col = Just i
-                                  , msg = "Лишние пробелы в ячейке"
+                                  , msg = "Лишние пробелы в ячейке (в начале или конце)"
                                   }
                                 ]
 

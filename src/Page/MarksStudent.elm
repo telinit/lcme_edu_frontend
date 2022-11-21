@@ -86,8 +86,8 @@ view model =
                     Maybe.map
                         (\u ->
                             div []
-                                [ h3 [class "row center-xs middle-xs"]
-                                    [ span [class "mr-5"] [text "Учащийся: "]
+                                [ h3 [ class "row center-xs middle-xs" ]
+                                    [ span [ class "mr-5" ] [ text "Учащийся: " ]
                                     , user_link Nothing u
                                     ]
                                 ]
@@ -95,7 +95,13 @@ view model =
                     <|
                         List.head <|
                             List.filter (.id >> (==) model.student_id) (u1 ++ u2)
-                , div [ class "row center-xs" ] [ Html.map MsgTable <| MT.view t ]
+                , div [ class "row center-xs" ]
+                    [ div
+                        [ class "col"
+
+                        ]
+                        [ Html.map MsgTable <| MT.view t ]
+                    ]
                 ]
 
         StudentSelection ->

@@ -10274,6 +10274,8 @@ var $author$project$Component$MarkTable$initForCourse = F3(
 				rows: _List_Nil,
 				size: _Utils_Tuple2(0, 0),
 				state: $author$project$Component$MarkTable$Loading(m),
+				stickyCol1: true,
+				stickyRow1: true,
 				student_id: $elm$core$Maybe$Nothing,
 				teacher_id: teacher_id,
 				token: token,
@@ -10367,6 +10369,8 @@ var $author$project$Component$MarkTable$initForStudent = F2(
 				rows: _List_Nil,
 				size: _Utils_Tuple2(0, 0),
 				state: $author$project$Component$MarkTable$Loading(m),
+				stickyCol1: true,
+				stickyRow1: true,
 				student_id: $elm$core$Maybe$Just(student_id),
 				teacher_id: $elm$core$Maybe$Nothing,
 				token: token,
@@ -13155,7 +13159,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 								{
 								col: $elm$core$Maybe$Just(i),
 								kind: $author$project$Page$CoursePage$IssueKindWarning,
-								msg: 'Лишние пробелы в ячейке',
+								msg: 'Лишние пробелы в ячейке (в начале или конце)',
 								row: $elm$core$Maybe$Just(row_num)
 							}
 							]) : _List_Nil;
@@ -15770,9 +15774,23 @@ var $author$project$Component$MarkTable$update = F2(
 						_Utils_Tuple2(x, y),
 						$elm$core$Maybe$Nothing),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'MsgNop':
 				var _v33 = _v0.a;
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			case 'MsgSetStickyCol1':
+				var v = _v0.a.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{stickyCol1: v}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var v = _v0.a.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{stickyRow1: v}),
+					$elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$Page$MarksCourse$update = F2(
@@ -35626,6 +35644,12 @@ var $author$project$Component$MarkTable$showFetchedData = function (fetchedData)
 				$elm$core$List$length(activities));
 	}
 };
+var $author$project$Component$MarkTable$MsgSetStickyCol1 = function (a) {
+	return {$: 'MsgSetStickyCol1', a: a};
+};
+var $author$project$Component$MarkTable$MsgSetStickyRow1 = function (a) {
+	return {$: 'MsgSetStickyRow1', a: a};
+};
 var $elm$html$Html$thead = _VirtualDom_node('thead');
 var $author$project$Component$MarkTable$viewColumn = F2(
 	function (tz, column) {
@@ -35704,77 +35728,90 @@ var $author$project$Component$MarkTable$viewColumn = F2(
 				A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, posix));
 		}
 	});
-var $author$project$Component$MarkTable$viewTableHeader = F2(
-	function (tz, columns) {
-		var td_attrs = function (col) {
-			if (col.$ === 'Activity') {
-				var act = col.a;
-				var _v1 = act.contentType;
-				_v1$2:
-				while (true) {
-					if (_v1.$ === 'Just') {
-						switch (_v1.a.$) {
-							case 'ActivityContentTypeFIN':
-								var _v2 = _v1.a;
-								return _List_fromArray(
-									[
-										A2($elm$html$Html$Attributes$style, 'background-color', '#FFEFE2FF')
-									]);
-							case 'ActivityContentTypeTSK':
-								var _v3 = _v1.a;
-								return _List_fromArray(
-									[
-										A2($elm$html$Html$Attributes$style, 'background-color', 'hsl(266, 100%, 97%)')
-									]);
-							default:
-								break _v1$2;
-						}
-					} else {
-						break _v1$2;
+var $author$project$Component$MarkTable$viewTableHeader = function (model) {
+	var td_attrs = function (col) {
+		if (col.$ === 'Activity') {
+			var act = col.a;
+			var _v1 = act.contentType;
+			_v1$2:
+			while (true) {
+				if (_v1.$ === 'Just') {
+					switch (_v1.a.$) {
+						case 'ActivityContentTypeFIN':
+							var _v2 = _v1.a;
+							return _List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'background-color', '#FFEFE2FF')
+								]);
+						case 'ActivityContentTypeTSK':
+							var _v3 = _v1.a;
+							return _List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'background-color', 'hsl(266, 100%, 97%)')
+								]);
+						default:
+							break _v1$2;
 					}
+				} else {
+					break _v1$2;
 				}
-				return _List_fromArray(
-					[
-						A2($elm$html$Html$Attributes$style, 'background-color', '#EEF6FFFF')
-					]);
-			} else {
-				return _List_Nil;
 			}
-		};
-		return A2(
-			$elm$html$Html$thead,
-			_List_Nil,
-			_List_fromArray(
+			return _List_fromArray(
 				[
+					A2($elm$html$Html$Attributes$style, 'background-color', '#EEF6FFFF')
+				]);
+		} else {
+			return _List_Nil;
+		}
+	};
+	return A2(
+		$elm$html$Html$thead,
+		model.stickyRow1 ? _List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'position', 'sticky'),
+				A2($elm$html$Html$Attributes$style, 'top', '0'),
+				A2($elm$html$Html$Attributes$style, 'z-index', '2')
+			]) : _List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$tr,
+				_List_Nil,
+				_Utils_ap(
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$td,
+							model.stickyCol1 ? _List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'position', 'sticky'),
+									A2($elm$html$Html$Attributes$style, 'left', '0'),
+									A2($elm$html$Html$Attributes$style, 'top', '0'),
+									A2($elm$html$Html$Attributes$style, 'background-color', '#F6F6F6')
+								]) : _List_Nil,
+							_List_Nil)
+						]),
 					A2(
-					$elm$html$Html$tr,
-					_List_Nil,
-					_Utils_ap(
-						_List_fromArray(
-							[
-								A2($elm$html$Html$tr, _List_Nil, _List_Nil)
-							]),
-						A2(
-							$elm$core$List$map,
-							function (col) {
-								return A2(
-									$elm$html$Html$td,
-									_Utils_ap(
-										_List_fromArray(
-											[
-												A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-												A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
-											]),
-										td_attrs(col)),
+						$elm$core$List$map,
+						function (col) {
+							return A2(
+								$elm$html$Html$td,
+								_Utils_ap(
 									_List_fromArray(
 										[
-											A2($author$project$Component$MarkTable$viewColumn, tz, col)
-										]));
-							},
-							columns)))
-				]));
-	});
-var $author$project$Component$MarkTable$viewRow = function (row) {
+											A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+											A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
+										]),
+									td_attrs(col)),
+								_List_fromArray(
+									[
+										A2($author$project$Component$MarkTable$viewColumn, model.tz, col)
+									]));
+						},
+						model.columns)))
+			]));
+};
+var $author$project$Component$MarkTable$viewRowsFirstCol = function (row) {
 	if (row.$ === 'User') {
 		var user = row.a;
 		return A2(
@@ -36029,8 +36066,8 @@ var $author$project$Component$MarkTable$viewTableCell = F3(
 						slot_list))
 				]));
 	});
-var $author$project$Component$MarkTable$viewTableRow = F2(
-	function (y, _v0) {
+var $author$project$Component$MarkTable$viewTableRow = F3(
+	function (stickyCol1, y, _v0) {
 		var row = _v0.a;
 		var cols = _v0.b;
 		return A2(
@@ -36041,14 +36078,21 @@ var $author$project$Component$MarkTable$viewTableRow = F2(
 					[
 						A2(
 						$elm$html$Html$td,
+						_Utils_ap(
+							_List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'vertical-align', 'middle'),
+									A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap'),
+									A2($elm$html$Html$Attributes$style, 'background-color', 'white')
+								]),
+							stickyCol1 ? _List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'position', 'sticky'),
+									A2($elm$html$Html$Attributes$style, 'left', '0')
+								]) : _List_Nil),
 						_List_fromArray(
 							[
-								A2($elm$html$Html$Attributes$style, 'vertical-align', 'middle'),
-								A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap')
-							]),
-						_List_fromArray(
-							[
-								$author$project$Component$MarkTable$viewRow(row)
+								$author$project$Component$MarkTable$viewRowsFirstCol(row)
 							]))
 					]),
 				A3(
@@ -36069,27 +36113,130 @@ var $author$project$Component$MarkTable$viewTableRow = F2(
 					_Utils_Tuple2(0, _List_Nil),
 					cols).b));
 	});
-var $author$project$Component$MarkTable$viewTable = F4(
-	function (tz, rows, columns, cells) {
-		return A2(
-			$elm$html$Html$table,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('ui celled striped unstackable table'),
-					A2($elm$html$Html$Attributes$style, 'max-width', '100vw'),
-					A2($elm$html$Html$Attributes$style, 'display', 'block'),
-					A2($elm$html$Html$Attributes$style, 'overflow-x', 'scroll')
-				]),
-			_Utils_ap(
+var $author$project$Component$MarkTable$viewTable = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'position', 'absolute'),
+				A2($elm$html$Html$Attributes$style, 'left', '0'),
+				A2($elm$html$Html$Attributes$style, 'right', '0'),
+				A2($elm$html$Html$Attributes$style, 'bottom', '0'),
+				A2($elm$html$Html$Attributes$style, 'top', '120px')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						A2($author$project$Component$MarkTable$viewTableHeader, tz, columns)
+						$elm$html$Html$Attributes$class('ui container segment'),
+						A2($elm$html$Html$Attributes$style, 'background-color', '#EEE')
 					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row between-xs')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('col-xs-12 col-sm center-xs start-sm')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('ui checkbox')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$input,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$type_('checkbox'),
+														A2($elm$html$Html$Attributes$attribute, 'tabindex', '0'),
+														$elm$html$Html$Attributes$checked(model.stickyRow1),
+														$elm$html$Html$Events$onCheck($author$project$Component$MarkTable$MsgSetStickyRow1)
+													]),
+												_List_Nil),
+												A2(
+												$elm$html$Html$label,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Закрепить первую строку')
+													]))
+											])),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('ui checkbox ml-10')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$input,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$type_('checkbox'),
+														A2($elm$html$Html$Attributes$attribute, 'tabindex', '0'),
+														$elm$html$Html$Attributes$checked(model.stickyCol1),
+														$elm$html$Html$Events$onCheck($author$project$Component$MarkTable$MsgSetStickyCol1)
+													]),
+												_List_Nil),
+												A2(
+												$elm$html$Html$label,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Закрепить первый столбец')
+													]))
+											]))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('col-xs-12 col-sm center-xs end-sm')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('')
+									]))
+							]))
+					])),
 				A2(
-					$elm$core$List$indexedMap,
-					$author$project$Component$MarkTable$viewTableRow,
-					A2($author$project$Util$zip, rows, cells))));
-	});
+				$elm$html$Html$table,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('ui celled striped unstackable table'),
+						A2($elm$html$Html$Attributes$style, 'max-width', '100%'),
+						A2($elm$html$Html$Attributes$style, 'max-height', '100%'),
+						A2($elm$html$Html$Attributes$style, 'display', 'block'),
+						A2($elm$html$Html$Attributes$style, 'overflow', 'scroll')
+					]),
+				_Utils_ap(
+					_List_fromArray(
+						[
+							$author$project$Component$MarkTable$viewTableHeader(model)
+						]),
+					A2(
+						$elm$core$List$indexedMap,
+						$author$project$Component$MarkTable$viewTableRow(model.stickyCol1),
+						A2($author$project$Util$zip, model.rows, model.cells))))
+			]));
+};
 var $author$project$Component$MarkTable$view = function (model) {
 	var _v0 = model.state;
 	switch (_v0.$) {
@@ -36106,7 +36253,7 @@ var $author$project$Component$MarkTable$view = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$text('Нет данных')
-					])) : A4($author$project$Component$MarkTable$viewTable, model.tz, model.rows, model.columns, model.cells);
+					])) : $author$project$Component$MarkTable$viewTable(model);
 		default:
 			var string = _v0.a;
 			return $elm$html$Html$text(string);
@@ -36223,10 +36370,7 @@ var $author$project$Page$MarksCourse$view = function (model) {
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('row center-xs mt-20'),
-						A2($elm$html$Html$Attributes$style, 'position', 'absolute'),
-						A2($elm$html$Html$Attributes$style, 'left', '0'),
-						A2($elm$html$Html$Attributes$style, 'right', '0')
+						$elm$html$Html$Attributes$class('row center-xs mt-20')
 					]),
 				_List_fromArray(
 					[
@@ -36347,9 +36491,18 @@ var $author$project$Page$MarksStudent$view = function (model) {
 					_List_fromArray(
 						[
 							A2(
-							$elm$html$Html$map,
-							$author$project$Page$MarksStudent$MsgTable,
-							$author$project$Component$MarkTable$view(t))
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('col')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$map,
+									$author$project$Page$MarksStudent$MsgTable,
+									$author$project$Component$MarkTable$view(t))
+								]))
 						]))
 				]));
 	} else {

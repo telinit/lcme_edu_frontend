@@ -10,8 +10,8 @@ import Component.Misc exposing (user_link)
 import Component.MultiTask as MultiTask exposing (Msg(..))
 import Dict as D exposing (Dict)
 import Html exposing (..)
-import Html.Attributes exposing (autofocus, class, href, id, style, tabindex)
-import Html.Events exposing (on)
+import Html.Attributes exposing (attribute, autofocus, checked, class, href, id, style, tabindex, type_, value)
+import Html.Events exposing (on, onCheck)
 import Http
 import Json.Decode as JD
 import List as L
@@ -94,6 +94,8 @@ type Msg
     | MsgMarkUpdated ( Int, Int ) Mark
     | MsgMarkDeleted ( Int, Int )
     | MsgNop
+    | MsgSetStickyCol1 Bool
+    | MsgSetStickyRow1 Bool
 
 
 type State
@@ -114,6 +116,8 @@ type alias Model =
     , student_id : Maybe Uuid
     , teacher_id : Maybe Uuid
     , size : ( Int, Int )
+    , stickyRow1 : Bool
+    , stickyCol1 : Bool
     }
 
 
@@ -302,6 +306,8 @@ initForStudent token student_id =
       , teacher_id = Nothing
       , size = ( 0, 0 )
       , tz = utc
+      , stickyRow1 = True
+      , stickyCol1 = True
       }
     , Cmd.map MsgFetch c
     )
@@ -331,6 +337,8 @@ initForCourse token course_id teacher_id =
       , teacher_id = teacher_id
       , size = ( 0, 0 )
       , tz = utc
+      , stickyRow1 = True
+      , stickyCol1 = True
       }
     , Cmd.map MsgFetch c
     )
@@ -680,6 +688,12 @@ update msg model =
         ( MsgNop, _ ) ->
             ( model, Cmd.none )
 
+        ( MsgSetStickyCol1 v, _ ) ->
+            ( { model | stickyCol1 = v }, Cmd.none )
+
+        ( MsgSetStickyRow1 v, _ ) ->
+            ( { model | stickyRow1 = v }, Cmd.none )
+
 
 viewColumn : Zone -> Column -> Html Msg
 viewColumn tz column =
@@ -702,8 +716,8 @@ viewColumn tz column =
             text <| posixToDDMMYYYY T.utc posix
 
 
-viewRow : Row -> Html Msg
-viewRow row =
+viewRowsFirstCol : Row -> Html Msg
+viewRowsFirstCol row =
     case row of
         User user ->
             div [ style "margin" "0 1em" ] [ user_link Nothing user ]
@@ -845,8 +859,8 @@ viewTableCell y x slot_list =
         ]
 
 
-viewTableHeader : Zone -> List Column -> Html Msg
-viewTableHeader tz columns =
+viewTableHeader : Model -> Html Msg
+viewTableHeader model =
     let
         td_attrs col =
             case col of
@@ -864,9 +878,29 @@ viewTableHeader tz columns =
                 Date _ ->
                     []
     in
-    thead []
+    thead
+        (if model.stickyRow1 then
+            [ style "position" "sticky", style "top" "0", style "z-index" "2" ]
+
+         else
+            []
+        )
         [ tr []
-            ((++) [ tr [] [] ] <|
+            ((++)
+                [ td
+                    (if model.stickyCol1 then
+                        [ style "position" "sticky"
+                        , style "left" "0"
+                        , style "top" "0"
+                        , style "background-color" "#F6F6F6"
+                        ]
+
+                     else
+                        []
+                    )
+                    []
+                ]
+             <|
                 L.map
                     (\col ->
                         td
@@ -877,21 +911,29 @@ viewTableHeader tz columns =
                              ]
                                 ++ td_attrs col
                             )
-                            [ viewColumn tz col ]
+                            [ viewColumn model.tz col ]
                     )
-                    columns
+                    model.columns
             )
         ]
 
 
-viewTableRow : Int -> ( Row, ColList ) -> Html Msg
-viewTableRow y ( row, cols ) =
+viewTableRow : Bool -> Int -> ( Row, ColList ) -> Html Msg
+viewTableRow stickyCol1 y ( row, cols ) =
     tr []
         ([ td
-            [ style "vertical-align" "middle"
-            , style "white-space" "nowrap"
-            ]
-            [ viewRow row ]
+            ([ style "vertical-align" "middle"
+             , style "white-space" "nowrap"
+             , style "background-color" "white"
+             ]
+                ++ (if stickyCol1 then
+                        [ style "position" "sticky", style "left" "0" ]
+
+                    else
+                        []
+                   )
+            )
+            [ viewRowsFirstCol row ]
          ]
             ++ (Tuple.second <|
                     L.foldl
@@ -902,15 +944,42 @@ viewTableRow y ( row, cols ) =
         )
 
 
-viewTable : Zone -> List Row -> List Column -> RowList -> Html Msg
-viewTable tz rows columns cells =
-    table
-        [ class "ui celled striped unstackable table"
-        , style "max-width" "100vw"
-        , style "display" "block"
-        , style "overflow-x" "scroll"
+viewTable : Model -> Html Msg
+viewTable model =
+    div
+        [ style "position" "absolute"
+        , style "left" "0"
+        , style "right" "0"
+        , style "bottom" "0"
+        , style "top" "120px"
         ]
-        ((++) [ viewTableHeader tz columns ] <| L.indexedMap viewTableRow <| zip rows cells)
+        [ div
+            [ class "ui container segment"
+            , style "background-color" "#EEE"
+            ]
+            [ div [ class "row between-xs" ]
+                [ div [ class "col-xs-12 col-sm center-xs start-sm" ]
+                    [ div [ class "ui checkbox" ]
+                        [ input [ type_ "checkbox", attribute "tabindex" "0", checked model.stickyRow1, onCheck MsgSetStickyRow1 ] []
+                        , label [] [ text "Закрепить первую строку" ]
+                        ]
+                    , div [ class "ui checkbox ml-10" ]
+                        [ input [ type_ "checkbox", attribute "tabindex" "0", checked model.stickyCol1, onCheck MsgSetStickyCol1 ] []
+                        , label [] [ text "Закрепить первый столбец" ]
+                        ]
+                    ]
+                , div [ class "col-xs-12 col-sm center-xs end-sm" ] [ text "" ]
+                ]
+            ]
+        , table
+            [ class "ui celled striped unstackable table"
+            , style "max-width" "100%"
+            , style "max-height" "100%"
+            , style "display" "block"
+            , style "overflow" "scroll"
+            ]
+            ((++) [ viewTableHeader model ] <| L.indexedMap (viewTableRow model.stickyCol1) <| zip model.rows model.cells)
+        ]
 
 
 view : Model -> Html Msg
@@ -924,7 +993,7 @@ view model =
                 h3 [] [ text "Нет данных" ]
 
             else
-                viewTable model.tz model.rows model.columns model.cells
+                viewTable model
 
         Error string ->
             text string
