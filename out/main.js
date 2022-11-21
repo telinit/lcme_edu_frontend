@@ -36133,7 +36133,8 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 						$elm$html$Html$Attributes$class('ui container segment'),
 						A2($elm$html$Html$Attributes$style, 'height', '50px'),
 						A2($elm$html$Html$Attributes$style, 'margin-bottom', '10px'),
-						A2($elm$html$Html$Attributes$style, 'background-color', '#EEE')
+						A2($elm$html$Html$Attributes$style, 'background-color', '#EEE'),
+						A2($elm$html$Html$Attributes$style, 'padding', '5px')
 					]),
 				_List_fromArray(
 					[
@@ -36141,7 +36142,8 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('row between-xs')
+								$elm$html$Html$Attributes$class('row between-xs middle-xs'),
+								A2($elm$html$Html$Attributes$style, 'height', '100%')
 							]),
 						_List_fromArray(
 							[
@@ -36210,7 +36212,7 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('col-xs-12 col-sm center-xs end-sm')
+										$elm$html$Html$Attributes$class('col-xs-12 col-sm-3 center-xs end-sm')
 									]),
 								_List_fromArray(
 									[
@@ -37384,7 +37386,10 @@ var $author$project$Page$UserProfile$view = function (model) {
 					function ($) {
 						return $.started;
 					},
-					$elm$time$Time$posixToMillis),
+					A2(
+						$elm$core$Basics$composeR,
+						$elm$time$Time$posixToMillis,
+						$elm$core$Basics$mul(-1))),
 				user.education));
 		return A2(
 			$elm$html$Html$div,

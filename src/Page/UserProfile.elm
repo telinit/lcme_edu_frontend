@@ -500,7 +500,7 @@ view model =
                     is_staff_or_own_page || is_related
 
                 education =
-                    List.map viewEducation <| List.sortBy (.started >> Time.posixToMillis) user.education
+                    List.map viewEducation <| List.sortBy (.started >> Time.posixToMillis >> ((*) (-1))) user.education
 
                 impersonation_icon =
                     case model.result_impersonation of

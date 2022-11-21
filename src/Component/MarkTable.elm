@@ -958,8 +958,9 @@ viewTable model =
             , style "height" "50px"
             , style "margin-bottom" "10px"
             , style "background-color" "#EEE"
+            , style "padding" "5px"
             ]
-            [ div [ class "row between-xs" ]
+            [ div [ class "row between-xs middle-xs", style "height" "100%" ]
                 [ div [ class "col-xs-12 col-sm center-xs start-sm" ]
                     [ div [ class "ui checkbox" ]
                         [ input [ type_ "checkbox", attribute "tabindex" "0", checked model.stickyRow1, onCheck MsgSetStickyRow1 ] []
@@ -970,7 +971,7 @@ viewTable model =
                         , label [] [ text "Закрепить первый столбец" ]
                         ]
                     ]
-                , div [ class "col-xs-12 col-sm center-xs end-sm" ] [ text "" ]
+                , div [ class "col-xs-12 col-sm-3 center-xs end-sm" ] [ text "" ]
                 ]
             ]
         , table
