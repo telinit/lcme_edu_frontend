@@ -85,7 +85,7 @@ init token =
                 , ( ext_task FetchedSpecs token [] educationSpecializationList, "Получаем список специализаций" )
                 ]
     in
-    ( { state = Loading m, token = token, group_by = GroupByClass }, Cmd.map MsgFetch c )
+    ( { state = Loading m, token = token, group_by = GroupByNone }, Cmd.map MsgFetch c )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

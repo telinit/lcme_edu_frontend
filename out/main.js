@@ -7583,7 +7583,7 @@ var $author$project$Page$CourseListPage$FetchedCourses = function (a) {
 var $author$project$Page$CourseListPage$FetchedSpecs = function (a) {
 	return {$: 'FetchedSpecs', a: a};
 };
-var $author$project$Page$CourseListPage$GroupByClass = {$: 'GroupByClass'};
+var $author$project$Page$CourseListPage$GroupByNone = {$: 'GroupByNone'};
 var $author$project$Page$CourseListPage$Loading = function (a) {
 	return {$: 'Loading', a: a};
 };
@@ -9076,7 +9076,7 @@ var $author$project$Page$CourseListPage$init = function (token) {
 	var c = _v0.b;
 	return _Utils_Tuple2(
 		{
-			group_by: $author$project$Page$CourseListPage$GroupByClass,
+			group_by: $author$project$Page$CourseListPage$GroupByNone,
 			state: $author$project$Page$CourseListPage$Loading(m),
 			token: token
 		},
