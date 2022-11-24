@@ -12660,7 +12660,6 @@ var $author$project$Component$List$User$init = function (token) {
 		},
 		A2($elm$core$Platform$Cmd$map, $author$project$Component$List$User$MsgLoading, c));
 };
-var $elm$core$Debug$log = _Debug_log;
 var $author$project$Component$List$User$Idle = F2(
 	function (a, b) {
 		return {$: 'Idle', a: a, b: b};
@@ -12849,15 +12848,11 @@ var $elm$core$Dict$values = function (dict) {
 };
 var $author$project$Page$Course$CourseMembers$update = F2(
 	function (msg, model) {
-		var _v0 = A2(
-			$elm$core$Debug$log,
-			'CourseMembers.update',
-			_Utils_Tuple2(msg, model));
 		switch (msg.$) {
 			case 'MsgOnClickAddTeacher':
-				var _v2 = $author$project$Component$List$User$init(model.token);
-				var m = _v2.a;
-				var c = _v2.b;
+				var _v1 = $author$project$Component$List$User$init(model.token);
+				var m = _v1.a;
+				var c = _v1.b;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -12866,9 +12861,9 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 						}),
 					A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CourseMembers$MsgUserList, c));
 			case 'MsgOnClickAddStudent':
-				var _v3 = $author$project$Component$List$User$init(model.token);
-				var m = _v3.a;
-				var c = _v3.b;
+				var _v2 = $author$project$Component$List$User$init(model.token);
+				var m = _v2.a;
+				var c = _v2.b;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -12878,10 +12873,10 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 					A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CourseMembers$MsgUserList, c));
 			case 'MsgOnClickRemoveEnrollment':
 				var enr = msg.a;
-				var _v4 = model.state;
-				switch (_v4.$) {
+				var _v3 = model.state;
+				switch (_v3.$) {
 					case 'StateList':
-						var removingState = _v4.a;
+						var removingState = _v3.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -12890,7 +12885,7 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 										A3(
 											$elm$core$Dict$update,
 											$author$project$Util$get_id_str(enr),
-											function (_v5) {
+											function (_v4) {
 												return $elm$core$Maybe$Just($elm$core$Maybe$Nothing);
 											},
 											removingState))
@@ -12907,14 +12902,14 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 				}
 			case 'MsgUserList':
 				var msg_ = msg.a;
-				var _v6 = model.state;
-				switch (_v6.$) {
+				var _v5 = model.state;
+				switch (_v5.$) {
 					case 'StateAddMemberSelection':
-						var r = _v6.a;
-						var model_ = _v6.b;
-						var _v7 = A2($author$project$Component$List$User$update, msg_, model_);
-						var m = _v7.a;
-						var c = _v7.b;
+						var r = _v5.a;
+						var model_ = _v5.b;
+						var _v6 = A2($author$project$Component$List$User$update, msg_, model_);
+						var m = _v6.a;
+						var c = _v6.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -12939,10 +12934,10 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 								$elm$core$Basics$neq(enr),
 								model.enrollments)
 						});
-					var _v9 = model_.state;
-					switch (_v9.$) {
+					var _v8 = model_.state;
+					switch (_v8.$) {
 						case 'StateList':
-							var removing = _v9.a;
+							var removing = _v8.a;
 							return _Utils_Tuple2(
 								_Utils_update(
 									model_,
@@ -12961,10 +12956,10 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 					}
 				} else {
 					var error = result.a;
-					var _v10 = model.state;
-					switch (_v10.$) {
+					var _v9 = model.state;
+					switch (_v9.$) {
 						case 'StateList':
-							var removing = _v10.a;
+							var removing = _v9.a;
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
@@ -12973,7 +12968,7 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 											A3(
 												$elm$core$Dict$update,
 												$author$project$Util$get_id_str(enr),
-												function (_v11) {
+												function (_v10) {
 													return $elm$core$Maybe$Just(
 														$elm$core$Maybe$Just(error));
 												},
@@ -12987,8 +12982,8 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 					}
 				}
 			case 'MsgOnClickBackToList':
-				var _v12 = model.state;
-				switch (_v12.$) {
+				var _v11 = model.state;
+				switch (_v11.$) {
 					case 'StateList':
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					case 'StateAddMemberSelection':
@@ -13003,13 +12998,13 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
 			case 'MsgOnClickAddMembers':
-				var _v13 = model.state;
-				switch (_v13.$) {
+				var _v12 = model.state;
+				switch (_v12.$) {
 					case 'StateList':
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					case 'StateAddMemberSelection':
-						var role = _v13.a;
-						var userList = _v13.b;
+						var role = _v12.a;
+						var userList = _v12.b;
 						var users = $elm$core$Dict$values(userList.selected);
 						var role2 = function () {
 							if (role.$ === 'CourseEnrollmentReadRoleT') {
@@ -13019,10 +13014,10 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 							}
 						}();
 						var taskAddEnr = function (user) {
-							var _v15 = _Utils_Tuple2(model.courseID, user.id);
-							if ((_v15.a.$ === 'Just') && (_v15.b.$ === 'Just')) {
-								var cid = _v15.a.a;
-								var uid = _v15.b.a;
+							var _v14 = _Utils_Tuple2(model.courseID, user.id);
+							if ((_v14.a.$ === 'Just') && (_v14.b.$ === 'Just')) {
+								var cid = _v14.a.a;
+								var uid = _v14.b.a;
 								return $elm$core$Maybe$Just(
 									A4(
 										$author$project$Api$ext_task,
@@ -13035,7 +13030,7 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 								return $elm$core$Maybe$Nothing;
 							}
 						};
-						var _v14 = $author$project$Component$MultiTask$init(
+						var _v13 = $author$project$Component$MultiTask$init(
 							A2(
 								$elm$core$List$filterMap,
 								function (u) {
@@ -13049,8 +13044,8 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 										taskAddEnr(u));
 								},
 								users));
-						var m = _v14.a;
-						var c = _v14.b;
+						var m = _v13.a;
+						var c = _v13.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -13063,13 +13058,13 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 				}
 			default:
 				var msg_ = msg.a;
-				var _v17 = model.state;
-				switch (_v17.$) {
+				var _v16 = model.state;
+				switch (_v16.$) {
 					case 'StateEnrolling':
-						var model_ = _v17.a;
-						var _v18 = A2($author$project$Component$MultiTask$update, msg_, model_);
-						var m = _v18.a;
-						var c = _v18.b;
+						var model_ = _v16.a;
+						var _v17 = A2($author$project$Component$MultiTask$update, msg_, model_);
+						var m = _v17.a;
+						var c = _v17.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,

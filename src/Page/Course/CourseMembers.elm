@@ -113,10 +113,6 @@ init token courseID enr isTeacher isStaff =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        _ =
-            Debug.log "CourseMembers.update" ( msg, model )
-    in
     case msg of
         MsgOnClickAddTeacher ->
             let
