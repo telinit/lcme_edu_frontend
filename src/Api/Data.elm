@@ -230,7 +230,7 @@ type alias CourseDeep =
     , updatedAt : Maybe Posix
     , type_ : Maybe CourseDeepType
     , title : String
-    , description : String
+    , description : Maybe String
     , forClass : Maybe String
     , forGroup : Maybe String
     }
@@ -306,7 +306,7 @@ type alias CourseShallow =
     , updatedAt : Maybe Posix
     , type_ : Maybe CourseShallowType
     , title : String
-    , description : String
+    , description : Maybe String
     , forClass : Maybe String
     , forGroup : Maybe String
     , forSpecialization : Maybe Uuid
@@ -529,6 +529,7 @@ type alias UserDeep =
     { id : Maybe Uuid
     , roles : Maybe (List String)
     , currentClass : Maybe String
+    , currentSpec : Maybe EducationSpecialization
     , children : List UserShallow
     , parents : List UserShallow
     , education : List EducationShallow
@@ -561,6 +562,7 @@ type alias UserShallow =
     { id : Maybe Uuid
     , roles : Maybe (List String)
     , currentClass : Maybe String
+    , currentSpec : Maybe EducationSpecialization
     , lastLogin : Maybe Posix
     , isSuperuser : Maybe Bool
     , username : String
@@ -758,7 +760,7 @@ encodeCourseDeepPairs model =
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , maybeEncode "type" encodeCourseDeepType model.type_
             , encode "title" Json.Encode.string model.title
-            , encode "description" Json.Encode.string model.description
+            , maybeEncodeNullable "description" Json.Encode.string model.description
             , maybeEncode "for_class" Json.Encode.string model.forClass
             , maybeEncodeNullable "for_group" Json.Encode.string model.forGroup
             ]
@@ -891,7 +893,7 @@ encodeCourseShallowPairs model =
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , maybeEncode "type" encodeCourseShallowType model.type_
             , encode "title" Json.Encode.string model.title
-            , encode "description" Json.Encode.string model.description
+            , maybeEncodeNullable "description" Json.Encode.string model.description
             , maybeEncode "for_class" Json.Encode.string model.forClass
             , maybeEncodeNullable "for_group" Json.Encode.string model.forGroup
             , maybeEncodeNullable "for_specialization" Uuid.encode model.forSpecialization
@@ -1421,6 +1423,7 @@ encodeUserDeepPairs model =
             [ maybeEncode "id" Uuid.encode model.id
             , maybeEncode "roles" (Json.Encode.list Json.Encode.string) model.roles
             , maybeEncode "current_class" Json.Encode.string model.currentClass
+            , maybeEncodeNullable "current_spec" encodeEducationSpecialization model.currentSpec
             , encode "children" (Json.Encode.list encodeUserShallow) model.children
             , encode "parents" (Json.Encode.list encodeUserShallow) model.parents
             , encode "education" (Json.Encode.list encodeEducationShallow) model.education
@@ -1483,6 +1486,7 @@ encodeUserShallowPairs model =
             [ maybeEncode "id" Uuid.encode model.id
             , maybeEncode "roles" (Json.Encode.list Json.Encode.string) model.roles
             , maybeEncode "current_class" Json.Encode.string model.currentClass
+            , maybeEncodeNullable "current_spec" encodeEducationSpecialization model.currentSpec
             , maybeEncodeNullable "last_login" Api.Time.encodeDateTime model.lastLogin
             , maybeEncode "is_superuser" Json.Encode.bool model.isSuperuser
             , encode "username" Json.Encode.string model.username
@@ -1633,7 +1637,7 @@ courseDeepDecoder =
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "type" courseDeepTypeDecoder Nothing
         |> decode "title" Json.Decode.string
-        |> decode "description" Json.Decode.string
+        |> maybeDecodeNullable "description" Json.Decode.string Nothing
         |> maybeDecode "for_class" Json.Decode.string Nothing
         |> maybeDecodeNullable "for_group" Json.Decode.string Nothing
 
@@ -1730,7 +1734,7 @@ courseShallowDecoder =
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "type" courseShallowTypeDecoder Nothing
         |> decode "title" Json.Decode.string
-        |> decode "description" Json.Decode.string
+        |> maybeDecodeNullable "description" Json.Decode.string Nothing
         |> maybeDecode "for_class" Json.Decode.string Nothing
         |> maybeDecodeNullable "for_group" Json.Decode.string Nothing
         |> maybeDecodeNullable "for_specialization" Uuid.decoder Nothing
@@ -2000,6 +2004,7 @@ userDeepDecoder =
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecode "roles" (Json.Decode.list Json.Decode.string) Nothing
         |> maybeDecode "current_class" Json.Decode.string Nothing
+        |> maybeDecodeNullable "current_spec" educationSpecializationDecoder Nothing
         |> decode "children" (Json.Decode.list userShallowDecoder)
         |> decode "parents" (Json.Decode.list userShallowDecoder)
         |> decode "education" (Json.Decode.list educationShallowDecoder)
@@ -2034,6 +2039,7 @@ userShallowDecoder =
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecode "roles" (Json.Decode.list Json.Decode.string) Nothing
         |> maybeDecode "current_class" Json.Decode.string Nothing
+        |> maybeDecodeNullable "current_spec" educationSpecializationDecoder Nothing
         |> maybeDecodeNullable "last_login" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "is_superuser" Json.Decode.bool Nothing
         |> decode "username" Json.Decode.string

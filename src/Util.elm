@@ -322,6 +322,7 @@ user_deep_to_shallow userDeep =
     , groups = Maybe.map (List.filterMap .id) userDeep.groups
     , children = Just <| List.filterMap .id userDeep.children
     , currentClass = userDeep.currentClass
+    , currentSpec = userDeep.currentSpec
     }
 
 
@@ -400,6 +401,17 @@ list_insert_at i x l =
             x :: l
 
 
+prec digits x =
+    let
+        m =
+            10.0 ^ toFloat digits
+
+        tr =
+            toFloat <| truncate (x * m)
+    in
+    tr / m
+
+
 fileSizeToISO : Int -> String
 fileSizeToISO size =
     let
@@ -417,16 +429,6 @@ fileSizeToISO size =
 
         sizef =
             toFloat size
-
-        prec digits x =
-            let
-                m =
-                    10.0 ^ toFloat digits
-
-                tr =
-                    toFloat <| truncate (x * m)
-            in
-            tr / m
     in
     if sizef >= tib then
         String.fromFloat (prec 2 <| sizef / tib) ++ " ТиБ"

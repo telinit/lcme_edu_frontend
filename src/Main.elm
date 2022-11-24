@@ -5,7 +5,7 @@ import Browser
 import Browser.Navigation as Nav
 import Html exposing (Html, text)
 import Page.CourseListPage as CourseListPage
-import Page.CoursePage as CoursePage
+import Page.Course.CoursePage as CoursePage
 import Page.DefaultLayout as DefaultLayout
 import Page.FatalError as FatalError
 import Page.FrontPage as FrontPage
@@ -14,6 +14,7 @@ import Page.MarksCourse as MarksCourse
 import Page.MarksStudent as MarksStudent
 import Page.NotFound as NotFound
 import Page.UserProfile as PageUserProfile
+import Ports exposing (scrollIdIntoView)
 import Task
 import Url exposing (Url)
 import Url.Parser exposing ((</>), (<?>), map, oneOf, parse, query, s, string, top)
@@ -338,7 +339,7 @@ update msg model =
                             ( { model | page = PageBlank }, Cmd.none )
             in
             ( { new_model | url = url }
-            , Cmd.batch [ cmd ]
+            , Cmd.batch [ cmd, scrollIdIntoView "main_container" ]
             )
 
         ( MsgPageLogin ((Login.LoginCompleted token) as msg_), PageLogin model_, _ ) ->

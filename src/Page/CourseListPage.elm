@@ -145,7 +145,7 @@ viewCourse course =
                 , style "max-height" "300px"
                 , style "overflow" "hidden"
                 ]
-                [ text <| String.trim course.description
+                [ text <| String.trim <| Maybe.withDefault "" course.description
                 ]
             ]
         , div [ class "extra content row around-xs" ] <|

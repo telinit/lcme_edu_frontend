@@ -6,7 +6,8 @@ import Api.Request.Stats exposing (statsCounters)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Styled.Attributes exposing (css)
-import Util exposing (httpErrorToString, task_to_cmd)
+import String exposing (fromInt)
+import Util exposing (httpErrorToString, prec, task_to_cmd)
 
 
 type Msg
@@ -55,7 +56,8 @@ view model =
 
         Complete obj ->
             let
-                label = [style "min-width" "100px", style "text-align" "right", style "margin-right" "1em"]
+                label =
+                    [ style "min-width" "100px", style "text-align" "right", style "margin-right" "1em" ]
             in
             div [ class "ui segment" ]
                 [ h3 [] [ text "Статистика" ]
@@ -75,6 +77,28 @@ view model =
                     , div [ class "row" ]
                         [ div ([ class "col" ] ++ label) [ text "Оценки:" ]
                         , div [ class "col" ] [ strong [] [ text <| String.fromInt <| obj.marks ] ]
+                        ]
+                    , div [ class "row" ]
+                        [ div ([ class "col" ] ++ label) [ text "Ак / Пр:" ]
+                        , div [ class "col" ]
+                            [ strong []
+                                [ text <|
+                                    String.fromFloat <|
+                                        prec 2
+                                            (toFloat obj.activities / toFloat obj.courses)
+                                ]
+                            ]
+                        ]
+                    , div [ class "row" ]
+                        [ div ([ class "col" ] ++ label) [ text "Оц / Ак:" ]
+                        , div [ class "col" ]
+                            [ strong []
+                                [ text <|
+                                    String.fromFloat <|
+                                        prec 2
+                                            (toFloat obj.marks / toFloat obj.activities)
+                                ]
+                            ]
                         ]
                     ]
                 ]

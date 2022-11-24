@@ -6946,7 +6946,7 @@ var $author$project$Main$MsgPageFront = function (a) {
 var $elm$core$Platform$Sub$map = _Platform_map;
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$Page$CoursePage$MsgActivity = F2(
+var $author$project$Page$Course$CoursePage$MsgActivity = F2(
 	function (a, b) {
 		return {$: 'MsgActivity', a: a, b: b};
 	});
@@ -7262,7 +7262,7 @@ var $author$project$Component$Activity$subscriptions = function (model) {
 			},
 			model.component_fin_type));
 };
-var $author$project$Page$CoursePage$subscriptions = function (model) {
+var $author$project$Page$Course$CoursePage$subscriptions = function (model) {
 	var _v0 = model.state;
 	if (_v0.$ === 'FetchDone') {
 		var id_comps = _v0.b;
@@ -7274,7 +7274,7 @@ var $author$project$Page$CoursePage$subscriptions = function (model) {
 					var v = _v1.b;
 					return A2(
 						$elm$core$Platform$Sub$map,
-						$author$project$Page$CoursePage$MsgActivity(k),
+						$author$project$Page$Course$CoursePage$MsgActivity(k),
 						$author$project$Component$Activity$subscriptions(v));
 				},
 				id_comps));
@@ -7482,7 +7482,7 @@ var $author$project$Main$subscriptions = function (model) {
 			return A2(
 				$elm$core$Platform$Sub$map,
 				$author$project$Main$MsgPageCourse,
-				$author$project$Page$CoursePage$subscriptions(model_));
+				$author$project$Page$Course$CoursePage$subscriptions(model_));
 		default:
 			return $elm$core$Platform$Sub$none;
 	}
@@ -7577,31 +7577,233 @@ var $author$project$Util$either_map = F3(
 		}
 	});
 var $elm$core$String$endsWith = _String_endsWith;
-var $author$project$Page$CourseListPage$FetchedCourses = function (a) {
-	return {$: 'FetchedCourses', a: a};
+var $author$project$Page$Course$CoursePage$ActivityImportStateNone = {$: 'ActivityImportStateNone'};
+var $author$project$Page$Course$CoursePage$EditOff = {$: 'EditOff'};
+var $author$project$Page$Course$CoursePage$Fetching = function (a) {
+	return {$: 'Fetching', a: a};
 };
-var $author$project$Page$CourseListPage$FetchedSpecs = function (a) {
-	return {$: 'FetchedSpecs', a: a};
-};
-var $author$project$Page$CourseListPage$GroupByNone = {$: 'GroupByNone'};
-var $author$project$Page$CourseListPage$Loading = function (a) {
-	return {$: 'Loading', a: a};
-};
-var $author$project$Page$CourseListPage$MsgFetch = function (a) {
+var $author$project$Page$Course$CoursePage$MsgFetch = function (a) {
 	return {$: 'MsgFetch', a: a};
 };
-var $author$project$Api$Data$CourseShallow = function (id) {
-	return function (createdAt) {
-		return function (updatedAt) {
-			return function (type_) {
-				return function (title) {
-					return function (description) {
-						return function (forClass) {
-							return function (forGroup) {
-								return function (forSpecialization) {
-									return function (logo) {
-										return function (cover) {
-											return {cover: cover, createdAt: createdAt, description: description, forClass: forClass, forGroup: forGroup, forSpecialization: forSpecialization, id: id, logo: logo, title: title, type_: type_, updatedAt: updatedAt};
+var $elm$core$Set$Set_elm_builtin = function (a) {
+	return {$: 'Set_elm_builtin', a: a};
+};
+var $elm$core$Set$empty = $elm$core$Set$Set_elm_builtin($elm$core$Dict$empty);
+var $elm$core$Set$insert = F2(
+	function (key, _v0) {
+		var dict = _v0.a;
+		return $elm$core$Set$Set_elm_builtin(
+			A3($elm$core$Dict$insert, key, _Utils_Tuple0, dict));
+	});
+var $elm$core$Set$fromList = function (list) {
+	return A3($elm$core$List$foldl, $elm$core$Set$insert, $elm$core$Set$empty, list);
+};
+var $author$project$Component$MultiTask$Running = {$: 'Running'};
+var $author$project$Component$MultiTask$TaskCompleted = F2(
+	function (a, b) {
+		return {$: 'TaskCompleted', a: a, b: b};
+	});
+var $author$project$Component$MultiTask$TaskFailed = F2(
+	function (a, b) {
+		return {$: 'TaskFailed', a: a, b: b};
+	});
+var $elm$core$Task$onError = _Scheduler_onError;
+var $elm$core$Task$attempt = F2(
+	function (resultToMessage, task) {
+		return $elm$core$Task$command(
+			$elm$core$Task$Perform(
+				A2(
+					$elm$core$Task$onError,
+					A2(
+						$elm$core$Basics$composeL,
+						A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
+						$elm$core$Result$Err),
+					A2(
+						$elm$core$Task$andThen,
+						A2(
+							$elm$core$Basics$composeL,
+							A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
+							$elm$core$Result$Ok),
+						task))));
+	});
+var $author$project$Util$task_to_cmd = F2(
+	function (on_err, on_success) {
+		var on_result = function (r) {
+			if (r.$ === 'Ok') {
+				var x = r.a;
+				return on_success(x);
+			} else {
+				var x = r.a;
+				return on_err(x);
+			}
+		};
+		return $elm$core$Task$attempt(on_result);
+	});
+var $author$project$Component$MultiTask$doFetch = F2(
+	function (idx, task) {
+		return A3(
+			$author$project$Util$task_to_cmd,
+			$author$project$Component$MultiTask$TaskFailed(idx),
+			$author$project$Component$MultiTask$TaskCompleted(idx),
+			task);
+	});
+var $elm$core$Array$fromListHelp = F3(
+	function (list, nodeList, nodeListSize) {
+		fromListHelp:
+		while (true) {
+			var _v0 = A2($elm$core$Elm$JsArray$initializeFromList, $elm$core$Array$branchFactor, list);
+			var jsArray = _v0.a;
+			var remainingItems = _v0.b;
+			if (_Utils_cmp(
+				$elm$core$Elm$JsArray$length(jsArray),
+				$elm$core$Array$branchFactor) < 0) {
+				return A2(
+					$elm$core$Array$builderToArray,
+					true,
+					{nodeList: nodeList, nodeListSize: nodeListSize, tail: jsArray});
+			} else {
+				var $temp$list = remainingItems,
+					$temp$nodeList = A2(
+					$elm$core$List$cons,
+					$elm$core$Array$Leaf(jsArray),
+					nodeList),
+					$temp$nodeListSize = nodeListSize + 1;
+				list = $temp$list;
+				nodeList = $temp$nodeList;
+				nodeListSize = $temp$nodeListSize;
+				continue fromListHelp;
+			}
+		}
+	});
+var $elm$core$Array$fromList = function (list) {
+	if (!list.b) {
+		return $elm$core$Array$empty;
+	} else {
+		return A3($elm$core$Array$fromListHelp, list, _List_Nil, 0);
+	}
+};
+var $elm$core$Array$length = function (_v0) {
+	var len = _v0.a;
+	return len;
+};
+var $elm$core$Elm$JsArray$map = _JsArray_map;
+var $elm$core$Array$map = F2(
+	function (func, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		var helper = function (node) {
+			if (node.$ === 'SubTree') {
+				var subTree = node.a;
+				return $elm$core$Array$SubTree(
+					A2($elm$core$Elm$JsArray$map, helper, subTree));
+			} else {
+				var values = node.a;
+				return $elm$core$Array$Leaf(
+					A2($elm$core$Elm$JsArray$map, func, values));
+			}
+		};
+		return A4(
+			$elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			A2($elm$core$Elm$JsArray$map, helper, tree),
+			A2($elm$core$Elm$JsArray$map, func, tail));
+	});
+var $author$project$Component$MultiTask$init = function (tasks) {
+	var states = A2(
+		$elm$core$Array$map,
+		function (_v1) {
+			var t = _v1.a;
+			var label = _v1.b;
+			return _Utils_Tuple3(label, $author$project$Component$MultiTask$Running, t);
+		},
+		$elm$core$Array$fromList(tasks));
+	return _Utils_Tuple2(
+		{
+			task_states: states,
+			tasks_left: $elm$core$Array$length(states)
+		},
+		$elm$core$Platform$Cmd$batch(
+			A2(
+				$elm$core$List$indexedMap,
+				F2(
+					function (i, _v0) {
+						var t = _v0.a;
+						return A2($author$project$Component$MultiTask$doFetch, i, t);
+					}),
+				tasks)));
+};
+var $elm$core$Dict$filter = F2(
+	function (isGood, dict) {
+		return A3(
+			$elm$core$Dict$foldl,
+			F3(
+				function (k, v, d) {
+					return A2(isGood, k, v) ? A3($elm$core$Dict$insert, k, v, d) : d;
+				}),
+			$elm$core$Dict$empty,
+			dict);
+	});
+var $elm$core$Dict$member = F2(
+	function (key, dict) {
+		var _v0 = A2($elm$core$Dict$get, key, dict);
+		if (_v0.$ === 'Just') {
+			return true;
+		} else {
+			return false;
+		}
+	});
+var $elm$core$Dict$intersect = F2(
+	function (t1, t2) {
+		return A2(
+			$elm$core$Dict$filter,
+			F2(
+				function (k, _v0) {
+					return A2($elm$core$Dict$member, k, t2);
+				}),
+			t1);
+	});
+var $elm$core$Set$intersect = F2(
+	function (_v0, _v1) {
+		var dict1 = _v0.a;
+		var dict2 = _v1.a;
+		return $elm$core$Set$Set_elm_builtin(
+			A2($elm$core$Dict$intersect, dict1, dict2));
+	});
+var $elm$core$Dict$isEmpty = function (dict) {
+	if (dict.$ === 'RBEmpty_elm_builtin') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$core$Set$isEmpty = function (_v0) {
+	var dict = _v0.a;
+	return $elm$core$Dict$isEmpty(dict);
+};
+var $elm$core$Platform$Cmd$map = _Platform_map;
+var $elm$core$Basics$not = _Basics_not;
+var $author$project$Page$Course$CoursePage$ResCourse = function (a) {
+	return {$: 'ResCourse', a: a};
+};
+var $author$project$Api$Data$CourseDeep = function (id) {
+	return function (forSpecialization) {
+		return function (logo) {
+			return function (cover) {
+				return function (activities) {
+					return function (enrollments) {
+						return function (createdAt) {
+							return function (updatedAt) {
+								return function (type_) {
+									return function (title) {
+										return function (description) {
+											return function (forClass) {
+												return function (forGroup) {
+													return {activities: activities, cover: cover, createdAt: createdAt, description: description, enrollments: enrollments, forClass: forClass, forGroup: forGroup, forSpecialization: forSpecialization, id: id, logo: logo, title: title, type_: type_, updatedAt: updatedAt};
+												};
+											};
 										};
 									};
 								};
@@ -7613,32 +7815,122 @@ var $author$project$Api$Data$CourseShallow = function (id) {
 		};
 	};
 };
-var $author$project$Api$Data$CourseShallowTypeCLB = {$: 'CourseShallowTypeCLB'};
-var $author$project$Api$Data$CourseShallowTypeEDU = {$: 'CourseShallowTypeEDU'};
-var $author$project$Api$Data$CourseShallowTypeELE = {$: 'CourseShallowTypeELE'};
-var $author$project$Api$Data$CourseShallowTypeGEN = {$: 'CourseShallowTypeGEN'};
-var $author$project$Api$Data$CourseShallowTypeSEM = {$: 'CourseShallowTypeSEM'};
+var $author$project$Api$Data$Activity = function (id) {
+	return function (createdAt) {
+		return function (updatedAt) {
+			return function (contentType) {
+				return function (title) {
+					return function (keywords) {
+						return function (lessonType) {
+							return function (isHidden) {
+								return function (marksLimit) {
+									return function (hours) {
+										return function (fgosComplient) {
+											return function (order) {
+												return function (date) {
+													return function (group) {
+														return function (scientificTopic) {
+															return function (body) {
+																return function (dueDate) {
+																	return function (submittable) {
+																		return function (link) {
+																			return function (embed) {
+																				return function (finalType) {
+																					return function (course) {
+																						return function (linkedActivity) {
+																							return function (files) {
+																								return {body: body, contentType: contentType, course: course, createdAt: createdAt, date: date, dueDate: dueDate, embed: embed, fgosComplient: fgosComplient, files: files, finalType: finalType, group: group, hours: hours, id: id, isHidden: isHidden, keywords: keywords, lessonType: lessonType, link: link, linkedActivity: linkedActivity, marksLimit: marksLimit, order: order, scientificTopic: scientificTopic, submittable: submittable, title: title, updatedAt: updatedAt};
+																							};
+																						};
+																					};
+																				};
+																			};
+																		};
+																	};
+																};
+															};
+														};
+													};
+												};
+											};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var $author$project$Api$Data$ActivityContentTypeFIN = {$: 'ActivityContentTypeFIN'};
+var $author$project$Api$Data$ActivityContentTypeGEN = {$: 'ActivityContentTypeGEN'};
+var $author$project$Api$Data$ActivityContentTypeLNK = {$: 'ActivityContentTypeLNK'};
+var $author$project$Api$Data$ActivityContentTypeMED = {$: 'ActivityContentTypeMED'};
+var $author$project$Api$Data$ActivityContentTypeTSK = {$: 'ActivityContentTypeTSK'};
+var $author$project$Api$Data$ActivityContentTypeTXT = {$: 'ActivityContentTypeTXT'};
 var $elm$json$Json$Decode$fail = _Json_fail;
-var $author$project$Api$Data$courseShallowTypeDecoder = A2(
+var $author$project$Api$Data$activityContentTypeDecoder = A2(
 	$elm$json$Json$Decode$andThen,
 	function (value) {
 		switch (value) {
 			case 'GEN':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallowTypeGEN);
-			case 'EDU':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallowTypeEDU);
-			case 'SEM':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallowTypeSEM);
-			case 'CLB':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallowTypeCLB);
-			case 'ELE':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallowTypeELE);
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeGEN);
+			case 'TXT':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeTXT);
+			case 'TSK':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeTSK);
+			case 'LNK':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeLNK);
+			case 'MED':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeMED);
+			case 'FIN':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeFIN);
 			default:
 				var other = value;
 				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
 		}
 	},
 	$elm$json$Json$Decode$string);
+var $author$project$Api$Data$ActivityFinalTypeE = {$: 'ActivityFinalTypeE'};
+var $author$project$Api$Data$ActivityFinalTypeF = {$: 'ActivityFinalTypeF'};
+var $author$project$Api$Data$ActivityFinalTypeH1 = {$: 'ActivityFinalTypeH1'};
+var $author$project$Api$Data$ActivityFinalTypeH2 = {$: 'ActivityFinalTypeH2'};
+var $author$project$Api$Data$ActivityFinalTypeQ1 = {$: 'ActivityFinalTypeQ1'};
+var $author$project$Api$Data$ActivityFinalTypeQ2 = {$: 'ActivityFinalTypeQ2'};
+var $author$project$Api$Data$ActivityFinalTypeQ3 = {$: 'ActivityFinalTypeQ3'};
+var $author$project$Api$Data$ActivityFinalTypeQ4 = {$: 'ActivityFinalTypeQ4'};
+var $author$project$Api$Data$ActivityFinalTypeY = {$: 'ActivityFinalTypeY'};
+var $author$project$Api$Data$activityFinalTypeDecoder = A2(
+	$elm$json$Json$Decode$andThen,
+	function (value) {
+		switch (value) {
+			case 'Q1':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeQ1);
+			case 'Q2':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeQ2);
+			case 'Q3':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeQ3);
+			case 'Q4':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeQ4);
+			case 'H1':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeH1);
+			case 'H2':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeH2);
+			case 'Y':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeY);
+			case 'E':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeE);
+			case 'F':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeF);
+			default:
+				var other = value;
+				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
+		}
+	},
+	$elm$json$Json$Decode$string);
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$parser$Parser$Advanced$Bad = F2(
 	function (a, b) {
 		return {$: 'Bad', a: a, b: b};
@@ -8085,7 +8377,6 @@ var $elm$parser$Parser$Advanced$Token = F2(
 		return {$: 'Token', a: a, b: b};
 	});
 var $elm$parser$Parser$Advanced$isSubString = _Parser_isSubString;
-var $elm$core$Basics$not = _Basics_not;
 var $elm$parser$Parser$Advanced$token = function (_v0) {
 	var str = _v0.a;
 	var expecting = _v0.b;
@@ -8403,6 +8694,16 @@ var $elm$parser$Parser$run = F2(
 var $rtfeldman$elm_iso8601_date_strings$Iso8601$toTime = function (str) {
 	return A2($elm$parser$Parser$run, $rtfeldman$elm_iso8601_date_strings$Iso8601$iso8601, str);
 };
+var $author$project$Api$Time$decodeDateIsoString = function (str) {
+	var _v0 = $rtfeldman$elm_iso8601_date_strings$Iso8601$toTime(str + 'T00:00:00.000Z');
+	if (_v0.$ === 'Ok') {
+		var posix = _v0.a;
+		return $elm$json$Json$Decode$succeed(posix);
+	} else {
+		return $elm$json$Json$Decode$fail('Invalid calendar date: ' + str);
+	}
+};
+var $author$project$Api$Time$dateDecoder = A2($elm$json$Json$Decode$andThen, $author$project$Api$Time$decodeDateIsoString, $elm$json$Json$Decode$string);
 var $author$project$Api$Time$decodeDateTimeIsoString = function (str) {
 	var _v0 = $rtfeldman$elm_iso8601_date_strings$Iso8601$toTime(str);
 	if (_v0.$ === 'Ok') {
@@ -8431,6 +8732,8 @@ var $danyx23$elm_uuid$Uuid$decoder = A2(
 		}
 	},
 	$elm$json$Json$Decode$string);
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$json$Json$Decode$list = _Json_decodeList;
 var $elm$json$Json$Decode$decodeValue = _Json_run;
 var $elm$json$Json$Decode$null = _Json_decodeNull;
 var $elm$json$Json$Decode$oneOf = _Json_oneOf;
@@ -8473,840 +8776,6 @@ var $author$project$Api$Data$maybeDecodeNullable = F3(
 		return $author$project$Api$Data$decodeChain(
 			A3($author$project$Api$Data$maybeField, key, decoder, fallback));
 	});
-var $author$project$Api$Data$courseShallowDecoder = A4(
-	$author$project$Api$Data$maybeDecodeNullable,
-	'cover',
-	$danyx23$elm_uuid$Uuid$decoder,
-	$elm$core$Maybe$Nothing,
-	A4(
-		$author$project$Api$Data$maybeDecodeNullable,
-		'logo',
-		$danyx23$elm_uuid$Uuid$decoder,
-		$elm$core$Maybe$Nothing,
-		A4(
-			$author$project$Api$Data$maybeDecodeNullable,
-			'for_specialization',
-			$danyx23$elm_uuid$Uuid$decoder,
-			$elm$core$Maybe$Nothing,
-			A4(
-				$author$project$Api$Data$maybeDecodeNullable,
-				'for_group',
-				$elm$json$Json$Decode$string,
-				$elm$core$Maybe$Nothing,
-				A4(
-					$author$project$Api$Data$maybeDecode,
-					'for_class',
-					$elm$json$Json$Decode$string,
-					$elm$core$Maybe$Nothing,
-					A3(
-						$author$project$Api$Data$decode,
-						'description',
-						$elm$json$Json$Decode$string,
-						A3(
-							$author$project$Api$Data$decode,
-							'title',
-							$elm$json$Json$Decode$string,
-							A4(
-								$author$project$Api$Data$maybeDecode,
-								'type',
-								$author$project$Api$Data$courseShallowTypeDecoder,
-								$elm$core$Maybe$Nothing,
-								A4(
-									$author$project$Api$Data$maybeDecode,
-									'updated_at',
-									$author$project$Api$Time$dateTimeDecoder,
-									$elm$core$Maybe$Nothing,
-									A4(
-										$author$project$Api$Data$maybeDecode,
-										'created_at',
-										$author$project$Api$Time$dateTimeDecoder,
-										$elm$core$Maybe$Nothing,
-										A4(
-											$author$project$Api$Data$maybeDecode,
-											'id',
-											$danyx23$elm_uuid$Uuid$decoder,
-											$elm$core$Maybe$Nothing,
-											$elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallow))))))))))));
-var $elm$json$Json$Decode$list = _Json_decodeList;
-var $author$project$Api$Request = function (a) {
-	return {$: 'Request', a: a};
-};
-var $elm$http$Http$BadStatus_ = F2(
-	function (a, b) {
-		return {$: 'BadStatus_', a: a, b: b};
-	});
-var $elm$http$Http$BadUrl_ = function (a) {
-	return {$: 'BadUrl_', a: a};
-};
-var $elm$http$Http$GoodStatus_ = F2(
-	function (a, b) {
-		return {$: 'GoodStatus_', a: a, b: b};
-	});
-var $elm$http$Http$NetworkError_ = {$: 'NetworkError_'};
-var $elm$http$Http$Receiving = function (a) {
-	return {$: 'Receiving', a: a};
-};
-var $elm$http$Http$Sending = function (a) {
-	return {$: 'Sending', a: a};
-};
-var $elm$http$Http$Timeout_ = {$: 'Timeout_'};
-var $elm$core$Maybe$isJust = function (maybe) {
-	if (maybe.$ === 'Just') {
-		return true;
-	} else {
-		return false;
-	}
-};
-var $elm$http$Http$emptyBody = _Http_emptyBody;
-var $elm$http$Http$Header = F2(
-	function (a, b) {
-		return {$: 'Header', a: a, b: b};
-	});
-var $elm$http$Http$header = $elm$http$Http$Header;
-var $author$project$Api$headers = $elm$core$List$filterMap(
-	function (_v0) {
-		var key = _v0.a;
-		var value = _v0.b;
-		return A2(
-			$elm$core$Maybe$map,
-			$elm$http$Http$header(key),
-			value);
-	});
-var $elm$core$List$drop = F2(
-	function (n, list) {
-		drop:
-		while (true) {
-			if (n <= 0) {
-				return list;
-			} else {
-				if (!list.b) {
-					return list;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs;
-					n = $temp$n;
-					list = $temp$list;
-					continue drop;
-				}
-			}
-		}
-	});
-var $elm$core$String$replace = F3(
-	function (before, after, string) {
-		return A2(
-			$elm$core$String$join,
-			after,
-			A2($elm$core$String$split, before, string));
-	});
-var $author$project$Api$interpolatePath = F2(
-	function (rawPath, pathParams) {
-		var interpolate = F2(
-			function (_v0, path) {
-				var name = _v0.a;
-				var value = _v0.b;
-				return A3($elm$core$String$replace, '{' + (name + '}'), value, path);
-			});
-		return A2(
-			$elm$core$List$drop,
-			1,
-			A2(
-				$elm$core$String$split,
-				'/',
-				A3($elm$core$List$foldl, interpolate, rawPath, pathParams)));
-	});
-var $elm$http$Http$jsonBody = function (value) {
-	return A2(
-		_Http_pair,
-		'application/json',
-		A2($elm$json$Json$Encode$encode, 0, value));
-};
-var $elm$url$Url$Builder$QueryParameter = F2(
-	function (a, b) {
-		return {$: 'QueryParameter', a: a, b: b};
-	});
-var $elm$url$Url$percentEncode = _Url_percentEncode;
-var $elm$url$Url$Builder$string = F2(
-	function (key, value) {
-		return A2(
-			$elm$url$Url$Builder$QueryParameter,
-			$elm$url$Url$percentEncode(key),
-			$elm$url$Url$percentEncode(value));
-	});
-var $author$project$Api$queries = $elm$core$List$filterMap(
-	function (_v0) {
-		var key = _v0.a;
-		var value = _v0.b;
-		return A2(
-			$elm$core$Maybe$map,
-			$elm$url$Url$Builder$string(key),
-			value);
-	});
-var $author$project$Api$request = F7(
-	function (method, path, pathParams, queryParams, headerParams, body, decoder) {
-		return $author$project$Api$Request(
-			{
-				basePath: 'http://edu.lcme/api',
-				body: A2(
-					$elm$core$Maybe$withDefault,
-					$elm$http$Http$emptyBody,
-					A2($elm$core$Maybe$map, $elm$http$Http$jsonBody, body)),
-				decoder: decoder,
-				headers: $author$project$Api$headers(headerParams),
-				method: method,
-				pathParams: A2($author$project$Api$interpolatePath, path, pathParams),
-				queryParams: $author$project$Api$queries(queryParams),
-				timeout: $elm$core$Maybe$Nothing,
-				tracker: $elm$core$Maybe$Nothing
-			});
-	});
-var $author$project$Api$Request$Course$courseList = A7(
-	$author$project$Api$request,
-	'GET',
-	'/course/',
-	_List_Nil,
-	_List_Nil,
-	_List_Nil,
-	$elm$core$Maybe$Nothing,
-	$elm$json$Json$Decode$list($author$project$Api$Data$courseShallowDecoder));
-var $author$project$Api$Data$EducationSpecialization = F5(
-	function (id, department, createdAt, updatedAt, name) {
-		return {createdAt: createdAt, department: department, id: id, name: name, updatedAt: updatedAt};
-	});
-var $author$project$Api$Data$Department = F5(
-	function (id, organization, createdAt, updatedAt, name) {
-		return {createdAt: createdAt, id: id, name: name, organization: organization, updatedAt: updatedAt};
-	});
-var $author$project$Api$Data$Organization = F5(
-	function (id, createdAt, updatedAt, name, nameShort) {
-		return {createdAt: createdAt, id: id, name: name, nameShort: nameShort, updatedAt: updatedAt};
-	});
-var $author$project$Api$Data$organizationDecoder = A4(
-	$author$project$Api$Data$maybeDecodeNullable,
-	'name_short',
-	$elm$json$Json$Decode$string,
-	$elm$core$Maybe$Nothing,
-	A3(
-		$author$project$Api$Data$decode,
-		'name',
-		$elm$json$Json$Decode$string,
-		A4(
-			$author$project$Api$Data$maybeDecode,
-			'updated_at',
-			$author$project$Api$Time$dateTimeDecoder,
-			$elm$core$Maybe$Nothing,
-			A4(
-				$author$project$Api$Data$maybeDecode,
-				'created_at',
-				$author$project$Api$Time$dateTimeDecoder,
-				$elm$core$Maybe$Nothing,
-				A4(
-					$author$project$Api$Data$maybeDecode,
-					'id',
-					$danyx23$elm_uuid$Uuid$decoder,
-					$elm$core$Maybe$Nothing,
-					$elm$json$Json$Decode$succeed($author$project$Api$Data$Organization))))));
-var $author$project$Api$Data$departmentDecoder = A3(
-	$author$project$Api$Data$decode,
-	'name',
-	$elm$json$Json$Decode$string,
-	A4(
-		$author$project$Api$Data$maybeDecode,
-		'updated_at',
-		$author$project$Api$Time$dateTimeDecoder,
-		$elm$core$Maybe$Nothing,
-		A4(
-			$author$project$Api$Data$maybeDecode,
-			'created_at',
-			$author$project$Api$Time$dateTimeDecoder,
-			$elm$core$Maybe$Nothing,
-			A3(
-				$author$project$Api$Data$decode,
-				'organization',
-				$author$project$Api$Data$organizationDecoder,
-				A4(
-					$author$project$Api$Data$maybeDecode,
-					'id',
-					$danyx23$elm_uuid$Uuid$decoder,
-					$elm$core$Maybe$Nothing,
-					$elm$json$Json$Decode$succeed($author$project$Api$Data$Department))))));
-var $author$project$Api$Data$educationSpecializationDecoder = A3(
-	$author$project$Api$Data$decode,
-	'name',
-	$elm$json$Json$Decode$string,
-	A4(
-		$author$project$Api$Data$maybeDecode,
-		'updated_at',
-		$author$project$Api$Time$dateTimeDecoder,
-		$elm$core$Maybe$Nothing,
-		A4(
-			$author$project$Api$Data$maybeDecode,
-			'created_at',
-			$author$project$Api$Time$dateTimeDecoder,
-			$elm$core$Maybe$Nothing,
-			A3(
-				$author$project$Api$Data$decode,
-				'department',
-				$author$project$Api$Data$departmentDecoder,
-				A4(
-					$author$project$Api$Data$maybeDecode,
-					'id',
-					$danyx23$elm_uuid$Uuid$decoder,
-					$elm$core$Maybe$Nothing,
-					$elm$json$Json$Decode$succeed($author$project$Api$Data$EducationSpecialization))))));
-var $author$project$Api$Request$Education$educationSpecializationList = A7(
-	$author$project$Api$request,
-	'GET',
-	'/education/specialization/',
-	_List_Nil,
-	_List_Nil,
-	_List_Nil,
-	$elm$core$Maybe$Nothing,
-	$elm$json$Json$Decode$list($author$project$Api$Data$educationSpecializationDecoder));
-var $elm$url$Url$Builder$toQueryPair = function (_v0) {
-	var key = _v0.a;
-	var value = _v0.b;
-	return key + ('=' + value);
-};
-var $elm$url$Url$Builder$toQuery = function (parameters) {
-	if (!parameters.b) {
-		return '';
-	} else {
-		return '?' + A2(
-			$elm$core$String$join,
-			'&',
-			A2($elm$core$List$map, $elm$url$Url$Builder$toQueryPair, parameters));
-	}
-};
-var $elm$url$Url$Builder$crossOrigin = F3(
-	function (prePath, pathSegments, parameters) {
-		return prePath + ('/' + (A2($elm$core$String$join, '/', pathSegments) + $elm$url$Url$Builder$toQuery(parameters)));
-	});
-var $elm$http$Http$BadStatus = function (a) {
-	return {$: 'BadStatus', a: a};
-};
-var $elm$http$Http$BadUrl = function (a) {
-	return {$: 'BadUrl', a: a};
-};
-var $elm$http$Http$NetworkError = {$: 'NetworkError'};
-var $elm$http$Http$Timeout = {$: 'Timeout'};
-var $elm$http$Http$BadBody = function (a) {
-	return {$: 'BadBody', a: a};
-};
-var $elm$json$Json$Decode$decodeString = _Json_runOnString;
-var $author$project$Api$decodeBody = F2(
-	function (decoder, body) {
-		var _v0 = A2($elm$json$Json$Decode$decodeString, decoder, body);
-		if (_v0.$ === 'Ok') {
-			var value = _v0.a;
-			return $elm$core$Result$Ok(value);
-		} else {
-			var err = _v0.a;
-			return $elm$core$Result$Err(
-				$elm$http$Http$BadBody(
-					$elm$json$Json$Decode$errorToString(err)));
-		}
-	});
-var $author$project$Api$decodeResponse = F2(
-	function (decoder, response) {
-		switch (response.$) {
-			case 'BadUrl_':
-				var url = response.a;
-				return $elm$core$Result$Err(
-					$elm$http$Http$BadUrl(url));
-			case 'Timeout_':
-				return $elm$core$Result$Err($elm$http$Http$Timeout);
-			case 'NetworkError_':
-				return $elm$core$Result$Err($elm$http$Http$NetworkError);
-			case 'BadStatus_':
-				var metadata = response.a;
-				return $elm$core$Result$Err(
-					$elm$http$Http$BadStatus(metadata.statusCode));
-			default:
-				var body = response.b;
-				if ($elm$core$String$isEmpty(body)) {
-					var _v1 = A2($elm$json$Json$Decode$decodeString, decoder, '{}');
-					if (_v1.$ === 'Ok') {
-						var value = _v1.a;
-						return $elm$core$Result$Ok(value);
-					} else {
-						return A2($author$project$Api$decodeBody, decoder, body);
-					}
-				} else {
-					return A2($author$project$Api$decodeBody, decoder, body);
-				}
-		}
-	});
-var $elm$http$Http$stringResolver = A2(_Http_expect, '', $elm$core$Basics$identity);
-var $author$project$Api$jsonResolver = function (decoder) {
-	return $elm$http$Http$stringResolver(
-		$author$project$Api$decodeResponse(decoder));
-};
-var $elm$core$Task$fail = _Scheduler_fail;
-var $elm$http$Http$resultToTask = function (result) {
-	if (result.$ === 'Ok') {
-		var a = result.a;
-		return $elm$core$Task$succeed(a);
-	} else {
-		var x = result.a;
-		return $elm$core$Task$fail(x);
-	}
-};
-var $elm$http$Http$task = function (r) {
-	return A3(
-		_Http_toTask,
-		_Utils_Tuple0,
-		$elm$http$Http$resultToTask,
-		{allowCookiesFromOtherDomains: false, body: r.body, expect: r.resolver, headers: r.headers, method: r.method, timeout: r.timeout, tracker: $elm$core$Maybe$Nothing, url: r.url});
-};
-var $author$project$Api$task = function (_v0) {
-	var req = _v0.a;
-	return $elm$http$Http$task(
-		{
-			body: req.body,
-			headers: req.headers,
-			method: req.method,
-			resolver: $author$project$Api$jsonResolver(req.decoder),
-			timeout: req.timeout,
-			url: A3($elm$url$Url$Builder$crossOrigin, req.basePath, req.pathParams, req.queryParams)
-		});
-};
-var $author$project$Api$withQuery = F2(
-	function (qs, _v0) {
-		var request_ = _v0.a;
-		return $author$project$Api$Request(
-			_Utils_update(
-				request_,
-				{
-					queryParams: $author$project$Api$queries(qs)
-				}));
-	});
-var $author$project$Api$withToken = F2(
-	function (token, _v0) {
-		var req = _v0.a;
-		if (token.$ === 'Just') {
-			var t = token.a;
-			return $author$project$Api$Request(
-				_Utils_update(
-					req,
-					{
-						headers: A2(
-							$elm$core$List$cons,
-							A2($elm$http$Http$header, 'Authorization', 'Token ' + t),
-							req.headers)
-					}));
-		} else {
-			return $author$project$Api$Request(req);
-		}
-	});
-var $author$project$Api$ext_task = F4(
-	function (result_mapper, token, query_params, request_) {
-		return A2(
-			$elm$core$Task$map,
-			result_mapper,
-			$author$project$Api$task(
-				A2(
-					$author$project$Api$withQuery,
-					A2(
-						$elm$core$List$map,
-						function (_v0) {
-							var a = _v0.a;
-							var b = _v0.b;
-							return _Utils_Tuple2(
-								a,
-								$elm$core$Maybe$Just(b));
-						},
-						query_params),
-					A2(
-						$author$project$Api$withToken,
-						$elm$core$Maybe$Just(token),
-						request_))));
-	});
-var $author$project$Component$MultiTask$Running = {$: 'Running'};
-var $author$project$Component$MultiTask$TaskCompleted = F2(
-	function (a, b) {
-		return {$: 'TaskCompleted', a: a, b: b};
-	});
-var $author$project$Component$MultiTask$TaskFailed = F2(
-	function (a, b) {
-		return {$: 'TaskFailed', a: a, b: b};
-	});
-var $elm$core$Task$onError = _Scheduler_onError;
-var $elm$core$Task$attempt = F2(
-	function (resultToMessage, task) {
-		return $elm$core$Task$command(
-			$elm$core$Task$Perform(
-				A2(
-					$elm$core$Task$onError,
-					A2(
-						$elm$core$Basics$composeL,
-						A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
-						$elm$core$Result$Err),
-					A2(
-						$elm$core$Task$andThen,
-						A2(
-							$elm$core$Basics$composeL,
-							A2($elm$core$Basics$composeL, $elm$core$Task$succeed, resultToMessage),
-							$elm$core$Result$Ok),
-						task))));
-	});
-var $author$project$Util$task_to_cmd = F2(
-	function (on_err, on_success) {
-		var on_result = function (r) {
-			if (r.$ === 'Ok') {
-				var x = r.a;
-				return on_success(x);
-			} else {
-				var x = r.a;
-				return on_err(x);
-			}
-		};
-		return $elm$core$Task$attempt(on_result);
-	});
-var $author$project$Component$MultiTask$doFetch = F2(
-	function (idx, task) {
-		return A3(
-			$author$project$Util$task_to_cmd,
-			$author$project$Component$MultiTask$TaskFailed(idx),
-			$author$project$Component$MultiTask$TaskCompleted(idx),
-			task);
-	});
-var $elm$core$Array$fromListHelp = F3(
-	function (list, nodeList, nodeListSize) {
-		fromListHelp:
-		while (true) {
-			var _v0 = A2($elm$core$Elm$JsArray$initializeFromList, $elm$core$Array$branchFactor, list);
-			var jsArray = _v0.a;
-			var remainingItems = _v0.b;
-			if (_Utils_cmp(
-				$elm$core$Elm$JsArray$length(jsArray),
-				$elm$core$Array$branchFactor) < 0) {
-				return A2(
-					$elm$core$Array$builderToArray,
-					true,
-					{nodeList: nodeList, nodeListSize: nodeListSize, tail: jsArray});
-			} else {
-				var $temp$list = remainingItems,
-					$temp$nodeList = A2(
-					$elm$core$List$cons,
-					$elm$core$Array$Leaf(jsArray),
-					nodeList),
-					$temp$nodeListSize = nodeListSize + 1;
-				list = $temp$list;
-				nodeList = $temp$nodeList;
-				nodeListSize = $temp$nodeListSize;
-				continue fromListHelp;
-			}
-		}
-	});
-var $elm$core$Array$fromList = function (list) {
-	if (!list.b) {
-		return $elm$core$Array$empty;
-	} else {
-		return A3($elm$core$Array$fromListHelp, list, _List_Nil, 0);
-	}
-};
-var $elm$core$Array$length = function (_v0) {
-	var len = _v0.a;
-	return len;
-};
-var $elm$core$Elm$JsArray$map = _JsArray_map;
-var $elm$core$Array$map = F2(
-	function (func, _v0) {
-		var len = _v0.a;
-		var startShift = _v0.b;
-		var tree = _v0.c;
-		var tail = _v0.d;
-		var helper = function (node) {
-			if (node.$ === 'SubTree') {
-				var subTree = node.a;
-				return $elm$core$Array$SubTree(
-					A2($elm$core$Elm$JsArray$map, helper, subTree));
-			} else {
-				var values = node.a;
-				return $elm$core$Array$Leaf(
-					A2($elm$core$Elm$JsArray$map, func, values));
-			}
-		};
-		return A4(
-			$elm$core$Array$Array_elm_builtin,
-			len,
-			startShift,
-			A2($elm$core$Elm$JsArray$map, helper, tree),
-			A2($elm$core$Elm$JsArray$map, func, tail));
-	});
-var $author$project$Component$MultiTask$init = function (tasks) {
-	var states = A2(
-		$elm$core$Array$map,
-		function (_v1) {
-			var t = _v1.a;
-			var label = _v1.b;
-			return _Utils_Tuple3(label, $author$project$Component$MultiTask$Running, t);
-		},
-		$elm$core$Array$fromList(tasks));
-	return _Utils_Tuple2(
-		{
-			task_states: states,
-			tasks_left: $elm$core$Array$length(states)
-		},
-		$elm$core$Platform$Cmd$batch(
-			A2(
-				$elm$core$List$indexedMap,
-				F2(
-					function (i, _v0) {
-						var t = _v0.a;
-						return A2($author$project$Component$MultiTask$doFetch, i, t);
-					}),
-				tasks)));
-};
-var $elm$core$Platform$Cmd$map = _Platform_map;
-var $author$project$Page$CourseListPage$init = function (token) {
-	var _v0 = $author$project$Component$MultiTask$init(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				A4($author$project$Api$ext_task, $author$project$Page$CourseListPage$FetchedCourses, token, _List_Nil, $author$project$Api$Request$Course$courseList),
-				'Получаем список курсов'),
-				_Utils_Tuple2(
-				A4($author$project$Api$ext_task, $author$project$Page$CourseListPage$FetchedSpecs, token, _List_Nil, $author$project$Api$Request$Education$educationSpecializationList),
-				'Получаем список специализаций')
-			]));
-	var m = _v0.a;
-	var c = _v0.b;
-	return _Utils_Tuple2(
-		{
-			group_by: $author$project$Page$CourseListPage$GroupByNone,
-			state: $author$project$Page$CourseListPage$Loading(m),
-			token: token
-		},
-		A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFetch, c));
-};
-var $author$project$Page$CoursePage$ActivityImportStateNone = {$: 'ActivityImportStateNone'};
-var $author$project$Page$CoursePage$EditOff = {$: 'EditOff'};
-var $author$project$Page$CoursePage$Fetching = function (a) {
-	return {$: 'Fetching', a: a};
-};
-var $author$project$Page$CoursePage$MsgFetch = function (a) {
-	return {$: 'MsgFetch', a: a};
-};
-var $elm$core$Set$Set_elm_builtin = function (a) {
-	return {$: 'Set_elm_builtin', a: a};
-};
-var $elm$core$Set$empty = $elm$core$Set$Set_elm_builtin($elm$core$Dict$empty);
-var $elm$core$Set$insert = F2(
-	function (key, _v0) {
-		var dict = _v0.a;
-		return $elm$core$Set$Set_elm_builtin(
-			A3($elm$core$Dict$insert, key, _Utils_Tuple0, dict));
-	});
-var $elm$core$Set$fromList = function (list) {
-	return A3($elm$core$List$foldl, $elm$core$Set$insert, $elm$core$Set$empty, list);
-};
-var $elm$core$Dict$filter = F2(
-	function (isGood, dict) {
-		return A3(
-			$elm$core$Dict$foldl,
-			F3(
-				function (k, v, d) {
-					return A2(isGood, k, v) ? A3($elm$core$Dict$insert, k, v, d) : d;
-				}),
-			$elm$core$Dict$empty,
-			dict);
-	});
-var $elm$core$Dict$member = F2(
-	function (key, dict) {
-		var _v0 = A2($elm$core$Dict$get, key, dict);
-		if (_v0.$ === 'Just') {
-			return true;
-		} else {
-			return false;
-		}
-	});
-var $elm$core$Dict$intersect = F2(
-	function (t1, t2) {
-		return A2(
-			$elm$core$Dict$filter,
-			F2(
-				function (k, _v0) {
-					return A2($elm$core$Dict$member, k, t2);
-				}),
-			t1);
-	});
-var $elm$core$Set$intersect = F2(
-	function (_v0, _v1) {
-		var dict1 = _v0.a;
-		var dict2 = _v1.a;
-		return $elm$core$Set$Set_elm_builtin(
-			A2($elm$core$Dict$intersect, dict1, dict2));
-	});
-var $elm$core$Dict$isEmpty = function (dict) {
-	if (dict.$ === 'RBEmpty_elm_builtin') {
-		return true;
-	} else {
-		return false;
-	}
-};
-var $elm$core$Set$isEmpty = function (_v0) {
-	var dict = _v0.a;
-	return $elm$core$Dict$isEmpty(dict);
-};
-var $author$project$Page$CoursePage$ResCourse = function (a) {
-	return {$: 'ResCourse', a: a};
-};
-var $author$project$Api$Data$CourseDeep = function (id) {
-	return function (forSpecialization) {
-		return function (logo) {
-			return function (cover) {
-				return function (activities) {
-					return function (enrollments) {
-						return function (createdAt) {
-							return function (updatedAt) {
-								return function (type_) {
-									return function (title) {
-										return function (description) {
-											return function (forClass) {
-												return function (forGroup) {
-													return {activities: activities, cover: cover, createdAt: createdAt, description: description, enrollments: enrollments, forClass: forClass, forGroup: forGroup, forSpecialization: forSpecialization, id: id, logo: logo, title: title, type_: type_, updatedAt: updatedAt};
-												};
-											};
-										};
-									};
-								};
-							};
-						};
-					};
-				};
-			};
-		};
-	};
-};
-var $author$project$Api$Data$Activity = function (id) {
-	return function (createdAt) {
-		return function (updatedAt) {
-			return function (contentType) {
-				return function (title) {
-					return function (keywords) {
-						return function (lessonType) {
-							return function (isHidden) {
-								return function (marksLimit) {
-									return function (hours) {
-										return function (fgosComplient) {
-											return function (order) {
-												return function (date) {
-													return function (group) {
-														return function (scientificTopic) {
-															return function (body) {
-																return function (dueDate) {
-																	return function (submittable) {
-																		return function (link) {
-																			return function (embed) {
-																				return function (finalType) {
-																					return function (course) {
-																						return function (linkedActivity) {
-																							return function (files) {
-																								return {body: body, contentType: contentType, course: course, createdAt: createdAt, date: date, dueDate: dueDate, embed: embed, fgosComplient: fgosComplient, files: files, finalType: finalType, group: group, hours: hours, id: id, isHidden: isHidden, keywords: keywords, lessonType: lessonType, link: link, linkedActivity: linkedActivity, marksLimit: marksLimit, order: order, scientificTopic: scientificTopic, submittable: submittable, title: title, updatedAt: updatedAt};
-																							};
-																						};
-																					};
-																				};
-																			};
-																		};
-																	};
-																};
-															};
-														};
-													};
-												};
-											};
-										};
-									};
-								};
-							};
-						};
-					};
-				};
-			};
-		};
-	};
-};
-var $author$project$Api$Data$ActivityContentTypeFIN = {$: 'ActivityContentTypeFIN'};
-var $author$project$Api$Data$ActivityContentTypeGEN = {$: 'ActivityContentTypeGEN'};
-var $author$project$Api$Data$ActivityContentTypeLNK = {$: 'ActivityContentTypeLNK'};
-var $author$project$Api$Data$ActivityContentTypeMED = {$: 'ActivityContentTypeMED'};
-var $author$project$Api$Data$ActivityContentTypeTSK = {$: 'ActivityContentTypeTSK'};
-var $author$project$Api$Data$ActivityContentTypeTXT = {$: 'ActivityContentTypeTXT'};
-var $author$project$Api$Data$activityContentTypeDecoder = A2(
-	$elm$json$Json$Decode$andThen,
-	function (value) {
-		switch (value) {
-			case 'GEN':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeGEN);
-			case 'TXT':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeTXT);
-			case 'TSK':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeTSK);
-			case 'LNK':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeLNK);
-			case 'MED':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeMED);
-			case 'FIN':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityContentTypeFIN);
-			default:
-				var other = value;
-				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
-		}
-	},
-	$elm$json$Json$Decode$string);
-var $author$project$Api$Data$ActivityFinalTypeE = {$: 'ActivityFinalTypeE'};
-var $author$project$Api$Data$ActivityFinalTypeF = {$: 'ActivityFinalTypeF'};
-var $author$project$Api$Data$ActivityFinalTypeH1 = {$: 'ActivityFinalTypeH1'};
-var $author$project$Api$Data$ActivityFinalTypeH2 = {$: 'ActivityFinalTypeH2'};
-var $author$project$Api$Data$ActivityFinalTypeQ1 = {$: 'ActivityFinalTypeQ1'};
-var $author$project$Api$Data$ActivityFinalTypeQ2 = {$: 'ActivityFinalTypeQ2'};
-var $author$project$Api$Data$ActivityFinalTypeQ3 = {$: 'ActivityFinalTypeQ3'};
-var $author$project$Api$Data$ActivityFinalTypeQ4 = {$: 'ActivityFinalTypeQ4'};
-var $author$project$Api$Data$ActivityFinalTypeY = {$: 'ActivityFinalTypeY'};
-var $author$project$Api$Data$activityFinalTypeDecoder = A2(
-	$elm$json$Json$Decode$andThen,
-	function (value) {
-		switch (value) {
-			case 'Q1':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeQ1);
-			case 'Q2':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeQ2);
-			case 'Q3':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeQ3);
-			case 'Q4':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeQ4);
-			case 'H1':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeH1);
-			case 'H2':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeH2);
-			case 'Y':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeY);
-			case 'E':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeE);
-			case 'F':
-				return $elm$json$Json$Decode$succeed($author$project$Api$Data$ActivityFinalTypeF);
-			default:
-				var other = value;
-				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
-		}
-	},
-	$elm$json$Json$Decode$string);
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
-var $author$project$Api$Time$decodeDateIsoString = function (str) {
-	var _v0 = $rtfeldman$elm_iso8601_date_strings$Iso8601$toTime(str + 'T00:00:00.000Z');
-	if (_v0.$ === 'Ok') {
-		var posix = _v0.a;
-		return $elm$json$Json$Decode$succeed(posix);
-	} else {
-		return $elm$json$Json$Decode$fail('Invalid calendar date: ' + str);
-	}
-};
-var $author$project$Api$Time$dateDecoder = A2($elm$json$Json$Decode$andThen, $author$project$Api$Time$decodeDateIsoString, $elm$json$Json$Decode$string);
-var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $author$project$Api$Data$activityDecoder = A4(
 	$author$project$Api$Data$maybeDecode,
 	'files',
@@ -9473,23 +8942,25 @@ var $author$project$Api$Data$courseEnrollmentReadRoleDecoder = A2(
 var $author$project$Api$Data$UserShallow = function (id) {
 	return function (roles) {
 		return function (currentClass) {
-			return function (lastLogin) {
-				return function (isSuperuser) {
-					return function (username) {
-						return function (firstName) {
-							return function (lastName) {
-								return function (email) {
-									return function (isStaff) {
-										return function (isActive) {
-											return function (dateJoined) {
-												return function (createdAt) {
-													return function (updatedAt) {
-														return function (middleName) {
-															return function (birthDate) {
-																return function (avatar) {
-																	return function (groups) {
-																		return function (children) {
-																			return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, dateJoined: dateJoined, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, roles: roles, updatedAt: updatedAt, username: username};
+			return function (currentSpec) {
+				return function (lastLogin) {
+					return function (isSuperuser) {
+						return function (username) {
+							return function (firstName) {
+								return function (lastName) {
+									return function (email) {
+										return function (isStaff) {
+											return function (isActive) {
+												return function (dateJoined) {
+													return function (createdAt) {
+														return function (updatedAt) {
+															return function (middleName) {
+																return function (birthDate) {
+																	return function (avatar) {
+																		return function (groups) {
+																			return function (children) {
+																				return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, currentSpec: currentSpec, dateJoined: dateJoined, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, roles: roles, updatedAt: updatedAt, username: username};
+																			};
 																		};
 																	};
 																};
@@ -9509,6 +8980,91 @@ var $author$project$Api$Data$UserShallow = function (id) {
 		};
 	};
 };
+var $author$project$Api$Data$EducationSpecialization = F5(
+	function (id, department, createdAt, updatedAt, name) {
+		return {createdAt: createdAt, department: department, id: id, name: name, updatedAt: updatedAt};
+	});
+var $author$project$Api$Data$Department = F5(
+	function (id, organization, createdAt, updatedAt, name) {
+		return {createdAt: createdAt, id: id, name: name, organization: organization, updatedAt: updatedAt};
+	});
+var $author$project$Api$Data$Organization = F5(
+	function (id, createdAt, updatedAt, name, nameShort) {
+		return {createdAt: createdAt, id: id, name: name, nameShort: nameShort, updatedAt: updatedAt};
+	});
+var $author$project$Api$Data$organizationDecoder = A4(
+	$author$project$Api$Data$maybeDecodeNullable,
+	'name_short',
+	$elm$json$Json$Decode$string,
+	$elm$core$Maybe$Nothing,
+	A3(
+		$author$project$Api$Data$decode,
+		'name',
+		$elm$json$Json$Decode$string,
+		A4(
+			$author$project$Api$Data$maybeDecode,
+			'updated_at',
+			$author$project$Api$Time$dateTimeDecoder,
+			$elm$core$Maybe$Nothing,
+			A4(
+				$author$project$Api$Data$maybeDecode,
+				'created_at',
+				$author$project$Api$Time$dateTimeDecoder,
+				$elm$core$Maybe$Nothing,
+				A4(
+					$author$project$Api$Data$maybeDecode,
+					'id',
+					$danyx23$elm_uuid$Uuid$decoder,
+					$elm$core$Maybe$Nothing,
+					$elm$json$Json$Decode$succeed($author$project$Api$Data$Organization))))));
+var $author$project$Api$Data$departmentDecoder = A3(
+	$author$project$Api$Data$decode,
+	'name',
+	$elm$json$Json$Decode$string,
+	A4(
+		$author$project$Api$Data$maybeDecode,
+		'updated_at',
+		$author$project$Api$Time$dateTimeDecoder,
+		$elm$core$Maybe$Nothing,
+		A4(
+			$author$project$Api$Data$maybeDecode,
+			'created_at',
+			$author$project$Api$Time$dateTimeDecoder,
+			$elm$core$Maybe$Nothing,
+			A3(
+				$author$project$Api$Data$decode,
+				'organization',
+				$author$project$Api$Data$organizationDecoder,
+				A4(
+					$author$project$Api$Data$maybeDecode,
+					'id',
+					$danyx23$elm_uuid$Uuid$decoder,
+					$elm$core$Maybe$Nothing,
+					$elm$json$Json$Decode$succeed($author$project$Api$Data$Department))))));
+var $author$project$Api$Data$educationSpecializationDecoder = A3(
+	$author$project$Api$Data$decode,
+	'name',
+	$elm$json$Json$Decode$string,
+	A4(
+		$author$project$Api$Data$maybeDecode,
+		'updated_at',
+		$author$project$Api$Time$dateTimeDecoder,
+		$elm$core$Maybe$Nothing,
+		A4(
+			$author$project$Api$Data$maybeDecode,
+			'created_at',
+			$author$project$Api$Time$dateTimeDecoder,
+			$elm$core$Maybe$Nothing,
+			A3(
+				$author$project$Api$Data$decode,
+				'department',
+				$author$project$Api$Data$departmentDecoder,
+				A4(
+					$author$project$Api$Data$maybeDecode,
+					'id',
+					$danyx23$elm_uuid$Uuid$decoder,
+					$elm$core$Maybe$Nothing,
+					$elm$json$Json$Decode$succeed($author$project$Api$Data$EducationSpecialization))))));
 var $author$project$Api$Data$userShallowDecoder = A4(
 	$author$project$Api$Data$maybeDecode,
 	'children',
@@ -9589,21 +9145,26 @@ var $author$project$Api$Data$userShallowDecoder = A4(
 																$author$project$Api$Time$dateTimeDecoder,
 																$elm$core$Maybe$Nothing,
 																A4(
-																	$author$project$Api$Data$maybeDecode,
-																	'current_class',
-																	$elm$json$Json$Decode$string,
+																	$author$project$Api$Data$maybeDecodeNullable,
+																	'current_spec',
+																	$author$project$Api$Data$educationSpecializationDecoder,
 																	$elm$core$Maybe$Nothing,
 																	A4(
 																		$author$project$Api$Data$maybeDecode,
-																		'roles',
-																		$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+																		'current_class',
+																		$elm$json$Json$Decode$string,
 																		$elm$core$Maybe$Nothing,
 																		A4(
 																			$author$project$Api$Data$maybeDecode,
-																			'id',
-																			$danyx23$elm_uuid$Uuid$decoder,
+																			'roles',
+																			$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
 																			$elm$core$Maybe$Nothing,
-																			$elm$json$Json$Decode$succeed($author$project$Api$Data$UserShallow))))))))))))))))))));
+																			A4(
+																				$author$project$Api$Data$maybeDecode,
+																				'id',
+																				$danyx23$elm_uuid$Uuid$decoder,
+																				$elm$core$Maybe$Nothing,
+																				$elm$json$Json$Decode$succeed($author$project$Api$Data$UserShallow)))))))))))))))))))));
 var $author$project$Api$Data$courseEnrollmentReadDecoder = A3(
 	$author$project$Api$Data$decode,
 	'course',
@@ -9693,10 +9254,11 @@ var $author$project$Api$Data$courseDeepDecoder = A4(
 		'for_class',
 		$elm$json$Json$Decode$string,
 		$elm$core$Maybe$Nothing,
-		A3(
-			$author$project$Api$Data$decode,
+		A4(
+			$author$project$Api$Data$maybeDecodeNullable,
 			'description',
 			$elm$json$Json$Decode$string,
+			$elm$core$Maybe$Nothing,
 			A3(
 				$author$project$Api$Data$decode,
 				'title',
@@ -9742,6 +9304,139 @@ var $author$project$Api$Data$courseDeepDecoder = A4(
 													$danyx23$elm_uuid$Uuid$decoder,
 													$elm$core$Maybe$Nothing,
 													$elm$json$Json$Decode$succeed($author$project$Api$Data$CourseDeep))))))))))))));
+var $author$project$Api$Request = function (a) {
+	return {$: 'Request', a: a};
+};
+var $elm$http$Http$BadStatus_ = F2(
+	function (a, b) {
+		return {$: 'BadStatus_', a: a, b: b};
+	});
+var $elm$http$Http$BadUrl_ = function (a) {
+	return {$: 'BadUrl_', a: a};
+};
+var $elm$http$Http$GoodStatus_ = F2(
+	function (a, b) {
+		return {$: 'GoodStatus_', a: a, b: b};
+	});
+var $elm$http$Http$NetworkError_ = {$: 'NetworkError_'};
+var $elm$http$Http$Receiving = function (a) {
+	return {$: 'Receiving', a: a};
+};
+var $elm$http$Http$Sending = function (a) {
+	return {$: 'Sending', a: a};
+};
+var $elm$http$Http$Timeout_ = {$: 'Timeout_'};
+var $elm$core$Maybe$isJust = function (maybe) {
+	if (maybe.$ === 'Just') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$http$Http$emptyBody = _Http_emptyBody;
+var $elm$http$Http$Header = F2(
+	function (a, b) {
+		return {$: 'Header', a: a, b: b};
+	});
+var $elm$http$Http$header = $elm$http$Http$Header;
+var $author$project$Api$headers = $elm$core$List$filterMap(
+	function (_v0) {
+		var key = _v0.a;
+		var value = _v0.b;
+		return A2(
+			$elm$core$Maybe$map,
+			$elm$http$Http$header(key),
+			value);
+	});
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
+var $elm$core$String$replace = F3(
+	function (before, after, string) {
+		return A2(
+			$elm$core$String$join,
+			after,
+			A2($elm$core$String$split, before, string));
+	});
+var $author$project$Api$interpolatePath = F2(
+	function (rawPath, pathParams) {
+		var interpolate = F2(
+			function (_v0, path) {
+				var name = _v0.a;
+				var value = _v0.b;
+				return A3($elm$core$String$replace, '{' + (name + '}'), value, path);
+			});
+		return A2(
+			$elm$core$List$drop,
+			1,
+			A2(
+				$elm$core$String$split,
+				'/',
+				A3($elm$core$List$foldl, interpolate, rawPath, pathParams)));
+	});
+var $elm$http$Http$jsonBody = function (value) {
+	return A2(
+		_Http_pair,
+		'application/json',
+		A2($elm$json$Json$Encode$encode, 0, value));
+};
+var $elm$url$Url$Builder$QueryParameter = F2(
+	function (a, b) {
+		return {$: 'QueryParameter', a: a, b: b};
+	});
+var $elm$url$Url$percentEncode = _Url_percentEncode;
+var $elm$url$Url$Builder$string = F2(
+	function (key, value) {
+		return A2(
+			$elm$url$Url$Builder$QueryParameter,
+			$elm$url$Url$percentEncode(key),
+			$elm$url$Url$percentEncode(value));
+	});
+var $author$project$Api$queries = $elm$core$List$filterMap(
+	function (_v0) {
+		var key = _v0.a;
+		var value = _v0.b;
+		return A2(
+			$elm$core$Maybe$map,
+			$elm$url$Url$Builder$string(key),
+			value);
+	});
+var $author$project$Api$request = F7(
+	function (method, path, pathParams, queryParams, headerParams, body, decoder) {
+		return $author$project$Api$Request(
+			{
+				basePath: 'http://edu.lcme/api',
+				body: A2(
+					$elm$core$Maybe$withDefault,
+					$elm$http$Http$emptyBody,
+					A2($elm$core$Maybe$map, $elm$http$Http$jsonBody, body)),
+				decoder: decoder,
+				headers: $author$project$Api$headers(headerParams),
+				method: method,
+				pathParams: A2($author$project$Api$interpolatePath, path, pathParams),
+				queryParams: $author$project$Api$queries(queryParams),
+				timeout: $elm$core$Maybe$Nothing,
+				tracker: $elm$core$Maybe$Nothing
+			});
+	});
 var $author$project$Api$Request$Course$courseGetDeep = function (id_path) {
 	return A7(
 		$author$project$Api$request,
@@ -9758,24 +9453,150 @@ var $author$project$Api$Request$Course$courseGetDeep = function (id_path) {
 		$elm$core$Maybe$Nothing,
 		$author$project$Api$Data$courseDeepDecoder);
 };
-var $author$project$Page$CoursePage$taskCourse = F2(
+var $elm$url$Url$Builder$toQueryPair = function (_v0) {
+	var key = _v0.a;
+	var value = _v0.b;
+	return key + ('=' + value);
+};
+var $elm$url$Url$Builder$toQuery = function (parameters) {
+	if (!parameters.b) {
+		return '';
+	} else {
+		return '?' + A2(
+			$elm$core$String$join,
+			'&',
+			A2($elm$core$List$map, $elm$url$Url$Builder$toQueryPair, parameters));
+	}
+};
+var $elm$url$Url$Builder$crossOrigin = F3(
+	function (prePath, pathSegments, parameters) {
+		return prePath + ('/' + (A2($elm$core$String$join, '/', pathSegments) + $elm$url$Url$Builder$toQuery(parameters)));
+	});
+var $elm$http$Http$BadStatus = function (a) {
+	return {$: 'BadStatus', a: a};
+};
+var $elm$http$Http$BadUrl = function (a) {
+	return {$: 'BadUrl', a: a};
+};
+var $elm$http$Http$NetworkError = {$: 'NetworkError'};
+var $elm$http$Http$Timeout = {$: 'Timeout'};
+var $elm$http$Http$BadBody = function (a) {
+	return {$: 'BadBody', a: a};
+};
+var $elm$json$Json$Decode$decodeString = _Json_runOnString;
+var $author$project$Api$decodeBody = F2(
+	function (decoder, body) {
+		var _v0 = A2($elm$json$Json$Decode$decodeString, decoder, body);
+		if (_v0.$ === 'Ok') {
+			var value = _v0.a;
+			return $elm$core$Result$Ok(value);
+		} else {
+			var err = _v0.a;
+			return $elm$core$Result$Err(
+				$elm$http$Http$BadBody(
+					$elm$json$Json$Decode$errorToString(err)));
+		}
+	});
+var $author$project$Api$decodeResponse = F2(
+	function (decoder, response) {
+		switch (response.$) {
+			case 'BadUrl_':
+				var url = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadUrl(url));
+			case 'Timeout_':
+				return $elm$core$Result$Err($elm$http$Http$Timeout);
+			case 'NetworkError_':
+				return $elm$core$Result$Err($elm$http$Http$NetworkError);
+			case 'BadStatus_':
+				var metadata = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadStatus(metadata.statusCode));
+			default:
+				var body = response.b;
+				if ($elm$core$String$isEmpty(body)) {
+					var _v1 = A2($elm$json$Json$Decode$decodeString, decoder, '{}');
+					if (_v1.$ === 'Ok') {
+						var value = _v1.a;
+						return $elm$core$Result$Ok(value);
+					} else {
+						return A2($author$project$Api$decodeBody, decoder, body);
+					}
+				} else {
+					return A2($author$project$Api$decodeBody, decoder, body);
+				}
+		}
+	});
+var $elm$http$Http$stringResolver = A2(_Http_expect, '', $elm$core$Basics$identity);
+var $author$project$Api$jsonResolver = function (decoder) {
+	return $elm$http$Http$stringResolver(
+		$author$project$Api$decodeResponse(decoder));
+};
+var $elm$core$Task$fail = _Scheduler_fail;
+var $elm$http$Http$resultToTask = function (result) {
+	if (result.$ === 'Ok') {
+		var a = result.a;
+		return $elm$core$Task$succeed(a);
+	} else {
+		var x = result.a;
+		return $elm$core$Task$fail(x);
+	}
+};
+var $elm$http$Http$task = function (r) {
+	return A3(
+		_Http_toTask,
+		_Utils_Tuple0,
+		$elm$http$Http$resultToTask,
+		{allowCookiesFromOtherDomains: false, body: r.body, expect: r.resolver, headers: r.headers, method: r.method, timeout: r.timeout, tracker: $elm$core$Maybe$Nothing, url: r.url});
+};
+var $author$project$Api$task = function (_v0) {
+	var req = _v0.a;
+	return $elm$http$Http$task(
+		{
+			body: req.body,
+			headers: req.headers,
+			method: req.method,
+			resolver: $author$project$Api$jsonResolver(req.decoder),
+			timeout: req.timeout,
+			url: A3($elm$url$Url$Builder$crossOrigin, req.basePath, req.pathParams, req.queryParams)
+		});
+};
+var $author$project$Api$withToken = F2(
+	function (token, _v0) {
+		var req = _v0.a;
+		if (token.$ === 'Just') {
+			var t = token.a;
+			return $author$project$Api$Request(
+				_Utils_update(
+					req,
+					{
+						headers: A2(
+							$elm$core$List$cons,
+							A2($elm$http$Http$header, 'Authorization', 'Token ' + t),
+							req.headers)
+					}));
+		} else {
+			return $author$project$Api$Request(req);
+		}
+	});
+var $author$project$Page$Course$CoursePage$taskCourse = F2(
 	function (token, cid) {
 		return A2(
 			$elm$core$Task$map,
-			$author$project$Page$CoursePage$ResCourse,
+			$author$project$Page$Course$CoursePage$ResCourse,
 			$author$project$Api$task(
 				A2(
 					$author$project$Api$withToken,
 					$elm$core$Maybe$Just(token),
 					$author$project$Api$Request$Course$courseGetDeep(cid))));
 	});
-var $author$project$Page$CoursePage$init = F3(
+var $author$project$Page$Course$CoursePage$init = F3(
 	function (token, course_id, user) {
 		var _v0 = $author$project$Component$MultiTask$init(
 			_List_fromArray(
 				[
 					_Utils_Tuple2(
-					A2($author$project$Page$CoursePage$taskCourse, token, course_id),
+					A2($author$project$Page$Course$CoursePage$taskCourse, token, course_id),
 					'Получаем данные о курсе')
 				]));
 		var m = _v0.a;
@@ -9783,9 +9604,9 @@ var $author$project$Page$CoursePage$init = F3(
 		return _Utils_Tuple2(
 			{
 				activity_component_pk: 0,
-				activity_import_state: $author$project$Page$CoursePage$ActivityImportStateNone,
+				activity_import_state: $author$project$Page$Course$CoursePage$ActivityImportStateNone,
 				activity_primitive_import: $elm$core$Maybe$Nothing,
-				edit_mode: $author$project$Page$CoursePage$EditOff,
+				edit_mode: $author$project$Page$Course$CoursePage$EditOff,
 				is_staff: !$elm$core$Set$isEmpty(
 					A2(
 						$elm$core$Set$intersect,
@@ -9796,13 +9617,201 @@ var $author$project$Page$CoursePage$init = F3(
 								['admin', 'staff'])))),
 				save_error: $elm$core$Maybe$Nothing,
 				show_members: false,
-				state: $author$project$Page$CoursePage$Fetching(m),
+				state: $author$project$Page$Course$CoursePage$Fetching(m),
 				teaching_here: false,
 				token: token,
 				user: user
 			},
-			A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
+			A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CoursePage$MsgFetch, c));
 	});
+var $author$project$Page$CourseListPage$FetchedCourses = function (a) {
+	return {$: 'FetchedCourses', a: a};
+};
+var $author$project$Page$CourseListPage$FetchedSpecs = function (a) {
+	return {$: 'FetchedSpecs', a: a};
+};
+var $author$project$Page$CourseListPage$GroupByNone = {$: 'GroupByNone'};
+var $author$project$Page$CourseListPage$Loading = function (a) {
+	return {$: 'Loading', a: a};
+};
+var $author$project$Page$CourseListPage$MsgFetch = function (a) {
+	return {$: 'MsgFetch', a: a};
+};
+var $author$project$Api$Data$CourseShallow = function (id) {
+	return function (createdAt) {
+		return function (updatedAt) {
+			return function (type_) {
+				return function (title) {
+					return function (description) {
+						return function (forClass) {
+							return function (forGroup) {
+								return function (forSpecialization) {
+									return function (logo) {
+										return function (cover) {
+											return {cover: cover, createdAt: createdAt, description: description, forClass: forClass, forGroup: forGroup, forSpecialization: forSpecialization, id: id, logo: logo, title: title, type_: type_, updatedAt: updatedAt};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var $author$project$Api$Data$CourseShallowTypeCLB = {$: 'CourseShallowTypeCLB'};
+var $author$project$Api$Data$CourseShallowTypeEDU = {$: 'CourseShallowTypeEDU'};
+var $author$project$Api$Data$CourseShallowTypeELE = {$: 'CourseShallowTypeELE'};
+var $author$project$Api$Data$CourseShallowTypeGEN = {$: 'CourseShallowTypeGEN'};
+var $author$project$Api$Data$CourseShallowTypeSEM = {$: 'CourseShallowTypeSEM'};
+var $author$project$Api$Data$courseShallowTypeDecoder = A2(
+	$elm$json$Json$Decode$andThen,
+	function (value) {
+		switch (value) {
+			case 'GEN':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallowTypeGEN);
+			case 'EDU':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallowTypeEDU);
+			case 'SEM':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallowTypeSEM);
+			case 'CLB':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallowTypeCLB);
+			case 'ELE':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallowTypeELE);
+			default:
+				var other = value;
+				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
+		}
+	},
+	$elm$json$Json$Decode$string);
+var $author$project$Api$Data$courseShallowDecoder = A4(
+	$author$project$Api$Data$maybeDecodeNullable,
+	'cover',
+	$danyx23$elm_uuid$Uuid$decoder,
+	$elm$core$Maybe$Nothing,
+	A4(
+		$author$project$Api$Data$maybeDecodeNullable,
+		'logo',
+		$danyx23$elm_uuid$Uuid$decoder,
+		$elm$core$Maybe$Nothing,
+		A4(
+			$author$project$Api$Data$maybeDecodeNullable,
+			'for_specialization',
+			$danyx23$elm_uuid$Uuid$decoder,
+			$elm$core$Maybe$Nothing,
+			A4(
+				$author$project$Api$Data$maybeDecodeNullable,
+				'for_group',
+				$elm$json$Json$Decode$string,
+				$elm$core$Maybe$Nothing,
+				A4(
+					$author$project$Api$Data$maybeDecode,
+					'for_class',
+					$elm$json$Json$Decode$string,
+					$elm$core$Maybe$Nothing,
+					A4(
+						$author$project$Api$Data$maybeDecodeNullable,
+						'description',
+						$elm$json$Json$Decode$string,
+						$elm$core$Maybe$Nothing,
+						A3(
+							$author$project$Api$Data$decode,
+							'title',
+							$elm$json$Json$Decode$string,
+							A4(
+								$author$project$Api$Data$maybeDecode,
+								'type',
+								$author$project$Api$Data$courseShallowTypeDecoder,
+								$elm$core$Maybe$Nothing,
+								A4(
+									$author$project$Api$Data$maybeDecode,
+									'updated_at',
+									$author$project$Api$Time$dateTimeDecoder,
+									$elm$core$Maybe$Nothing,
+									A4(
+										$author$project$Api$Data$maybeDecode,
+										'created_at',
+										$author$project$Api$Time$dateTimeDecoder,
+										$elm$core$Maybe$Nothing,
+										A4(
+											$author$project$Api$Data$maybeDecode,
+											'id',
+											$danyx23$elm_uuid$Uuid$decoder,
+											$elm$core$Maybe$Nothing,
+											$elm$json$Json$Decode$succeed($author$project$Api$Data$CourseShallow))))))))))));
+var $author$project$Api$Request$Course$courseList = A7(
+	$author$project$Api$request,
+	'GET',
+	'/course/',
+	_List_Nil,
+	_List_Nil,
+	_List_Nil,
+	$elm$core$Maybe$Nothing,
+	$elm$json$Json$Decode$list($author$project$Api$Data$courseShallowDecoder));
+var $author$project$Api$Request$Education$educationSpecializationList = A7(
+	$author$project$Api$request,
+	'GET',
+	'/education/specialization/',
+	_List_Nil,
+	_List_Nil,
+	_List_Nil,
+	$elm$core$Maybe$Nothing,
+	$elm$json$Json$Decode$list($author$project$Api$Data$educationSpecializationDecoder));
+var $author$project$Api$withQuery = F2(
+	function (qs, _v0) {
+		var request_ = _v0.a;
+		return $author$project$Api$Request(
+			_Utils_update(
+				request_,
+				{
+					queryParams: $author$project$Api$queries(qs)
+				}));
+	});
+var $author$project$Api$ext_task = F4(
+	function (result_mapper, token, query_params, request_) {
+		return A2(
+			$elm$core$Task$map,
+			result_mapper,
+			$author$project$Api$task(
+				A2(
+					$author$project$Api$withQuery,
+					A2(
+						$elm$core$List$map,
+						function (_v0) {
+							var a = _v0.a;
+							var b = _v0.b;
+							return _Utils_Tuple2(
+								a,
+								$elm$core$Maybe$Just(b));
+						},
+						query_params),
+					A2(
+						$author$project$Api$withToken,
+						$elm$core$Maybe$Just(token),
+						request_))));
+	});
+var $author$project$Page$CourseListPage$init = function (token) {
+	var _v0 = $author$project$Component$MultiTask$init(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				A4($author$project$Api$ext_task, $author$project$Page$CourseListPage$FetchedCourses, token, _List_Nil, $author$project$Api$Request$Course$courseList),
+				'Получаем список курсов'),
+				_Utils_Tuple2(
+				A4($author$project$Api$ext_task, $author$project$Page$CourseListPage$FetchedSpecs, token, _List_Nil, $author$project$Api$Request$Education$educationSpecializationList),
+				'Получаем список специализаций')
+			]));
+	var m = _v0.a;
+	var c = _v0.b;
+	return _Utils_Tuple2(
+		{
+			group_by: $author$project$Page$CourseListPage$GroupByNone,
+			state: $author$project$Page$CourseListPage$Loading(m),
+			token: token
+		},
+		A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFetch, c));
+};
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Page$DefaultLayout$init = function (user) {
 	return _Utils_Tuple2(
@@ -9916,25 +9925,27 @@ var $elm$core$Task$mapError = F2(
 var $author$project$Api$Data$UserDeep = function (id) {
 	return function (roles) {
 		return function (currentClass) {
-			return function (children) {
-				return function (parents) {
-					return function (education) {
-						return function (lastLogin) {
-							return function (isSuperuser) {
-								return function (username) {
-									return function (firstName) {
-										return function (lastName) {
-											return function (email) {
-												return function (isStaff) {
-													return function (isActive) {
-														return function (dateJoined) {
-															return function (createdAt) {
-																return function (updatedAt) {
-																	return function (middleName) {
-																		return function (birthDate) {
-																			return function (avatar) {
-																				return function (groups) {
-																					return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, dateJoined: dateJoined, education: education, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, parents: parents, roles: roles, updatedAt: updatedAt, username: username};
+			return function (currentSpec) {
+				return function (children) {
+					return function (parents) {
+						return function (education) {
+							return function (lastLogin) {
+								return function (isSuperuser) {
+									return function (username) {
+										return function (firstName) {
+											return function (lastName) {
+												return function (email) {
+													return function (isStaff) {
+														return function (isActive) {
+															return function (dateJoined) {
+																return function (createdAt) {
+																	return function (updatedAt) {
+																		return function (middleName) {
+																			return function (birthDate) {
+																				return function (avatar) {
+																					return function (groups) {
+																						return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, currentSpec: currentSpec, dateJoined: dateJoined, education: education, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, parents: parents, roles: roles, updatedAt: updatedAt, username: username};
+																					};
 																				};
 																			};
 																		};
@@ -10108,21 +10119,26 @@ var $author$project$Api$Data$userDeepDecoder = A4(
 																		'children',
 																		$elm$json$Json$Decode$list($author$project$Api$Data$userShallowDecoder),
 																		A4(
-																			$author$project$Api$Data$maybeDecode,
-																			'current_class',
-																			$elm$json$Json$Decode$string,
+																			$author$project$Api$Data$maybeDecodeNullable,
+																			'current_spec',
+																			$author$project$Api$Data$educationSpecializationDecoder,
 																			$elm$core$Maybe$Nothing,
 																			A4(
 																				$author$project$Api$Data$maybeDecode,
-																				'roles',
-																				$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+																				'current_class',
+																				$elm$json$Json$Decode$string,
 																				$elm$core$Maybe$Nothing,
 																				A4(
 																					$author$project$Api$Data$maybeDecode,
-																					'id',
-																					$danyx23$elm_uuid$Uuid$decoder,
+																					'roles',
+																					$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
 																					$elm$core$Maybe$Nothing,
-																					$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeep))))))))))))))))))))));
+																					A4(
+																						$author$project$Api$Data$maybeDecode,
+																						'id',
+																						$danyx23$elm_uuid$Uuid$decoder,
+																						$elm$core$Maybe$Nothing,
+																						$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeep)))))))))))))))))))))));
 var $author$project$Api$Request$User$userSelf = A7($author$project$Api$request, 'GET', '/user/self/', _List_Nil, _List_Nil, _List_Nil, $elm$core$Maybe$Nothing, $author$project$Api$Data$userDeepDecoder);
 var $author$project$Page$Login$doCheckSession = function (token) {
 	var task_user = A2(
@@ -10560,313 +10576,54 @@ var $author$project$Page$Login$init_password_reset_fin = function (reset_token) 
 		$elm$core$Platform$Cmd$none);
 };
 var $elm$browser$Browser$Navigation$load = _Browser_load;
-var $author$project$Page$CourseListPage$Completed = F2(
-	function (a, b) {
-		return {$: 'Completed', a: a, b: b};
-	});
-var $author$project$Page$CourseListPage$Error = function (a) {
-	return {$: 'Error', a: a};
-};
-var $author$project$Component$MultiTask$Complete = function (a) {
-	return {$: 'Complete', a: a};
-};
-var $author$project$Component$MultiTask$Error = function (a) {
-	return {$: 'Error', a: a};
-};
-var $author$project$Component$MultiTask$TaskFinishedAll = function (a) {
-	return {$: 'TaskFinishedAll', a: a};
-};
-var $elm$core$Bitwise$and = _Bitwise_and;
-var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
-var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
-var $elm$core$Basics$ge = _Utils_ge;
-var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
-var $elm$core$Array$getHelp = F3(
-	function (shift, index, tree) {
-		getHelp:
-		while (true) {
-			var pos = $elm$core$Array$bitMask & (index >>> shift);
-			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
-			if (_v0.$ === 'SubTree') {
-				var subTree = _v0.a;
-				var $temp$shift = shift - $elm$core$Array$shiftStep,
-					$temp$index = index,
-					$temp$tree = subTree;
-				shift = $temp$shift;
-				index = $temp$index;
-				tree = $temp$tree;
-				continue getHelp;
-			} else {
-				var values = _v0.a;
-				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
-			}
-		}
-	});
-var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
-var $elm$core$Array$tailIndex = function (len) {
-	return (len >>> 5) << 5;
-};
-var $elm$core$Array$get = F2(
-	function (index, _v0) {
-		var len = _v0.a;
-		var startShift = _v0.b;
-		var tree = _v0.c;
-		var tail = _v0.d;
-		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
-			index,
-			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
-			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
-			A3($elm$core$Array$getHelp, startShift, index, tree)));
-	});
-var $elm$core$Elm$JsArray$unsafeSet = _JsArray_unsafeSet;
-var $elm$core$Array$setHelp = F4(
-	function (shift, index, value, tree) {
-		var pos = $elm$core$Array$bitMask & (index >>> shift);
-		var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
-		if (_v0.$ === 'SubTree') {
-			var subTree = _v0.a;
-			var newSub = A4($elm$core$Array$setHelp, shift - $elm$core$Array$shiftStep, index, value, subTree);
-			return A3(
-				$elm$core$Elm$JsArray$unsafeSet,
-				pos,
-				$elm$core$Array$SubTree(newSub),
-				tree);
-		} else {
-			var values = _v0.a;
-			var newLeaf = A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, values);
-			return A3(
-				$elm$core$Elm$JsArray$unsafeSet,
-				pos,
-				$elm$core$Array$Leaf(newLeaf),
-				tree);
-		}
-	});
-var $elm$core$Array$set = F3(
-	function (index, value, array) {
-		var len = array.a;
-		var startShift = array.b;
-		var tree = array.c;
-		var tail = array.d;
-		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? array : ((_Utils_cmp(
-			index,
-			$elm$core$Array$tailIndex(len)) > -1) ? A4(
-			$elm$core$Array$Array_elm_builtin,
-			len,
-			startShift,
-			tree,
-			A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, tail)) : A4(
-			$elm$core$Array$Array_elm_builtin,
-			len,
-			startShift,
-			A4($elm$core$Array$setHelp, startShift, index, value, tree),
-			tail));
-	});
-var $author$project$Util$arrayUpdate = F3(
-	function (ix, transform, array) {
-		var _v0 = A2($elm$core$Array$get, ix, array);
-		if (_v0.$ === 'Just') {
-			var el = _v0.a;
-			return A3(
-				$elm$core$Array$set,
-				ix,
-				transform(el),
-				array);
-		} else {
-			return array;
-		}
-	});
-var $author$project$Component$MultiTask$collectResults = function (model) {
-	var state2result = function (state) {
-		switch (state.$) {
-			case 'Running':
-				return $elm$core$Maybe$Nothing;
-			case 'Complete':
-				var r = state.a;
-				return $elm$core$Maybe$Just(
-					$elm$core$Result$Ok(r));
-			default:
-				var e = state.a;
-				return $elm$core$Maybe$Just(
-					$elm$core$Result$Err(e));
-		}
-	};
-	return A2(
-		$elm$core$List$filterMap,
-		$elm$core$Basics$identity,
-		$elm$core$Array$toList(
-			A2(
-				$elm$core$Array$map,
-				A2(
-					$elm$core$Basics$composeL,
-					state2result,
-					function (_v0) {
-						var s = _v0.b;
-						return s;
-					}),
-				model.task_states)));
-};
-var $author$project$Component$MultiTask$update = F2(
-	function (msg, model) {
-		switch (msg.$) {
-			case 'TaskCompleted':
-				var i = msg.a;
-				var res = msg.b;
-				var new_model = _Utils_update(
-					model,
-					{
-						task_states: A3(
-							$author$project$Util$arrayUpdate,
-							i,
-							function (_v2) {
-								var l = _v2.a;
-								var t = _v2.c;
-								return _Utils_Tuple3(
-									l,
-									$author$project$Component$MultiTask$Complete(res),
-									t);
-							},
-							model.task_states),
-						tasks_left: model.tasks_left - 1
-					});
-				return _Utils_Tuple2(
-					new_model,
-					(model.tasks_left <= 1) ? A2(
-						$elm$core$Task$perform,
-						function (_v1) {
-							return $author$project$Component$MultiTask$TaskFinishedAll(
-								$author$project$Component$MultiTask$collectResults(new_model));
-						},
-						$elm$core$Task$succeed(_Utils_Tuple0)) : $elm$core$Platform$Cmd$none);
-			case 'TaskFailed':
-				var i = msg.a;
-				var err = msg.b;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							task_states: A3(
-								$author$project$Util$arrayUpdate,
-								i,
-								function (_v3) {
-									var l = _v3.a;
-									var t = _v3.c;
-									return _Utils_Tuple3(
-										l,
-										$author$project$Component$MultiTask$Error(err),
-										t);
-								},
-								model.task_states)
-						}),
-					$elm$core$Platform$Cmd$none);
-			default:
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-		}
-	});
-var $author$project$Page$CourseListPage$update = F2(
-	function (msg, model) {
-		var _v0 = _Utils_Tuple2(msg, model.state);
-		if (_v0.a.$ === 'CourseListFetchFailed') {
-			var err = _v0.a.a;
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{
-						state: $author$project$Page$CourseListPage$Error(err)
-					}),
-				$elm$core$Platform$Cmd$none);
-		} else {
-			if (_v0.b.$ === 'Loading') {
-				var msg_ = _v0.a.a;
-				var model_ = _v0.b.a;
-				var _v1 = A2($author$project$Component$MultiTask$update, msg_, model_);
-				var m = _v1.a;
-				var c = _v1.b;
-				if ((((((((msg_.$ === 'TaskFinishedAll') && msg_.a.b) && (msg_.a.a.$ === 'Ok')) && (msg_.a.a.a.$ === 'FetchedCourses')) && msg_.a.b.b) && (msg_.a.b.a.$ === 'Ok')) && (msg_.a.b.a.a.$ === 'FetchedSpecs')) && (!msg_.a.b.b.b)) {
-					var _v3 = msg_.a;
-					var courses = _v3.a.a.a;
-					var _v4 = _v3.b;
-					var specs = _v4.a.a.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								state: A2(
-									$author$project$Page$CourseListPage$Completed,
-									courses,
-									$elm$core$Dict$fromList(
-										A2(
-											$elm$core$List$filterMap,
-											function (s) {
-												return A2(
-													$elm$core$Maybe$map,
-													function (id_) {
-														return _Utils_Tuple2(
-															$danyx23$elm_uuid$Uuid$toString(id_),
-															s);
-													},
-													s.id);
-											},
-											specs)))
-							}),
-						A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFetch, c));
-				} else {
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								state: $author$project$Page$CourseListPage$Loading(m)
-							}),
-						A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFetch, c));
-				}
-			} else {
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-			}
-		}
-	});
-var $author$project$Page$CoursePage$ActivityImportStateDataInput = F3(
+var $author$project$Ports$scrollIdIntoView = _Platform_outgoingPort('scrollIdIntoView', $elm$json$Json$Encode$string);
+var $author$project$Page$Course$CoursePage$ActivityImportStateDataInput = F3(
 	function (a, b, c) {
 		return {$: 'ActivityImportStateDataInput', a: a, b: b, c: c};
 	});
-var $author$project$Page$CoursePage$ActivityImportStateFinished = function (a) {
+var $author$project$Page$Course$CoursePage$ActivityImportStateFinished = function (a) {
 	return {$: 'ActivityImportStateFinished', a: a};
 };
-var $author$project$Page$CoursePage$ActivityImportStateInProgress = {$: 'ActivityImportStateInProgress'};
-var $author$project$Page$CoursePage$ActivityImportStateValidationFinished = F3(
+var $author$project$Page$Course$CoursePage$ActivityImportStateInProgress = {$: 'ActivityImportStateInProgress'};
+var $author$project$Page$Course$CoursePage$ActivityImportStateValidationFinished = F3(
 	function (a, b, c) {
 		return {$: 'ActivityImportStateValidationFinished', a: a, b: b, c: c};
 	});
-var $author$project$Page$CoursePage$ActivityImportStateValidationInProgress = {$: 'ActivityImportStateValidationInProgress'};
-var $author$project$Page$CoursePage$AddFin = {$: 'AddFin'};
-var $author$project$Page$CoursePage$AddGen = {$: 'AddGen'};
-var $author$project$Page$CoursePage$AddNone = {$: 'AddNone'};
-var $author$project$Page$CoursePage$AddTsk = {$: 'AddTsk'};
-var $author$project$Page$CoursePage$AddTxt = {$: 'AddTxt'};
-var $author$project$Page$CoursePage$EditOn = F2(
+var $author$project$Page$Course$CoursePage$ActivityImportStateValidationInProgress = {$: 'ActivityImportStateValidationInProgress'};
+var $author$project$Page$Course$CoursePage$AddFin = {$: 'AddFin'};
+var $author$project$Page$Course$CoursePage$AddGen = {$: 'AddGen'};
+var $author$project$Page$Course$CoursePage$AddNone = {$: 'AddNone'};
+var $author$project$Page$Course$CoursePage$AddTsk = {$: 'AddTsk'};
+var $author$project$Page$Course$CoursePage$AddTxt = {$: 'AddTxt'};
+var $author$project$Page$Course$CoursePage$EditOn = F2(
 	function (a, b) {
 		return {$: 'EditOn', a: a, b: b};
 	});
-var $author$project$Page$CoursePage$FetchDone = F2(
-	function (a, b) {
-		return {$: 'FetchDone', a: a, b: b};
+var $author$project$Page$Course$CoursePage$FetchDone = F3(
+	function (a, b, c) {
+		return {$: 'FetchDone', a: a, b: b, c: c};
 	});
-var $author$project$Page$CoursePage$FetchFailed = function (a) {
+var $author$project$Page$Course$CoursePage$FetchFailed = function (a) {
 	return {$: 'FetchFailed', a: a};
 };
-var $author$project$Page$CoursePage$MsgActivitiesImportFinished = function (a) {
+var $author$project$Page$Course$CoursePage$MsgActivitiesImportFinished = function (a) {
 	return {$: 'MsgActivitiesImportFinished', a: a};
 };
-var $author$project$Page$CoursePage$MsgActivityImportGotCSVData = F2(
+var $author$project$Page$Course$CoursePage$MsgActivityImportGotCSVData = F2(
 	function (a, b) {
 		return {$: 'MsgActivityImportGotCSVData', a: a, b: b};
 	});
-var $author$project$Page$CoursePage$MsgCourseSaveError = function (a) {
+var $author$project$Page$Course$CoursePage$MsgCourseMembers = function (a) {
+	return {$: 'MsgCourseMembers', a: a};
+};
+var $author$project$Page$Course$CoursePage$MsgCourseSaveError = function (a) {
 	return {$: 'MsgCourseSaveError', a: a};
 };
-var $author$project$Page$CoursePage$MsgCourseSaved = {$: 'MsgCourseSaved'};
-var $author$project$Page$CoursePage$MsgFileInputImport = function (a) {
+var $author$project$Page$Course$CoursePage$MsgCourseSaved = {$: 'MsgCourseSaved'};
+var $author$project$Page$Course$CoursePage$MsgFileInputImport = function (a) {
 	return {$: 'MsgFileInputImport', a: a};
 };
-var $author$project$Page$CoursePage$MsgOnClickAddBefore = F2(
+var $author$project$Page$Course$CoursePage$MsgOnClickAddBefore = F2(
 	function (a, b) {
 		return {$: 'MsgOnClickAddBefore', a: a, b: b};
 	});
@@ -10964,7 +10721,7 @@ var $author$project$Component$Activity$setOrder = F2(
 			model,
 			{state: new_state});
 	});
-var $author$project$Page$CoursePage$activityMoveDown = F2(
+var $author$project$Page$Course$CoursePage$activityMoveDown = F2(
 	function (id, acts) {
 		if (acts.b && acts.b.b) {
 			var x = acts.a;
@@ -10995,14 +10752,14 @@ var $author$project$Page$CoursePage$activityMoveDown = F2(
 				$elm$core$List$cons,
 				x,
 				A2(
-					$author$project$Page$CoursePage$activityMoveDown,
+					$author$project$Page$Course$CoursePage$activityMoveDown,
 					id,
 					A2($elm$core$List$cons, y, tl)));
 		} else {
 			return acts;
 		}
 	});
-var $author$project$Page$CoursePage$activityMoveUp = F2(
+var $author$project$Page$Course$CoursePage$activityMoveUp = F2(
 	function (id, acts) {
 		if (acts.b && acts.b.b) {
 			var x = acts.a;
@@ -11033,7 +10790,7 @@ var $author$project$Page$CoursePage$activityMoveUp = F2(
 				$elm$core$List$cons,
 				x,
 				A2(
-					$author$project$Page$CoursePage$activityMoveUp,
+					$author$project$Page$Course$CoursePage$activityMoveUp,
 					id,
 					A2($elm$core$List$cons, y, tl)));
 		} else {
@@ -11061,7 +10818,7 @@ var $author$project$Util$assoc_update = F3(
 				]);
 		}
 	});
-var $author$project$Page$CoursePage$collectFetchResults = function (fetchResults) {
+var $author$project$Page$Course$CoursePage$collectFetchResults = function (fetchResults) {
 	if ((fetchResults.b && (fetchResults.a.$ === 'Ok')) && (!fetchResults.b.b)) {
 		var crs = fetchResults.a.a.a;
 		return $elm$core$Maybe$Just(crs);
@@ -11199,6 +10956,7 @@ var $elm$time$Time$toAdjustedMinutes = F2(
 				60000),
 			eras);
 	});
+var $elm$core$Basics$ge = _Utils_ge;
 var $elm$time$Time$toCivil = function (minutes) {
 	var rawDay = A2($elm$time$Time$flooredDiv, minutes, 60 * 24) + 719468;
 	var era = (((rawDay >= 0) ? rawDay : (rawDay - 146096)) / 146097) | 0;
@@ -11289,6 +11047,7 @@ var $elm$time$Time$toMonth = F2(
 var $elm$core$String$fromChar = function (_char) {
 	return A2($elm$core$String$cons, _char, '');
 };
+var $elm$core$Bitwise$and = _Bitwise_and;
 var $elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
 var $elm$core$String$repeatHelp = F3(
 	function (n, chunk, result) {
@@ -11470,7 +11229,6 @@ var $author$project$Api$Request$Course$courseBulkSetActivities = F2(
 				$author$project$Api$Data$encodeBulkSetActivities(data_body)),
 			$elm$json$Json$Decode$succeed(_Utils_Tuple0));
 	});
-var $author$project$Ports$scrollIdIntoView = _Platform_outgoingPort('scrollIdIntoView', $elm$json$Json$Encode$string);
 var $author$project$Component$Activity$doScrollInto = function (model) {
 	return A2(
 		$elm$core$Maybe$withDefault,
@@ -11503,7 +11261,7 @@ var $author$project$Component$Activity$setUpDownControls = F3(
 				up_down: A2($author$project$Component$Activity$ControlsUpDown, up, down)
 			});
 	});
-var $author$project$Page$CoursePage$fixOrder = function (model) {
+var $author$project$Page$Course$CoursePage$fixOrder = function (model) {
 	var fixOrder_ = F2(
 		function (j, l) {
 			var up = !(!j);
@@ -11537,13 +11295,15 @@ var $author$project$Page$CoursePage$fixOrder = function (model) {
 	if (_v3.$ === 'FetchDone') {
 		var c = _v3.a;
 		var acts = _v3.b;
+		var members = _v3.c;
 		return _Utils_update(
 			model,
 			{
-				state: A2(
-					$author$project$Page$CoursePage$FetchDone,
+				state: A3(
+					$author$project$Page$Course$CoursePage$FetchDone,
 					c,
-					A2(fixOrder_, 0, acts))
+					A2(fixOrder_, 0, acts),
+					members)
 			});
 	} else {
 		return model;
@@ -11577,6 +11337,22 @@ var $author$project$Component$FileInput$init = F2(
 			},
 			$elm$core$Platform$Cmd$none);
 	});
+var $author$project$Page$Course$CourseMembers$StateList = function (a) {
+	return {$: 'StateList', a: a};
+};
+var $author$project$Page$Course$CourseMembers$init = F5(
+	function (token, courseID, enr, isTeacher, isStaff) {
+		return _Utils_Tuple2(
+			{
+				canManageStudents: isTeacher || isStaff,
+				canManageTeachers: isStaff,
+				courseID: courseID,
+				enrollments: enr,
+				state: $author$project$Page$Course$CourseMembers$StateList($elm$core$Dict$empty),
+				token: token
+			},
+			$elm$core$Platform$Cmd$none);
+	});
 var $author$project$Component$Activity$MsgSetInternalID = function (a) {
 	return {$: 'MsgSetInternalID', a: a};
 };
@@ -11587,6 +11363,7 @@ var $elm$random$Random$Seed = F2(
 	function (a, b) {
 		return {$: 'Seed', a: a, b: b};
 	});
+var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
 var $elm$random$Random$next = function (_v0) {
 	var state0 = _v0.a;
 	var incr = _v0.b;
@@ -11743,6 +11520,45 @@ var $elm$core$Bitwise$or = _Bitwise_or;
 var $danyx23$elm_uuid$Uuid$Barebones$limitDigitRange8ToB = function (digit) {
 	return (digit & 3) | 8;
 };
+var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
+var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
+var $elm$core$Array$getHelp = F3(
+	function (shift, index, tree) {
+		getHelp:
+		while (true) {
+			var pos = $elm$core$Array$bitMask & (index >>> shift);
+			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+			if (_v0.$ === 'SubTree') {
+				var subTree = _v0.a;
+				var $temp$shift = shift - $elm$core$Array$shiftStep,
+					$temp$index = index,
+					$temp$tree = subTree;
+				shift = $temp$shift;
+				index = $temp$index;
+				tree = $temp$tree;
+				continue getHelp;
+			} else {
+				var values = _v0.a;
+				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
+			}
+		}
+	});
+var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
+var $elm$core$Array$tailIndex = function (len) {
+	return (len >>> 5) << 5;
+};
+var $elm$core$Array$get = F2(
+	function (index, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
+			index,
+			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
+			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
+			A3($elm$core$Array$getHelp, startShift, index, tree)));
+	});
 var $elm$core$Char$fromCode = _Char_fromCode;
 var $danyx23$elm_uuid$Uuid$Barebones$hexDigits = function () {
 	var mapChars = F2(
@@ -12115,15 +11931,16 @@ var $author$project$Component$Activity$setEditable = F2(
 			model,
 			{editable: editable});
 	});
-var $author$project$Page$CoursePage$setEditMode = F2(
+var $author$project$Page$Course$CoursePage$setEditMode = F2(
 	function (edt, model) {
 		var new_state = function () {
 			var _v0 = model.state;
 			if (_v0.$ === 'FetchDone') {
 				var courseDeep = _v0.a;
 				var acts = _v0.b;
-				return A2(
-					$author$project$Page$CoursePage$FetchDone,
+				var members = _v0.c;
+				return A3(
+					$author$project$Page$Course$CoursePage$FetchDone,
 					courseDeep,
 					A2(
 						$elm$core$List$map,
@@ -12134,7 +11951,8 @@ var $author$project$Page$CoursePage$setEditMode = F2(
 								k,
 								A2($author$project$Component$Activity$setEditable, edt, v));
 						},
-						acts));
+						acts),
+					members);
 			} else {
 				return model.state;
 			}
@@ -12142,11 +11960,11 @@ var $author$project$Page$CoursePage$setEditMode = F2(
 		return _Utils_update(
 			model,
 			{
-				edit_mode: edt ? A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddNone, false) : $author$project$Page$CoursePage$EditOff,
+				edit_mode: edt ? A2($author$project$Page$Course$CoursePage$EditOn, $author$project$Page$Course$CoursePage$AddNone, false) : $author$project$Page$Course$CoursePage$EditOff,
 				state: new_state
 			});
 	});
-var $author$project$Page$CoursePage$setModified = F2(
+var $author$project$Page$Course$CoursePage$setModified = F2(
 	function (mod, model) {
 		var _v0 = model.edit_mode;
 		if (_v0.$ === 'EditOff') {
@@ -12157,7 +11975,7 @@ var $author$project$Page$CoursePage$setModified = F2(
 			return _Utils_update(
 				model,
 				{
-					edit_mode: A2($author$project$Page$CoursePage$EditOn, addMode, mod)
+					edit_mode: A2($author$project$Page$Course$CoursePage$EditOn, addMode, mod)
 				});
 		}
 	});
@@ -12500,9 +12318,775 @@ var $author$project$Component$FileInput$update = F2(
 				$elm$core$Platform$Cmd$none);
 		}
 	});
-var $author$project$Page$CoursePage$IssueKindError = {$: 'IssueKindError'};
-var $author$project$Page$CoursePage$IssueKindNotice = {$: 'IssueKindNotice'};
-var $author$project$Page$CoursePage$IssueKindWarning = {$: 'IssueKindWarning'};
+var $author$project$Component$MultiTask$Complete = function (a) {
+	return {$: 'Complete', a: a};
+};
+var $author$project$Component$MultiTask$Error = function (a) {
+	return {$: 'Error', a: a};
+};
+var $author$project$Component$MultiTask$TaskFinishedAll = function (a) {
+	return {$: 'TaskFinishedAll', a: a};
+};
+var $elm$core$Elm$JsArray$unsafeSet = _JsArray_unsafeSet;
+var $elm$core$Array$setHelp = F4(
+	function (shift, index, value, tree) {
+		var pos = $elm$core$Array$bitMask & (index >>> shift);
+		var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+		if (_v0.$ === 'SubTree') {
+			var subTree = _v0.a;
+			var newSub = A4($elm$core$Array$setHelp, shift - $elm$core$Array$shiftStep, index, value, subTree);
+			return A3(
+				$elm$core$Elm$JsArray$unsafeSet,
+				pos,
+				$elm$core$Array$SubTree(newSub),
+				tree);
+		} else {
+			var values = _v0.a;
+			var newLeaf = A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, values);
+			return A3(
+				$elm$core$Elm$JsArray$unsafeSet,
+				pos,
+				$elm$core$Array$Leaf(newLeaf),
+				tree);
+		}
+	});
+var $elm$core$Array$set = F3(
+	function (index, value, array) {
+		var len = array.a;
+		var startShift = array.b;
+		var tree = array.c;
+		var tail = array.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? array : ((_Utils_cmp(
+			index,
+			$elm$core$Array$tailIndex(len)) > -1) ? A4(
+			$elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			tree,
+			A3($elm$core$Elm$JsArray$unsafeSet, $elm$core$Array$bitMask & index, value, tail)) : A4(
+			$elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			A4($elm$core$Array$setHelp, startShift, index, value, tree),
+			tail));
+	});
+var $author$project$Util$arrayUpdate = F3(
+	function (ix, transform, array) {
+		var _v0 = A2($elm$core$Array$get, ix, array);
+		if (_v0.$ === 'Just') {
+			var el = _v0.a;
+			return A3(
+				$elm$core$Array$set,
+				ix,
+				transform(el),
+				array);
+		} else {
+			return array;
+		}
+	});
+var $author$project$Component$MultiTask$collectResults = function (model) {
+	var state2result = function (state) {
+		switch (state.$) {
+			case 'Running':
+				return $elm$core$Maybe$Nothing;
+			case 'Complete':
+				var r = state.a;
+				return $elm$core$Maybe$Just(
+					$elm$core$Result$Ok(r));
+			default:
+				var e = state.a;
+				return $elm$core$Maybe$Just(
+					$elm$core$Result$Err(e));
+		}
+	};
+	return A2(
+		$elm$core$List$filterMap,
+		$elm$core$Basics$identity,
+		$elm$core$Array$toList(
+			A2(
+				$elm$core$Array$map,
+				A2(
+					$elm$core$Basics$composeL,
+					state2result,
+					function (_v0) {
+						var s = _v0.b;
+						return s;
+					}),
+				model.task_states)));
+};
+var $author$project$Component$MultiTask$update = F2(
+	function (msg, model) {
+		switch (msg.$) {
+			case 'TaskCompleted':
+				var i = msg.a;
+				var res = msg.b;
+				var new_model = _Utils_update(
+					model,
+					{
+						task_states: A3(
+							$author$project$Util$arrayUpdate,
+							i,
+							function (_v2) {
+								var l = _v2.a;
+								var t = _v2.c;
+								return _Utils_Tuple3(
+									l,
+									$author$project$Component$MultiTask$Complete(res),
+									t);
+							},
+							model.task_states),
+						tasks_left: model.tasks_left - 1
+					});
+				return _Utils_Tuple2(
+					new_model,
+					(model.tasks_left <= 1) ? A2(
+						$elm$core$Task$perform,
+						function (_v1) {
+							return $author$project$Component$MultiTask$TaskFinishedAll(
+								$author$project$Component$MultiTask$collectResults(new_model));
+						},
+						$elm$core$Task$succeed(_Utils_Tuple0)) : $elm$core$Platform$Cmd$none);
+			case 'TaskFailed':
+				var i = msg.a;
+				var err = msg.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							task_states: A3(
+								$author$project$Util$arrayUpdate,
+								i,
+								function (_v3) {
+									var l = _v3.a;
+									var t = _v3.c;
+									return _Utils_Tuple3(
+										l,
+										$author$project$Component$MultiTask$Error(err),
+										t);
+								},
+								model.task_states)
+						}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		}
+	});
+var $author$project$Api$Data$CourseEnrollmentWriteRoleS = {$: 'CourseEnrollmentWriteRoleS'};
+var $author$project$Api$Data$CourseEnrollmentWriteRoleT = {$: 'CourseEnrollmentWriteRoleT'};
+var $author$project$Page$Course$CourseMembers$MsgEnrolling = function (a) {
+	return {$: 'MsgEnrolling', a: a};
+};
+var $author$project$Page$Course$CourseMembers$MsgUserList = function (a) {
+	return {$: 'MsgUserList', a: a};
+};
+var $author$project$Page$Course$CourseMembers$StateAddMemberSelection = F2(
+	function (a, b) {
+		return {$: 'StateAddMemberSelection', a: a, b: b};
+	});
+var $author$project$Page$Course$CourseMembers$StateEnrolling = function (a) {
+	return {$: 'StateEnrolling', a: a};
+};
+var $author$project$Api$Data$CourseEnrollmentWrite = F7(
+	function (id, createdAt, updatedAt, role, finishedOn, person, course) {
+		return {course: course, createdAt: createdAt, finishedOn: finishedOn, id: id, person: person, role: role, updatedAt: updatedAt};
+	});
+var $author$project$Api$Data$courseEnrollmentWriteRoleDecoder = A2(
+	$elm$json$Json$Decode$andThen,
+	function (value) {
+		switch (value) {
+			case 't':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentWriteRoleT);
+			case 's':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentWriteRoleS);
+			default:
+				var other = value;
+				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
+		}
+	},
+	$elm$json$Json$Decode$string);
+var $author$project$Api$Data$courseEnrollmentWriteDecoder = A3(
+	$author$project$Api$Data$decode,
+	'course',
+	$danyx23$elm_uuid$Uuid$decoder,
+	A3(
+		$author$project$Api$Data$decode,
+		'person',
+		$danyx23$elm_uuid$Uuid$decoder,
+		A4(
+			$author$project$Api$Data$maybeDecodeNullable,
+			'finished_on',
+			$author$project$Api$Time$dateTimeDecoder,
+			$elm$core$Maybe$Nothing,
+			A3(
+				$author$project$Api$Data$decode,
+				'role',
+				$author$project$Api$Data$courseEnrollmentWriteRoleDecoder,
+				A4(
+					$author$project$Api$Data$maybeDecode,
+					'updated_at',
+					$author$project$Api$Time$dateTimeDecoder,
+					$elm$core$Maybe$Nothing,
+					A4(
+						$author$project$Api$Data$maybeDecode,
+						'created_at',
+						$author$project$Api$Time$dateTimeDecoder,
+						$elm$core$Maybe$Nothing,
+						A4(
+							$author$project$Api$Data$maybeDecode,
+							'id',
+							$danyx23$elm_uuid$Uuid$decoder,
+							$elm$core$Maybe$Nothing,
+							$elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentWrite))))))));
+var $author$project$Api$Data$stringFromCourseEnrollmentWriteRole = function (model) {
+	if (model.$ === 'CourseEnrollmentWriteRoleT') {
+		return 't';
+	} else {
+		return 's';
+	}
+};
+var $author$project$Api$Data$encodeCourseEnrollmentWriteRole = A2($elm$core$Basics$composeL, $elm$json$Json$Encode$string, $author$project$Api$Data$stringFromCourseEnrollmentWriteRole);
+var $author$project$Api$Data$encodeCourseEnrollmentWritePairs = function (model) {
+	var pairs = _List_fromArray(
+		[
+			A3($author$project$Api$Data$maybeEncode, 'id', $danyx23$elm_uuid$Uuid$encode, model.id),
+			A3($author$project$Api$Data$maybeEncode, 'created_at', $author$project$Api$Time$encodeDateTime, model.createdAt),
+			A3($author$project$Api$Data$maybeEncode, 'updated_at', $author$project$Api$Time$encodeDateTime, model.updatedAt),
+			A3($author$project$Api$Data$encode, 'role', $author$project$Api$Data$encodeCourseEnrollmentWriteRole, model.role),
+			A3($author$project$Api$Data$maybeEncodeNullable, 'finished_on', $author$project$Api$Time$encodeDateTime, model.finishedOn),
+			A3($author$project$Api$Data$encode, 'person', $danyx23$elm_uuid$Uuid$encode, model.person),
+			A3($author$project$Api$Data$encode, 'course', $danyx23$elm_uuid$Uuid$encode, model.course)
+		]);
+	return pairs;
+};
+var $author$project$Api$Data$encodeCourseEnrollmentWrite = A2($elm$core$Basics$composeL, $author$project$Api$Data$encodeObject, $author$project$Api$Data$encodeCourseEnrollmentWritePairs);
+var $author$project$Api$Request$Course$courseEnrollmentCreate = function (data_body) {
+	return A7(
+		$author$project$Api$request,
+		'POST',
+		'/course/enrollment/',
+		_List_Nil,
+		_List_Nil,
+		_List_Nil,
+		$elm$core$Maybe$Just(
+			$author$project$Api$Data$encodeCourseEnrollmentWrite(data_body)),
+		$author$project$Api$Data$courseEnrollmentWriteDecoder);
+};
+var $author$project$Page$Course$CourseMembers$MsgRemoveFinished = F2(
+	function (a, b) {
+		return {$: 'MsgRemoveFinished', a: a, b: b};
+	});
+var $author$project$Api$Request$Course$courseEnrollmentDelete = function (id_path) {
+	return A7(
+		$author$project$Api$request,
+		'DELETE',
+		'/course/enrollment/{id}/',
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'id',
+				$elm$core$Basics$identity(id_path))
+			]),
+		_List_Nil,
+		_List_Nil,
+		$elm$core$Maybe$Nothing,
+		$elm$json$Json$Decode$succeed(_Utils_Tuple0));
+};
+var $author$project$Util$get_id_str = function (record) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		'',
+		A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, record.id));
+};
+var $author$project$Page$Course$CourseMembers$doRemove = F2(
+	function (model, enrs) {
+		var cmdDelEnr = function (enr) {
+			return A2(
+				$elm$core$Task$attempt,
+				$author$project$Page$Course$CourseMembers$MsgRemoveFinished(enr),
+				A2(
+					$elm$core$Task$mapError,
+					$author$project$Util$httpErrorToString,
+					A4(
+						$author$project$Api$ext_task,
+						$elm$core$Basics$identity,
+						model.token,
+						_List_Nil,
+						$author$project$Api$Request$Course$courseEnrollmentDelete(
+							$author$project$Util$get_id_str(enr)))));
+		};
+		return $elm$core$Platform$Cmd$batch(
+			A2($elm$core$List$map, cmdDelEnr, enrs));
+	});
+var $author$project$Component$List$User$Loading = function (a) {
+	return {$: 'Loading', a: a};
+};
+var $author$project$Component$List$User$LoadingResultSpecs = function (a) {
+	return {$: 'LoadingResultSpecs', a: a};
+};
+var $author$project$Component$List$User$LoadingResultUsers = function (a) {
+	return {$: 'LoadingResultUsers', a: a};
+};
+var $author$project$Component$List$User$MsgLoading = function (a) {
+	return {$: 'MsgLoading', a: a};
+};
+var $author$project$Api$Request$User$userList = A7(
+	$author$project$Api$request,
+	'GET',
+	'/user/',
+	_List_Nil,
+	_List_Nil,
+	_List_Nil,
+	$elm$core$Maybe$Nothing,
+	$elm$json$Json$Decode$list($author$project$Api$Data$userShallowDecoder));
+var $author$project$Component$List$User$init = function (token) {
+	var _v0 = $author$project$Component$MultiTask$init(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				A4($author$project$Api$ext_task, $author$project$Component$List$User$LoadingResultUsers, token, _List_Nil, $author$project$Api$Request$User$userList),
+				'Загружаем пользователей'),
+				_Utils_Tuple2(
+				A4($author$project$Api$ext_task, $author$project$Component$List$User$LoadingResultSpecs, token, _List_Nil, $author$project$Api$Request$Education$educationSpecializationList),
+				'Загружаем направления')
+			]));
+	var m = _v0.a;
+	var c = _v0.b;
+	return _Utils_Tuple2(
+		{
+			selectable: true,
+			selected: $elm$core$Dict$empty,
+			state: $author$project$Component$List$User$Loading(m),
+			token: token
+		},
+		A2($elm$core$Platform$Cmd$map, $author$project$Component$List$User$MsgLoading, c));
+};
+var $elm$core$Debug$log = _Debug_log;
+var $author$project$Component$List$User$Idle = F2(
+	function (a, b) {
+		return {$: 'Idle', a: a, b: b};
+	});
+var $author$project$Component$List$User$MsgSpecSelect = function (a) {
+	return {$: 'MsgSpecSelect', a: a};
+};
+var $author$project$Component$List$User$update = F2(
+	function (msg, model) {
+		switch (msg.$) {
+			case 'MsgLoading':
+				var msg_ = msg.a;
+				var _v1 = model.state;
+				if (_v1.$ === 'Loading') {
+					var model_ = _v1.a;
+					var _v2 = A2($author$project$Component$MultiTask$update, msg_, model_);
+					var m = _v2.a;
+					var c = _v2.b;
+					if ((((((((msg_.$ === 'TaskFinishedAll') && msg_.a.b) && (msg_.a.a.$ === 'Ok')) && (msg_.a.a.a.$ === 'LoadingResultUsers')) && msg_.a.b.b) && (msg_.a.b.a.$ === 'Ok')) && (msg_.a.b.a.a.$ === 'LoadingResultSpecs')) && (!msg_.a.b.b.b)) {
+						var _v4 = msg_.a;
+						var users = _v4.a.a.a;
+						var _v5 = _v4.b;
+						var specs = _v5.a.a.a;
+						var _v6 = A3(
+							$author$project$Component$Select$init,
+							'Направление',
+							true,
+							$elm$core$Dict$fromList(
+								_Utils_ap(
+									_List_fromArray(
+										[
+											_Utils_Tuple2('', 'Все')
+										]),
+									A2(
+										$elm$core$List$map,
+										function (s) {
+											return _Utils_Tuple2(
+												A2(
+													$elm$core$Maybe$withDefault,
+													'',
+													A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, s.id)),
+												s.name);
+										},
+										specs))));
+						var sm = _v6.a;
+						var sc = _v6.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									state: A2(
+										$author$project$Component$List$User$Idle,
+										{currentClass: '', currentSpec: sm, searchText: ''},
+										$elm$core$Dict$fromList(
+											A2(
+												$elm$core$List$map,
+												function (u) {
+													return _Utils_Tuple2(
+														$author$project$Util$get_id_str(u),
+														u);
+												},
+												users)))
+								}),
+							A2($elm$core$Platform$Cmd$map, $author$project$Component$List$User$MsgSpecSelect, sc));
+					} else {
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									state: $author$project$Component$List$User$Loading(m)
+								}),
+							A2($elm$core$Platform$Cmd$map, $author$project$Component$List$User$MsgLoading, c));
+					}
+				} else {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			case 'MsgSpecSelect':
+				var msg_ = msg.a;
+				var _v7 = model.state;
+				if (_v7.$ === 'Idle') {
+					var flt = _v7.a;
+					var usr = _v7.b;
+					var _v8 = A2($author$project$Component$Select$update, msg_, flt.currentSpec);
+					var m = _v8.a;
+					var c = _v8.b;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								state: A2(
+									$author$project$Component$List$User$Idle,
+									_Utils_update(
+										flt,
+										{currentSpec: m}),
+									usr)
+							}),
+						A2($elm$core$Platform$Cmd$map, $author$project$Component$List$User$MsgSpecSelect, c));
+				} else {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			case 'MsgSelectUser':
+				var sUID = msg.a;
+				var bSelected = msg.b;
+				var _v9 = model.state;
+				if (_v9.$ === 'Idle') {
+					var users = _v9.b;
+					return bSelected ? _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								selected: A3(
+									$elm$core$Dict$update,
+									sUID,
+									function (_v10) {
+										return A2($elm$core$Dict$get, sUID, users);
+									},
+									model.selected)
+							}),
+						$elm$core$Platform$Cmd$none) : _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								selected: A2($elm$core$Dict$remove, sUID, model.selected)
+							}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			case 'MsgOnInputSearchText':
+				var v = msg.a;
+				var _v11 = model.state;
+				if (_v11.$ === 'Idle') {
+					var filters = _v11.a;
+					var users = _v11.b;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								state: A2(
+									$author$project$Component$List$User$Idle,
+									_Utils_update(
+										filters,
+										{searchText: v}),
+									users)
+							}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			default:
+				var v = msg.a;
+				var _v12 = model.state;
+				if (_v12.$ === 'Idle') {
+					var filters = _v12.a;
+					var users = _v12.b;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								state: A2(
+									$author$project$Component$List$User$Idle,
+									_Utils_update(
+										filters,
+										{currentClass: v}),
+									users)
+							}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+		}
+	});
+var $author$project$Util$user_full_name = function (user) {
+	var mb = $elm$core$Maybe$withDefault('');
+	return mb(user.lastName) + (' ' + (mb(user.firstName) + (' ' + mb(user.middleName))));
+};
+var $elm$core$Dict$values = function (dict) {
+	return A3(
+		$elm$core$Dict$foldr,
+		F3(
+			function (key, value, valueList) {
+				return A2($elm$core$List$cons, value, valueList);
+			}),
+		_List_Nil,
+		dict);
+};
+var $author$project$Page$Course$CourseMembers$update = F2(
+	function (msg, model) {
+		var _v0 = A2(
+			$elm$core$Debug$log,
+			'CourseMembers.update',
+			_Utils_Tuple2(msg, model));
+		switch (msg.$) {
+			case 'MsgOnClickAddTeacher':
+				var _v2 = $author$project$Component$List$User$init(model.token);
+				var m = _v2.a;
+				var c = _v2.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							state: A2($author$project$Page$Course$CourseMembers$StateAddMemberSelection, $author$project$Api$Data$CourseEnrollmentReadRoleT, m)
+						}),
+					A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CourseMembers$MsgUserList, c));
+			case 'MsgOnClickAddStudent':
+				var _v3 = $author$project$Component$List$User$init(model.token);
+				var m = _v3.a;
+				var c = _v3.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							state: A2($author$project$Page$Course$CourseMembers$StateAddMemberSelection, $author$project$Api$Data$CourseEnrollmentReadRoleS, m)
+						}),
+					A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CourseMembers$MsgUserList, c));
+			case 'MsgOnClickRemoveEnrollment':
+				var enr = msg.a;
+				var _v4 = model.state;
+				switch (_v4.$) {
+					case 'StateList':
+						var removingState = _v4.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									state: $author$project$Page$Course$CourseMembers$StateList(
+										A3(
+											$elm$core$Dict$update,
+											$author$project$Util$get_id_str(enr),
+											function (_v5) {
+												return $elm$core$Maybe$Just($elm$core$Maybe$Nothing);
+											},
+											removingState))
+								}),
+							A2(
+								$author$project$Page$Course$CourseMembers$doRemove,
+								model,
+								_List_fromArray(
+									[enr])));
+					case 'StateAddMemberSelection':
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					default:
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			case 'MsgUserList':
+				var msg_ = msg.a;
+				var _v6 = model.state;
+				switch (_v6.$) {
+					case 'StateAddMemberSelection':
+						var r = _v6.a;
+						var model_ = _v6.b;
+						var _v7 = A2($author$project$Component$List$User$update, msg_, model_);
+						var m = _v7.a;
+						var c = _v7.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									state: A2($author$project$Page$Course$CourseMembers$StateAddMemberSelection, r, m)
+								}),
+							A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CourseMembers$MsgUserList, c));
+					case 'StateList':
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					default:
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			case 'MsgRemoveFinished':
+				var enr = msg.a;
+				var result = msg.b;
+				if (result.$ === 'Ok') {
+					var model_ = _Utils_update(
+						model,
+						{
+							enrollments: A2(
+								$elm$core$List$filter,
+								$elm$core$Basics$neq(enr),
+								model.enrollments)
+						});
+					var _v9 = model_.state;
+					switch (_v9.$) {
+						case 'StateList':
+							var removing = _v9.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model_,
+									{
+										state: $author$project$Page$Course$CourseMembers$StateList(
+											A2(
+												$elm$core$Dict$remove,
+												$author$project$Util$get_id_str(enr),
+												removing))
+									}),
+								$elm$core$Platform$Cmd$none);
+						case 'StateAddMemberSelection':
+							return _Utils_Tuple2(model_, $elm$core$Platform$Cmd$none);
+						default:
+							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					}
+				} else {
+					var error = result.a;
+					var _v10 = model.state;
+					switch (_v10.$) {
+						case 'StateList':
+							var removing = _v10.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										state: $author$project$Page$Course$CourseMembers$StateList(
+											A3(
+												$elm$core$Dict$update,
+												$author$project$Util$get_id_str(enr),
+												function (_v11) {
+													return $elm$core$Maybe$Just(
+														$elm$core$Maybe$Just(error));
+												},
+												removing))
+									}),
+								$elm$core$Platform$Cmd$none);
+						case 'StateAddMemberSelection':
+							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						default:
+							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					}
+				}
+			case 'MsgOnClickBackToList':
+				var _v12 = model.state;
+				switch (_v12.$) {
+					case 'StateList':
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					case 'StateAddMemberSelection':
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									state: $author$project$Page$Course$CourseMembers$StateList($elm$core$Dict$empty)
+								}),
+							$elm$core$Platform$Cmd$none);
+					default:
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			case 'MsgOnClickAddMembers':
+				var _v13 = model.state;
+				switch (_v13.$) {
+					case 'StateList':
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					case 'StateAddMemberSelection':
+						var role = _v13.a;
+						var userList = _v13.b;
+						var users = $elm$core$Dict$values(userList.selected);
+						var role2 = function () {
+							if (role.$ === 'CourseEnrollmentReadRoleT') {
+								return $author$project$Api$Data$CourseEnrollmentWriteRoleT;
+							} else {
+								return $author$project$Api$Data$CourseEnrollmentWriteRoleS;
+							}
+						}();
+						var taskAddEnr = function (user) {
+							var _v15 = _Utils_Tuple2(model.courseID, user.id);
+							if ((_v15.a.$ === 'Just') && (_v15.b.$ === 'Just')) {
+								var cid = _v15.a.a;
+								var uid = _v15.b.a;
+								return $elm$core$Maybe$Just(
+									A4(
+										$author$project$Api$ext_task,
+										$elm$core$Basics$identity,
+										model.token,
+										_List_Nil,
+										$author$project$Api$Request$Course$courseEnrollmentCreate(
+											{course: cid, createdAt: $elm$core$Maybe$Nothing, finishedOn: $elm$core$Maybe$Nothing, id: $elm$core$Maybe$Nothing, person: uid, role: role2, updatedAt: $elm$core$Maybe$Nothing})));
+							} else {
+								return $elm$core$Maybe$Nothing;
+							}
+						};
+						var _v14 = $author$project$Component$MultiTask$init(
+							A2(
+								$elm$core$List$filterMap,
+								function (u) {
+									return A2(
+										$elm$core$Maybe$map,
+										function (t) {
+											return _Utils_Tuple2(
+												t,
+												'Добавляем пользователя ' + $author$project$Util$user_full_name(u));
+										},
+										taskAddEnr(u));
+								},
+								users));
+						var m = _v14.a;
+						var c = _v14.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									state: $author$project$Page$Course$CourseMembers$StateEnrolling(m)
+								}),
+							A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CourseMembers$MsgEnrolling, c));
+					default:
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			default:
+				var msg_ = msg.a;
+				var _v17 = model.state;
+				switch (_v17.$) {
+					case 'StateEnrolling':
+						var model_ = _v17.a;
+						var _v18 = A2($author$project$Component$MultiTask$update, msg_, model_);
+						var m = _v18.a;
+						var c = _v18.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									state: $author$project$Page$Course$CourseMembers$StateEnrolling(m)
+								}),
+							A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CourseMembers$MsgEnrolling, c));
+					case 'StateList':
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					default:
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+		}
+	});
+var $author$project$Page$Course$CoursePage$IssueKindError = {$: 'IssueKindError'};
+var $author$project$Page$Course$CoursePage$IssueKindNotice = {$: 'IssueKindNotice'};
+var $author$project$Page$Course$CoursePage$IssueKindWarning = {$: 'IssueKindWarning'};
 var $elm$core$List$all = F2(
 	function (isOkay, list) {
 		return !A2(
@@ -13059,7 +13643,7 @@ var $BrianHicks$elm_csv$Csv$Parser$parse = F2(
 			0,
 			0)));
 	});
-var $author$project$Page$CoursePage$validateActivityCSV = F2(
+var $author$project$Page$Course$CoursePage$validateActivityCSV = F2(
 	function (sep, data) {
 		var validateHeaderRow = function (fields) {
 			if (!fields.b) {
@@ -13067,7 +13651,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 					[
 						{
 						col: $elm$core$Maybe$Nothing,
-						kind: $author$project$Page$CoursePage$IssueKindError,
+						kind: $author$project$Page$Course$CoursePage$IssueKindError,
 						msg: 'Не обнаружен заголовок. Возможно, ваш файл пустой или пуста первая строка.',
 						row: $elm$core$Maybe$Just(1)
 					}
@@ -13089,7 +13673,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 									$elm$core$String$trim(f))) ? $elm$core$Maybe$Just(
 									{
 										col: $elm$core$Maybe$Just(i + 1),
-										kind: $author$project$Page$CoursePage$IssueKindWarning,
+										kind: $author$project$Page$Course$CoursePage$IssueKindWarning,
 										msg: 'Лишние пробельные символы в поле \'' + (f + '\''),
 										row: $elm$core$Maybe$Just(1)
 									}) : $elm$core$Maybe$Nothing;
@@ -13108,7 +13692,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 									requiredFields) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
 									{
 										col: $elm$core$Maybe$Just(c + 1),
-										kind: $author$project$Page$CoursePage$IssueKindWarning,
+										kind: $author$project$Page$Course$CoursePage$IssueKindWarning,
 										msg: 'Обнаружено лишнее поле \'' + (fieldName + '\''),
 										row: $elm$core$Maybe$Just(1)
 									});
@@ -13122,7 +13706,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 					function (fieldName) {
 						return {
 							col: $elm$core$Maybe$Nothing,
-							kind: $author$project$Page$CoursePage$IssueKindError,
+							kind: $author$project$Page$Course$CoursePage$IssueKindError,
 							msg: 'Не обнаружено обязательное поле \'' + (fieldName + '\''),
 							row: $elm$core$Maybe$Just(1)
 						};
@@ -13144,7 +13728,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 								[
 									{
 									col: $elm$core$Maybe$Just(i),
-									kind: $author$project$Page$CoursePage$IssueKindError,
+									kind: $author$project$Page$Course$CoursePage$IssueKindError,
 									msg: 'Значение в поле \'' + (k + ('\' не является целым числом: \'' + (v + '\''))),
 									row: $elm$core$Maybe$Just(row_num)
 								}
@@ -13158,7 +13742,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 							[
 								{
 								col: $elm$core$Maybe$Just(i),
-								kind: $author$project$Page$CoursePage$IssueKindWarning,
+								kind: $author$project$Page$Course$CoursePage$IssueKindWarning,
 								msg: 'Лишние пробелы в ячейке (в начале или конце)',
 								row: $elm$core$Maybe$Just(row_num)
 							}
@@ -13167,7 +13751,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 							[
 								{
 								col: $elm$core$Maybe$Just(i),
-								kind: $author$project$Page$CoursePage$IssueKindWarning,
+								kind: $author$project$Page$Course$CoursePage$IssueKindWarning,
 								msg: 'Не указано значение поля \'' + (k + '\''),
 								row: $elm$core$Maybe$Just(row_num)
 							}
@@ -13193,7 +13777,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 												[
 													{
 													col: $elm$core$Maybe$Just(i),
-													kind: $author$project$Page$CoursePage$IssueKindError,
+													kind: $author$project$Page$Course$CoursePage$IssueKindError,
 													msg: 'Некорректное значение года в дате',
 													row: $elm$core$Maybe$Just(row_num)
 												}
@@ -13202,7 +13786,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 												[
 													{
 													col: $elm$core$Maybe$Just(i),
-													kind: $author$project$Page$CoursePage$IssueKindError,
+													kind: $author$project$Page$Course$CoursePage$IssueKindError,
 													msg: 'Некорректное значение месяца в дате',
 													row: $elm$core$Maybe$Just(row_num)
 												}
@@ -13211,7 +13795,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 												[
 													{
 													col: $elm$core$Maybe$Just(i),
-													kind: $author$project$Page$CoursePage$IssueKindError,
+													kind: $author$project$Page$Course$CoursePage$IssueKindError,
 													msg: 'Некорректное значение числа в дате',
 													row: $elm$core$Maybe$Just(row_num)
 												}
@@ -13224,7 +13808,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 												[
 													{
 													col: $elm$core$Maybe$Just(i),
-													kind: $author$project$Page$CoursePage$IssueKindError,
+													kind: $author$project$Page$Course$CoursePage$IssueKindError,
 													msg: 'Некорректное значение даты',
 													row: $elm$core$Maybe$Just(row_num)
 												}
@@ -13235,7 +13819,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 											[
 												{
 												col: $elm$core$Maybe$Just(i),
-												kind: $author$project$Page$CoursePage$IssueKindError,
+												kind: $author$project$Page$Course$CoursePage$IssueKindError,
 												msg: 'Не указана тема',
 												row: $elm$core$Maybe$Just(row_num)
 											}
@@ -13245,7 +13829,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 											[
 												{
 												col: $elm$core$Maybe$Just(i),
-												kind: $author$project$Page$CoursePage$IssueKindError,
+												kind: $author$project$Page$Course$CoursePage$IssueKindError,
 												msg: 'Ключевое слово слишком длинное (>255 символов)',
 												row: $elm$core$Maybe$Just(row_num)
 											}
@@ -13255,7 +13839,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 											[
 												{
 												col: $elm$core$Maybe$Just(i),
-												kind: $author$project$Page$CoursePage$IssueKindError,
+												kind: $author$project$Page$Course$CoursePage$IssueKindError,
 												msg: 'Название раздела слишком длинное (>255 символов)',
 												row: $elm$core$Maybe$Just(row_num)
 											}
@@ -13269,7 +13853,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 											[
 												{
 												col: $elm$core$Maybe$Just(i),
-												kind: $author$project$Page$CoursePage$IssueKindWarning,
+												kind: $author$project$Page$Course$CoursePage$IssueKindWarning,
 												msg: 'Значение должно быть одно из: Да, Нет; По умолчанию выбирается \'Нет\'. Ваше значение: \'' + (v + '\''),
 												row: $elm$core$Maybe$Just(row_num)
 											}
@@ -13279,7 +13863,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 											[
 												{
 												col: $elm$core$Maybe$Just(i),
-												kind: $author$project$Page$CoursePage$IssueKindError,
+												kind: $author$project$Page$Course$CoursePage$IssueKindError,
 												msg: 'Название научной дисциплины слишком длинное (>255 символов)',
 												row: $elm$core$Maybe$Just(row_num)
 											}
@@ -13289,7 +13873,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 											[
 												{
 												col: $elm$core$Maybe$Just(i),
-												kind: $author$project$Page$CoursePage$IssueKindError,
+												kind: $author$project$Page$Course$CoursePage$IssueKindError,
 												msg: 'Название формы занятия дисциплины слишком длинное (>255 символов)',
 												row: $elm$core$Maybe$Just(row_num)
 											}
@@ -13314,7 +13898,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 					[
 						{
 						col: $elm$core$Maybe$Nothing,
-						kind: $author$project$Page$CoursePage$IssueKindWarning,
+						kind: $author$project$Page$Course$CoursePage$IssueKindWarning,
 						msg: 'Пустая строка',
 						row: $elm$core$Maybe$Just(row_num)
 					}
@@ -13335,14 +13919,14 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 			data);
 		var hasErrors = $elm$core$List$any(
 			function (i) {
-				return _Utils_eq(i.kind, $author$project$Page$CoursePage$IssueKindError);
+				return _Utils_eq(i.kind, $author$project$Page$Course$CoursePage$IssueKindError);
 			});
 		if (parsed.$ === 'Ok') {
 			var res = parsed.a;
 			if (!res.b) {
 				return _List_fromArray(
 					[
-						{col: $elm$core$Maybe$Nothing, kind: $author$project$Page$CoursePage$IssueKindNotice, msg: 'Нет данных для импорта.', row: $elm$core$Maybe$Nothing}
+						{col: $elm$core$Maybe$Nothing, kind: $author$project$Page$Course$CoursePage$IssueKindNotice, msg: 'Нет данных для импорта.', row: $elm$core$Maybe$Nothing}
 					]);
 			} else {
 				var header = res.a;
@@ -13355,7 +13939,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 					if (!rows.b) {
 						return A2(
 							$elm$core$List$cons,
-							{col: $elm$core$Maybe$Nothing, kind: $author$project$Page$CoursePage$IssueKindNotice, msg: 'Нет строк для импорта.', row: $elm$core$Maybe$Nothing},
+							{col: $elm$core$Maybe$Nothing, kind: $author$project$Page$Course$CoursePage$IssueKindNotice, msg: 'Нет строк для импорта.', row: $elm$core$Maybe$Nothing},
 							headerErrors);
 					} else {
 						var bodyErrors = A2(
@@ -13378,7 +13962,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 					[
 						{
 						col: $elm$core$Maybe$Nothing,
-						kind: $author$project$Page$CoursePage$IssueKindError,
+						kind: $author$project$Page$Course$CoursePage$IssueKindError,
 						msg: 'Ошибка около символа ' + ($elm$core$String$fromInt(p) + ': Экранирование начато, но не знавершено'),
 						row: $elm$core$Maybe$Nothing
 					}
@@ -13389,7 +13973,7 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 					[
 						{
 						col: $elm$core$Maybe$Nothing,
-						kind: $author$project$Page$CoursePage$IssueKindError,
+						kind: $author$project$Page$Course$CoursePage$IssueKindError,
 						msg: 'Ошибка около символа ' + ($elm$core$String$fromInt(p) + ': Обнаружены данные после завершенного экранирования.'),
 						row: $elm$core$Maybe$Nothing
 					}
@@ -13398,54 +13982,64 @@ var $author$project$Page$CoursePage$validateActivityCSV = F2(
 		}
 	});
 var $author$project$Util$zip = $elm$core$List$map2($elm$core$Tuple$pair);
-var $author$project$Page$CoursePage$update = F2(
+var $author$project$Page$Course$CoursePage$update = F2(
 	function (msg, model) {
 		var parse_course = function (course) {
+			var teaching_here = A2(
+				$elm$core$List$any,
+				function (enr) {
+					return _Utils_eq(enr.role, $author$project$Api$Data$CourseEnrollmentReadRoleT) && _Utils_eq(enr.person.id, model.user.id);
+				},
+				course.enrollments);
 			var activities = A2(
 				$elm$core$List$sortBy,
 				function ($) {
 					return $.order;
 				},
 				course.activities);
-			var _v70 = $elm$core$List$unzip(
+			var _v74 = $elm$core$List$unzip(
 				A2(
 					$elm$core$List$map,
 					$author$project$Component$Activity$init_from_activity(model.token),
 					activities));
-			var ms = _v70.a;
-			var cs = _v70.b;
+			var ms = _v74.a;
+			var cs = _v74.b;
 			var len = $elm$core$List$length(ms);
 			var id_range = A2($elm$core$List$range, model.activity_component_pk, (model.activity_component_pk + len) - 1);
 			var pairs_id_cmd = A2($author$project$Util$zip, id_range, cs);
+			var cmdsAct = A2(
+				$elm$core$List$map,
+				function (_v76) {
+					var id = _v76.a;
+					var c_ = _v76.b;
+					return A2(
+						$elm$core$Platform$Cmd$map,
+						$author$project$Page$Course$CoursePage$MsgActivity(id),
+						c_);
+				},
+				pairs_id_cmd);
 			var pairs_id_comp = A2($author$project$Util$zip, id_range, ms);
+			var _v75 = A5($author$project$Page$Course$CourseMembers$init, model.token, course.id, course.enrollments, teaching_here, model.is_staff);
+			var mMembers = _v75.a;
+			var cMembers = _v75.b;
 			return _Utils_Tuple2(
 				_Utils_update(
 					model,
 					{
 						activity_component_pk: model.activity_component_pk + len,
-						state: A2($author$project$Page$CoursePage$FetchDone, course, pairs_id_comp),
-						teaching_here: A2(
-							$elm$core$List$any,
-							function (enr) {
-								return _Utils_eq(enr.role, $author$project$Api$Data$CourseEnrollmentReadRoleT) && _Utils_eq(enr.person.id, model.user.id);
-							},
-							course.enrollments)
+						state: A3($author$project$Page$Course$CoursePage$FetchDone, course, pairs_id_comp, mMembers),
+						teaching_here: teaching_here
 					}),
 				$elm$core$Platform$Cmd$batch(
-					A2(
-						$elm$core$List$map,
-						function (_v71) {
-							var id = _v71.a;
-							var c_ = _v71.b;
-							return A2(
-								$elm$core$Platform$Cmd$map,
-								$author$project$Page$CoursePage$MsgActivity(id),
-								c_);
-						},
-						pairs_id_cmd)));
+					_Utils_ap(
+						cmdsAct,
+						_List_fromArray(
+							[
+								A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CoursePage$MsgCourseMembers, cMembers)
+							]))));
 		};
 		var _v0 = _Utils_Tuple2(msg, model.state);
-		_v0$27:
+		_v0$28:
 		while (true) {
 			switch (_v0.a.$) {
 				case 'MsgFetch':
@@ -13457,7 +14051,7 @@ var $author$project$Page$CoursePage$update = F2(
 						var c = _v1.b;
 						if (msg_.$ === 'TaskFinishedAll') {
 							var results = msg_.a;
-							var _v3 = $author$project$Page$CoursePage$collectFetchResults(results);
+							var _v3 = $author$project$Page$Course$CoursePage$collectFetchResults(results);
 							if (_v3.$ === 'Just') {
 								var course = _v3.a;
 								return parse_course(course);
@@ -13466,7 +14060,7 @@ var $author$project$Page$CoursePage$update = F2(
 									_Utils_update(
 										model,
 										{
-											state: $author$project$Page$CoursePage$FetchFailed('Не удалось разобрать результаты запросов')
+											state: $author$project$Page$Course$CoursePage$FetchFailed('Не удалось разобрать результаты запросов')
 										}),
 									$elm$core$Platform$Cmd$none);
 							}
@@ -13475,12 +14069,12 @@ var $author$project$Page$CoursePage$update = F2(
 								_Utils_update(
 									model,
 									{
-										state: $author$project$Page$CoursePage$Fetching(m)
+										state: $author$project$Page$Course$CoursePage$Fetching(m)
 									}),
-								A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFetch, c));
+								A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CoursePage$MsgFetch, c));
 						}
 					} else {
-						break _v0$27;
+						break _v0$28;
 					}
 				case 'MsgClickMembers':
 					var _v4 = _v0.a;
@@ -13501,18 +14095,18 @@ var $author$project$Page$CoursePage$update = F2(
 						var _v6 = _v0.a;
 						var _v7 = _v0.b;
 						return _Utils_Tuple2(
-							$author$project$Page$CoursePage$fixOrder(
+							$author$project$Page$Course$CoursePage$fixOrder(
 								A2(
-									$author$project$Page$CoursePage$setEditMode,
+									$author$project$Page$Course$CoursePage$setEditMode,
 									true,
 									_Utils_update(
 										model,
 										{
-											edit_mode: A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddNone, false)
+											edit_mode: A2($author$project$Page$Course$CoursePage$EditOn, $author$project$Page$Course$CoursePage$AddNone, false)
 										}))),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$27;
+						break _v0$28;
 					}
 				case 'MsgActivity':
 					if (_v0.b.$ === 'FetchDone') {
@@ -13522,6 +14116,7 @@ var $author$project$Page$CoursePage$update = F2(
 						var _v9 = _v0.b;
 						var course = _v9.a;
 						var act_components = _v9.b;
+						var members = _v9.c;
 						var _v10 = $elm$core$List$head(
 							A2(
 								$elm$core$List$filter,
@@ -13540,58 +14135,60 @@ var $author$project$Page$CoursePage$update = F2(
 								switch (msg_.$) {
 									case 'MsgMoveUp':
 										return _Utils_Tuple2(
-											$author$project$Page$CoursePage$fixOrder(
+											$author$project$Page$Course$CoursePage$fixOrder(
 												_Utils_update(
 													model,
 													{
-														state: A2(
-															$author$project$Page$CoursePage$FetchDone,
+														state: A3(
+															$author$project$Page$Course$CoursePage$FetchDone,
 															course,
 															A2(
-																$author$project$Page$CoursePage$activityMoveUp,
+																$author$project$Page$Course$CoursePage$activityMoveUp,
 																id,
-																A3($author$project$Util$assoc_update, id, m, act_components)))
+																A3($author$project$Util$assoc_update, id, m, act_components)),
+															members)
 													})),
 											$elm$core$Platform$Cmd$batch(
 												_List_fromArray(
 													[
 														A2(
 														$elm$core$Platform$Cmd$map,
-														$author$project$Page$CoursePage$MsgActivity(id),
+														$author$project$Page$Course$CoursePage$MsgActivity(id),
 														c),
 														$author$project$Component$Activity$doScrollInto(m)
 													])));
 									case 'MsgMoveDown':
 										return _Utils_Tuple2(
-											$author$project$Page$CoursePage$fixOrder(
+											$author$project$Page$Course$CoursePage$fixOrder(
 												_Utils_update(
 													model,
 													{
-														state: A2(
-															$author$project$Page$CoursePage$FetchDone,
+														state: A3(
+															$author$project$Page$Course$CoursePage$FetchDone,
 															course,
 															A2(
-																$author$project$Page$CoursePage$activityMoveDown,
+																$author$project$Page$Course$CoursePage$activityMoveDown,
 																id,
-																A3($author$project$Util$assoc_update, id, m, act_components)))
+																A3($author$project$Util$assoc_update, id, m, act_components)),
+															members)
 													})),
 											$elm$core$Platform$Cmd$batch(
 												_List_fromArray(
 													[
 														A2(
 														$elm$core$Platform$Cmd$map,
-														$author$project$Page$CoursePage$MsgActivity(id),
+														$author$project$Page$Course$CoursePage$MsgActivity(id),
 														c),
 														$author$project$Component$Activity$doScrollInto(m)
 													])));
 									case 'MsgOnClickDelete':
 										return _Utils_Tuple2(
-											$author$project$Page$CoursePage$fixOrder(
+											$author$project$Page$Course$CoursePage$fixOrder(
 												_Utils_update(
 													model,
 													{
-														state: A2(
-															$author$project$Page$CoursePage$FetchDone,
+														state: A3(
+															$author$project$Page$Course$CoursePage$FetchDone,
 															course,
 															A2(
 																$elm$core$List$filter,
@@ -13599,7 +14196,8 @@ var $author$project$Page$CoursePage$update = F2(
 																	$elm$core$Basics$composeR,
 																	$elm$core$Tuple$first,
 																	$elm$core$Basics$neq(id)),
-																act_components))
+																act_components),
+															members)
 													})),
 											$elm$core$Platform$Cmd$none);
 									default:
@@ -13607,27 +14205,28 @@ var $author$project$Page$CoursePage$update = F2(
 											_Utils_update(
 												model,
 												{
-													state: A2(
-														$author$project$Page$CoursePage$FetchDone,
+													state: A3(
+														$author$project$Page$Course$CoursePage$FetchDone,
 														course,
-														A3($author$project$Util$assoc_update, id, m, act_components))
+														A3($author$project$Util$assoc_update, id, m, act_components),
+														members)
 												}),
 											A2(
 												$elm$core$Platform$Cmd$map,
-												$author$project$Page$CoursePage$MsgActivity(id),
+												$author$project$Page$Course$CoursePage$MsgActivity(id),
 												c));
 								}
 							}();
 							var new_model = _v13.a;
 							var cmd = _v13.b;
 							return _Utils_Tuple2(
-								A2($author$project$Page$CoursePage$setModified, true, new_model),
+								A2($author$project$Page$Course$CoursePage$setModified, true, new_model),
 								cmd);
 						} else {
 							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					} else {
-						break _v0$27;
+						break _v0$28;
 					}
 				case 'MsgOnClickAddGen':
 					var _v15 = _v0.a;
@@ -13635,9 +14234,9 @@ var $author$project$Page$CoursePage$update = F2(
 						var _v16 = model.edit_mode;
 						if (_v16.$ === 'EditOn') {
 							var mod = _v16.b;
-							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddGen, mod);
+							return A2($author$project$Page$Course$CoursePage$EditOn, $author$project$Page$Course$CoursePage$AddGen, mod);
 						} else {
-							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddGen, false);
+							return A2($author$project$Page$Course$CoursePage$EditOn, $author$project$Page$Course$CoursePage$AddGen, false);
 						}
 					}();
 					return _Utils_Tuple2(
@@ -13651,9 +14250,9 @@ var $author$project$Page$CoursePage$update = F2(
 						var _v18 = model.edit_mode;
 						if (_v18.$ === 'EditOn') {
 							var mod = _v18.b;
-							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddFin, mod);
+							return A2($author$project$Page$Course$CoursePage$EditOn, $author$project$Page$Course$CoursePage$AddFin, mod);
 						} else {
-							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddFin, false);
+							return A2($author$project$Page$Course$CoursePage$EditOn, $author$project$Page$Course$CoursePage$AddFin, false);
 						}
 					}();
 					return _Utils_Tuple2(
@@ -13667,9 +14266,9 @@ var $author$project$Page$CoursePage$update = F2(
 						var _v20 = model.edit_mode;
 						if (_v20.$ === 'EditOn') {
 							var mod = _v20.b;
-							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddTsk, mod);
+							return A2($author$project$Page$Course$CoursePage$EditOn, $author$project$Page$Course$CoursePage$AddTsk, mod);
 						} else {
-							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddTsk, false);
+							return A2($author$project$Page$Course$CoursePage$EditOn, $author$project$Page$Course$CoursePage$AddTsk, false);
 						}
 					}();
 					return _Utils_Tuple2(
@@ -13683,9 +14282,9 @@ var $author$project$Page$CoursePage$update = F2(
 						var _v22 = model.edit_mode;
 						if (_v22.$ === 'EditOn') {
 							var mod = _v22.b;
-							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddTxt, mod);
+							return A2($author$project$Page$Course$CoursePage$EditOn, $author$project$Page$Course$CoursePage$AddTxt, mod);
 						} else {
-							return A2($author$project$Page$CoursePage$EditOn, $author$project$Page$CoursePage$AddTxt, false);
+							return A2($author$project$Page$Course$CoursePage$EditOn, $author$project$Page$Course$CoursePage$AddTxt, false);
 						}
 					}();
 					return _Utils_Tuple2(
@@ -13705,7 +14304,7 @@ var $author$project$Page$CoursePage$update = F2(
 								A2(
 									$elm$core$Basics$composeR,
 									$elm$core$Maybe$Just,
-									$author$project$Page$CoursePage$MsgOnClickAddBefore(i)),
+									$author$project$Page$Course$CoursePage$MsgOnClickAddBefore(i)),
 								$elm$time$Time$now));
 					} else {
 						if (_v0.b.$ === 'FetchDone') {
@@ -13715,6 +14314,7 @@ var $author$project$Page$CoursePage$update = F2(
 							var _v26 = _v0.b;
 							var course = _v26.a;
 							var act_components = _v26.b;
+							var members = _v26.c;
 							var act = function () {
 								var _v29 = _Utils_Tuple2(model.edit_mode, course.id);
 								_v29$4:
@@ -13862,16 +14462,16 @@ var $author$project$Page$CoursePage$update = F2(
 								var m = _v28.a;
 								var c = _v28.b;
 								return _Utils_Tuple2(
-									$author$project$Page$CoursePage$fixOrder(
+									$author$project$Page$Course$CoursePage$fixOrder(
 										A2(
-											$author$project$Page$CoursePage$setModified,
+											$author$project$Page$Course$CoursePage$setModified,
 											true,
 											_Utils_update(
 												model,
 												{
 													activity_component_pk: model.activity_component_pk + 1,
-													state: A2(
-														$author$project$Page$CoursePage$FetchDone,
+													state: A3(
+														$author$project$Page$Course$CoursePage$FetchDone,
 														course,
 														A3(
 															$author$project$Util$list_insert_at,
@@ -13879,15 +14479,16 @@ var $author$project$Page$CoursePage$update = F2(
 															_Utils_Tuple2(
 																model.activity_component_pk,
 																A2($author$project$Component$Activity$setEditable, true, m)),
-															act_components))
+															act_components),
+														members)
 												}))),
 									A2(
 										$elm$core$Platform$Cmd$map,
-										$author$project$Page$CoursePage$MsgActivity(model.activity_component_pk),
+										$author$project$Page$Course$CoursePage$MsgActivity(model.activity_component_pk),
 										c));
 							}
 						} else {
-							break _v0$27;
+							break _v0$28;
 						}
 					}
 				case 'MsgOnClickEditCancel':
@@ -13899,10 +14500,10 @@ var $author$project$Page$CoursePage$update = F2(
 						var m = _v40.a;
 						var c = _v40.b;
 						return _Utils_Tuple2(
-							A2($author$project$Page$CoursePage$setEditMode, false, m),
+							A2($author$project$Page$Course$CoursePage$setEditMode, false, m),
 							c);
 					} else {
-						break _v0$27;
+						break _v0$28;
 					}
 				case 'MsgOnClickSave':
 					if (_v0.b.$ === 'FetchDone') {
@@ -13953,9 +14554,9 @@ var $author$project$Page$CoursePage$update = F2(
 							model,
 							A3(
 								$author$project$Util$task_to_cmd,
-								A2($elm$core$Basics$composeR, $author$project$Util$httpErrorToString, $author$project$Page$CoursePage$MsgCourseSaveError),
+								A2($elm$core$Basics$composeR, $author$project$Util$httpErrorToString, $author$project$Page$Course$CoursePage$MsgCourseSaveError),
 								function (_v43) {
-									return $author$project$Page$CoursePage$MsgCourseSaved;
+									return $author$project$Page$Course$CoursePage$MsgCourseSaved;
 								},
 								A4(
 									$author$project$Api$ext_task,
@@ -13970,7 +14571,7 @@ var $author$project$Page$CoursePage$update = F2(
 											A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, course.id)),
 										{create: create, update: update_}))));
 					} else {
-						break _v0$27;
+						break _v0$28;
 					}
 				case 'MsgCourseSaveError':
 					if (_v0.b.$ === 'FetchDone') {
@@ -13986,7 +14587,7 @@ var $author$project$Page$CoursePage$update = F2(
 								}),
 							$elm$core$Platform$Cmd$none);
 					} else {
-						break _v0$27;
+						break _v0$28;
 					}
 				case 'MsgCourseSaved':
 					if (_v0.b.$ === 'FetchDone') {
@@ -13995,7 +14596,7 @@ var $author$project$Page$CoursePage$update = F2(
 						var course = _v48.a;
 						var act_components = _v48.b;
 						var _v49 = A3(
-							$author$project$Page$CoursePage$init,
+							$author$project$Page$Course$CoursePage$init,
 							model.token,
 							A2(
 								$elm$core$Maybe$withDefault,
@@ -14005,10 +14606,10 @@ var $author$project$Page$CoursePage$update = F2(
 						var m = _v49.a;
 						var c = _v49.b;
 						return _Utils_Tuple2(
-							A2($author$project$Page$CoursePage$setEditMode, false, m),
+							A2($author$project$Page$Course$CoursePage$setEditMode, false, m),
 							c);
 					} else {
-						break _v0$27;
+						break _v0$28;
 					}
 				case 'MsgOnClickImportActivities':
 					var _v50 = _v0.a;
@@ -14023,15 +14624,15 @@ var $author$project$Page$CoursePage$update = F2(
 						_Utils_update(
 							model,
 							{
-								activity_import_state: A3($author$project$Page$CoursePage$ActivityImportStateDataInput, false, ',', m)
+								activity_import_state: A3($author$project$Page$Course$CoursePage$ActivityImportStateDataInput, false, ',', m)
 							}),
-						A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFileInputImport, c));
+						A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CoursePage$MsgFileInputImport, c));
 				case 'MsgCloseActivitiesImport':
 					var _v52 = _v0.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{activity_import_state: $author$project$Page$CoursePage$ActivityImportStateNone}),
+							{activity_import_state: $author$project$Page$Course$CoursePage$ActivityImportStateNone}),
 						$elm$core$Platform$Cmd$none);
 				case 'MsgFileInputImport':
 					var msg_ = _v0.a.a;
@@ -14048,14 +14649,14 @@ var $author$project$Page$CoursePage$update = F2(
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
-									{activity_import_state: $author$project$Page$CoursePage$ActivityImportStateValidationInProgress}),
+									{activity_import_state: $author$project$Page$Course$CoursePage$ActivityImportStateValidationInProgress}),
 								$elm$core$Platform$Cmd$batch(
 									_List_fromArray(
 										[
-											A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFileInputImport, c),
+											A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CoursePage$MsgFileInputImport, c),
 											A2(
 											$elm$core$Task$perform,
-											$author$project$Page$CoursePage$MsgActivityImportGotCSVData(
+											$author$project$Page$Course$CoursePage$MsgActivityImportGotCSVData(
 												A2(
 													$elm$core$Maybe$withDefault,
 													_Utils_chr(','),
@@ -14070,9 +14671,9 @@ var $author$project$Page$CoursePage$update = F2(
 								_Utils_update(
 									model,
 									{
-										activity_import_state: A3($author$project$Page$CoursePage$ActivityImportStateDataInput, show_settings, sep, m)
+										activity_import_state: A3($author$project$Page$Course$CoursePage$ActivityImportStateDataInput, show_settings, sep, m)
 									}),
-								A2($elm$core$Platform$Cmd$map, $author$project$Page$CoursePage$MsgFileInputImport, c));
+								A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CoursePage$MsgFileInputImport, c));
 						}
 					} else {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -14095,10 +14696,10 @@ var $author$project$Page$CoursePage$update = F2(
 									return _Utils_Tuple2(
 										_Utils_update(
 											model,
-											{activity_import_state: $author$project$Page$CoursePage$ActivityImportStateInProgress}),
+											{activity_import_state: $author$project$Page$Course$CoursePage$ActivityImportStateInProgress}),
 										A2(
 											$elm$core$Task$attempt,
-											$author$project$Page$CoursePage$MsgActivitiesImportFinished,
+											$author$project$Page$Course$CoursePage$MsgActivitiesImportFinished,
 											A2(
 												$elm$core$Task$mapError,
 												$author$project$Util$httpErrorToString,
@@ -14122,7 +14723,7 @@ var $author$project$Page$CoursePage$update = F2(
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
 					} else {
-						break _v0$27;
+						break _v0$28;
 					}
 				case 'MsgActivitiesImportFinished':
 					var res = _v0.a.a;
@@ -14130,7 +14731,7 @@ var $author$project$Page$CoursePage$update = F2(
 						_Utils_update(
 							model,
 							{
-								activity_import_state: $author$project$Page$CoursePage$ActivityImportStateFinished(
+								activity_import_state: $author$project$Page$Course$CoursePage$ActivityImportStateFinished(
 									A2(
 										$elm$core$Result$map,
 										function (v) {
@@ -14144,7 +14745,7 @@ var $author$project$Page$CoursePage$update = F2(
 					var _v60 = _v0.a;
 					var sep = _v60.a;
 					var data = _v60.b;
-					var val_res = A2($author$project$Page$CoursePage$validateActivityCSV, sep, data);
+					var val_res = A2($author$project$Page$Course$CoursePage$validateActivityCSV, sep, data);
 					var res = function () {
 						if (!val_res.b) {
 							return $elm$core$Result$Ok(_Utils_Tuple0);
@@ -14156,7 +14757,7 @@ var $author$project$Page$CoursePage$update = F2(
 						_Utils_update(
 							model,
 							{
-								activity_import_state: A3($author$project$Page$CoursePage$ActivityImportStateValidationFinished, sep, data, res)
+								activity_import_state: A3($author$project$Page$Course$CoursePage$ActivityImportStateValidationFinished, sep, data, res)
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 'MsgOnInputActivityCSVSep':
@@ -14169,7 +14770,7 @@ var $author$project$Page$CoursePage$update = F2(
 							_Utils_update(
 								model,
 								{
-									activity_import_state: A3($author$project$Page$CoursePage$ActivityImportStateDataInput, show_settings, sep, m)
+									activity_import_state: A3($author$project$Page$Course$CoursePage$ActivityImportStateDataInput, show_settings, sep, m)
 								}),
 							$elm$core$Platform$Cmd$none);
 					} else {
@@ -14186,7 +14787,7 @@ var $author$project$Page$CoursePage$update = F2(
 							_Utils_update(
 								model,
 								{
-									activity_import_state: A3($author$project$Page$CoursePage$ActivityImportStateDataInput, !show_settings, sep, m)
+									activity_import_state: A3($author$project$Page$Course$CoursePage$ActivityImportStateDataInput, !show_settings, sep, m)
 								}),
 							$elm$core$Platform$Cmd$none);
 					} else {
@@ -14207,6 +14808,7 @@ var $author$project$Page$CoursePage$update = F2(
 						var _v66 = _v0.b;
 						var c = _v66.a;
 						var la = _v66.b;
+						var members = _v66.c;
 						var topics = A2(
 							$elm$core$List$filter,
 							$elm$core$Basics$neq(''),
@@ -14283,8 +14885,8 @@ var $author$project$Page$CoursePage$update = F2(
 								{
 									activity_component_pk: model.activity_component_pk + lenTopics,
 									activity_primitive_import: $elm$core$Maybe$Nothing,
-									state: A2(
-										$author$project$Page$CoursePage$FetchDone,
+									state: A3(
+										$author$project$Page$Course$CoursePage$FetchDone,
 										c,
 										_Utils_ap(
 											la,
@@ -14294,7 +14896,8 @@ var $author$project$Page$CoursePage$update = F2(
 												A2(
 													$elm$core$List$map,
 													$author$project$Component$Activity$setEditable(true),
-													lm))))
+													lm))),
+										members)
 								}),
 							$elm$core$Platform$Cmd$batch(
 								A3(
@@ -14303,13 +14906,13 @@ var $author$project$Page$CoursePage$update = F2(
 										function (k, c_) {
 											return A2(
 												$elm$core$Platform$Cmd$map,
-												$author$project$Page$CoursePage$MsgActivity(k),
+												$author$project$Page$Course$CoursePage$MsgActivity(k),
 												c_);
 										}),
 									listPK,
 									lc)));
 					} else {
-						break _v0$27;
+						break _v0$28;
 					}
 				case 'MsgOnClickOpenPrimitiveActImport':
 					var _v68 = _v0.a;
@@ -14320,16 +14923,115 @@ var $author$project$Page$CoursePage$update = F2(
 								activity_primitive_import: $elm$core$Maybe$Just('')
 							}),
 						$elm$core$Platform$Cmd$none);
-				default:
+				case 'MsgCloseActivitiesImportPrimitive':
 					var _v69 = _v0.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{activity_primitive_import: $elm$core$Maybe$Nothing}),
 						$elm$core$Platform$Cmd$none);
+				default:
+					if (_v0.b.$ === 'FetchDone') {
+						var msg_ = _v0.a.a;
+						var _v70 = _v0.b;
+						var course = _v70.a;
+						var la = _v70.b;
+						var model_ = _v70.c;
+						var _v71 = A2($author$project$Page$Course$CourseMembers$update, msg_, model_);
+						var m = _v71.a;
+						var c = _v71.b;
+						if ((msg_.$ === 'MsgEnrolling') && (msg_.a.$ === 'TaskFinishedAll')) {
+							return _Utils_Tuple2(
+								model,
+								A2(
+									$elm$core$Task$perform,
+									function (_v73) {
+										return $author$project$Page$Course$CoursePage$MsgCourseSaved;
+									},
+									$elm$core$Task$succeed(_Utils_Tuple0)));
+						} else {
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										state: A3($author$project$Page$Course$CoursePage$FetchDone, course, la, m)
+									}),
+								A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CoursePage$MsgCourseMembers, c));
+						}
+					} else {
+						break _v0$28;
+					}
 			}
 		}
 		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+	});
+var $author$project$Page$CourseListPage$Completed = F2(
+	function (a, b) {
+		return {$: 'Completed', a: a, b: b};
+	});
+var $author$project$Page$CourseListPage$Error = function (a) {
+	return {$: 'Error', a: a};
+};
+var $author$project$Page$CourseListPage$update = F2(
+	function (msg, model) {
+		var _v0 = _Utils_Tuple2(msg, model.state);
+		if (_v0.a.$ === 'CourseListFetchFailed') {
+			var err = _v0.a.a;
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{
+						state: $author$project$Page$CourseListPage$Error(err)
+					}),
+				$elm$core$Platform$Cmd$none);
+		} else {
+			if (_v0.b.$ === 'Loading') {
+				var msg_ = _v0.a.a;
+				var model_ = _v0.b.a;
+				var _v1 = A2($author$project$Component$MultiTask$update, msg_, model_);
+				var m = _v1.a;
+				var c = _v1.b;
+				if ((((((((msg_.$ === 'TaskFinishedAll') && msg_.a.b) && (msg_.a.a.$ === 'Ok')) && (msg_.a.a.a.$ === 'FetchedCourses')) && msg_.a.b.b) && (msg_.a.b.a.$ === 'Ok')) && (msg_.a.b.a.a.$ === 'FetchedSpecs')) && (!msg_.a.b.b.b)) {
+					var _v3 = msg_.a;
+					var courses = _v3.a.a.a;
+					var _v4 = _v3.b;
+					var specs = _v4.a.a.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								state: A2(
+									$author$project$Page$CourseListPage$Completed,
+									courses,
+									$elm$core$Dict$fromList(
+										A2(
+											$elm$core$List$filterMap,
+											function (s) {
+												return A2(
+													$elm$core$Maybe$map,
+													function (id_) {
+														return _Utils_Tuple2(
+															$danyx23$elm_uuid$Uuid$toString(id_),
+															s);
+													},
+													s.id);
+											},
+											specs)))
+							}),
+						A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFetch, c));
+				} else {
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								state: $author$project$Page$CourseListPage$Loading(m)
+							}),
+						A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFetch, c));
+				}
+			} else {
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			}
+		}
 	});
 var $author$project$Page$DefaultLayout$update = F2(
 	function (msg, model) {
@@ -15158,12 +15860,6 @@ var $author$project$Component$MarkTable$doUpdateMark = F4(
 				old_mark.id));
 	});
 var $elm$browser$Browser$Dom$focus = _Browser_call('focus');
-var $author$project$Util$get_id_str = function (record) {
-	return A2(
-		$elm$core$Maybe$withDefault,
-		'',
-		A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, record.id));
-};
 var $author$project$Util$index_by = F2(
 	function (key, list) {
 		return $elm$core$Dict$fromList(
@@ -15285,10 +15981,6 @@ var $author$project$Component$MarkTable$updateMark = F3(
 					model.cells)
 			});
 	});
-var $author$project$Util$user_full_name = function (user) {
-	var mb = $elm$core$Maybe$withDefault('');
-	return mb(user.lastName) + (' ' + (mb(user.firstName) + (' ' + mb(user.middleName))));
-};
 var $author$project$Component$MarkTable$update = F2(
 	function (msg, model) {
 		var _v0 = _Utils_Tuple2(msg, model.state);
@@ -16329,7 +17021,7 @@ var $author$project$Main$update = F2(
 									if (_v4.b.$ === 'Right') {
 										var id = _v4.a.a;
 										var token = _v4.b.a;
-										var _v12 = A3($author$project$Page$CoursePage$init, token.key, id, token.user);
+										var _v12 = A3($author$project$Page$Course$CoursePage$init, token.key, id, token.user);
 										var model_ = _v12.a;
 										var cmd_2 = _v12.b;
 										var _v13 = $author$project$Page$DefaultLayout$init(token.user);
@@ -16572,7 +17264,10 @@ var $author$project$Main$update = F2(
 							{url: url}),
 						$elm$core$Platform$Cmd$batch(
 							_List_fromArray(
-								[cmd])));
+								[
+									cmd,
+									$author$project$Ports$scrollIdIntoView('main_container')
+								])));
 				case 'MsgPageLogin':
 					if (_v0.b.$ === 'PageLogin') {
 						if (_v0.a.a.$ === 'LoginCompleted') {
@@ -16638,7 +17333,7 @@ var $author$project$Main$update = F2(
 						var msg_ = _v0.a.a;
 						var model_ = _v0.b.a;
 						var layout_ = _v0.c.a;
-						var _v35 = A2($author$project$Page$CoursePage$update, msg_, model_);
+						var _v35 = A2($author$project$Page$Course$CoursePage$update, msg_, model_);
 						var model__ = _v35.a;
 						var cmd_ = _v35.b;
 						return _Utils_Tuple2(
@@ -17114,74 +17809,78 @@ var $author$project$Main$viewLayout = F2(
 			return A3($author$project$Page$DefaultLayout$view, $author$project$Main$MsgDefaultLayout, model_, body);
 		}
 	});
-var $author$project$Util$dictGroupBy = F2(
-	function (key, list) {
-		var f = F2(
-			function (x, acc) {
-				return A3(
-					$elm$core$Dict$update,
-					key(x),
-					A2(
-						$elm$core$Basics$composeL,
+var $author$project$Component$MessageBox$Error = {$: 'Error'};
+var $author$project$Page$Course$CoursePage$showFetchResult = function (fetchResult) {
+	var courseRead = fetchResult.a;
+	return courseRead.title;
+};
+var $author$project$Component$MessageBox$view = F5(
+	function (type_, isLoading, onClose, header, body) {
+		var type_class = function () {
+			switch (type_.$) {
+				case 'None':
+					return '';
+				case 'Success':
+					return 'positive';
+				case 'Error':
+					return 'negative';
+				default:
+					return 'warning';
+			}
+		}();
+		var close_button = function () {
+			if (onClose.$ === 'Just') {
+				var msg = onClose.a;
+				return _List_fromArray(
+					[
 						A2(
-							$elm$core$Basics$composeL,
-							$elm$core$Maybe$Just,
-							$elm$core$Maybe$withDefault(
-								_List_fromArray(
-									[x]))),
-						$elm$core$Maybe$map(
-							function (old_list) {
-								return A2($elm$core$List$cons, x, old_list);
-							})),
-					acc);
-			});
-		return A3($elm$core$List$foldl, f, $elm$core$Dict$empty, list);
-	});
-var $author$project$Page$CourseListPage$groupBy = F3(
-	function (group_by, courses, specs) {
-		if (group_by.$ === 'GroupByNone') {
-			return $elm$core$Dict$fromList(
+						$elm$html$Html$i,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('close icon'),
+								$elm$html$Html$Events$onClick(msg)
+							]),
+						_List_Nil)
+					]);
+			} else {
+				return _List_Nil;
+			}
+		}();
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('ui message ' + type_class)
+				]),
+			_Utils_ap(
+				close_button,
 				_List_fromArray(
 					[
-						_Utils_Tuple2('', courses)
-					]));
-		} else {
-			var key = function (course) {
-				var _v1 = _Utils_Tuple2(
-					$author$project$Page$CourseListPage$empty_to_nothing(course.forClass),
-					course.forSpecialization);
-				if (_v1.a.$ === 'Nothing') {
-					var _v2 = _v1.a;
-					return 'Остальное';
-				} else {
-					if (_v1.b.$ === 'Nothing') {
-						var _class = _v1.a.a;
-						var _v3 = _v1.b;
-						return _class;
-					} else {
-						var _class = _v1.a.a;
-						var spec_id = _v1.b.a;
-						return _class + (' (' + (A2(
-							$elm$core$Maybe$withDefault,
-							'Неизвестное',
-							A2(
-								$elm$core$Maybe$map,
-								function ($) {
-									return $.name;
-								},
-								A2(
-									$elm$core$Dict$get,
-									$danyx23$elm_uuid$Uuid$toString(spec_id),
-									specs))) + ' направление)'));
-					}
-				}
-			};
-			return A2($author$project$Util$dictGroupBy, key, courses);
-		}
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('header')
+							]),
+						_List_fromArray(
+							[header])),
+						A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								isLoading ? A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('ui active inline loader small'),
+										A2($elm$html$Html$Attributes$style, 'margin-right', '1em')
+									]),
+								_List_Nil) : $elm$html$Html$text(''),
+								body
+							]))
+					])));
 	});
-var $elm$html$Html$h1 = _VirtualDom_node('h1');
-var $elm$html$Html$h2 = _VirtualDom_node('h2');
-var $elm$html$Html$p = _VirtualDom_node('p');
 var $author$project$Component$MultiTask$viewTask = F3(
 	function (show_result, show_error, _v0) {
 		var label = _v0.a;
@@ -17302,383 +18001,19 @@ var $author$project$Component$MultiTask$view = F3(
 							model.task_states)))
 				]));
 	});
-var $author$project$Page$CourseListPage$viewControls = $elm$html$Html$text('');
-var $elm$html$Html$img = _VirtualDom_node('img');
-var $elm$html$Html$Attributes$src = function (url) {
-	return A2(
-		$elm$html$Html$Attributes$stringProperty,
-		'src',
-		_VirtualDom_noJavaScriptOrHtmlUri(url));
-};
-var $author$project$Page$CourseListPage$courseImg = function (mb) {
-	if (mb.$ === 'Just') {
-		var file = mb.a;
-		return A2(
-			$elm$html$Html$img,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$src(
-					'/file/' + ($danyx23$elm_uuid$Uuid$toString(file) + '/download'))
-				]),
-			_List_Nil);
-	} else {
-		return A2(
-			$elm$html$Html$img,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$src('/img/course.jpg')
-				]),
-			_List_Nil);
-	}
-};
-var $author$project$Page$CourseListPage$viewCourse = function (course) {
-	return A2(
-		$elm$html$Html$a,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('card'),
-				$elm$html$Html$Attributes$href(
-				A2(
-					$elm$core$Maybe$withDefault,
-					'',
-					A2(
-						$elm$core$Maybe$map,
-						function (id) {
-							return '/course/' + $danyx23$elm_uuid$Uuid$toString(id);
-						},
-						course.id)))
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('image')
-					]),
-				_List_fromArray(
-					[
-						$author$project$Page$CourseListPage$courseImg(course.logo)
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('content')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('header')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text(course.title)
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('meta')
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('description'),
-								A2($elm$html$Html$Attributes$style, 'max-height', '300px'),
-								A2($elm$html$Html$Attributes$style, 'overflow', 'hidden')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text(
-								$elm$core$String$trim(course.description))
-							]))
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('extra content row around-xs')
-					]),
-				A2(
-					$elm$core$List$filterMap,
-					$elm$core$Basics$identity,
-					_List_fromArray(
-						[
-							A2(
-							$elm$core$Maybe$map,
-							function (c) {
-								return A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('col-xs')
-										]),
-									_List_fromArray(
-										[
-											A2(
-											$elm$html$Html$i,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('users icon')
-												]),
-											_List_Nil),
-											$elm$html$Html$text(c + ' класс')
-										]));
-							},
-							course.forClass),
-							A2(
-							$elm$core$Maybe$map,
-							function (g) {
-								return A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('col-xs')
-										]),
-									_List_fromArray(
-										[
-											A2(
-											$elm$html$Html$i,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('list ol icon')
-												]),
-											_List_Nil),
-											$elm$html$Html$text(g)
-										]));
-							},
-							$author$project$Page$CourseListPage$empty_to_nothing(course.forGroup))
-						])))
-			]));
-};
-var $author$project$Page$CourseListPage$view = function (model) {
-	var view_courses = function (cs) {
-		return _List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('ui link cards'),
-						A2($elm$html$Html$Attributes$style, 'display', 'inline-flex'),
-						A2($elm$html$Html$Attributes$style, 'margin', '0 -50px')
-					]),
-				A2($elm$core$List$map, $author$project$Page$CourseListPage$viewCourse, cs))
-			]);
-	};
-	var body = function () {
-		var _v0 = model.state;
-		switch (_v0.$) {
-			case 'Completed':
-				if (!_v0.a.b) {
-					return _List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('row center-xs')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$h2,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text('У вас нет курсов')
-										]))
-								]))
-						]);
-				} else {
-					var courses = _v0.a;
-					var specs = _v0.b;
-					var _v1 = model.group_by;
-					if (_v1.$ === 'GroupByNone') {
-						return view_courses(courses);
-					} else {
-						var grouped = A3($author$project$Page$CourseListPage$groupBy, model.group_by, courses, specs);
-						return $elm$core$List$concat(
-							A2(
-								$elm$core$List$map,
-								function (_v2) {
-									var g = _v2.a;
-									var cs = _v2.b;
-									return _Utils_ap(
-										_List_fromArray(
-											[
-												A2(
-												$elm$html$Html$h2,
-												_List_Nil,
-												_List_fromArray(
-													[
-														$elm$html$Html$text(g)
-													]))
-											]),
-										view_courses(cs));
-								},
-								$elm$core$Dict$toList(grouped)));
-					}
-				}
-			case 'Error':
-				var err = _v0.a;
-				return _List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('ui negative message')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('header')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Ошибка при попытке получения списка предметов')
-									])),
-								A2(
-								$elm$html$Html$p,
-								_List_Nil,
-								_List_fromArray(
-									[
-										$elm$html$Html$text(err)
-									]))
-							]))
-					]);
-			default:
-				var m = _v0.a;
-				return _List_fromArray(
-					[
-						A2(
-						$elm$html$Html$map,
-						$author$project$Page$CourseListPage$MsgFetch,
-						A3(
-							$author$project$Component$MultiTask$view,
-							function (_v3) {
-								return 'OK';
-							},
-							$author$project$Util$httpErrorToString,
-							m))
-					]);
-		}
-	}();
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('center-xs')
-			]),
-		_Utils_ap(
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$h1,
-					_List_Nil,
-					_List_fromArray(
-						[
-							$elm$html$Html$text('Доступные предметы')
-						])),
-					$author$project$Page$CourseListPage$viewControls
-				]),
-			body));
-};
-var $author$project$Component$MessageBox$Error = {$: 'Error'};
-var $author$project$Page$CoursePage$showFetchResult = function (fetchResult) {
-	var courseRead = fetchResult.a;
-	return courseRead.title;
-};
-var $author$project$Component$MessageBox$view = F5(
-	function (type_, isLoading, onClose, header, body) {
-		var type_class = function () {
-			switch (type_.$) {
-				case 'None':
-					return '';
-				case 'Success':
-					return 'positive';
-				case 'Error':
-					return 'negative';
-				default:
-					return 'warning';
-			}
-		}();
-		var close_button = function () {
-			if (onClose.$ === 'Just') {
-				var msg = onClose.a;
-				return _List_fromArray(
-					[
-						A2(
-						$elm$html$Html$i,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('close icon'),
-								$elm$html$Html$Events$onClick(msg)
-							]),
-						_List_Nil)
-					]);
-			} else {
-				return _List_Nil;
-			}
-		}();
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('ui message ' + type_class)
-				]),
-			_Utils_ap(
-				close_button,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('header')
-							]),
-						_List_fromArray(
-							[header])),
-						A2(
-						$elm$html$Html$div,
-						_List_Nil,
-						_List_fromArray(
-							[
-								isLoading ? A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('ui active inline loader small'),
-										A2($elm$html$Html$Attributes$style, 'margin-right', '1em')
-									]),
-								_List_Nil) : $elm$html$Html$text(''),
-								body
-							]))
-					])));
-	});
-var $author$project$Page$CoursePage$MsgClickMembers = {$: 'MsgClickMembers'};
-var $author$project$Page$CoursePage$MsgCloseActivitiesImport = {$: 'MsgCloseActivitiesImport'};
-var $author$project$Page$CoursePage$MsgCloseActivitiesImportPrimitive = {$: 'MsgCloseActivitiesImportPrimitive'};
-var $author$project$Page$CoursePage$MsgCloseMembers = {$: 'MsgCloseMembers'};
-var $author$project$Page$CoursePage$MsgOnClickAddFin = {$: 'MsgOnClickAddFin'};
-var $author$project$Page$CoursePage$MsgOnClickAddGen = {$: 'MsgOnClickAddGen'};
-var $author$project$Page$CoursePage$MsgOnClickAddTsk = {$: 'MsgOnClickAddTsk'};
-var $author$project$Page$CoursePage$MsgOnClickAddTxt = {$: 'MsgOnClickAddTxt'};
-var $author$project$Page$CoursePage$MsgOnClickEdit = {$: 'MsgOnClickEdit'};
-var $author$project$Page$CoursePage$MsgOnClickEditCancel = {$: 'MsgOnClickEditCancel'};
-var $author$project$Page$CoursePage$MsgOnClickImportActivities = {$: 'MsgOnClickImportActivities'};
-var $author$project$Page$CoursePage$MsgOnClickOpenPrimitiveActImport = {$: 'MsgOnClickOpenPrimitiveActImport'};
-var $author$project$Page$CoursePage$MsgOnClickSave = {$: 'MsgOnClickSave'};
+var $author$project$Page$Course$CoursePage$MsgClickMembers = {$: 'MsgClickMembers'};
+var $author$project$Page$Course$CoursePage$MsgCloseActivitiesImport = {$: 'MsgCloseActivitiesImport'};
+var $author$project$Page$Course$CoursePage$MsgCloseActivitiesImportPrimitive = {$: 'MsgCloseActivitiesImportPrimitive'};
+var $author$project$Page$Course$CoursePage$MsgCloseMembers = {$: 'MsgCloseMembers'};
+var $author$project$Page$Course$CoursePage$MsgOnClickAddFin = {$: 'MsgOnClickAddFin'};
+var $author$project$Page$Course$CoursePage$MsgOnClickAddGen = {$: 'MsgOnClickAddGen'};
+var $author$project$Page$Course$CoursePage$MsgOnClickAddTsk = {$: 'MsgOnClickAddTsk'};
+var $author$project$Page$Course$CoursePage$MsgOnClickAddTxt = {$: 'MsgOnClickAddTxt'};
+var $author$project$Page$Course$CoursePage$MsgOnClickEdit = {$: 'MsgOnClickEdit'};
+var $author$project$Page$Course$CoursePage$MsgOnClickEditCancel = {$: 'MsgOnClickEditCancel'};
+var $author$project$Page$Course$CoursePage$MsgOnClickImportActivities = {$: 'MsgOnClickImportActivities'};
+var $author$project$Page$Course$CoursePage$MsgOnClickOpenPrimitiveActImport = {$: 'MsgOnClickOpenPrimitiveActImport'};
+var $author$project$Page$Course$CoursePage$MsgOnClickSave = {$: 'MsgOnClickSave'};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$Attributes$classList = function (classes) {
 	return $elm$html$Html$Attributes$class(
@@ -17690,44 +18025,20 @@ var $elm$html$Html$Attributes$classList = function (classes) {
 				$elm$core$Tuple$first,
 				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
 };
-var $author$project$Component$Misc$user_link = F2(
-	function (custom_link, user) {
-		return A2(
-			$elm$html$Html$a,
-			_List_fromArray(
-				[
-					A2($elm$html$Html$Attributes$style, 'flex-wrap', 'nowrap'),
-					$elm$html$Html$Attributes$href(
-					A2(
-						$elm$core$Maybe$withDefault,
-						'/profile/' + $author$project$Util$get_id_str(user),
-						custom_link))
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$img,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('ui avatar image'),
-							$elm$html$Html$Attributes$src(
-							A2($elm$core$Maybe$withDefault, '/img/user.png', user.avatar))
-						]),
-					_List_Nil),
-					A2(
-					$elm$html$Html$span,
-					_List_Nil,
-					_List_fromArray(
-						[
-							$elm$html$Html$text(
-							$author$project$Util$user_full_name(user))
-						]))
-				]));
-	});
+var $elm$html$Html$h1 = _VirtualDom_node('h1');
+var $elm$html$Html$img = _VirtualDom_node('img');
+var $elm$html$Html$p = _VirtualDom_node('p');
+var $elm$html$Html$Attributes$src = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'src',
+		_VirtualDom_noJavaScriptOrHtmlUri(url));
+};
 var $jxxcarlson$elm_markdown$Markdown$Option$ExtendedMath = {$: 'ExtendedMath'};
 var $author$project$Component$Activity$MsgMarkdownMsg = function (a) {
 	return {$: 'MsgMarkdownMsg', a: a};
 };
+var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $author$project$Util$monthToInt = function (month) {
 	switch (month.$) {
 		case 'Jan':
@@ -32669,9 +32980,682 @@ var $author$project$Component$Modal$view = F6(
 						]))
 				])) : $elm$html$Html$text('');
 	});
-var $author$project$Page$CoursePage$MsgOnClickActivitiesImport = {$: 'MsgOnClickActivitiesImport'};
-var $author$project$Page$CoursePage$MsgOnClickToggleActivityImportSettings = {$: 'MsgOnClickToggleActivityImportSettings'};
-var $author$project$Page$CoursePage$MsgOnInputActivityCSVSep = function (a) {
+var $author$project$Page$Course$CourseMembers$MsgOnClickAddMembers = {$: 'MsgOnClickAddMembers'};
+var $author$project$Page$Course$CourseMembers$MsgOnClickAddStudent = {$: 'MsgOnClickAddStudent'};
+var $author$project$Page$Course$CourseMembers$MsgOnClickAddTeacher = {$: 'MsgOnClickAddTeacher'};
+var $author$project$Page$Course$CourseMembers$MsgOnClickBackToList = {$: 'MsgOnClickBackToList'};
+var $author$project$Page$Course$CourseMembers$MsgOnClickRemoveEnrollment = function (a) {
+	return {$: 'MsgOnClickRemoveEnrollment', a: a};
+};
+var $author$project$Page$Course$CourseMembers$getStudents = function (model) {
+	return A2(
+		$elm$core$List$filter,
+		A2(
+			$elm$core$Basics$composeR,
+			function ($) {
+				return $.role;
+			},
+			$elm$core$Basics$eq($author$project$Api$Data$CourseEnrollmentReadRoleS)),
+		model.enrollments);
+};
+var $author$project$Page$Course$CourseMembers$getTeachers = function (model) {
+	return A2(
+		$elm$core$List$filter,
+		A2(
+			$elm$core$Basics$composeR,
+			function ($) {
+				return $.role;
+			},
+			$elm$core$Basics$eq($author$project$Api$Data$CourseEnrollmentReadRoleT)),
+		model.enrollments);
+};
+var $author$project$Component$Misc$user_link = F2(
+	function (custom_link, user) {
+		return A2(
+			$elm$html$Html$a,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'flex-wrap', 'nowrap'),
+					$elm$html$Html$Attributes$href(
+					A2(
+						$elm$core$Maybe$withDefault,
+						'/profile/' + $author$project$Util$get_id_str(user),
+						custom_link))
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$img,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('ui avatar image'),
+							$elm$html$Html$Attributes$src(
+							A2($elm$core$Maybe$withDefault, '/img/user.png', user.avatar))
+						]),
+					_List_Nil),
+					A2(
+					$elm$html$Html$span,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text(
+							$author$project$Util$user_full_name(user))
+						]))
+				]));
+	});
+var $author$project$Component$List$User$showLoadingResult = function (loadingResult) {
+	if (loadingResult.$ === 'LoadingResultUsers') {
+		return 'OK';
+	} else {
+		return 'OK';
+	}
+};
+var $author$project$Component$List$User$MsgOnInputCurrentClass = function (a) {
+	return {$: 'MsgOnInputCurrentClass', a: a};
+};
+var $author$project$Component$List$User$MsgOnInputSearchText = function (a) {
+	return {$: 'MsgOnInputSearchText', a: a};
+};
+var $author$project$Component$List$User$viewFilter = function (flt) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('ui segment col-xs-12'),
+				A2($elm$html$Html$Attributes$style, 'background-color', '#EEE')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('row mb-10')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('ui fluid input col-xs-12')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('text'),
+										$elm$html$Html$Attributes$value(flt.searchText),
+										$elm$html$Html$Attributes$placeholder('ФИО'),
+										$elm$html$Html$Events$onInput($author$project$Component$List$User$MsgOnInputSearchText)
+									]),
+								_List_Nil)
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('row')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('col-xs-12 col-sm-6')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('ui fluid input')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$input,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$type_('text'),
+												$elm$html$Html$Attributes$value(flt.currentClass),
+												$elm$html$Html$Attributes$placeholder('Класс'),
+												$elm$html$Html$Events$onInput($author$project$Component$List$User$MsgOnInputCurrentClass)
+											]),
+										_List_Nil)
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('col-xs-12 col-sm-6')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('ui fluid input')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$map,
+										$author$project$Component$List$User$MsgSpecSelect,
+										$author$project$Component$Select$view(flt.currentSpec))
+									]))
+							]))
+					]))
+			]));
+};
+var $author$project$Component$List$User$applyFilter = F2(
+	function (filter, users) {
+		var mb = $elm$core$Maybe$withDefault('');
+		var filterUser = function (u) {
+			var uStr = mb(u.firstName) + (' ' + (mb(u.lastName) + (' ' + mb(u.middleName))));
+			var mSpec = function () {
+				var _v0 = _Utils_Tuple2(
+					$author$project$Page$CourseListPage$empty_to_nothing(filter.currentSpec.selected),
+					u.currentSpec);
+				if (_v0.a.$ === 'Nothing') {
+					var _v1 = _v0.a;
+					return true;
+				} else {
+					if (_v0.b.$ === 'Nothing') {
+						var _v2 = _v0.b;
+						return false;
+					} else {
+						var selID = _v0.a.a;
+						var uSpec = _v0.b.a;
+						return _Utils_eq(
+							selID,
+							$author$project$Util$get_id_str(uSpec));
+					}
+				}
+			}();
+			return A2(
+				$elm$core$String$contains,
+				$elm$core$String$toLower(filter.searchText),
+				$elm$core$String$toLower(uStr)) && (A2(
+				$elm$core$String$contains,
+				$elm$core$String$toLower(filter.currentClass),
+				$elm$core$String$toLower(
+					mb(u.currentClass))) && mSpec);
+		};
+		return A2($elm$core$List$filter, filterUser, users);
+	});
+var $author$project$Component$List$User$MsgSelectUser = F2(
+	function (a, b) {
+		return {$: 'MsgSelectUser', a: a, b: b};
+	});
+var $author$project$Component$List$User$viewUser = F3(
+	function (selectable, selected, user) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('row m-10 mt-20 middle-xs'),
+					A2($elm$html$Html$Attributes$style, 'font-size', '16pt')
+				]),
+			_List_fromArray(
+				[
+					selectable ? A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('ui checkbox'),
+							A2($elm$html$Html$Attributes$style, 'scale', '1.5')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$input,
+							_List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$attribute, 'tabindex', '0'),
+									$elm$html$Html$Attributes$type_('checkbox'),
+									$elm$html$Html$Attributes$checked(selected),
+									$elm$html$Html$Events$onCheck(
+									$author$project$Component$List$User$MsgSelectUser(
+										$author$project$Util$get_id_str(user)))
+								]),
+							_List_Nil),
+							A2($elm$html$Html$label, _List_Nil, _List_Nil)
+						])) : $elm$html$Html$text(''),
+					A2($author$project$Component$Misc$user_link, $elm$core$Maybe$Nothing, user)
+				]));
+	});
+var $author$project$Component$List$User$viewUsers = function (model) {
+	var _v0 = model.state;
+	if (_v0.$ === 'Idle') {
+		var filter = _v0.a;
+		var users = _v0.b;
+		var filtered = A2(
+			$elm$core$List$take,
+			100,
+			A2(
+				$elm$core$List$sortBy,
+				$author$project$Util$user_full_name,
+				A2(
+					$author$project$Component$List$User$applyFilter,
+					filter,
+					$elm$core$Dict$values(users))));
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('col-xs-12')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_Nil,
+					A2(
+						$elm$core$List$map,
+						function (u) {
+							return A3(
+								$author$project$Component$List$User$viewUser,
+								model.selectable,
+								A2(
+									$elm$core$Dict$member,
+									$author$project$Util$get_id_str(u),
+									model.selected),
+								u);
+						},
+						filtered)),
+					($elm$core$List$length(filtered) >= 100) ? A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('row center-xs middle-xs'),
+							A2($elm$html$Html$Attributes$style, 'font-size', '10pt'),
+							A2($elm$html$Html$Attributes$style, 'color', '#777')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Отображаются первые 100 пользователей')
+						])) : $elm$html$Html$text('')
+				]));
+	} else {
+		return $elm$html$Html$text('User.viewUsers: ERR');
+	}
+};
+var $author$project$Component$List$User$view = function (model) {
+	var _v0 = model.state;
+	if (_v0.$ === 'Loading') {
+		var model_ = _v0.a;
+		return A2(
+			$elm$html$Html$map,
+			$author$project$Component$List$User$MsgLoading,
+			A3($author$project$Component$MultiTask$view, $author$project$Component$List$User$showLoadingResult, $author$project$Util$httpErrorToString, model_));
+	} else {
+		var filter = _v0.a;
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'min-height', '250px')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('row')
+						]),
+					_List_fromArray(
+						[
+							$author$project$Component$List$User$viewFilter(filter)
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('row')
+						]),
+					_List_fromArray(
+						[
+							$author$project$Component$List$User$viewUsers(model)
+						]))
+				]));
+	}
+};
+var $author$project$Page$Course$CourseMembers$view = function (model) {
+	var user_list = F2(
+		function (mbDeleteMsg, removingState) {
+			var removeStatus = function (enr) {
+				var _v6 = A2(
+					$elm$core$Dict$get,
+					$author$project$Util$get_id_str(enr),
+					removingState);
+				if (_v6.$ === 'Just') {
+					var state = _v6.a;
+					if (state.$ === 'Just') {
+						var err = state.a;
+						return A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('ui segment'),
+									A2($elm$html$Html$Attributes$style, 'margin', '0')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Не удалось удалить: ' + err)
+								]));
+					} else {
+						return A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('ui segment'),
+									A2($elm$html$Html$Attributes$style, 'margin', '0')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Удаляем...')
+								]));
+					}
+				} else {
+					return $elm$html$Html$text('');
+				}
+			};
+			var removeButton = function (enr) {
+				var _v3 = _Utils_Tuple2(
+					mbDeleteMsg,
+					A2(
+						$elm$core$Dict$get,
+						$author$project$Util$get_id_str(enr),
+						removingState));
+				if (_v3.a.$ === 'Nothing') {
+					var _v4 = _v3.a;
+					return $elm$html$Html$text('');
+				} else {
+					if ((_v3.b.$ === 'Just') && (_v3.b.a.$ === 'Nothing')) {
+						var _v5 = _v3.b.a;
+						return A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('ui text loader')
+								]),
+							_List_Nil);
+					} else {
+						var msg = _v3.a.a;
+						return A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('ui basic icon button red'),
+									$elm$html$Html$Events$onClick(
+									msg(enr))
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$i,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('minus icon')
+										]),
+									_List_Nil)
+								]));
+					}
+				}
+			};
+			return A2(
+				$elm$core$Basics$composeR,
+				$elm$core$List$sortBy(
+					A2(
+						$elm$core$Basics$composeR,
+						function ($) {
+							return $.person;
+						},
+						$author$project$Util$user_full_name)),
+				$elm$core$List$map(
+					function (enr) {
+						return A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('row between-xs middle-xs')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											A2($elm$html$Html$Attributes$style, 'margin', '1em')
+										]),
+									_List_fromArray(
+										[
+											removeButton(enr),
+											A2(
+											$elm$html$Html$span,
+											_List_fromArray(
+												[
+													A2($elm$html$Html$Attributes$style, 'font-size', '16pt')
+												]),
+											_List_fromArray(
+												[
+													A2($author$project$Component$Misc$user_link, $elm$core$Maybe$Nothing, enr.person)
+												]))
+										])),
+									removeStatus(enr)
+								]));
+					}));
+		});
+	var _v0 = model.state;
+	switch (_v0.$) {
+		case 'StateList':
+			var removing = _v0.a;
+			return A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$h3,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row between-xs middle-xs')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Преподаватели'),
+								model.canManageTeachers ? A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('ui button green'),
+										$elm$html$Html$Events$onClick($author$project$Page$Course$CourseMembers$MsgOnClickAddTeacher)
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$i,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('plus icon')
+											]),
+										_List_Nil),
+										$elm$html$Html$text('Добавить')
+									])) : $elm$html$Html$text('')
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'padding-left', '1em')
+							]),
+						A3(
+							user_list,
+							model.canManageTeachers ? $elm$core$Maybe$Just($author$project$Page$Course$CourseMembers$MsgOnClickRemoveEnrollment) : $elm$core$Maybe$Nothing,
+							removing,
+							$author$project$Page$Course$CourseMembers$getTeachers(model))),
+						A2(
+						$elm$html$Html$h3,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row between-xs middle-xs')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Учащиеся'),
+								model.canManageStudents ? A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('ui button green'),
+										$elm$html$Html$Events$onClick($author$project$Page$Course$CourseMembers$MsgOnClickAddStudent)
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$i,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('plus icon')
+											]),
+										_List_Nil),
+										$elm$html$Html$text('Добавить')
+									])) : $elm$html$Html$text('')
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'padding-left', '1em')
+							]),
+						A3(
+							user_list,
+							model.canManageStudents ? $elm$core$Maybe$Just($author$project$Page$Course$CourseMembers$MsgOnClickRemoveEnrollment) : $elm$core$Maybe$Nothing,
+							removing,
+							$author$project$Page$Course$CourseMembers$getStudents(model)))
+					]));
+		case 'StateAddMemberSelection':
+			var r = _v0.a;
+			var model_ = _v0.b;
+			var sRole = function () {
+				if (r.$ === 'CourseEnrollmentReadRoleT') {
+					return 'преподавателей';
+				} else {
+					return 'учащихся';
+				}
+			}();
+			var controls = A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('ui button'),
+								$elm$html$Html$Events$onClick($author$project$Page$Course$CourseMembers$MsgOnClickBackToList)
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$i,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('arrow left icon')
+									]),
+								_List_Nil),
+								$elm$html$Html$text('Назад')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('ui button green'),
+								$elm$html$Html$Attributes$classList(
+								_List_fromArray(
+									[
+										_Utils_Tuple2(
+										'disabled',
+										$elm$core$Dict$isEmpty(model_.selected))
+									])),
+								$elm$html$Html$Events$onClick($author$project$Page$Course$CourseMembers$MsgOnClickAddMembers)
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$i,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('plus icon')
+									]),
+								_List_Nil),
+								$elm$html$Html$text('Добавить')
+							]))
+					]));
+			return A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$h3,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row between-xs middle-xs')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Добавить ' + sRole),
+								controls
+							])),
+						A2(
+						$elm$html$Html$map,
+						$author$project$Page$Course$CourseMembers$MsgUserList,
+						$author$project$Component$List$User$view(model_))
+					]));
+		default:
+			var model_ = _v0.a;
+			return A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$h3,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('row between-xs middle-xs')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Выполняем запись на курс')
+							])),
+						A2(
+						$elm$html$Html$map,
+						$author$project$Page$Course$CourseMembers$MsgEnrolling,
+						A3(
+							$author$project$Component$MultiTask$view,
+							function (_v2) {
+								return 'OK';
+							},
+							$author$project$Util$httpErrorToString,
+							model_))
+					]));
+	}
+};
+var $author$project$Page$Course$CoursePage$MsgOnClickActivitiesImport = {$: 'MsgOnClickActivitiesImport'};
+var $author$project$Page$Course$CoursePage$MsgOnClickToggleActivityImportSettings = {$: 'MsgOnClickToggleActivityImportSettings'};
+var $author$project$Page$Course$CoursePage$MsgOnInputActivityCSVSep = function (a) {
 	return {$: 'MsgOnInputActivityCSVSep', a: a};
 };
 var $author$project$Component$MessageBox$None = {$: 'None'};
@@ -32681,23 +33665,23 @@ var $elm$html$Html$ul = _VirtualDom_node('ul');
 var $author$project$Component$FileInput$MsgDoSelectFile = {$: 'MsgDoSelectFile'};
 var $elm$core$Basics$pow = _Basics_pow;
 var $elm$core$Basics$truncate = _Basics_truncate;
+var $author$project$Util$prec = F2(
+	function (digits, x) {
+		var m = A2($elm$core$Basics$pow, 10.0, digits);
+		var tr = (x * m) | 0;
+		return tr / m;
+	});
 var $author$project$Util$fileSizeToISO = function (size) {
 	var tib = ((1024 * 1024) * 1024) * 1024;
 	var sizef = size;
-	var prec = F2(
-		function (digits, x) {
-			var m = A2($elm$core$Basics$pow, 10.0, digits);
-			var tr = (x * m) | 0;
-			return tr / m;
-		});
 	var mib = 1024 * 1024;
 	var kib = 1024;
 	var gib = (1024 * 1024) * 1024;
 	return (_Utils_cmp(sizef, tib) > -1) ? ($elm$core$String$fromFloat(
-		A2(prec, 2, sizef / tib)) + ' ТиБ') : ((_Utils_cmp(sizef, gib) > -1) ? ($elm$core$String$fromFloat(
-		A2(prec, 2, sizef / gib)) + ' ГиБ') : ((_Utils_cmp(sizef, mib) > -1) ? ($elm$core$String$fromFloat(
-		A2(prec, 2, sizef / mib)) + ' МиБ') : ((_Utils_cmp(sizef, kib) > -1) ? ($elm$core$String$fromFloat(
-		A2(prec, 2, sizef / kib)) + ' КиБ') : ($elm$core$String$fromInt(size) + ' байт'))));
+		A2($author$project$Util$prec, 2, sizef / tib)) + ' ТиБ') : ((_Utils_cmp(sizef, gib) > -1) ? ($elm$core$String$fromFloat(
+		A2($author$project$Util$prec, 2, sizef / gib)) + ' ГиБ') : ((_Utils_cmp(sizef, mib) > -1) ? ($elm$core$String$fromFloat(
+		A2($author$project$Util$prec, 2, sizef / mib)) + ' МиБ') : ((_Utils_cmp(sizef, kib) > -1) ? ($elm$core$String$fromFloat(
+		A2($author$project$Util$prec, 2, sizef / kib)) + ' КиБ') : ($elm$core$String$fromInt(size) + ' байт'))));
 };
 var $elm$file$File$name = _File_name;
 var $elm$file$File$size = _File_size;
@@ -32804,7 +33788,7 @@ var $author$project$Component$FileInput$view = function (model) {
 					]))
 			]));
 };
-var $author$project$Page$CoursePage$viewActValidationIssue = function (issue) {
+var $author$project$Page$Course$CoursePage$viewActValidationIssue = function (issue) {
 	var row = A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -32946,7 +33930,7 @@ var $author$project$Page$CoursePage$viewActValidationIssue = function (issue) {
 		_List_fromArray(
 			[icon, row, col, msg]));
 };
-var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
+var $author$project$Page$Course$CoursePage$viewActivitiesImport = function (model) {
 	var form = function (state) {
 		return A2(
 			$elm$html$Html$div,
@@ -33203,7 +34187,7 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('ui button'),
-											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickToggleActivityImportSettings)
+											$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgOnClickToggleActivityImportSettings)
 										]),
 									_List_fromArray(
 										[
@@ -33271,7 +34255,7 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 																	$elm$html$Html$Attributes$type_('text'),
 																	$elm$html$Html$Attributes$placeholder('Разделитель'),
 																	$elm$html$Html$Attributes$value(sep),
-																	$elm$html$Html$Events$onInput($author$project$Page$CoursePage$MsgOnInputActivityCSVSep)
+																	$elm$html$Html$Events$onInput($author$project$Page$Course$CoursePage$MsgOnInputActivityCSVSep)
 																]),
 															_List_Nil)
 														]))
@@ -33288,7 +34272,7 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 												[
 													A2(
 													$elm$html$Html$map,
-													$author$project$Page$CoursePage$MsgFileInputImport,
+													$author$project$Page$Course$CoursePage$MsgFileInputImport,
 													$author$project$Component$FileInput$view(m))
 												]))
 										]))
@@ -33358,7 +34342,7 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$class('ui button primary'),
-												$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickImportActivities)
+												$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgOnClickImportActivities)
 											]),
 										_List_fromArray(
 											[
@@ -33376,7 +34360,7 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$class('ui button green'),
-												$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgCourseSaved)
+												$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgCourseSaved)
 											]),
 										_List_fromArray(
 											[
@@ -33438,7 +34422,7 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$class('ui button primary'),
-												$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickImportActivities)
+												$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgOnClickImportActivities)
 											]),
 										_List_fromArray(
 											[
@@ -33489,7 +34473,7 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$Attributes$class('ui button primary'),
-						$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickImportActivities)
+						$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgOnClickImportActivities)
 					]),
 				_List_fromArray(
 					[
@@ -33508,7 +34492,7 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 					_List_fromArray(
 						[
 							$elm$html$Html$Attributes$class('ui button ' + color_class),
-							$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickActivitiesImport)
+							$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgOnClickActivitiesImport)
 						]),
 					_List_fromArray(
 						[
@@ -33586,7 +34570,7 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 					return succ;
 				} else {
 					var hd = sorted.a;
-					var canContinue = !_Utils_eq(hd.kind, $author$project$Page$CoursePage$IssueKindError);
+					var canContinue = !_Utils_eq(hd.kind, $author$project$Page$Course$CoursePage$IssueKindError);
 					return form(
 						A2(
 							$elm$html$Html$div,
@@ -33633,15 +34617,15 @@ var $author$project$Page$CoursePage$viewActivitiesImport = function (model) {
 											A2(
 											$elm$html$Html$div,
 											_List_Nil,
-											A2($elm$core$List$map, $author$project$Page$CoursePage$viewActValidationIssue, sorted))
+											A2($elm$core$List$map, $author$project$Page$Course$CoursePage$viewActValidationIssue, sorted))
 										]))
 								])));
 				}
 			}
 	}
 };
-var $author$project$Page$CoursePage$MsgOnClickActivityPrimitiveImport = {$: 'MsgOnClickActivityPrimitiveImport'};
-var $author$project$Page$CoursePage$MsgOnInputActivityPrimitiveImport = function (a) {
+var $author$project$Page$Course$CoursePage$MsgOnClickActivityPrimitiveImport = {$: 'MsgOnClickActivityPrimitiveImport'};
+var $author$project$Page$Course$CoursePage$MsgOnInputActivityPrimitiveImport = function (a) {
 	return {$: 'MsgOnInputActivityPrimitiveImport', a: a};
 };
 var $elm$html$Html$Attributes$rows = function (n) {
@@ -33650,7 +34634,7 @@ var $elm$html$Html$Attributes$rows = function (n) {
 		'rows',
 		$elm$core$String$fromInt(n));
 };
-var $author$project$Page$CoursePage$viewPrimitiveImport = function (model) {
+var $author$project$Page$Course$CoursePage$viewPrimitiveImport = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_Nil,
@@ -33896,7 +34880,7 @@ var $author$project$Page$CoursePage$viewPrimitiveImport = function (model) {
 											[
 												$elm$html$Html$Attributes$value(
 												A2($elm$core$Maybe$withDefault, '', model.activity_primitive_import)),
-												$elm$html$Html$Events$onInput($author$project$Page$CoursePage$MsgOnInputActivityPrimitiveImport),
+												$elm$html$Html$Events$onInput($author$project$Page$Course$CoursePage$MsgOnInputActivityPrimitiveImport),
 												$elm$html$Html$Attributes$rows(20)
 											]),
 										_List_Nil)
@@ -33914,7 +34898,7 @@ var $author$project$Page$CoursePage$viewPrimitiveImport = function (model) {
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$class('ui button green'),
-												$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickActivityPrimitiveImport)
+												$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgOnClickActivityPrimitiveImport)
 											]),
 										_List_fromArray(
 											[
@@ -33932,8 +34916,24 @@ var $author$project$Page$CoursePage$viewPrimitiveImport = function (model) {
 					]))
 			]));
 };
-var $author$project$Page$CoursePage$viewCourse = F3(
-	function (courseRead, components_activity, model) {
+var $author$project$Page$Course$CoursePage$viewCourse = F4(
+	function (courseRead, components_activity, members, model) {
+		var modal_members = function (do_show) {
+			return A6(
+				$author$project$Component$Modal$view,
+				'members',
+				'Участники',
+				A2(
+					$elm$html$Html$map,
+					$author$project$Page$Course$CoursePage$MsgCourseMembers,
+					$author$project$Page$Course$CourseMembers$view(members)),
+				$author$project$Page$Course$CoursePage$MsgCloseMembers,
+				_List_fromArray(
+					[
+						_Utils_Tuple2('Закрыть', $author$project$Page$Course$CoursePage$MsgCloseMembers)
+					]),
+				do_show);
+		};
 		var modal_activities_import_primitive = function () {
 			var _v12 = model.activity_primitive_import;
 			if (_v12.$ === 'Just') {
@@ -33941,11 +34941,11 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 					$author$project$Component$Modal$view,
 					'activities_import_primitive',
 					'Импорт тем (список)',
-					$author$project$Page$CoursePage$viewPrimitiveImport(model),
-					$author$project$Page$CoursePage$MsgCloseActivitiesImportPrimitive,
+					$author$project$Page$Course$CoursePage$viewPrimitiveImport(model),
+					$author$project$Page$Course$CoursePage$MsgCloseActivitiesImportPrimitive,
 					_List_fromArray(
 						[
-							_Utils_Tuple2('Закрыть', $author$project$Page$CoursePage$MsgCloseActivitiesImportPrimitive)
+							_Utils_Tuple2('Закрыть', $author$project$Page$Course$CoursePage$MsgCloseActivitiesImportPrimitive)
 						]),
 					true);
 			} else {
@@ -33960,99 +34960,14 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 					$author$project$Component$Modal$view,
 					'activities_import',
 					'Импорт тем (КТП)',
-					$author$project$Page$CoursePage$viewActivitiesImport(model),
-					$author$project$Page$CoursePage$MsgCloseActivitiesImport,
+					$author$project$Page$Course$CoursePage$viewActivitiesImport(model),
+					$author$project$Page$Course$CoursePage$MsgCloseActivitiesImport,
 					_List_fromArray(
 						[
-							_Utils_Tuple2('Закрыть', $author$project$Page$CoursePage$MsgCloseActivitiesImport)
+							_Utils_Tuple2('Закрыть', $author$project$Page$Course$CoursePage$MsgCloseActivitiesImport)
 						]),
 					true);
 			}
-		};
-		var members = function () {
-			var user_list = $elm$core$List$map(
-				A2(
-					$elm$core$Basics$composeR,
-					$author$project$Component$Misc$user_link($elm$core$Maybe$Nothing),
-					function (el) {
-						return A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'margin', '1em')
-								]),
-							_List_fromArray(
-								[el]));
-					}));
-			var teachers = A2(
-				$elm$core$List$map,
-				function ($) {
-					return $.person;
-				},
-				A2(
-					$elm$core$List$filter,
-					function (enr) {
-						return _Utils_eq(enr.role, $author$project$Api$Data$CourseEnrollmentReadRoleT);
-					},
-					courseRead.enrollments));
-			var students = A2(
-				$elm$core$List$map,
-				function ($) {
-					return $.person;
-				},
-				A2(
-					$elm$core$List$filter,
-					function (enr) {
-						return _Utils_eq(enr.role, $author$project$Api$Data$CourseEnrollmentReadRoleS);
-					},
-					courseRead.enrollments));
-			return A2(
-				$elm$html$Html$div,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$h3,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Преподаватели')
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'padding-left', '1em')
-							]),
-						user_list(teachers)),
-						A2(
-						$elm$html$Html$h3,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Учащиеся')
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'padding-left', '1em')
-							]),
-						user_list(students))
-					]));
-		}();
-		var modal_members = function (do_show) {
-			return A6(
-				$author$project$Component$Modal$view,
-				'members',
-				'Участники',
-				members,
-				$author$project$Page$CoursePage$MsgCloseMembers,
-				_List_fromArray(
-					[
-						_Utils_Tuple2('Закрыть', $author$project$Page$CoursePage$MsgCloseMembers)
-					]),
-				do_show);
 		};
 		var header = function () {
 			var teacher = function () {
@@ -34162,7 +35077,8 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 					return $elm$html$Html$text('');
 				}
 			}();
-			var description = ($elm$core$String$trim(courseRead.description) === '') ? '(нет описания)' : courseRead.description;
+			var description = ($elm$core$String$trim(
+				A2($elm$core$Maybe$withDefault, '', courseRead.description)) === '') ? '(нет описания)' : A2($elm$core$Maybe$withDefault, '', courseRead.description);
 			var default_logo_url = '/img/course.jpg';
 			var logo_img = A2(
 				$elm$core$Maybe$withDefault,
@@ -34199,7 +35115,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('ui button yellow'),
-											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickEdit)
+											$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgOnClickEdit)
 										]),
 									_List_fromArray(
 										[
@@ -34227,7 +35143,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('ui button'),
-											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickEditCancel)
+											$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgOnClickEditCancel)
 										]),
 									_List_fromArray(
 										[
@@ -34250,7 +35166,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 												[
 													_Utils_Tuple2('disabled', !mod)
 												])),
-											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickSave)
+											$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgOnClickSave)
 										]),
 									_List_fromArray(
 										[
@@ -34465,7 +35381,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 									A2($elm$html$Html$Attributes$style, 'border', '1px dashed #AAA'),
 									A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
 									$elm$html$Html$Events$onClick(
-									A2($author$project$Page$CoursePage$MsgOnClickAddBefore, i, $elm$core$Maybe$Nothing))
+									A2($author$project$Page$Course$CoursePage$MsgOnClickAddBefore, i, $elm$core$Maybe$Nothing))
 								]),
 							_List_fromArray(
 								[
@@ -34492,7 +35408,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 				return $elm$html$Html$text('');
 			}
 		};
-		var add_activity_bar = (!_Utils_eq(model.edit_mode, $author$project$Page$CoursePage$EditOff)) ? A2(
+		var add_activity_bar = (!_Utils_eq(model.edit_mode, $author$project$Page$Course$CoursePage$EditOff)) ? A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
@@ -34539,7 +35455,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('ui button green'),
-											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickAddGen)
+											$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgOnClickAddGen)
 										]),
 									_List_fromArray(
 										[
@@ -34557,7 +35473,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('ui button green'),
-											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickAddFin)
+											$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgOnClickAddFin)
 										]),
 									_List_fromArray(
 										[
@@ -34575,7 +35491,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('ui button green'),
-											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickAddTsk)
+											$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgOnClickAddTsk)
 										]),
 									_List_fromArray(
 										[
@@ -34593,7 +35509,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('ui button green'),
-											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickAddTxt)
+											$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgOnClickAddTxt)
 										]),
 									_List_fromArray(
 										[
@@ -34633,7 +35549,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('ui button green'),
-											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickImportActivities)
+											$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgOnClickImportActivities)
 										]),
 									_List_fromArray(
 										[
@@ -34651,7 +35567,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 									_List_fromArray(
 										[
 											$elm$html$Html$Attributes$class('ui button green'),
-											$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgOnClickOpenPrimitiveActImport)
+											$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgOnClickOpenPrimitiveActImport)
 										]),
 									_List_fromArray(
 										[
@@ -34713,7 +35629,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$class('ui button'),
-									$elm$html$Html$Events$onClick($author$project$Page$CoursePage$MsgClickMembers)
+									$elm$html$Html$Events$onClick($author$project$Page$Course$CoursePage$MsgClickMembers)
 								]),
 							_List_fromArray(
 								[
@@ -34753,7 +35669,7 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 									[
 										A2(
 										$elm$html$Html$map,
-										$author$project$Page$CoursePage$MsgActivity(id),
+										$author$project$Page$Course$CoursePage$MsgActivity(id),
 										$author$project$Component$Activity$view(comp)),
 										add_activity_placeholder(i + 1)
 									]);
@@ -34786,12 +35702,12 @@ var $author$project$Page$CoursePage$viewCourse = F3(
 					activities)
 				]));
 	});
-var $author$project$Page$CoursePage$view = function (model) {
+var $author$project$Page$Course$CoursePage$view = function (model) {
 	var _v0 = model.state;
 	switch (_v0.$) {
 		case 'Fetching':
 			var model_ = _v0.a;
-			var fetcher = A3($author$project$Component$MultiTask$view, $author$project$Page$CoursePage$showFetchResult, $author$project$Util$httpErrorToString, model_);
+			var fetcher = A3($author$project$Component$MultiTask$view, $author$project$Page$Course$CoursePage$showFetchResult, $author$project$Util$httpErrorToString, model_);
 			return A2(
 				$elm$html$Html$div,
 				_List_fromArray(
@@ -34800,12 +35716,13 @@ var $author$project$Page$CoursePage$view = function (model) {
 					]),
 				_List_fromArray(
 					[
-						A2($elm$html$Html$map, $author$project$Page$CoursePage$MsgFetch, fetcher)
+						A2($elm$html$Html$map, $author$project$Page$Course$CoursePage$MsgFetch, fetcher)
 					]));
 		case 'FetchDone':
 			var courseRead = _v0.a;
 			var components_activity = _v0.b;
-			return A3($author$project$Page$CoursePage$viewCourse, courseRead, components_activity, model);
+			var members = _v0.c;
+			return A4($author$project$Page$Course$CoursePage$viewCourse, courseRead, components_activity, members, model);
 		default:
 			var err = _v0.a;
 			return A5(
@@ -34816,6 +35733,357 @@ var $author$project$Page$CoursePage$view = function (model) {
 				$elm$html$Html$text('Ошибка'),
 				$elm$html$Html$text('Не удалось получить данные курса: ' + err));
 	}
+};
+var $author$project$Util$dictGroupBy = F2(
+	function (key, list) {
+		var f = F2(
+			function (x, acc) {
+				return A3(
+					$elm$core$Dict$update,
+					key(x),
+					A2(
+						$elm$core$Basics$composeL,
+						A2(
+							$elm$core$Basics$composeL,
+							$elm$core$Maybe$Just,
+							$elm$core$Maybe$withDefault(
+								_List_fromArray(
+									[x]))),
+						$elm$core$Maybe$map(
+							function (old_list) {
+								return A2($elm$core$List$cons, x, old_list);
+							})),
+					acc);
+			});
+		return A3($elm$core$List$foldl, f, $elm$core$Dict$empty, list);
+	});
+var $author$project$Page$CourseListPage$groupBy = F3(
+	function (group_by, courses, specs) {
+		if (group_by.$ === 'GroupByNone') {
+			return $elm$core$Dict$fromList(
+				_List_fromArray(
+					[
+						_Utils_Tuple2('', courses)
+					]));
+		} else {
+			var key = function (course) {
+				var _v1 = _Utils_Tuple2(
+					$author$project$Page$CourseListPage$empty_to_nothing(course.forClass),
+					course.forSpecialization);
+				if (_v1.a.$ === 'Nothing') {
+					var _v2 = _v1.a;
+					return 'Остальное';
+				} else {
+					if (_v1.b.$ === 'Nothing') {
+						var _class = _v1.a.a;
+						var _v3 = _v1.b;
+						return _class;
+					} else {
+						var _class = _v1.a.a;
+						var spec_id = _v1.b.a;
+						return _class + (' (' + (A2(
+							$elm$core$Maybe$withDefault,
+							'Неизвестное',
+							A2(
+								$elm$core$Maybe$map,
+								function ($) {
+									return $.name;
+								},
+								A2(
+									$elm$core$Dict$get,
+									$danyx23$elm_uuid$Uuid$toString(spec_id),
+									specs))) + ' направление)'));
+					}
+				}
+			};
+			return A2($author$project$Util$dictGroupBy, key, courses);
+		}
+	});
+var $author$project$Page$CourseListPage$viewControls = $elm$html$Html$text('');
+var $author$project$Page$CourseListPage$courseImg = function (mb) {
+	if (mb.$ === 'Just') {
+		var file = mb.a;
+		return A2(
+			$elm$html$Html$img,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$src(
+					'/file/' + ($danyx23$elm_uuid$Uuid$toString(file) + '/download'))
+				]),
+			_List_Nil);
+	} else {
+		return A2(
+			$elm$html$Html$img,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$src('/img/course.jpg')
+				]),
+			_List_Nil);
+	}
+};
+var $author$project$Page$CourseListPage$viewCourse = function (course) {
+	return A2(
+		$elm$html$Html$a,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('card'),
+				$elm$html$Html$Attributes$href(
+				A2(
+					$elm$core$Maybe$withDefault,
+					'',
+					A2(
+						$elm$core$Maybe$map,
+						function (id) {
+							return '/course/' + $danyx23$elm_uuid$Uuid$toString(id);
+						},
+						course.id)))
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('image')
+					]),
+				_List_fromArray(
+					[
+						$author$project$Page$CourseListPage$courseImg(course.logo)
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('content')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('header')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(course.title)
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('meta')
+							]),
+						_List_Nil),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('description'),
+								A2($elm$html$Html$Attributes$style, 'max-height', '300px'),
+								A2($elm$html$Html$Attributes$style, 'overflow', 'hidden')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								$elm$core$String$trim(
+									A2($elm$core$Maybe$withDefault, '', course.description)))
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('extra content row around-xs')
+					]),
+				A2(
+					$elm$core$List$filterMap,
+					$elm$core$Basics$identity,
+					_List_fromArray(
+						[
+							A2(
+							$elm$core$Maybe$map,
+							function (c) {
+								return A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('col-xs')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$i,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('users icon')
+												]),
+											_List_Nil),
+											$elm$html$Html$text(c + ' класс')
+										]));
+							},
+							course.forClass),
+							A2(
+							$elm$core$Maybe$map,
+							function (g) {
+								return A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('col-xs')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$i,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('list ol icon')
+												]),
+											_List_Nil),
+											$elm$html$Html$text(g)
+										]));
+							},
+							$author$project$Page$CourseListPage$empty_to_nothing(course.forGroup))
+						])))
+			]));
+};
+var $author$project$Page$CourseListPage$view = function (model) {
+	var view_courses = function (cs) {
+		return _List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('ui link cards'),
+						A2($elm$html$Html$Attributes$style, 'display', 'inline-flex'),
+						A2($elm$html$Html$Attributes$style, 'margin', '0 -50px')
+					]),
+				A2($elm$core$List$map, $author$project$Page$CourseListPage$viewCourse, cs))
+			]);
+	};
+	var body = function () {
+		var _v0 = model.state;
+		switch (_v0.$) {
+			case 'Completed':
+				if (!_v0.a.b) {
+					return _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('row center-xs')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$h2,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text('У вас нет курсов')
+										]))
+								]))
+						]);
+				} else {
+					var courses = _v0.a;
+					var specs = _v0.b;
+					var _v1 = model.group_by;
+					if (_v1.$ === 'GroupByNone') {
+						return view_courses(courses);
+					} else {
+						var grouped = A3($author$project$Page$CourseListPage$groupBy, model.group_by, courses, specs);
+						return $elm$core$List$concat(
+							A2(
+								$elm$core$List$map,
+								function (_v2) {
+									var g = _v2.a;
+									var cs = _v2.b;
+									return _Utils_ap(
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$h2,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text(g)
+													]))
+											]),
+										view_courses(cs));
+								},
+								$elm$core$Dict$toList(grouped)));
+					}
+				}
+			case 'Error':
+				var err = _v0.a;
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('ui negative message')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('header')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Ошибка при попытке получения списка предметов')
+									])),
+								A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(err)
+									]))
+							]))
+					]);
+			default:
+				var m = _v0.a;
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$map,
+						$author$project$Page$CourseListPage$MsgFetch,
+						A3(
+							$author$project$Component$MultiTask$view,
+							function (_v3) {
+								return 'OK';
+							},
+							$author$project$Util$httpErrorToString,
+							m))
+					]);
+		}
+	}();
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('center-xs')
+			]),
+		_Utils_ap(
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$h1,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Доступные предметы')
+						])),
+					$author$project$Page$CourseListPage$viewControls
+				]),
+			body));
 };
 var $author$project$Page$FatalError$view = function (data) {
 	return A2(
@@ -35074,6 +36342,84 @@ var $author$project$Component$Stats$view = function (model) {
 													[
 														$elm$html$Html$text(
 														$elm$core$String$fromInt(obj.marks))
+													]))
+											]))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('row')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_Utils_ap(
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('col')
+												]),
+											label),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Ак / Пр:')
+											])),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('col')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$strong,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text(
+														$elm$core$String$fromFloat(
+															A2($author$project$Util$prec, 2, obj.activities / obj.courses)))
+													]))
+											]))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('row')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_Utils_ap(
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('col')
+												]),
+											label),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Оц / Ак:')
+											])),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('col')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$strong,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text(
+														$elm$core$String$fromFloat(
+															A2($author$project$Util$prec, 2, obj.marks / obj.activities)))
 													]))
 											]))
 									]))
@@ -36408,6 +37754,7 @@ var $author$project$Util$user_deep_to_shallow = function (userDeep) {
 				userDeep.children)),
 		createdAt: userDeep.createdAt,
 		currentClass: userDeep.currentClass,
+		currentSpec: userDeep.currentSpec,
 		dateJoined: userDeep.dateJoined,
 		email: userDeep.email,
 		firstName: userDeep.firstName,
@@ -37768,7 +39115,7 @@ var $author$project$Main$viewPage = function (model) {
 			return A2(
 				$elm$html$Html$map,
 				$author$project$Main$MsgPageCourse,
-				$author$project$Page$CoursePage$view(model_));
+				$author$project$Page$Course$CoursePage$view(model_));
 		case 'PageNotFound':
 			return $author$project$Page$NotFound$view;
 		case 'PageBlank':
