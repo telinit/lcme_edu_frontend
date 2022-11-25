@@ -283,8 +283,8 @@ viewFilter filter =
                     []
                 ]
             ]
-        , div [ class "row middle-xs mt-10" ]
-            [ div [ class "ui fluid input col-xs-12 col-md-4" ]
+        , div [ class "row middle-xs" ]
+            [ div [ class "ui fluid input col-xs-12 col-md-4 mt-10" ]
                 [ input
                     [ type_ "text"
                     , value filter.class
@@ -293,7 +293,7 @@ viewFilter filter =
                     ]
                     []
                 ]
-            , div [ class "ui fluid input col-xs-12 col-md-4" ]
+            , div [ class "ui fluid input col-xs-12 col-md-4 mt-10" ]
                 [ input
                     [ type_ "text"
                     , value filter.group
@@ -302,7 +302,7 @@ viewFilter filter =
                     ]
                     []
                 ]
-            , div [ class "ui fluid input col-xs-12 col-md-4" ]
+            , div [ class "ui fluid input col-xs-12 col-md-4 mt-10" ]
                 [ Html.map MsgFilterSpec <| Select.view filter.spec
                 ]
             ]
@@ -362,12 +362,22 @@ view : Model -> Html Msg
 view model =
     let
         view_courses dSpecs cs =
+            let
+                filtered =
+                    List.map (viewCourse dSpecs) <| List.sortBy .title <| filterCourses model.filter cs
+            in
             [ div
-                [ class "ui link cards"
+                [ class "ui link cards center-xs"
                 , style "display" "inline-flex"
                 , style "margin" "0 -50px"
                 ]
-                (List.map (viewCourse dSpecs) <| List.sortBy .title <| filterCourses model.filter cs)
+                (case filtered of
+                    [] ->
+                        [ h2 [] [ text "Нет курсов по вашему фильтру." ] ]
+
+                    _ ->
+                        filtered
+                )
             ]
 
         body =

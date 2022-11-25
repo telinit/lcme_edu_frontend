@@ -36236,7 +36236,7 @@ var $author$project$Page$CourseListPage$viewFilter = function (filter) {
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('row middle-xs mt-10')
+						$elm$html$Html$Attributes$class('row middle-xs')
 					]),
 				_List_fromArray(
 					[
@@ -36244,7 +36244,7 @@ var $author$project$Page$CourseListPage$viewFilter = function (filter) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('ui fluid input col-xs-12 col-md-4')
+								$elm$html$Html$Attributes$class('ui fluid input col-xs-12 col-md-4 mt-10')
 							]),
 						_List_fromArray(
 							[
@@ -36264,7 +36264,7 @@ var $author$project$Page$CourseListPage$viewFilter = function (filter) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('ui fluid input col-xs-12 col-md-4')
+								$elm$html$Html$Attributes$class('ui fluid input col-xs-12 col-md-4 mt-10')
 							]),
 						_List_fromArray(
 							[
@@ -36284,7 +36284,7 @@ var $author$project$Page$CourseListPage$viewFilter = function (filter) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('ui fluid input col-xs-12 col-md-4')
+								$elm$html$Html$Attributes$class('ui fluid input col-xs-12 col-md-4 mt-10')
 							]),
 						_List_fromArray(
 							[
@@ -36306,25 +36306,41 @@ var $author$project$Page$CourseListPage$viewFilter = function (filter) {
 var $author$project$Page$CourseListPage$view = function (model) {
 	var view_courses = F2(
 		function (dSpecs, cs) {
+			var filtered = A2(
+				$elm$core$List$map,
+				$author$project$Page$CourseListPage$viewCourse(dSpecs),
+				A2(
+					$elm$core$List$sortBy,
+					function ($) {
+						return $.title;
+					},
+					A2($author$project$Page$CourseListPage$filterCourses, model.filter, cs)));
 			return _List_fromArray(
 				[
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('ui link cards'),
+							$elm$html$Html$Attributes$class('ui link cards center-xs'),
 							A2($elm$html$Html$Attributes$style, 'display', 'inline-flex'),
 							A2($elm$html$Html$Attributes$style, 'margin', '0 -50px')
 						]),
-					A2(
-						$elm$core$List$map,
-						$author$project$Page$CourseListPage$viewCourse(dSpecs),
-						A2(
-							$elm$core$List$sortBy,
-							function ($) {
-								return $.title;
-							},
-							A2($author$project$Page$CourseListPage$filterCourses, model.filter, cs))))
+					function () {
+						if (!filtered.b) {
+							return _List_fromArray(
+								[
+									A2(
+									$elm$html$Html$h2,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Нет курсов по вашему фильтру.')
+										]))
+								]);
+						} else {
+							return filtered;
+						}
+					}())
 				]);
 		});
 	var body = function () {
