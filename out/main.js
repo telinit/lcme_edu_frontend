@@ -36319,7 +36319,12 @@ var $author$project$Page$CourseListPage$view = function (model) {
 					A2(
 						$elm$core$List$map,
 						$author$project$Page$CourseListPage$viewCourse(dSpecs),
-						A2($author$project$Page$CourseListPage$filterCourses, model.filter, cs)))
+						A2(
+							$elm$core$List$sortBy,
+							function ($) {
+								return $.title;
+							},
+							A2($author$project$Page$CourseListPage$filterCourses, model.filter, cs))))
 				]);
 		});
 	var body = function () {

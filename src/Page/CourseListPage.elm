@@ -367,7 +367,7 @@ view model =
                 , style "display" "inline-flex"
                 , style "margin" "0 -50px"
                 ]
-                (List.map (viewCourse dSpecs) <| filterCourses  model.filter cs)
+                (List.map (viewCourse dSpecs) <| List.sortBy .title <| filterCourses model.filter cs)
             ]
 
         body =
