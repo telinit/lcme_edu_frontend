@@ -49,6 +49,34 @@ doSelect key model =
     { model | selected = Maybe.map (\_ -> key) <| Dict.get key model.items }
 
 
+updateItem : Key -> Label -> Model -> Model
+updateItem key label model =
+    { model | items = Dict.update key (\_ -> Just label) model.items }
+
+
+removeItem : Key -> Model -> Model
+removeItem key model =
+    { model
+        | items = Dict.remove key model.items
+        , selected =
+            if model.selected == Just key then
+                Nothing
+
+            else
+                model.selected
+    }
+
+
+updateMany : List ( Key, Label ) -> Model -> Model
+updateMany items model =
+    List.foldl (\( k, v ) -> updateItem k v) model items
+
+
+removeMany : List Key -> Model -> Model
+removeMany items model =
+    List.foldl removeItem model items
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of

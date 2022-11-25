@@ -5,17 +5,28 @@ import Api.Data exposing (CourseShallow, EducationSpecialization, File)
 import Api.Request.Course exposing (courseList)
 import Api.Request.Education exposing (educationSpecializationList)
 import Component.MultiTask as MT
+import Component.Select as Select
 import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onInput)
 import Http
-import Util exposing (dictGroupBy, httpErrorToString, task_to_cmd)
+import Util exposing (dictGroupBy, get_id_str, httpErrorToString, task_to_cmd)
 import Uuid exposing (Uuid)
 
 
+type FilterField
+    = FilterFieldText
+    | FilterFieldClass
+    | FilterFieldGroup
+
+
 type Msg
-    = CourseListFetchFailed String
+    = MsgCourseListFetchFailed String
     | MsgFetch (MT.Msg Http.Error FetchedData)
+    | MsgFilterSpec Select.Msg
+    | MsgFilterGroupBy Select.Msg
+    | MsgOnInputFilter FilterField String
 
 
 type FetchedData
@@ -23,10 +34,19 @@ type FetchedData
     | FetchedSpecs (List EducationSpecialization)
 
 
+type alias Filter =
+    { text : String
+    , class : String
+    , group : String
+    , spec : Select.Model
+    , groupBy : Select.Model
+    }
+
+
 type State
-    = Loading (MT.Model Http.Error FetchedData)
-    | Completed (List CourseShallow) (Dict String EducationSpecialization)
-    | Error String
+    = StateLoading (MT.Model Http.Error FetchedData)
+    | StateCompleted (List CourseShallow) (Dict String EducationSpecialization)
+    | StateError String
 
 
 type GroupBy
@@ -35,7 +55,10 @@ type GroupBy
 
 
 type alias Model =
-    { state : State, token : String, group_by : GroupBy }
+    { state : State
+    , token : String
+    , filter : Filter
+    }
 
 
 empty_to_nothing : Maybe String -> Maybe String
@@ -46,6 +69,53 @@ empty_to_nothing x =
 
         _ ->
             x
+
+
+getGroupBy : Model -> GroupBy
+getGroupBy model =
+    case model.filter.groupBy.selected of
+        Just s ->
+            case s of
+                "class" ->
+                    GroupByClass
+
+                _ ->
+                    GroupByNone
+
+        Nothing ->
+            GroupByNone
+
+
+filterCourses : Filter -> List CourseShallow -> List CourseShallow
+filterCourses filter courses =
+    let
+        filterCourse c =
+            let
+                text =
+                    c.title ++ " " ++ Maybe.withDefault "" c.description
+
+                filter_text =
+                    String.contains (String.toLower filter.text) (String.toLower text)
+
+                filter_spec =
+                    Maybe.withDefault True <|
+                        Maybe.map
+                            (\fs ->
+                                Maybe.withDefault False <|
+                                    Maybe.map (\cs -> fs == Uuid.toString cs) c.forSpecialization
+                            )
+                        <|
+                            empty_to_nothing filter.spec.selected
+
+                filter_group =
+                    String.contains (String.toLower filter.group) (String.toLower <| Maybe.withDefault "" c.forGroup)
+
+                filter_class =
+                    String.contains (String.toLower filter.class) (String.toLower <| Maybe.withDefault "" c.forClass)
+            in
+            filter_text && filter_spec && filter_group && filter_class
+    in
+    List.filter filterCourse courses
 
 
 groupBy : GroupBy -> List CourseShallow -> Dict String EducationSpecialization -> Dict String (List CourseShallow)
@@ -84,42 +154,108 @@ init token =
                 [ ( ext_task FetchedCourses token [] courseList, "Получаем список курсов" )
                 , ( ext_task FetchedSpecs token [] educationSpecializationList, "Получаем список специализаций" )
                 ]
+
+        ( sm, sc ) =
+            Select.init "Направление" True <| Dict.fromList []
+
+        ( gm, gc ) =
+            Select.init "Группировать" True <|
+                Dict.fromList
+                    [ ( "", "Без группировки" )
+                    , ( "class", "По классам" )
+                    ]
     in
-    ( { state = Loading m, token = token, group_by = GroupByNone }, Cmd.map MsgFetch c )
+    ( { state = StateLoading m
+      , token = token
+      , filter =
+            { text = ""
+            , class = ""
+            , group = ""
+            , spec = sm
+            , groupBy = Select.doSelect "" gm
+            }
+      }
+    , Cmd.batch
+        [ Cmd.map MsgFetch c
+        , Cmd.map MsgFilterSpec sc
+        , Cmd.map MsgFilterGroupBy gc
+        ]
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model.state ) of
-        ( CourseListFetchFailed err, _ ) ->
-            ( { model | state = Error err }, Cmd.none )
+        ( MsgCourseListFetchFailed err, _ ) ->
+            ( { model | state = StateError err }, Cmd.none )
 
-        ( MsgFetch msg_, Loading model_ ) ->
+        ( MsgFetch msg_, StateLoading model_ ) ->
             let
                 ( m, c ) =
                     MT.update msg_ model_
             in
             case msg_ of
                 MT.TaskFinishedAll [ Ok (FetchedCourses courses), Ok (FetchedSpecs specs) ] ->
+                    let
+                        new_filter old =
+                            { old
+                                | spec =
+                                    Select.updateMany ([ ( "", "Все" ) ] ++ List.map (\s -> ( get_id_str s, s.name )) specs) old.spec
+                            }
+                    in
                     ( { model
                         | state =
-                            Completed courses <|
+                            StateCompleted courses <|
                                 Dict.fromList <|
                                     List.filterMap (\s -> Maybe.map (\id_ -> ( Uuid.toString id_, s )) s.id) specs
+                        , filter = new_filter model.filter
                       }
                     , Cmd.map MsgFetch c
                     )
 
                 _ ->
-                    ( { model | state = Loading m }, Cmd.map MsgFetch c )
+                    ( { model | state = StateLoading m }, Cmd.map MsgFetch c )
+
+        ( MsgFilterSpec msg_, StateCompleted courses specs ) ->
+            let
+                ( m, c ) =
+                    Select.update msg_ model.filter.spec
+
+                set_filter ({ filter } as model_) x =
+                    { model_ | filter = { filter | spec = x } }
+            in
+            ( set_filter model m, Cmd.map MsgFilterSpec c )
+
+        ( MsgFilterGroupBy msg_, StateCompleted courses specs ) ->
+            let
+                ( m, c ) =
+                    Select.update msg_ model.filter.groupBy
+
+                set_gb ({ filter } as model_) x =
+                    { model_ | filter = { filter | groupBy = x } }
+            in
+            ( set_gb model m, Cmd.map MsgFilterSpec c )
+
+        ( MsgOnInputFilter f v, _ ) ->
+            let
+                old_filter =
+                    model.filter
+
+                new_filter =
+                    case f of
+                        FilterFieldText ->
+                            { old_filter | text = v }
+
+                        FilterFieldClass ->
+                            { old_filter | class = v }
+
+                        FilterFieldGroup ->
+                            { old_filter | group = v }
+            in
+            ( { model | filter = new_filter }, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )
-
-
-viewControls : Html Msg
-viewControls =
-    text ""
 
 
 courseImg : Maybe Uuid -> Html Msg
@@ -133,13 +269,64 @@ courseImg mb =
             img [ src "/img/course.jpg" ] []
 
 
-viewCourse : CourseShallow -> Html Msg
-viewCourse course =
+viewFilter : Filter -> Html Msg
+viewFilter filter =
+    div [ class "ui segment middle-xs", style "background-color" "#EEE" ]
+        [ div [ class "row middle-xs" ]
+            [ div [ class "ui fluid input col-xs-12" ]
+                [ input
+                    [ type_ "text"
+                    , value filter.text
+                    , placeholder "Название, описание"
+                    , onInput (MsgOnInputFilter FilterFieldText)
+                    ]
+                    []
+                ]
+            ]
+        , div [ class "row middle-xs mt-10" ]
+            [ div [ class "ui fluid input col-xs-12 col-md-4" ]
+                [ input
+                    [ type_ "text"
+                    , value filter.class
+                    , placeholder "Класс"
+                    , onInput (MsgOnInputFilter FilterFieldClass)
+                    ]
+                    []
+                ]
+            , div [ class "ui fluid input col-xs-12 col-md-4" ]
+                [ input
+                    [ type_ "text"
+                    , value filter.group
+                    , placeholder "Уч. группа"
+                    , onInput (MsgOnInputFilter FilterFieldGroup)
+                    ]
+                    []
+                ]
+            , div [ class "ui fluid input col-xs-12 col-md-4" ]
+                [ Html.map MsgFilterSpec <| Select.view filter.spec
+                ]
+            ]
+        , div [ class "row middle-xs" ] []
+        ]
+
+
+viewCourse : Dict String EducationSpecialization -> CourseShallow -> Html Msg
+viewCourse specs course =
+    let
+        mbSpec =
+            Dict.get (Maybe.withDefault "" <| Maybe.map Uuid.toString course.forSpecialization) specs
+    in
     a [ class "card", href (Maybe.withDefault "" <| Maybe.map (\id -> "/course/" ++ Uuid.toString id) course.id) ]
         [ div [ class "image" ] [ courseImg course.logo ]
         , div [ class "content" ]
-            [ div [ class "header" ] [ text course.title ]
-            , div [ class "meta" ] []
+            [ div [ class "header" ]
+                [ text course.title
+                ]
+            , div [ class "meta" ]
+                [ text <|
+                    Maybe.withDefault "" <|
+                        Maybe.map (\spec -> spec.name ++ " направление") mbSpec
+                ]
             , div
                 [ class "description"
                 , style "max-height" "300px"
@@ -150,8 +337,23 @@ viewCourse course =
             ]
         , div [ class "extra content row around-xs" ] <|
             List.filterMap identity
-                [ Maybe.map (\c -> div [ class "col-xs" ] [ i [ class "users icon" ] [], text (c ++ " класс") ]) course.forClass
-                , Maybe.map (\g -> div [ class "col-xs" ] [ i [ class "list ol icon" ] [], text g ]) <| empty_to_nothing course.forGroup
+                [ Maybe.map
+                    (\c ->
+                        div [ class "col-xs" ]
+                            [ i [ class "users icon" ] []
+                            , text (c ++ " класс")
+                            ]
+                    )
+                    course.forClass
+                , Maybe.map
+                    (\g ->
+                        div [ class "col-xs" ]
+                            [ i [ class "list ol icon" ] []
+                            , text g
+                            ]
+                    )
+                  <|
+                    empty_to_nothing course.forGroup
                 ]
         ]
 
@@ -159,48 +361,52 @@ viewCourse course =
 view : Model -> Html Msg
 view model =
     let
-        view_courses cs =
+        view_courses dSpecs cs =
             [ div
                 [ class "ui link cards"
                 , style "display" "inline-flex"
                 , style "margin" "0 -50px"
                 ]
-                (List.map viewCourse cs)
+                (List.map (viewCourse dSpecs) <| filterCourses  model.filter cs)
             ]
 
         body =
             case model.state of
-                Completed [] _ ->
+                StateCompleted [] _ ->
                     [ div [ class "row center-xs" ]
                         [ h2 [] [ text "У вас нет курсов" ] ]
                     ]
 
-                Completed courses specs ->
-                    case model.group_by of
-                        GroupByNone ->
-                            view_courses courses
-
-                        _ ->
+                StateCompleted courses specs ->
+                    let
+                        gb =
+                            getGroupBy model
+                    in
+                    case gb of
+                        GroupByClass ->
                             let
                                 grouped =
-                                    groupBy model.group_by courses specs
+                                    groupBy gb courses specs
                             in
                             List.concat <|
-                                List.map (\( g, cs ) -> [ h2 [] [ text g ] ] ++ view_courses cs) <|
+                                List.map (\( g, cs ) -> [ h2 [] [ text g ] ] ++ view_courses specs cs) <|
                                     Dict.toList grouped
 
-                Error err ->
+                        _ ->
+                            view_courses specs courses
+
+                StateError err ->
                     [ div [ class "ui negative message" ]
                         [ div [ class "header" ] [ text "Ошибка при попытке получения списка предметов" ]
                         , p [] [ text err ]
                         ]
                     ]
 
-                Loading m ->
+                StateLoading m ->
                     [ Html.map MsgFetch <| MT.view (\_ -> "OK") httpErrorToString m ]
     in
     div [ class "center-xs" ] <|
         [ h1 [] [ text "Доступные предметы" ]
-        , viewControls
+        , viewFilter model.filter
         ]
             ++ body

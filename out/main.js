@@ -9630,12 +9630,17 @@ var $author$project$Page$CourseListPage$FetchedCourses = function (a) {
 var $author$project$Page$CourseListPage$FetchedSpecs = function (a) {
 	return {$: 'FetchedSpecs', a: a};
 };
-var $author$project$Page$CourseListPage$GroupByNone = {$: 'GroupByNone'};
-var $author$project$Page$CourseListPage$Loading = function (a) {
-	return {$: 'Loading', a: a};
-};
 var $author$project$Page$CourseListPage$MsgFetch = function (a) {
 	return {$: 'MsgFetch', a: a};
+};
+var $author$project$Page$CourseListPage$MsgFilterGroupBy = function (a) {
+	return {$: 'MsgFilterGroupBy', a: a};
+};
+var $author$project$Page$CourseListPage$MsgFilterSpec = function (a) {
+	return {$: 'MsgFilterSpec', a: a};
+};
+var $author$project$Page$CourseListPage$StateLoading = function (a) {
+	return {$: 'StateLoading', a: a};
 };
 var $author$project$Api$Data$CourseShallow = function (id) {
 	return function (createdAt) {
@@ -9749,6 +9754,19 @@ var $author$project$Api$Request$Course$courseList = A7(
 	_List_Nil,
 	$elm$core$Maybe$Nothing,
 	$elm$json$Json$Decode$list($author$project$Api$Data$courseShallowDecoder));
+var $author$project$Component$Select$doSelect = F2(
+	function (key, model) {
+		return _Utils_update(
+			model,
+			{
+				selected: A2(
+					$elm$core$Maybe$map,
+					function (_v0) {
+						return key;
+					},
+					A2($elm$core$Dict$get, key, model.items))
+			});
+	});
 var $author$project$Api$Request$Education$educationSpecializationList = A7(
 	$author$project$Api$request,
 	'GET',
@@ -9791,8 +9809,34 @@ var $author$project$Api$ext_task = F4(
 						$elm$core$Maybe$Just(token),
 						request_))));
 	});
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$Component$Select$init = F3(
+	function (placeholder, fluid, items) {
+		return _Utils_Tuple2(
+			{active: false, fluid: fluid, items: items, placeholder: placeholder, selected: $elm$core$Maybe$Nothing},
+			$elm$core$Platform$Cmd$none);
+	});
 var $author$project$Page$CourseListPage$init = function (token) {
-	var _v0 = $author$project$Component$MultiTask$init(
+	var _v0 = A3(
+		$author$project$Component$Select$init,
+		'Направление',
+		true,
+		$elm$core$Dict$fromList(_List_Nil));
+	var sm = _v0.a;
+	var sc = _v0.b;
+	var _v1 = A3(
+		$author$project$Component$Select$init,
+		'Группировать',
+		true,
+		$elm$core$Dict$fromList(
+			_List_fromArray(
+				[
+					_Utils_Tuple2('', 'Без группировки'),
+					_Utils_Tuple2('class', 'По классам')
+				])));
+	var gm = _v1.a;
+	var gc = _v1.b;
+	var _v2 = $author$project$Component$MultiTask$init(
 		_List_fromArray(
 			[
 				_Utils_Tuple2(
@@ -9802,17 +9846,28 @@ var $author$project$Page$CourseListPage$init = function (token) {
 				A4($author$project$Api$ext_task, $author$project$Page$CourseListPage$FetchedSpecs, token, _List_Nil, $author$project$Api$Request$Education$educationSpecializationList),
 				'Получаем список специализаций')
 			]));
-	var m = _v0.a;
-	var c = _v0.b;
+	var m = _v2.a;
+	var c = _v2.b;
 	return _Utils_Tuple2(
 		{
-			group_by: $author$project$Page$CourseListPage$GroupByNone,
-			state: $author$project$Page$CourseListPage$Loading(m),
+			filter: {
+				_class: '',
+				group: '',
+				groupBy: A2($author$project$Component$Select$doSelect, '', gm),
+				spec: sm,
+				text: ''
+			},
+			state: $author$project$Page$CourseListPage$StateLoading(m),
 			token: token
 		},
-		A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFetch, c));
+		$elm$core$Platform$Cmd$batch(
+			_List_fromArray(
+				[
+					A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFetch, c),
+					A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFilterSpec, sc),
+					A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFilterGroupBy, gc)
+				])));
 };
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Page$DefaultLayout$init = function (user) {
 	return _Utils_Tuple2(
 		{show_sidebar: false, user: user},
@@ -11780,25 +11835,6 @@ var $author$project$Component$Activity$MsgGotTZ = function (a) {
 	return {$: 'MsgGotTZ', a: a};
 };
 var $author$project$Component$Activity$doGetTZ = A2($elm$core$Task$perform, $author$project$Component$Activity$MsgGotTZ, $elm$time$Time$here);
-var $author$project$Component$Select$doSelect = F2(
-	function (key, model) {
-		return _Utils_update(
-			model,
-			{
-				selected: A2(
-					$elm$core$Maybe$map,
-					function (_v0) {
-						return key;
-					},
-					A2($elm$core$Dict$get, key, model.items))
-			});
-	});
-var $author$project$Component$Select$init = F3(
-	function (placeholder, fluid, items) {
-		return _Utils_Tuple2(
-			{active: false, fluid: fluid, items: items, placeholder: placeholder, selected: $elm$core$Maybe$Nothing},
-			$elm$core$Platform$Cmd$none);
-	});
 var $author$project$Component$Activity$init_from_activity = F2(
 	function (token, act) {
 		var _v0 = act.contentType;
@@ -14960,73 +14996,205 @@ var $author$project$Page$Course$CoursePage$update = F2(
 		}
 		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 	});
-var $author$project$Page$CourseListPage$Completed = F2(
+var $author$project$Page$CourseListPage$StateCompleted = F2(
 	function (a, b) {
-		return {$: 'Completed', a: a, b: b};
+		return {$: 'StateCompleted', a: a, b: b};
 	});
-var $author$project$Page$CourseListPage$Error = function (a) {
-	return {$: 'Error', a: a};
+var $author$project$Page$CourseListPage$StateError = function (a) {
+	return {$: 'StateError', a: a};
 };
+var $author$project$Component$Select$updateItem = F3(
+	function (key, label, model) {
+		return _Utils_update(
+			model,
+			{
+				items: A3(
+					$elm$core$Dict$update,
+					key,
+					function (_v0) {
+						return $elm$core$Maybe$Just(label);
+					},
+					model.items)
+			});
+	});
+var $author$project$Component$Select$updateMany = F2(
+	function (items, model) {
+		return A3(
+			$elm$core$List$foldl,
+			function (_v0) {
+				var k = _v0.a;
+				var v = _v0.b;
+				return A2($author$project$Component$Select$updateItem, k, v);
+			},
+			model,
+			items);
+	});
 var $author$project$Page$CourseListPage$update = F2(
 	function (msg, model) {
 		var _v0 = _Utils_Tuple2(msg, model.state);
-		if (_v0.a.$ === 'CourseListFetchFailed') {
-			var err = _v0.a.a;
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{
-						state: $author$project$Page$CourseListPage$Error(err)
-					}),
-				$elm$core$Platform$Cmd$none);
-		} else {
-			if (_v0.b.$ === 'Loading') {
-				var msg_ = _v0.a.a;
-				var model_ = _v0.b.a;
-				var _v1 = A2($author$project$Component$MultiTask$update, msg_, model_);
-				var m = _v1.a;
-				var c = _v1.b;
-				if ((((((((msg_.$ === 'TaskFinishedAll') && msg_.a.b) && (msg_.a.a.$ === 'Ok')) && (msg_.a.a.a.$ === 'FetchedCourses')) && msg_.a.b.b) && (msg_.a.b.a.$ === 'Ok')) && (msg_.a.b.a.a.$ === 'FetchedSpecs')) && (!msg_.a.b.b.b)) {
-					var _v3 = msg_.a;
-					var courses = _v3.a.a.a;
-					var _v4 = _v3.b;
-					var specs = _v4.a.a.a;
+		_v0$5:
+		while (true) {
+			switch (_v0.a.$) {
+				case 'MsgCourseListFetchFailed':
+					var err = _v0.a.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								state: A2(
-									$author$project$Page$CourseListPage$Completed,
-									courses,
-									$elm$core$Dict$fromList(
-										A2(
-											$elm$core$List$filterMap,
-											function (s) {
-												return A2(
-													$elm$core$Maybe$map,
-													function (id_) {
+								state: $author$project$Page$CourseListPage$StateError(err)
+							}),
+						$elm$core$Platform$Cmd$none);
+				case 'MsgFetch':
+					if (_v0.b.$ === 'StateLoading') {
+						var msg_ = _v0.a.a;
+						var model_ = _v0.b.a;
+						var _v1 = A2($author$project$Component$MultiTask$update, msg_, model_);
+						var m = _v1.a;
+						var c = _v1.b;
+						if ((((((((msg_.$ === 'TaskFinishedAll') && msg_.a.b) && (msg_.a.a.$ === 'Ok')) && (msg_.a.a.a.$ === 'FetchedCourses')) && msg_.a.b.b) && (msg_.a.b.a.$ === 'Ok')) && (msg_.a.b.a.a.$ === 'FetchedSpecs')) && (!msg_.a.b.b.b)) {
+							var _v3 = msg_.a;
+							var courses = _v3.a.a.a;
+							var _v4 = _v3.b;
+							var specs = _v4.a.a.a;
+							var new_filter = function (old) {
+								return _Utils_update(
+									old,
+									{
+										spec: A2(
+											$author$project$Component$Select$updateMany,
+											_Utils_ap(
+												_List_fromArray(
+													[
+														_Utils_Tuple2('', 'Все')
+													]),
+												A2(
+													$elm$core$List$map,
+													function (s) {
 														return _Utils_Tuple2(
-															$danyx23$elm_uuid$Uuid$toString(id_),
-															s);
+															$author$project$Util$get_id_str(s),
+															s.name);
 													},
-													s.id);
-											},
-											specs)))
-							}),
-						A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFetch, c));
-				} else {
+													specs)),
+											old.spec)
+									});
+							};
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										filter: new_filter(model.filter),
+										state: A2(
+											$author$project$Page$CourseListPage$StateCompleted,
+											courses,
+											$elm$core$Dict$fromList(
+												A2(
+													$elm$core$List$filterMap,
+													function (s) {
+														return A2(
+															$elm$core$Maybe$map,
+															function (id_) {
+																return _Utils_Tuple2(
+																	$danyx23$elm_uuid$Uuid$toString(id_),
+																	s);
+															},
+															s.id);
+													},
+													specs)))
+									}),
+								A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFetch, c));
+						} else {
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										state: $author$project$Page$CourseListPage$StateLoading(m)
+									}),
+								A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFetch, c));
+						}
+					} else {
+						break _v0$5;
+					}
+				case 'MsgFilterSpec':
+					if (_v0.b.$ === 'StateCompleted') {
+						var msg_ = _v0.a.a;
+						var _v5 = _v0.b;
+						var courses = _v5.a;
+						var specs = _v5.b;
+						var set_filter = F2(
+							function (model_, x) {
+								var filter = model_.filter;
+								return _Utils_update(
+									model_,
+									{
+										filter: _Utils_update(
+											filter,
+											{spec: x})
+									});
+							});
+						var _v6 = A2($author$project$Component$Select$update, msg_, model.filter.spec);
+						var m = _v6.a;
+						var c = _v6.b;
+						return _Utils_Tuple2(
+							A2(set_filter, model, m),
+							A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFilterSpec, c));
+					} else {
+						break _v0$5;
+					}
+				case 'MsgFilterGroupBy':
+					if (_v0.b.$ === 'StateCompleted') {
+						var msg_ = _v0.a.a;
+						var _v7 = _v0.b;
+						var courses = _v7.a;
+						var specs = _v7.b;
+						var set_gb = F2(
+							function (model_, x) {
+								var filter = model_.filter;
+								return _Utils_update(
+									model_,
+									{
+										filter: _Utils_update(
+											filter,
+											{groupBy: x})
+									});
+							});
+						var _v8 = A2($author$project$Component$Select$update, msg_, model.filter.groupBy);
+						var m = _v8.a;
+						var c = _v8.b;
+						return _Utils_Tuple2(
+							A2(set_gb, model, m),
+							A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFilterSpec, c));
+					} else {
+						break _v0$5;
+					}
+				default:
+					var _v9 = _v0.a;
+					var f = _v9.a;
+					var v = _v9.b;
+					var old_filter = model.filter;
+					var new_filter = function () {
+						switch (f.$) {
+							case 'FilterFieldText':
+								return _Utils_update(
+									old_filter,
+									{text: v});
+							case 'FilterFieldClass':
+								return _Utils_update(
+									old_filter,
+									{_class: v});
+							default:
+								return _Utils_update(
+									old_filter,
+									{group: v});
+						}
+					}();
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{
-								state: $author$project$Page$CourseListPage$Loading(m)
-							}),
-						A2($elm$core$Platform$Cmd$map, $author$project$Page$CourseListPage$MsgFetch, c));
-				}
-			} else {
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+							{filter: new_filter}),
+						$elm$core$Platform$Cmd$none);
 			}
 		}
+		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 	});
 var $author$project$Page$DefaultLayout$update = F2(
 	function (msg, model) {
@@ -35729,6 +35897,62 @@ var $author$project$Page$Course$CoursePage$view = function (model) {
 				$elm$html$Html$text('Не удалось получить данные курса: ' + err));
 	}
 };
+var $author$project$Page$CourseListPage$filterCourses = F2(
+	function (filter, courses) {
+		var filterCourse = function (c) {
+			var text = c.title + (' ' + A2($elm$core$Maybe$withDefault, '', c.description));
+			var filter_text = A2(
+				$elm$core$String$contains,
+				$elm$core$String$toLower(filter.text),
+				$elm$core$String$toLower(text));
+			var filter_spec = A2(
+				$elm$core$Maybe$withDefault,
+				true,
+				A2(
+					$elm$core$Maybe$map,
+					function (fs) {
+						return A2(
+							$elm$core$Maybe$withDefault,
+							false,
+							A2(
+								$elm$core$Maybe$map,
+								function (cs) {
+									return _Utils_eq(
+										fs,
+										$danyx23$elm_uuid$Uuid$toString(cs));
+								},
+								c.forSpecialization));
+					},
+					$author$project$Page$CourseListPage$empty_to_nothing(filter.spec.selected)));
+			var filter_group = A2(
+				$elm$core$String$contains,
+				$elm$core$String$toLower(filter.group),
+				$elm$core$String$toLower(
+					A2($elm$core$Maybe$withDefault, '', c.forGroup)));
+			var filter_class = A2(
+				$elm$core$String$contains,
+				$elm$core$String$toLower(filter._class),
+				$elm$core$String$toLower(
+					A2($elm$core$Maybe$withDefault, '', c.forClass)));
+			return filter_text && (filter_spec && (filter_group && filter_class));
+		};
+		return A2($elm$core$List$filter, filterCourse, courses);
+	});
+var $author$project$Page$CourseListPage$GroupByClass = {$: 'GroupByClass'};
+var $author$project$Page$CourseListPage$GroupByNone = {$: 'GroupByNone'};
+var $author$project$Page$CourseListPage$getGroupBy = function (model) {
+	var _v0 = model.filter.groupBy.selected;
+	if (_v0.$ === 'Just') {
+		var s = _v0.a;
+		if (s === 'class') {
+			return $author$project$Page$CourseListPage$GroupByClass;
+		} else {
+			return $author$project$Page$CourseListPage$GroupByNone;
+		}
+	} else {
+		return $author$project$Page$CourseListPage$GroupByNone;
+	}
+};
 var $author$project$Util$dictGroupBy = F2(
 	function (key, list) {
 		var f = F2(
@@ -35794,7 +36018,6 @@ var $author$project$Page$CourseListPage$groupBy = F3(
 			return A2($author$project$Util$dictGroupBy, key, courses);
 		}
 	});
-var $author$project$Page$CourseListPage$viewControls = $elm$html$Html$text('');
 var $author$project$Page$CourseListPage$courseImg = function (mb) {
 	if (mb.$ === 'Just') {
 		var file = mb.a;
@@ -35816,22 +36039,167 @@ var $author$project$Page$CourseListPage$courseImg = function (mb) {
 			_List_Nil);
 	}
 };
-var $author$project$Page$CourseListPage$viewCourse = function (course) {
+var $author$project$Page$CourseListPage$viewCourse = F2(
+	function (specs, course) {
+		var mbSpec = A2(
+			$elm$core$Dict$get,
+			A2(
+				$elm$core$Maybe$withDefault,
+				'',
+				A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, course.forSpecialization)),
+			specs);
+		return A2(
+			$elm$html$Html$a,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('card'),
+					$elm$html$Html$Attributes$href(
+					A2(
+						$elm$core$Maybe$withDefault,
+						'',
+						A2(
+							$elm$core$Maybe$map,
+							function (id) {
+								return '/course/' + $danyx23$elm_uuid$Uuid$toString(id);
+							},
+							course.id)))
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('image')
+						]),
+					_List_fromArray(
+						[
+							$author$project$Page$CourseListPage$courseImg(course.logo)
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('content')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('header')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(course.title)
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('meta')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									A2(
+										$elm$core$Maybe$withDefault,
+										'',
+										A2(
+											$elm$core$Maybe$map,
+											function (spec) {
+												return spec.name + ' направление';
+											},
+											mbSpec)))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('description'),
+									A2($elm$html$Html$Attributes$style, 'max-height', '300px'),
+									A2($elm$html$Html$Attributes$style, 'overflow', 'hidden')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									$elm$core$String$trim(
+										A2($elm$core$Maybe$withDefault, '', course.description)))
+								]))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('extra content row around-xs')
+						]),
+					A2(
+						$elm$core$List$filterMap,
+						$elm$core$Basics$identity,
+						_List_fromArray(
+							[
+								A2(
+								$elm$core$Maybe$map,
+								function (c) {
+									return A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('col-xs')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$i,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('users icon')
+													]),
+												_List_Nil),
+												$elm$html$Html$text(c + ' класс')
+											]));
+								},
+								course.forClass),
+								A2(
+								$elm$core$Maybe$map,
+								function (g) {
+									return A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('col-xs')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$i,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('list ol icon')
+													]),
+												_List_Nil),
+												$elm$html$Html$text(g)
+											]));
+								},
+								$author$project$Page$CourseListPage$empty_to_nothing(course.forGroup))
+							])))
+				]));
+	});
+var $author$project$Page$CourseListPage$FilterFieldClass = {$: 'FilterFieldClass'};
+var $author$project$Page$CourseListPage$FilterFieldGroup = {$: 'FilterFieldGroup'};
+var $author$project$Page$CourseListPage$FilterFieldText = {$: 'FilterFieldText'};
+var $author$project$Page$CourseListPage$MsgOnInputFilter = F2(
+	function (a, b) {
+		return {$: 'MsgOnInputFilter', a: a, b: b};
+	});
+var $author$project$Page$CourseListPage$viewFilter = function (filter) {
 	return A2(
-		$elm$html$Html$a,
+		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('card'),
-				$elm$html$Html$Attributes$href(
-				A2(
-					$elm$core$Maybe$withDefault,
-					'',
-					A2(
-						$elm$core$Maybe$map,
-						function (id) {
-							return '/course/' + $danyx23$elm_uuid$Uuid$toString(id);
-						},
-						course.id)))
+				$elm$html$Html$Attributes$class('ui segment middle-xs'),
+				A2($elm$html$Html$Attributes$style, 'background-color', '#EEE')
 			]),
 		_List_fromArray(
 			[
@@ -35839,17 +36207,7 @@ var $author$project$Page$CourseListPage$viewCourse = function (course) {
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('image')
-					]),
-				_List_fromArray(
-					[
-						$author$project$Page$CourseListPage$courseImg(course.logo)
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('content')
+						$elm$html$Html$Attributes$class('row middle-xs')
 					]),
 				_List_fromArray(
 					[
@@ -35857,111 +36215,117 @@ var $author$project$Page$CourseListPage$viewCourse = function (course) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('header')
+								$elm$html$Html$Attributes$class('ui fluid input col-xs-12')
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text(course.title)
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('meta')
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('description'),
-								A2($elm$html$Html$Attributes$style, 'max-height', '300px'),
-								A2($elm$html$Html$Attributes$style, 'overflow', 'hidden')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text(
-								$elm$core$String$trim(
-									A2($elm$core$Maybe$withDefault, '', course.description)))
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('text'),
+										$elm$html$Html$Attributes$value(filter.text),
+										$elm$html$Html$Attributes$placeholder('Название, описание'),
+										$elm$html$Html$Events$onInput(
+										$author$project$Page$CourseListPage$MsgOnInputFilter($author$project$Page$CourseListPage$FilterFieldText))
+									]),
+								_List_Nil)
 							]))
 					])),
 				A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('extra content row around-xs')
+						$elm$html$Html$Attributes$class('row middle-xs mt-10')
 					]),
-				A2(
-					$elm$core$List$filterMap,
-					$elm$core$Basics$identity,
-					_List_fromArray(
-						[
-							A2(
-							$elm$core$Maybe$map,
-							function (c) {
-								return A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('col-xs')
-										]),
-									_List_fromArray(
-										[
-											A2(
-											$elm$html$Html$i,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('users icon')
-												]),
-											_List_Nil),
-											$elm$html$Html$text(c + ' класс')
-										]));
-							},
-							course.forClass),
-							A2(
-							$elm$core$Maybe$map,
-							function (g) {
-								return A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('col-xs')
-										]),
-									_List_fromArray(
-										[
-											A2(
-											$elm$html$Html$i,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('list ol icon')
-												]),
-											_List_Nil),
-											$elm$html$Html$text(g)
-										]));
-							},
-							$author$project$Page$CourseListPage$empty_to_nothing(course.forGroup))
-						])))
-			]));
-};
-var $author$project$Page$CourseListPage$view = function (model) {
-	var view_courses = function (cs) {
-		return _List_fromArray(
-			[
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('ui fluid input col-xs-12 col-md-4')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('text'),
+										$elm$html$Html$Attributes$value(filter._class),
+										$elm$html$Html$Attributes$placeholder('Класс'),
+										$elm$html$Html$Events$onInput(
+										$author$project$Page$CourseListPage$MsgOnInputFilter($author$project$Page$CourseListPage$FilterFieldClass))
+									]),
+								_List_Nil)
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('ui fluid input col-xs-12 col-md-4')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('text'),
+										$elm$html$Html$Attributes$value(filter.group),
+										$elm$html$Html$Attributes$placeholder('Уч. группа'),
+										$elm$html$Html$Events$onInput(
+										$author$project$Page$CourseListPage$MsgOnInputFilter($author$project$Page$CourseListPage$FilterFieldGroup))
+									]),
+								_List_Nil)
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('ui fluid input col-xs-12 col-md-4')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$map,
+								$author$project$Page$CourseListPage$MsgFilterSpec,
+								$author$project$Component$Select$view(filter.spec))
+							]))
+					])),
 				A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('ui link cards'),
-						A2($elm$html$Html$Attributes$style, 'display', 'inline-flex'),
-						A2($elm$html$Html$Attributes$style, 'margin', '0 -50px')
+						$elm$html$Html$Attributes$class('row middle-xs')
 					]),
-				A2($elm$core$List$map, $author$project$Page$CourseListPage$viewCourse, cs))
-			]);
-	};
+				_List_Nil)
+			]));
+};
+var $author$project$Page$CourseListPage$view = function (model) {
+	var view_courses = F2(
+		function (dSpecs, cs) {
+			return _List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('ui link cards'),
+							A2($elm$html$Html$Attributes$style, 'display', 'inline-flex'),
+							A2($elm$html$Html$Attributes$style, 'margin', '0 -50px')
+						]),
+					A2(
+						$elm$core$List$map,
+						$author$project$Page$CourseListPage$viewCourse(dSpecs),
+						A2($author$project$Page$CourseListPage$filterCourses, model.filter, cs)))
+				]);
+		});
 	var body = function () {
 		var _v0 = model.state;
 		switch (_v0.$) {
-			case 'Completed':
+			case 'StateCompleted':
 				if (!_v0.a.b) {
 					return _List_fromArray(
 						[
@@ -35985,11 +36349,9 @@ var $author$project$Page$CourseListPage$view = function (model) {
 				} else {
 					var courses = _v0.a;
 					var specs = _v0.b;
-					var _v1 = model.group_by;
-					if (_v1.$ === 'GroupByNone') {
-						return view_courses(courses);
-					} else {
-						var grouped = A3($author$project$Page$CourseListPage$groupBy, model.group_by, courses, specs);
+					var gb = $author$project$Page$CourseListPage$getGroupBy(model);
+					if (gb.$ === 'GroupByClass') {
+						var grouped = A3($author$project$Page$CourseListPage$groupBy, gb, courses, specs);
 						return $elm$core$List$concat(
 							A2(
 								$elm$core$List$map,
@@ -36007,12 +36369,14 @@ var $author$project$Page$CourseListPage$view = function (model) {
 														$elm$html$Html$text(g)
 													]))
 											]),
-										view_courses(cs));
+										A2(view_courses, specs, cs));
 								},
 								$elm$core$Dict$toList(grouped)));
+					} else {
+						return A2(view_courses, specs, courses);
 					}
 				}
-			case 'Error':
+			case 'StateError':
 				var err = _v0.a;
 				return _List_fromArray(
 					[
@@ -36076,7 +36440,7 @@ var $author$project$Page$CourseListPage$view = function (model) {
 						[
 							$elm$html$Html$text('Доступные предметы')
 						])),
-					$author$project$Page$CourseListPage$viewControls
+					$author$project$Page$CourseListPage$viewFilter(model.filter)
 				]),
 			body));
 };
