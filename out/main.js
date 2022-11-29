@@ -4842,43 +4842,6 @@ function _Http_track(router, xhr, tracker)
 }
 
 
-var _Bitwise_and = F2(function(a, b)
-{
-	return a & b;
-});
-
-var _Bitwise_or = F2(function(a, b)
-{
-	return a | b;
-});
-
-var _Bitwise_xor = F2(function(a, b)
-{
-	return a ^ b;
-});
-
-function _Bitwise_complement(a)
-{
-	return ~a;
-};
-
-var _Bitwise_shiftLeftBy = F2(function(offset, a)
-{
-	return a << offset;
-});
-
-var _Bitwise_shiftRightBy = F2(function(offset, a)
-{
-	return a >> offset;
-});
-
-var _Bitwise_shiftRightZfBy = F2(function(offset, a)
-{
-	return a >>> offset;
-});
-
-
-
 // DECODER
 
 var _File_decoder = _Json_decodePrim(function(value) {
@@ -5054,6 +5017,43 @@ function _File_toUrl(blob)
 	});
 }
 
+
+
+
+var _Bitwise_and = F2(function(a, b)
+{
+	return a & b;
+});
+
+var _Bitwise_or = F2(function(a, b)
+{
+	return a | b;
+});
+
+var _Bitwise_xor = F2(function(a, b)
+{
+	return a ^ b;
+});
+
+function _Bitwise_complement(a)
+{
+	return ~a;
+};
+
+var _Bitwise_shiftLeftBy = F2(function(offset, a)
+{
+	return a << offset;
+});
+
+var _Bitwise_shiftRightBy = F2(function(offset, a)
+{
+	return a >> offset;
+});
+
+var _Bitwise_shiftRightZfBy = F2(function(offset, a)
+{
+	return a >>> offset;
+});
 var $author$project$Main$MsgUrlChanged = function (a) {
 	return {$: 'MsgUrlChanged', a: a};
 };
@@ -5856,6 +5856,7 @@ var $author$project$Util$Left = function (a) {
 	return {$: 'Left', a: a};
 };
 var $author$project$Main$PageBlank = {$: 'PageBlank'};
+var $author$project$Main$UrlAdmin = {$: 'UrlAdmin'};
 var $author$project$Main$UrlCourse = function (a) {
 	return {$: 'UrlCourse', a: a};
 };
@@ -6862,7 +6863,11 @@ var $author$project$Main$parse_url = function (url) {
 						A2(
 						$elm$url$Url$Parser$map,
 						$author$project$Main$UrlNews,
-						$elm$url$Url$Parser$s('news'))
+						$elm$url$Url$Parser$s('news')),
+						A2(
+						$elm$url$Url$Parser$map,
+						$author$project$Main$UrlAdmin,
+						$elm$url$Url$Parser$s('admin'))
 					])),
 			url));
 };
@@ -7493,6 +7498,9 @@ var $author$project$Main$LayoutDefault = function (a) {
 var $author$project$Main$MsgDefaultLayout = function (a) {
 	return {$: 'MsgDefaultLayout', a: a};
 };
+var $author$project$Main$MsgPageAdmin = function (a) {
+	return {$: 'MsgPageAdmin', a: a};
+};
 var $author$project$Main$MsgPageCourseList = function (a) {
 	return {$: 'MsgPageCourseList', a: a};
 };
@@ -7507,6 +7515,9 @@ var $author$project$Main$MsgPageMarksOfStudent = function (a) {
 };
 var $author$project$Main$MsgPageUserProfile = function (a) {
 	return {$: 'MsgPageUserProfile', a: a};
+};
+var $author$project$Main$PageAdmin = function (a) {
+	return {$: 'PageAdmin', a: a};
 };
 var $author$project$Main$PageCourse = function (a) {
 	return {$: 'PageCourse', a: a};
@@ -7577,6 +7588,13 @@ var $author$project$Util$either_map = F3(
 		}
 	});
 var $elm$core$String$endsWith = _String_endsWith;
+var $author$project$Page$Admin$AdminPage$SubpageIndex = {$: 'SubpageIndex'};
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $author$project$Page$Admin$AdminPage$init = function (token) {
+	return _Utils_Tuple2(
+		{currentSubpage: $author$project$Page$Admin$AdminPage$SubpageIndex, token: token},
+		$elm$core$Platform$Cmd$none);
+};
 var $author$project$Page$Course$CoursePage$ActivityImportStateNone = {$: 'ActivityImportStateNone'};
 var $author$project$Page$Course$CoursePage$EditOff = {$: 'EditOff'};
 var $author$project$Page$Course$CoursePage$Fetching = function (a) {
@@ -8957,10 +8975,8 @@ var $author$project$Api$Data$UserShallow = function (id) {
 															return function (middleName) {
 																return function (birthDate) {
 																	return function (avatar) {
-																		return function (groups) {
-																			return function (children) {
-																				return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, currentSpec: currentSpec, dateJoined: dateJoined, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, roles: roles, updatedAt: updatedAt, username: username};
-																			};
+																		return function (children) {
+																			return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, currentSpec: currentSpec, dateJoined: dateJoined, email: email, firstName: firstName, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, roles: roles, updatedAt: updatedAt, username: username};
 																		};
 																	};
 																};
@@ -9071,100 +9087,95 @@ var $author$project$Api$Data$userShallowDecoder = A4(
 	$elm$json$Json$Decode$list($danyx23$elm_uuid$Uuid$decoder),
 	$elm$core$Maybe$Nothing,
 	A4(
-		$author$project$Api$Data$maybeDecode,
-		'groups',
-		$elm$json$Json$Decode$list($elm$json$Json$Decode$int),
+		$author$project$Api$Data$maybeDecodeNullable,
+		'avatar',
+		$elm$json$Json$Decode$string,
 		$elm$core$Maybe$Nothing,
 		A4(
 			$author$project$Api$Data$maybeDecodeNullable,
-			'avatar',
-			$elm$json$Json$Decode$string,
+			'birth_date',
+			$author$project$Api$Time$dateDecoder,
 			$elm$core$Maybe$Nothing,
 			A4(
 				$author$project$Api$Data$maybeDecodeNullable,
-				'birth_date',
-				$author$project$Api$Time$dateDecoder,
+				'middle_name',
+				$elm$json$Json$Decode$string,
 				$elm$core$Maybe$Nothing,
 				A4(
-					$author$project$Api$Data$maybeDecodeNullable,
-					'middle_name',
-					$elm$json$Json$Decode$string,
+					$author$project$Api$Data$maybeDecode,
+					'updated_at',
+					$author$project$Api$Time$dateTimeDecoder,
 					$elm$core$Maybe$Nothing,
 					A4(
 						$author$project$Api$Data$maybeDecode,
-						'updated_at',
+						'created_at',
 						$author$project$Api$Time$dateTimeDecoder,
 						$elm$core$Maybe$Nothing,
 						A4(
 							$author$project$Api$Data$maybeDecode,
-							'created_at',
+							'date_joined',
 							$author$project$Api$Time$dateTimeDecoder,
 							$elm$core$Maybe$Nothing,
 							A4(
 								$author$project$Api$Data$maybeDecode,
-								'date_joined',
-								$author$project$Api$Time$dateTimeDecoder,
+								'is_active',
+								$elm$json$Json$Decode$bool,
 								$elm$core$Maybe$Nothing,
 								A4(
 									$author$project$Api$Data$maybeDecode,
-									'is_active',
+									'is_staff',
 									$elm$json$Json$Decode$bool,
 									$elm$core$Maybe$Nothing,
 									A4(
 										$author$project$Api$Data$maybeDecode,
-										'is_staff',
-										$elm$json$Json$Decode$bool,
+										'email',
+										$elm$json$Json$Decode$string,
 										$elm$core$Maybe$Nothing,
 										A4(
 											$author$project$Api$Data$maybeDecode,
-											'email',
+											'last_name',
 											$elm$json$Json$Decode$string,
 											$elm$core$Maybe$Nothing,
 											A4(
 												$author$project$Api$Data$maybeDecode,
-												'last_name',
+												'first_name',
 												$elm$json$Json$Decode$string,
 												$elm$core$Maybe$Nothing,
-												A4(
-													$author$project$Api$Data$maybeDecode,
-													'first_name',
+												A3(
+													$author$project$Api$Data$decode,
+													'username',
 													$elm$json$Json$Decode$string,
-													$elm$core$Maybe$Nothing,
-													A3(
-														$author$project$Api$Data$decode,
-														'username',
-														$elm$json$Json$Decode$string,
+													A4(
+														$author$project$Api$Data$maybeDecode,
+														'is_superuser',
+														$elm$json$Json$Decode$bool,
+														$elm$core$Maybe$Nothing,
 														A4(
-															$author$project$Api$Data$maybeDecode,
-															'is_superuser',
-															$elm$json$Json$Decode$bool,
+															$author$project$Api$Data$maybeDecodeNullable,
+															'last_login',
+															$author$project$Api$Time$dateTimeDecoder,
 															$elm$core$Maybe$Nothing,
 															A4(
 																$author$project$Api$Data$maybeDecodeNullable,
-																'last_login',
-																$author$project$Api$Time$dateTimeDecoder,
+																'current_spec',
+																$author$project$Api$Data$educationSpecializationDecoder,
 																$elm$core$Maybe$Nothing,
 																A4(
-																	$author$project$Api$Data$maybeDecodeNullable,
-																	'current_spec',
-																	$author$project$Api$Data$educationSpecializationDecoder,
+																	$author$project$Api$Data$maybeDecode,
+																	'current_class',
+																	$elm$json$Json$Decode$string,
 																	$elm$core$Maybe$Nothing,
 																	A4(
 																		$author$project$Api$Data$maybeDecode,
-																		'current_class',
-																		$elm$json$Json$Decode$string,
+																		'roles',
+																		$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
 																		$elm$core$Maybe$Nothing,
 																		A4(
 																			$author$project$Api$Data$maybeDecode,
-																			'roles',
-																			$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+																			'id',
+																			$danyx23$elm_uuid$Uuid$decoder,
 																			$elm$core$Maybe$Nothing,
-																			A4(
-																				$author$project$Api$Data$maybeDecode,
-																				'id',
-																				$danyx23$elm_uuid$Uuid$decoder,
-																				$elm$core$Maybe$Nothing,
-																				$elm$json$Json$Decode$succeed($author$project$Api$Data$UserShallow)))))))))))))))))))));
+																			$elm$json$Json$Decode$succeed($author$project$Api$Data$UserShallow))))))))))))))))))));
 var $author$project$Api$Data$courseEnrollmentReadDecoder = A3(
 	$author$project$Api$Data$decode,
 	'course',
@@ -9809,7 +9820,6 @@ var $author$project$Api$ext_task = F4(
 						$elm$core$Maybe$Just(token),
 						request_))));
 	});
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Component$Select$init = F3(
 	function (placeholder, fluid, items) {
 		return _Utils_Tuple2(
@@ -9998,9 +10008,7 @@ var $author$project$Api$Data$UserDeep = function (id) {
 																		return function (middleName) {
 																			return function (birthDate) {
 																				return function (avatar) {
-																					return function (groups) {
-																						return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, currentSpec: currentSpec, dateJoined: dateJoined, education: education, email: email, firstName: firstName, groups: groups, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, parents: parents, roles: roles, updatedAt: updatedAt, username: username};
-																					};
+																					return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, currentSpec: currentSpec, dateJoined: dateJoined, education: education, email: email, firstName: firstName, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, parents: parents, roles: roles, updatedAt: updatedAt, username: username};
 																				};
 																			};
 																		};
@@ -10068,132 +10076,108 @@ var $author$project$Api$Data$educationShallowDecoder = A3(
 									$danyx23$elm_uuid$Uuid$decoder,
 									$elm$core$Maybe$Nothing,
 									$elm$json$Json$Decode$succeed($author$project$Api$Data$EducationShallow))))))))));
-var $author$project$Api$Data$UserDeepGroupsInner = F3(
-	function (id, name, permissions) {
-		return {id: id, name: name, permissions: permissions};
-	});
-var $author$project$Api$Data$userDeepGroupsInnerDecoder = A4(
-	$author$project$Api$Data$maybeDecode,
-	'permissions',
-	$elm$json$Json$Decode$list($elm$json$Json$Decode$int),
-	$elm$core$Maybe$Nothing,
-	A3(
-		$author$project$Api$Data$decode,
-		'name',
-		$elm$json$Json$Decode$string,
-		A4(
-			$author$project$Api$Data$maybeDecode,
-			'id',
-			$elm$json$Json$Decode$int,
-			$elm$core$Maybe$Nothing,
-			$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeepGroupsInner))));
 var $author$project$Api$Data$userDeepDecoder = A4(
-	$author$project$Api$Data$maybeDecode,
-	'groups',
-	$elm$json$Json$Decode$list($author$project$Api$Data$userDeepGroupsInnerDecoder),
+	$author$project$Api$Data$maybeDecodeNullable,
+	'avatar',
+	$elm$json$Json$Decode$string,
 	$elm$core$Maybe$Nothing,
 	A4(
 		$author$project$Api$Data$maybeDecodeNullable,
-		'avatar',
-		$elm$json$Json$Decode$string,
+		'birth_date',
+		$author$project$Api$Time$dateDecoder,
 		$elm$core$Maybe$Nothing,
 		A4(
 			$author$project$Api$Data$maybeDecodeNullable,
-			'birth_date',
-			$author$project$Api$Time$dateDecoder,
+			'middle_name',
+			$elm$json$Json$Decode$string,
 			$elm$core$Maybe$Nothing,
 			A4(
-				$author$project$Api$Data$maybeDecodeNullable,
-				'middle_name',
-				$elm$json$Json$Decode$string,
+				$author$project$Api$Data$maybeDecode,
+				'updated_at',
+				$author$project$Api$Time$dateTimeDecoder,
 				$elm$core$Maybe$Nothing,
 				A4(
 					$author$project$Api$Data$maybeDecode,
-					'updated_at',
+					'created_at',
 					$author$project$Api$Time$dateTimeDecoder,
 					$elm$core$Maybe$Nothing,
 					A4(
 						$author$project$Api$Data$maybeDecode,
-						'created_at',
+						'date_joined',
 						$author$project$Api$Time$dateTimeDecoder,
 						$elm$core$Maybe$Nothing,
 						A4(
 							$author$project$Api$Data$maybeDecode,
-							'date_joined',
-							$author$project$Api$Time$dateTimeDecoder,
+							'is_active',
+							$elm$json$Json$Decode$bool,
 							$elm$core$Maybe$Nothing,
 							A4(
 								$author$project$Api$Data$maybeDecode,
-								'is_active',
+								'is_staff',
 								$elm$json$Json$Decode$bool,
 								$elm$core$Maybe$Nothing,
 								A4(
 									$author$project$Api$Data$maybeDecode,
-									'is_staff',
-									$elm$json$Json$Decode$bool,
+									'email',
+									$elm$json$Json$Decode$string,
 									$elm$core$Maybe$Nothing,
 									A4(
 										$author$project$Api$Data$maybeDecode,
-										'email',
+										'last_name',
 										$elm$json$Json$Decode$string,
 										$elm$core$Maybe$Nothing,
 										A4(
 											$author$project$Api$Data$maybeDecode,
-											'last_name',
+											'first_name',
 											$elm$json$Json$Decode$string,
 											$elm$core$Maybe$Nothing,
-											A4(
-												$author$project$Api$Data$maybeDecode,
-												'first_name',
+											A3(
+												$author$project$Api$Data$decode,
+												'username',
 												$elm$json$Json$Decode$string,
-												$elm$core$Maybe$Nothing,
-												A3(
-													$author$project$Api$Data$decode,
-													'username',
-													$elm$json$Json$Decode$string,
+												A4(
+													$author$project$Api$Data$maybeDecode,
+													'is_superuser',
+													$elm$json$Json$Decode$bool,
+													$elm$core$Maybe$Nothing,
 													A4(
-														$author$project$Api$Data$maybeDecode,
-														'is_superuser',
-														$elm$json$Json$Decode$bool,
+														$author$project$Api$Data$maybeDecodeNullable,
+														'last_login',
+														$author$project$Api$Time$dateTimeDecoder,
 														$elm$core$Maybe$Nothing,
-														A4(
-															$author$project$Api$Data$maybeDecodeNullable,
-															'last_login',
-															$author$project$Api$Time$dateTimeDecoder,
-															$elm$core$Maybe$Nothing,
+														A3(
+															$author$project$Api$Data$decode,
+															'education',
+															$elm$json$Json$Decode$list($author$project$Api$Data$educationShallowDecoder),
 															A3(
 																$author$project$Api$Data$decode,
-																'education',
-																$elm$json$Json$Decode$list($author$project$Api$Data$educationShallowDecoder),
+																'parents',
+																$elm$json$Json$Decode$list($author$project$Api$Data$userShallowDecoder),
 																A3(
 																	$author$project$Api$Data$decode,
-																	'parents',
+																	'children',
 																	$elm$json$Json$Decode$list($author$project$Api$Data$userShallowDecoder),
-																	A3(
-																		$author$project$Api$Data$decode,
-																		'children',
-																		$elm$json$Json$Decode$list($author$project$Api$Data$userShallowDecoder),
+																	A4(
+																		$author$project$Api$Data$maybeDecodeNullable,
+																		'current_spec',
+																		$author$project$Api$Data$educationSpecializationDecoder,
+																		$elm$core$Maybe$Nothing,
 																		A4(
-																			$author$project$Api$Data$maybeDecodeNullable,
-																			'current_spec',
-																			$author$project$Api$Data$educationSpecializationDecoder,
+																			$author$project$Api$Data$maybeDecode,
+																			'current_class',
+																			$elm$json$Json$Decode$string,
 																			$elm$core$Maybe$Nothing,
 																			A4(
 																				$author$project$Api$Data$maybeDecode,
-																				'current_class',
-																				$elm$json$Json$Decode$string,
+																				'roles',
+																				$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
 																				$elm$core$Maybe$Nothing,
 																				A4(
 																					$author$project$Api$Data$maybeDecode,
-																					'roles',
-																					$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+																					'id',
+																					$danyx23$elm_uuid$Uuid$decoder,
 																					$elm$core$Maybe$Nothing,
-																					A4(
-																						$author$project$Api$Data$maybeDecode,
-																						'id',
-																						$danyx23$elm_uuid$Uuid$decoder,
-																						$elm$core$Maybe$Nothing,
-																						$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeep)))))))))))))))))))))));
+																					$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeep))))))))))))))))))))));
 var $author$project$Api$Request$User$userSelf = A7($author$project$Api$request, 'GET', '/user/self/', _List_Nil, _List_Nil, _List_Nil, $elm$core$Maybe$Nothing, $author$project$Api$Data$userDeepDecoder);
 var $author$project$Page$Login$doCheckSession = function (token) {
 	var task_user = A2(
@@ -10632,6 +10616,362 @@ var $author$project$Page$Login$init_password_reset_fin = function (reset_token) 
 };
 var $elm$browser$Browser$Navigation$load = _Browser_load;
 var $author$project$Ports$scrollIdIntoView = _Platform_outgoingPort('scrollIdIntoView', $elm$json$Json$Encode$string);
+var $author$project$Page$Admin$AdminPage$MsgSubpageImportStudents = function (a) {
+	return {$: 'MsgSubpageImportStudents', a: a};
+};
+var $author$project$Page$Admin$AdminPage$SubpageImportStudents = function (a) {
+	return {$: 'SubpageImportStudents', a: a};
+};
+var $author$project$Page$Admin$ImportStudentsCSV$StateInput = function (a) {
+	return {$: 'StateInput', a: a};
+};
+var $author$project$Page$Admin$ImportStudentsCSV$init = function (token) {
+	return _Utils_Tuple2(
+		{
+			state: $author$project$Page$Admin$ImportStudentsCSV$StateInput(''),
+			token: token
+		},
+		$elm$core$Platform$Cmd$none);
+};
+var $author$project$Page$Admin$ImportStudentsCSV$StateFinished = function (a) {
+	return {$: 'StateFinished', a: a};
+};
+var $author$project$Page$Admin$ImportStudentsCSV$StateInProgress = {$: 'StateInProgress'};
+var $author$project$Page$Admin$ImportStudentsCSV$MsgImportFinished = function (a) {
+	return {$: 'MsgImportFinished', a: a};
+};
+var $author$project$Api$Data$encode = F3(
+	function (key, encoder, value) {
+		return $elm$core$Maybe$Just(
+			_Utils_Tuple2(
+				key,
+				encoder(value)));
+	});
+var $author$project$Api$Data$encodeImportStudentsCSVRequestPairs = function (model) {
+	var pairs = _List_fromArray(
+		[
+			A3($author$project$Api$Data$encode, 'data', $elm$json$Json$Encode$string, model.data)
+		]);
+	return pairs;
+};
+var $author$project$Api$Data$encodeObject = A2(
+	$elm$core$Basics$composeL,
+	$elm$json$Json$Encode$object,
+	$elm$core$List$filterMap($elm$core$Basics$identity));
+var $author$project$Api$Data$encodeImportStudentsCSVRequest = A2($elm$core$Basics$composeL, $author$project$Api$Data$encodeObject, $author$project$Api$Data$encodeImportStudentsCSVRequestPairs);
+var $author$project$Api$Data$ImportStudentsCSVResult = function (data) {
+	return {data: data};
+};
+var $author$project$Api$Data$importStudentsCSVResultDecoder = A3(
+	$author$project$Api$Data$decode,
+	'data',
+	$elm$json$Json$Decode$list(
+		$elm$json$Json$Decode$list($elm$json$Json$Decode$string)),
+	$elm$json$Json$Decode$succeed($author$project$Api$Data$ImportStudentsCSVResult));
+var $author$project$Api$Request$User$userImportStudentsCsv = function (data_body) {
+	return A7(
+		$author$project$Api$request,
+		'POST',
+		'/user/import_students_csv/',
+		_List_Nil,
+		_List_Nil,
+		_List_Nil,
+		$elm$core$Maybe$Just(
+			$author$project$Api$Data$encodeImportStudentsCSVRequest(data_body)),
+		$author$project$Api$Data$importStudentsCSVResultDecoder);
+};
+var $author$project$Page$Admin$ImportStudentsCSV$doImport = F2(
+	function (token, data) {
+		return A2(
+			$elm$core$Task$attempt,
+			$author$project$Page$Admin$ImportStudentsCSV$MsgImportFinished,
+			A4(
+				$author$project$Api$ext_task,
+				$elm$core$Basics$identity,
+				token,
+				_List_Nil,
+				$author$project$Api$Request$User$userImportStudentsCsv(
+					{data: data})));
+	});
+var $elm$core$Dict$map = F2(
+	function (func, dict) {
+		if (dict.$ === 'RBEmpty_elm_builtin') {
+			return $elm$core$Dict$RBEmpty_elm_builtin;
+		} else {
+			var color = dict.a;
+			var key = dict.b;
+			var value = dict.c;
+			var left = dict.d;
+			var right = dict.e;
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				color,
+				key,
+				A2(func, key, value),
+				A2($elm$core$Dict$map, func, left),
+				A2($elm$core$Dict$map, func, right));
+		}
+	});
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
+};
+var $elm$core$List$sortBy = _List_sortBy;
+var $elm$core$List$sum = function (numbers) {
+	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
+};
+var $BrianHicks$elm_csv$Csv$Encode$encodeItems = F2(
+	function (encoder, rows) {
+		if (encoder.$ === 'WithFieldNames') {
+			var convert = encoder.a;
+			var _v1 = A3(
+				$elm$core$List$foldr,
+				F2(
+					function (row, _v2) {
+						var converted_ = _v2.a;
+						var names = _v2.b;
+						var convertedRow = convert(row);
+						return _Utils_Tuple2(
+							A2(
+								$elm$core$List$cons,
+								$elm$core$Dict$fromList(convertedRow),
+								converted_),
+							A3(
+								$elm$core$List$foldl,
+								F2(
+									function (_v3, _v4) {
+										var name = _v3.a;
+										var soFar = _v4.a;
+										var column = _v4.b;
+										return _Utils_Tuple2(
+											A3(
+												$elm$core$Dict$update,
+												name,
+												function (value) {
+													if (value.$ === 'Just') {
+														var columns = value.a;
+														return $elm$core$Maybe$Just(
+															A2($elm$core$List$cons, column, columns));
+													} else {
+														return $elm$core$Maybe$Just(
+															_List_fromArray(
+																[column]));
+													}
+												},
+												soFar),
+											column + 1);
+									}),
+								_Utils_Tuple2(names, 0),
+								convertedRow).a);
+					}),
+				_Utils_Tuple2(_List_Nil, $elm$core$Dict$empty),
+				rows);
+			var converted = _v1.a;
+			var namePositions = _v1.b;
+			var ordering = A2(
+				$elm$core$List$map,
+				$elm$core$Tuple$first,
+				A2(
+					$elm$core$List$sortBy,
+					$elm$core$Tuple$second,
+					$elm$core$Dict$toList(
+						A2(
+							$elm$core$Dict$map,
+							F2(
+								function (_v6, positions) {
+									return $elm$core$List$sum(positions) / $elm$core$List$length(positions);
+								}),
+							namePositions))));
+			return A2(
+				$elm$core$List$cons,
+				ordering,
+				A2(
+					$elm$core$List$map,
+					function (row) {
+						return A2(
+							$elm$core$List$map,
+							function (field) {
+								return A2(
+									$elm$core$Maybe$withDefault,
+									'',
+									A2($elm$core$Dict$get, field, row));
+							},
+							ordering);
+					},
+					converted));
+		} else {
+			var convert = encoder.a;
+			return A2($elm$core$List$map, convert, rows);
+		}
+	});
+var $elm$core$String$cons = _String_cons;
+var $elm$core$String$fromChar = function (_char) {
+	return A2($elm$core$String$cons, _char, '');
+};
+var $BrianHicks$elm_csv$Csv$Encode$quoteIfNecessary = F2(
+	function (fieldSeparator, value) {
+		return (A2($elm$core$String$contains, '\"', value) || (A2($elm$core$String$contains, fieldSeparator, value) || (A2($elm$core$String$contains, '\u000D\n', value) || A2($elm$core$String$contains, '\n', value)))) ? ('\"' + (A3($elm$core$String$replace, '\"', '\"\"', value) + '\"')) : value;
+	});
+var $BrianHicks$elm_csv$Csv$Encode$encode = F2(
+	function (_v0, items) {
+		var encoder = _v0.encoder;
+		var fieldSeparator = _v0.fieldSeparator;
+		var fieldSeparatorString = $elm$core$String$fromChar(fieldSeparator);
+		return A2(
+			$elm$core$String$join,
+			'\u000D\n',
+			A2(
+				$elm$core$List$map,
+				A2(
+					$elm$core$Basics$composeL,
+					$elm$core$String$join(fieldSeparatorString),
+					$elm$core$List$map(
+						$BrianHicks$elm_csv$Csv$Encode$quoteIfNecessary(fieldSeparatorString))),
+				A2($BrianHicks$elm_csv$Csv$Encode$encodeItems, encoder, items)));
+	});
+var $elm$file$File$Download$string = F3(
+	function (name, mime, content) {
+		return A2(
+			$elm$core$Task$perform,
+			$elm$core$Basics$never,
+			A3(_File_download, name, mime, content));
+	});
+var $BrianHicks$elm_csv$Csv$Encode$WithFieldNames = function (a) {
+	return {$: 'WithFieldNames', a: a};
+};
+var $BrianHicks$elm_csv$Csv$Encode$withFieldNames = $BrianHicks$elm_csv$Csv$Encode$WithFieldNames;
+var $elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
+	});
+var $author$project$Util$zip = $elm$core$List$map2($elm$core$Tuple$pair);
+var $author$project$Page$Admin$ImportStudentsCSV$update = F2(
+	function (msg, model) {
+		var ignore = _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		switch (msg.$) {
+			case 'MsgOnInputData':
+				var v = msg.a;
+				var _v1 = model.state;
+				if (_v1.$ === 'StateInput') {
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								state: $author$project$Page$Admin$ImportStudentsCSV$StateInput(v)
+							}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					return ignore;
+				}
+			case 'MsgOnClickDownloadReport':
+				var _v2 = model.state;
+				if (_v2.$ === 'StateFinished') {
+					var result = _v2.a;
+					if (result.$ === 'Ok') {
+						var data = result.a.data;
+						if (data.b) {
+							var header = data.a;
+							var data_ = data.b;
+							var encoder = function (header_) {
+								return $BrianHicks$elm_csv$Csv$Encode$withFieldNames(
+									$author$project$Util$zip(header_));
+							};
+							var cmd = A3(
+								$elm$file$File$Download$string,
+								'import_result.csv',
+								'text/csv',
+								A2(
+									$BrianHicks$elm_csv$Csv$Encode$encode,
+									{
+										encoder: encoder(header),
+										fieldSeparator: _Utils_chr(',')
+									},
+									data_));
+							return _Utils_Tuple2(model, cmd);
+						} else {
+							return _Utils_Tuple2(
+								model,
+								A3($elm$file$File$Download$string, 'import_result.csv', 'text/csv', ''));
+						}
+					} else {
+						return ignore;
+					}
+				} else {
+					return ignore;
+				}
+			case 'MsgImportFinished':
+				var result = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							state: $author$project$Page$Admin$ImportStudentsCSV$StateFinished(result)
+						}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var _v5 = model.state;
+				if (_v5.$ === 'StateInput') {
+					var data = _v5.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{state: $author$project$Page$Admin$ImportStudentsCSV$StateInProgress}),
+						A2($author$project$Page$Admin$ImportStudentsCSV$doImport, model.token, data));
+				} else {
+					return ignore;
+				}
+		}
+	});
+var $author$project$Page$Admin$AdminPage$update = F2(
+	function (msg, model) {
+		var ignore = _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		if (msg.$ === 'MsgChangeSubpage') {
+			var subpage = msg.a;
+			if (subpage.$ === 'SubpageIndex') {
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{currentSubpage: subpage}),
+					$elm$core$Platform$Cmd$none);
+			} else {
+				if (subpage.a.$ === 'Nothing') {
+					var _v2 = subpage.a;
+					var _v3 = $author$project$Page$Admin$ImportStudentsCSV$init(model.token);
+					var m = _v3.a;
+					var c = _v3.b;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								currentSubpage: $author$project$Page$Admin$AdminPage$SubpageImportStudents(
+									$elm$core$Maybe$Just(m))
+							}),
+						A2($elm$core$Platform$Cmd$map, $author$project$Page$Admin$AdminPage$MsgSubpageImportStudents, c));
+				} else {
+					return ignore;
+				}
+			}
+		} else {
+			var msg_ = msg.a;
+			var _v4 = model.currentSubpage;
+			if ((_v4.$ === 'SubpageImportStudents') && (_v4.a.$ === 'Just')) {
+				var model_ = _v4.a.a;
+				var _v5 = A2($author$project$Page$Admin$ImportStudentsCSV$update, msg_, model_);
+				var m = _v5.a;
+				var c = _v5.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							currentSubpage: $author$project$Page$Admin$AdminPage$SubpageImportStudents(
+								$elm$core$Maybe$Just(m))
+						}),
+					A2($elm$core$Platform$Cmd$map, $author$project$Page$Admin$AdminPage$MsgSubpageImportStudents, c));
+			} else {
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			}
+		}
+	});
 var $author$project$Page$Course$CoursePage$ActivityImportStateDataInput = F3(
 	function (a, b, c) {
 		return {$: 'ActivityImportStateDataInput', a: a, b: b, c: c};
@@ -10682,13 +11022,6 @@ var $author$project$Page$Course$CoursePage$MsgOnClickAddBefore = F2(
 	function (a, b) {
 		return {$: 'MsgOnClickAddBefore', a: a, b: b};
 	});
-var $author$project$Api$Data$encode = F3(
-	function (key, encoder, value) {
-		return $elm$core$Maybe$Just(
-			_Utils_Tuple2(
-				key,
-				encoder(value)));
-	});
 var $danyx23$elm_uuid$Uuid$encode = A2($elm$core$Basics$composeR, $danyx23$elm_uuid$Uuid$toString, $elm$json$Json$Encode$string);
 var $author$project$Api$Data$encodeImportForCoursePairs = function (model) {
 	var pairs = _List_fromArray(
@@ -10699,10 +11032,6 @@ var $author$project$Api$Data$encodeImportForCoursePairs = function (model) {
 		]);
 	return pairs;
 };
-var $author$project$Api$Data$encodeObject = A2(
-	$elm$core$Basics$composeL,
-	$elm$json$Json$Encode$object,
-	$elm$core$List$filterMap($elm$core$Basics$identity));
 var $author$project$Api$Data$encodeImportForCourse = A2($elm$core$Basics$composeL, $author$project$Api$Data$encodeObject, $author$project$Api$Data$encodeImportForCoursePairs);
 var $author$project$Api$Data$ImportForCourseResult = function (objects) {
 	return {objects: objects};
@@ -10881,7 +11210,6 @@ var $author$project$Page$Course$CoursePage$collectFetchResults = function (fetch
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$core$String$cons = _String_cons;
 var $elm$json$Json$Encode$dict = F3(
 	function (toKey, toValue, dictionary) {
 		return _Json_wrap(
@@ -11099,9 +11427,6 @@ var $elm$time$Time$toMonth = F2(
 				return $elm$time$Time$Dec;
 		}
 	});
-var $elm$core$String$fromChar = function (_char) {
-	return A2($elm$core$String$cons, _char, '');
-};
 var $elm$core$Bitwise$and = _Bitwise_and;
 var $elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
 var $elm$core$String$repeatHelp = F3(
@@ -11189,10 +11514,6 @@ var $elm$json$Json$Encode$list = F2(
 				_Json_addEntry(func),
 				_Json_emptyArray(_Utils_Tuple0),
 				entries));
-	});
-var $elm$core$Tuple$pair = F2(
-	function (a, b) {
-		return _Utils_Tuple2(a, b);
 	});
 var $author$project$Api$Data$maybeEncode = F2(
 	function (key, encoder) {
@@ -11957,10 +12278,6 @@ var $author$project$Util$maybeFilter = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $elm$core$Tuple$second = function (_v0) {
-	var y = _v0.b;
-	return y;
-};
 var $author$project$Component$Activity$setEditable = F2(
 	function (editable, model) {
 		return _Utils_update(
@@ -12015,7 +12332,6 @@ var $author$project$Page$Course$CoursePage$setModified = F2(
 				});
 		}
 	});
-var $elm$core$List$sortBy = _List_sortBy;
 var $elm$file$File$toString = _File_toString;
 var $elm$core$String$trim = _String_trim;
 var $elm$core$List$unzip = function (pairs) {
@@ -14012,7 +14328,6 @@ var $author$project$Page$Course$CoursePage$validateActivityCSV = F2(
 			}
 		}
 	});
-var $author$project$Util$zip = $elm$core$List$map2($elm$core$Tuple$pair);
 var $author$project$Page$Course$CoursePage$update = F2(
 	function (msg, model) {
 		var parse_course = function (course) {
@@ -16056,9 +16371,6 @@ var $elm$core$List$repeat = F2(
 	function (n, value) {
 		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
 	});
-var $elm$core$List$sum = function (numbers) {
-	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
-};
 var $author$project$Component$MarkTable$updateMark = F3(
 	function (model, _v0, mb_mark) {
 		var cell_x = _v0.a;
@@ -17057,7 +17369,7 @@ var $author$project$Page$UserProfile$update = F2(
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		var _v0 = _Utils_Tuple3(msg, model.page, model.layout);
-		_v0$12:
+		_v0$13:
 		while (true) {
 			switch (_v0.a.$) {
 				case 'MsgDefaultLayout':
@@ -17075,7 +17387,7 @@ var $author$project$Main$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgDefaultLayout, cmd_));
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 				case 'MsgUrlRequested':
 					var urlRequest = _v0.a.a;
@@ -17103,7 +17415,7 @@ var $author$project$Main$update = F2(
 						var _v4 = _Utils_Tuple2(
 							$author$project$Main$parse_url(url),
 							model.token);
-						_v4$14:
+						_v4$15:
 						while (true) {
 							switch (_v4.a.$) {
 								case 'UrlNotFound':
@@ -17178,7 +17490,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageFront, cmd_2)
 													])));
 									} else {
-										break _v4$14;
+										break _v4$15;
 									}
 								case 'UrlCourse':
 									if (_v4.b.$ === 'Right') {
@@ -17204,7 +17516,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageCourse, cmd_2)
 													])));
 									} else {
-										break _v4$14;
+										break _v4$15;
 									}
 								case 'UrlCourseList':
 									if (_v4.b.$ === 'Right') {
@@ -17230,7 +17542,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageCourseList, cmd_2)
 													])));
 									} else {
-										break _v4$14;
+										break _v4$15;
 									}
 								case 'UrlMarks':
 									if (_v4.b.$ === 'Right') {
@@ -17256,7 +17568,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageMarksOfStudent, cmd_2)
 													])));
 									} else {
-										break _v4$14;
+										break _v4$15;
 									}
 								case 'UrlMarksOfPerson':
 									if (_v4.b.$ === 'Right') {
@@ -17286,7 +17598,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageMarksOfStudent, cmd_2)
 													])));
 									} else {
-										break _v4$14;
+										break _v4$15;
 									}
 								case 'UrlMarksOfCourse':
 									if (_v4.b.$ === 'Right') {
@@ -17312,7 +17624,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageMarksOfCourse, cmd_2)
 													])));
 									} else {
-										break _v4$14;
+										break _v4$15;
 									}
 								case 'UrlProfileOwn':
 									if (_v4.b.$ === 'Right') {
@@ -17338,7 +17650,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageUserProfile, cmd_2)
 													])));
 									} else {
-										break _v4$14;
+										break _v4$15;
 									}
 								case 'UrlProfileOfUser':
 									if (_v4.b.$ === 'Right') {
@@ -17368,7 +17680,7 @@ var $author$project$Main$update = F2(
 														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageUserProfile, cmd_2)
 													])));
 									} else {
-										break _v4$14;
+										break _v4$15;
 									}
 								case 'UrlMessages':
 									if (_v4.b.$ === 'Right') {
@@ -17380,7 +17692,7 @@ var $author$project$Main$update = F2(
 												{page: $author$project$Main$PageBlank}),
 											$elm$core$Platform$Cmd$none);
 									} else {
-										break _v4$14;
+										break _v4$15;
 									}
 								case 'UrlNews':
 									if (_v4.b.$ === 'Right') {
@@ -17392,9 +17704,9 @@ var $author$project$Main$update = F2(
 												{page: $author$project$Main$PageBlank}),
 											$elm$core$Platform$Cmd$none);
 									} else {
-										break _v4$14;
+										break _v4$15;
 									}
-								default:
+								case 'UrlPasswordReset':
 									if (_v4.a.a.$ === 'Just') {
 										var token = _v4.a.a.a;
 										var _v31 = $author$project$Page$Login$init_password_reset_fin(token);
@@ -17409,14 +17721,40 @@ var $author$project$Main$update = F2(
 												}),
 											A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageLogin, c));
 									} else {
-										break _v4$14;
+										break _v4$15;
+									}
+								default:
+									if (_v4.b.$ === 'Right') {
+										var _v32 = _v4.a;
+										var token = _v4.b.a;
+										var _v33 = $author$project$Page$Admin$AdminPage$init(token.key);
+										var model_ = _v33.a;
+										var cmd_2 = _v33.b;
+										var _v34 = $author$project$Page$DefaultLayout$init(token.user);
+										var layout_ = _v34.a;
+										var cmd_1 = _v34.b;
+										return _Utils_Tuple2(
+											_Utils_update(
+												model,
+												{
+													layout: $author$project$Main$LayoutDefault(layout_),
+													page: $author$project$Main$PageAdmin(model_)
+												}),
+											$elm$core$Platform$Cmd$batch(
+												_List_fromArray(
+													[
+														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgDefaultLayout, cmd_1),
+														A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageAdmin, cmd_2)
+													])));
+									} else {
+										break _v4$15;
 									}
 							}
 						}
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
-								{page: $author$project$Main$PageBlank}),
+								{page: $author$project$Main$PageNotFound}),
 							$elm$core$Platform$Cmd$none);
 					}();
 					var new_model = _v3.a;
@@ -17437,9 +17775,9 @@ var $author$project$Main$update = F2(
 							var msg_ = _v0.a.a;
 							var token = msg_.a;
 							var model_ = _v0.b.a;
-							var _v32 = A2($author$project$Page$Login$update, msg_, model_);
-							var m = _v32.a;
-							var c = _v32.b;
+							var _v35 = A2($author$project$Page$Login$update, msg_, model_);
+							var m = _v35.a;
+							var c = _v35.b;
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
@@ -17459,9 +17797,9 @@ var $author$project$Main$update = F2(
 						} else {
 							var msg_ = _v0.a.a;
 							var model_ = _v0.b.a;
-							var _v33 = A2($author$project$Page$Login$update, msg_, model_);
-							var m = _v33.a;
-							var c = _v33.b;
+							var _v36 = A2($author$project$Page$Login$update, msg_, model_);
+							var m = _v36.a;
+							var c = _v36.b;
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
@@ -17471,16 +17809,16 @@ var $author$project$Main$update = F2(
 								A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageLogin, c));
 						}
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 				case 'MsgPageCourseList':
 					if ((_v0.b.$ === 'PageCourseList') && (_v0.c.$ === 'LayoutDefault')) {
 						var msg_ = _v0.a.a;
 						var model_ = _v0.b.a;
 						var layout_ = _v0.c.a;
-						var _v34 = A2($author$project$Page$CourseListPage$update, msg_, model_);
-						var model__ = _v34.a;
-						var cmd_ = _v34.b;
+						var _v37 = A2($author$project$Page$CourseListPage$update, msg_, model_);
+						var model__ = _v37.a;
+						var cmd_ = _v37.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -17489,16 +17827,16 @@ var $author$project$Main$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageCourseList, cmd_));
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 				case 'MsgPageCourse':
 					if ((_v0.b.$ === 'PageCourse') && (_v0.c.$ === 'LayoutDefault')) {
 						var msg_ = _v0.a.a;
 						var model_ = _v0.b.a;
 						var layout_ = _v0.c.a;
-						var _v35 = A2($author$project$Page$Course$CoursePage$update, msg_, model_);
-						var model__ = _v35.a;
-						var cmd_ = _v35.b;
+						var _v38 = A2($author$project$Page$Course$CoursePage$update, msg_, model_);
+						var model__ = _v38.a;
+						var cmd_ = _v38.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -17507,16 +17845,16 @@ var $author$project$Main$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageCourse, cmd_));
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 				case 'MsgPageMarksOfStudent':
 					if ((_v0.b.$ === 'PageMarksOfStudent') && (_v0.c.$ === 'LayoutDefault')) {
 						var msg_ = _v0.a.a;
 						var model_ = _v0.b.a;
 						var layout_ = _v0.c.a;
-						var _v36 = A2($author$project$Page$MarksStudent$update, msg_, model_);
-						var model__ = _v36.a;
-						var cmd_ = _v36.b;
+						var _v39 = A2($author$project$Page$MarksStudent$update, msg_, model_);
+						var model__ = _v39.a;
+						var cmd_ = _v39.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -17525,16 +17863,16 @@ var $author$project$Main$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageMarksOfStudent, cmd_));
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 				case 'MsgPageMarksOfCourse':
 					if ((_v0.b.$ === 'PageMarksOfCourse') && (_v0.c.$ === 'LayoutDefault')) {
 						var msg_ = _v0.a.a;
 						var model_ = _v0.b.a;
 						var layout_ = _v0.c.a;
-						var _v37 = A2($author$project$Page$MarksCourse$update, msg_, model_);
-						var model__ = _v37.a;
-						var cmd_ = _v37.b;
+						var _v40 = A2($author$project$Page$MarksCourse$update, msg_, model_);
+						var model__ = _v40.a;
+						var cmd_ = _v40.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -17543,16 +17881,16 @@ var $author$project$Main$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageMarksOfCourse, cmd_));
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 				case 'MsgPageUserProfile':
 					if ((_v0.b.$ === 'PageUserProfile') && (_v0.c.$ === 'LayoutDefault')) {
 						var msg_ = _v0.a.a;
 						var model_ = _v0.b.a;
 						var layout_ = _v0.c.a;
-						var _v38 = A2($author$project$Page$UserProfile$update, msg_, model_);
-						var model__ = _v38.a;
-						var cmd_ = _v38.b;
+						var _v41 = A2($author$project$Page$UserProfile$update, msg_, model_);
+						var model__ = _v41.a;
+						var cmd_ = _v41.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -17561,10 +17899,10 @@ var $author$project$Main$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageUserProfile, cmd_));
 					} else {
-						break _v0$12;
+						break _v0$13;
 					}
 				case 'MsgUnauthorized':
-					var _v39 = _v0.a;
+					var _v42 = _v0.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
@@ -17582,14 +17920,14 @@ var $author$project$Main$update = F2(
 									$author$project$Page$Login$doSaveToken('')),
 									A2($elm$browser$Browser$Navigation$pushUrl, model.key, '/login')
 								])));
-				default:
+				case 'MsgPageFront':
 					if ((_v0.b.$ === 'PageFront') && (_v0.c.$ === 'LayoutDefault')) {
 						var msg_ = _v0.a.a;
 						var model_ = _v0.b.a;
 						var layout_ = _v0.c.a;
-						var _v40 = A2($author$project$Page$FrontPage$update, msg_, model_);
-						var model__ = _v40.a;
-						var cmd_ = _v40.b;
+						var _v43 = A2($author$project$Page$FrontPage$update, msg_, model_);
+						var model__ = _v43.a;
+						var cmd_ = _v43.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -17598,7 +17936,25 @@ var $author$project$Main$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageFront, cmd_));
 					} else {
-						break _v0$12;
+						break _v0$13;
+					}
+				default:
+					if ((_v0.b.$ === 'PageAdmin') && (_v0.c.$ === 'LayoutDefault')) {
+						var msg_ = _v0.a.a;
+						var model_ = _v0.b.a;
+						var layout_ = _v0.c.a;
+						var _v44 = A2($author$project$Page$Admin$AdminPage$update, msg_, model_);
+						var model__ = _v44.a;
+						var cmd_ = _v44.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									page: $author$project$Main$PageAdmin(model__)
+								}),
+							A2($elm$core$Platform$Cmd$map, $author$project$Main$MsgPageAdmin, cmd_));
+					} else {
+						break _v0$13;
 					}
 			}
 		}
@@ -17895,12 +18251,7 @@ var $author$project$Page$DefaultLayout$view = F3(
 					model.user,
 					_List_fromArray(
 						['admin'])) ? $elm$core$Maybe$Just(
-					{
-						href: '/admin',
-						icon: 'cog',
-						label: 'Администрирование',
-						target: $elm$core$Maybe$Just('_blank')
-					}) : $elm$core$Maybe$Nothing
+					{href: '/admin', icon: 'cog', label: 'Администрирование', target: $elm$core$Maybe$Nothing}) : $elm$core$Maybe$Nothing
 				]));
 		var sidebar = A2(
 			$elm$html$Html$div,
@@ -17972,11 +18323,128 @@ var $author$project$Main$viewLayout = F2(
 			return A3($author$project$Page$DefaultLayout$view, $author$project$Main$MsgDefaultLayout, model_, body);
 		}
 	});
-var $author$project$Component$MessageBox$Error = {$: 'Error'};
-var $author$project$Page$Course$CoursePage$showFetchResult = function (fetchResult) {
-	var courseRead = fetchResult.a;
-	return courseRead.title;
+var $elm$html$Html$h1 = _VirtualDom_node('h1');
+var $author$project$Page$Admin$AdminPage$MenuItemTypeExternalLink = function (a) {
+	return {$: 'MenuItemTypeExternalLink', a: a};
 };
+var $author$project$Page$Admin$AdminPage$MenuItemTypeSubpage = function (a) {
+	return {$: 'MenuItemTypeSubpage', a: a};
+};
+var $author$project$Page$Admin$AdminPage$MsgChangeSubpage = function (a) {
+	return {$: 'MsgChangeSubpage', a: a};
+};
+var $elm$html$Html$Attributes$classList = function (classes) {
+	return $elm$html$Html$Attributes$class(
+		A2(
+			$elm$core$String$join,
+			' ',
+			A2(
+				$elm$core$List$map,
+				$elm$core$Tuple$first,
+				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
+};
+var $author$project$Page$Admin$AdminPage$viewMenu = function (model) {
+	var viewMenuItem = function (item) {
+		var _v0 = item.type_;
+		switch (_v0.$) {
+			case 'MenuItemTypeSubpage':
+				var subpage = _v0.a;
+				return A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('ui'),
+							$elm$html$Html$Attributes$classList(
+							_List_fromArray(
+								[
+									_Utils_Tuple2(
+									'secondary segment',
+									!_Utils_eq(subpage, model.currentSubpage)),
+									_Utils_Tuple2(
+									'tertiary segment',
+									_Utils_eq(subpage, model.currentSubpage))
+								])),
+							$elm$html$Html$Attributes$href('#'),
+							$elm$html$Html$Events$onClick(
+							$author$project$Page$Admin$AdminPage$MsgChangeSubpage(subpage))
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$i,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class(item.icon + ' icon')
+								]),
+							_List_Nil),
+							$elm$html$Html$text(item.label)
+						]));
+			case 'MenuItemTypeInternalLink':
+				var addr = _v0.a;
+				return A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('ui segment secondary'),
+							$elm$html$Html$Attributes$href(addr)
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$i,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class(item.icon + ' icon')
+								]),
+							_List_Nil),
+							$elm$html$Html$text(item.label)
+						]));
+			default:
+				var addr = _v0.a;
+				return A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('ui segment secondary'),
+							$elm$html$Html$Attributes$href(addr),
+							$elm$html$Html$Attributes$target('_blank')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$i,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class(item.icon + ' icon')
+								]),
+							_List_Nil),
+							$elm$html$Html$text(item.label)
+						]));
+		}
+	};
+	var items = _List_fromArray(
+		[
+			{
+			icon: 'cog',
+			label: 'Импорт учащихся',
+			type_: $author$project$Page$Admin$AdminPage$MenuItemTypeSubpage(
+				$author$project$Page$Admin$AdminPage$SubpageImportStudents($elm$core$Maybe$Nothing))
+		},
+			{
+			icon: 'cog',
+			label: 'Админка Django',
+			type_: $author$project$Page$Admin$AdminPage$MenuItemTypeExternalLink('/djadmin')
+		}
+		]);
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('row ui raised horizontal segments')
+			]),
+		A2($elm$core$List$map, viewMenuItem, items));
+};
+var $author$project$Component$MessageBox$None = {$: 'None'};
 var $author$project$Component$MessageBox$view = F5(
 	function (type_, isLoading, onClose, header, body) {
 		var type_class = function () {
@@ -18044,6 +18512,423 @@ var $author$project$Component$MessageBox$view = F5(
 							]))
 					])));
 	});
+var $author$project$Component$MessageBox$Error = {$: 'Error'};
+var $author$project$Page$Admin$ImportStudentsCSV$MsgOnClickDownloadReport = {$: 'MsgOnClickDownloadReport'};
+var $author$project$Page$Admin$ImportStudentsCSV$MsgOnClickStartImport = {$: 'MsgOnClickStartImport'};
+var $author$project$Page$Admin$ImportStudentsCSV$MsgOnInputData = function (a) {
+	return {$: 'MsgOnInputData', a: a};
+};
+var $author$project$Component$MessageBox$Success = {$: 'Success'};
+var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$html$Html$h2 = _VirtualDom_node('h2');
+var $elm$html$Html$li = _VirtualDom_node('li');
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$html$Html$p = _VirtualDom_node('p');
+var $elm$html$Html$Attributes$rows = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'rows',
+		$elm$core$String$fromInt(n));
+};
+var $elm$html$Html$strong = _VirtualDom_node('strong');
+var $elm$html$Html$textarea = _VirtualDom_node('textarea');
+var $elm$html$Html$ul = _VirtualDom_node('ul');
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$Page$Admin$ImportStudentsCSV$view = function (model) {
+	var state = function () {
+		var _v0 = model.state;
+		switch (_v0.$) {
+			case 'StateInput':
+				var v = _v0.a;
+				return A2(
+					$elm$html$Html$div,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$textarea,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('m-10'),
+									A2($elm$html$Html$Attributes$style, 'width', '100%'),
+									$elm$html$Html$Attributes$rows(20),
+									$elm$html$Html$Attributes$value(v),
+									$elm$html$Html$Events$onInput($author$project$Page$Admin$ImportStudentsCSV$MsgOnInputData)
+								]),
+							_List_Nil),
+							A2(
+							$elm$html$Html$button,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('ui button'),
+									$elm$html$Html$Events$onClick($author$project$Page$Admin$ImportStudentsCSV$MsgOnClickStartImport)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Начать импорт')
+								]))
+						]));
+			case 'StateInProgress':
+				return A5(
+					$author$project$Component$MessageBox$view,
+					$author$project$Component$MessageBox$None,
+					true,
+					$elm$core$Maybe$Nothing,
+					$elm$html$Html$text(''),
+					$elm$html$Html$text('Выполняется импорт'));
+			default:
+				var result = _v0.a;
+				if (result.$ === 'Ok') {
+					var report = A2(
+						$elm$html$Html$span,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
+								A2($elm$html$Html$Attributes$style, 'text-decoration', 'underline'),
+								$elm$html$Html$Events$onClick($author$project$Page$Admin$ImportStudentsCSV$MsgOnClickDownloadReport)
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$i,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('file icon')
+									]),
+								_List_Nil),
+								$elm$html$Html$text(' файла')
+							]));
+					return A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A5(
+								$author$project$Component$MessageBox$view,
+								$author$project$Component$MessageBox$Success,
+								false,
+								$elm$core$Maybe$Nothing,
+								$elm$html$Html$text('Импорт выполнен успешно'),
+								A2(
+									$elm$html$Html$span,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Результат импорта можно скачать в виде CSV'),
+											report
+										])))
+							]));
+				} else {
+					var error = result.a;
+					return A5(
+						$author$project$Component$MessageBox$view,
+						$author$project$Component$MessageBox$Error,
+						false,
+						$elm$core$Maybe$Nothing,
+						$elm$html$Html$text(''),
+						$elm$html$Html$text(
+							'Ошибка иморта: ' + $author$project$Util$httpErrorToString(error)));
+				}
+		}
+	}();
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('col-xs-12')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h2,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Импорт учащихся')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('col')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$p,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Введите данные для импорта в тестовое поле ниже. Формат данных - UTF-8 CSV, разделитель - запятая.')
+							])),
+						A2(
+						$elm$html$Html$p,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Необходимые поля:')
+							])),
+						A2(
+						$elm$html$Html$ul,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Класс')
+											])),
+										$elm$html$Html$text('')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Направление')
+											])),
+										$elm$html$Html$text('')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Фамилия учащегося')
+											])),
+										$elm$html$Html$text('')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Имя учащегося')
+											])),
+										$elm$html$Html$text('')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Отчество учащегося')
+											])),
+										$elm$html$Html$text('')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Фамилия родителя 1')
+											])),
+										$elm$html$Html$text('')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Имя родителя 1')
+											])),
+										$elm$html$Html$text('')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Отчество родителя 1')
+											])),
+										$elm$html$Html$text('')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Фамилия родителя 2')
+											])),
+										$elm$html$Html$text('')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Имя родителя 2')
+											])),
+										$elm$html$Html$text('')
+									])),
+								A2(
+								$elm$html$Html$li,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$strong,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Отчество родителя 2')
+											])),
+										$elm$html$Html$text('')
+									]))
+							])),
+						state
+					])),
+				A2($elm$html$Html$div, _List_Nil, _List_Nil)
+			]));
+};
+var $author$project$Page$Admin$AdminPage$viewSubpage = function (model) {
+	var loading = A5(
+		$author$project$Component$MessageBox$view,
+		$author$project$Component$MessageBox$None,
+		true,
+		$elm$core$Maybe$Nothing,
+		$elm$html$Html$text(''),
+		$elm$html$Html$text('Инициализация...'));
+	var _v0 = model.currentSubpage;
+	if (_v0.$ === 'SubpageIndex') {
+		return $elm$html$Html$text('Выберите интересующий вас раздел в меню выше.');
+	} else {
+		if (_v0.a.$ === 'Just') {
+			var model_ = _v0.a.a;
+			return A2(
+				$elm$html$Html$map,
+				$author$project$Page$Admin$AdminPage$MsgSubpageImportStudents,
+				$author$project$Page$Admin$ImportStudentsCSV$view(model_));
+		} else {
+			var _v1 = _v0.a;
+			return loading;
+		}
+	}
+};
+var $author$project$Page$Admin$AdminPage$view = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h1,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('row center-xs')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Администрирование')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('row mt-10')
+					]),
+				_List_fromArray(
+					[
+						$author$project$Page$Admin$AdminPage$viewMenu(model)
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('row mt-10')
+					]),
+				_List_fromArray(
+					[
+						$author$project$Page$Admin$AdminPage$viewSubpage(model)
+					]))
+			]));
+};
+var $author$project$Page$Course$CoursePage$showFetchResult = function (fetchResult) {
+	var courseRead = fetchResult.a;
+	return courseRead.title;
+};
 var $author$project$Component$MultiTask$viewTask = F3(
 	function (show_result, show_error, _v0) {
 		var label = _v0.a;
@@ -18177,20 +19062,7 @@ var $author$project$Page$Course$CoursePage$MsgOnClickEditCancel = {$: 'MsgOnClic
 var $author$project$Page$Course$CoursePage$MsgOnClickImportActivities = {$: 'MsgOnClickImportActivities'};
 var $author$project$Page$Course$CoursePage$MsgOnClickOpenPrimitiveActImport = {$: 'MsgOnClickOpenPrimitiveActImport'};
 var $author$project$Page$Course$CoursePage$MsgOnClickSave = {$: 'MsgOnClickSave'};
-var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$html$Html$Attributes$classList = function (classes) {
-	return $elm$html$Html$Attributes$class(
-		A2(
-			$elm$core$String$join,
-			' ',
-			A2(
-				$elm$core$List$map,
-				$elm$core$Tuple$first,
-				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
-};
-var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$img = _VirtualDom_node('img');
-var $elm$html$Html$p = _VirtualDom_node('p');
 var $elm$html$Html$Attributes$src = function (url) {
 	return A2(
 		$elm$html$Html$Attributes$stringProperty,
@@ -18201,7 +19073,6 @@ var $jxxcarlson$elm_markdown$Markdown$Option$ExtendedMath = {$: 'ExtendedMath'};
 var $author$project$Component$Activity$MsgMarkdownMsg = function (a) {
 	return {$: 'MsgMarkdownMsg', a: a};
 };
-var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $author$project$Util$monthToInt = function (month) {
 	switch (month.$) {
 		case 'Jan':
@@ -18297,7 +19168,6 @@ var $author$project$Util$posixToFullDate = F2(
 			A2($elm$time$Time$toDay, zone, posix));
 		return dd + (' ' + (mm + (' ' + yyyy)));
 	});
-var $elm$html$Html$strong = _VirtualDom_node('strong');
 var $zwilias$elm_rosetree$Tree$children = function (_v0) {
 	var c = _v0.b;
 	return c;
@@ -26322,7 +27192,6 @@ var $jxxcarlson$elm_markdown$Markdown$Render$alphabet = function (k) {
 		$elm$core$List$head(
 			A2($elm$core$List$drop, k - 1, alpha)));
 };
-var $elm$html$Html$li = _VirtualDom_node('li');
 var $jxxcarlson$elm_markdown$Markdown$Parse$M = function (a) {
 	return {$: 'M', a: a};
 };
@@ -31057,10 +31926,6 @@ var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$label = _VirtualDom_node('label');
 var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
 var $elm$html$Html$Events$targetChecked = A2(
 	$elm$json$Json$Decode$at,
 	_List_fromArray(
@@ -31072,33 +31937,6 @@ var $elm$html$Html$Events$onCheck = function (tagger) {
 		'change',
 		A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetChecked));
 };
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var $elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
-};
 var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
 var $author$project$Util$posixToISODate = A2(
 	$elm$core$Basics$composeL,
@@ -31107,9 +31945,7 @@ var $author$project$Util$posixToISODate = A2(
 		$elm$core$List$head,
 		$elm$core$String$split('T')),
 	$rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime);
-var $elm$html$Html$textarea = _VirtualDom_node('textarea');
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
-var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$Component$Select$MsgItemSelected = function (a) {
 	return {$: 'MsgItemSelected', a: a};
 };
@@ -33322,7 +34158,7 @@ var $author$project$Component$List$User$applyFilter = F2(
 	function (filter, users) {
 		var mb = $elm$core$Maybe$withDefault('');
 		var filterUser = function (u) {
-			var uStr = mb(u.firstName) + (' ' + (mb(u.lastName) + (' ' + mb(u.middleName))));
+			var uStr = mb(u.lastName) + (' ' + (mb(u.firstName) + (' ' + mb(u.middleName))));
 			var mSpec = function () {
 				var _v0 = _Utils_Tuple2(
 					$author$project$Page$CourseListPage$empty_to_nothing(filter.currentSpec.selected),
@@ -33821,10 +34657,7 @@ var $author$project$Page$Course$CoursePage$MsgOnClickToggleActivityImportSetting
 var $author$project$Page$Course$CoursePage$MsgOnInputActivityCSVSep = function (a) {
 	return {$: 'MsgOnInputActivityCSVSep', a: a};
 };
-var $author$project$Component$MessageBox$None = {$: 'None'};
-var $author$project$Component$MessageBox$Success = {$: 'Success'};
 var $author$project$Component$MessageBox$Warning = {$: 'Warning'};
-var $elm$html$Html$ul = _VirtualDom_node('ul');
 var $author$project$Component$FileInput$MsgDoSelectFile = {$: 'MsgDoSelectFile'};
 var $elm$core$Basics$pow = _Basics_pow;
 var $elm$core$Basics$truncate = _Basics_truncate;
@@ -34790,12 +35623,6 @@ var $author$project$Page$Course$CoursePage$viewActivitiesImport = function (mode
 var $author$project$Page$Course$CoursePage$MsgOnClickActivityPrimitiveImport = {$: 'MsgOnClickActivityPrimitiveImport'};
 var $author$project$Page$Course$CoursePage$MsgOnInputActivityPrimitiveImport = function (a) {
 	return {$: 'MsgOnInputActivityPrimitiveImport', a: a};
-};
-var $elm$html$Html$Attributes$rows = function (n) {
-	return A2(
-		_VirtualDom_attribute,
-		'rows',
-		$elm$core$String$fromInt(n));
 };
 var $author$project$Page$Course$CoursePage$viewPrimitiveImport = function (model) {
 	return A2(
@@ -38138,13 +38965,6 @@ var $author$project$Util$user_deep_to_shallow = function (userDeep) {
 		dateJoined: userDeep.dateJoined,
 		email: userDeep.email,
 		firstName: userDeep.firstName,
-		groups: A2(
-			$elm$core$Maybe$map,
-			$elm$core$List$filterMap(
-				function ($) {
-					return $.id;
-				}),
-			userDeep.groups),
 		id: userDeep.id,
 		isActive: userDeep.isActive,
 		isStaff: userDeep.isStaff,
@@ -39515,12 +40335,18 @@ var $author$project$Main$viewPage = function (model) {
 		case 'PageFatalError':
 			var string = _v0.b;
 			return $author$project$Page$FatalError$view(string);
-		default:
+		case 'PageUserProfile':
 			var model_ = _v0.a;
 			return A2(
 				$elm$html$Html$map,
 				$author$project$Main$MsgPageUserProfile,
 				$author$project$Page$UserProfile$view(model_));
+		default:
+			var model_ = _v0.a;
+			return A2(
+				$elm$html$Html$map,
+				$author$project$Main$MsgPageAdmin,
+				$author$project$Page$Admin$AdminPage$view(model_));
 	}
 };
 var $author$project$Main$view = function (model) {

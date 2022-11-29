@@ -4,8 +4,9 @@ import Api.Data exposing (Token)
 import Browser
 import Browser.Navigation as Nav
 import Html exposing (Html, text)
-import Page.CourseListPage as CourseListPage
+import Page.Admin.AdminPage as AdminPage
 import Page.Course.CoursePage as CoursePage
+import Page.CourseListPage as CourseListPage
 import Page.DefaultLayout as DefaultLayout
 import Page.FatalError as FatalError
 import Page.FrontPage as FrontPage
@@ -65,6 +66,7 @@ type Page
     | PageUserProfile PageUserProfile.Model
     | PageNotFound
     | PageFatalError Page String
+    | PageAdmin AdminPage.Model
 
 
 type ParsedUrl
@@ -82,6 +84,7 @@ type ParsedUrl
     | UrlMessages
     | UrlNews
     | UrlPasswordReset (Maybe String)
+    | UrlAdmin
 
 
 type Msg
@@ -95,6 +98,7 @@ type Msg
     | MsgPageMarksOfStudent MarksStudent.Msg
     | MsgPageMarksOfCourse MarksCourse.Msg
     | MsgPageUserProfile PageUserProfile.Msg
+    | MsgPageAdmin AdminPage.Msg
     | MsgUnauthorized
 
 
@@ -116,6 +120,7 @@ parse_url url =
                 , map (Maybe.withDefault UrlNotFound << Maybe.map UrlProfileOfUser << Uuid.fromString) (s "profile" </> string)
                 , map UrlMessages (s "messages")
                 , map UrlNews (s "news")
+                , map UrlAdmin (s "admin")
                 ]
             )
             url
@@ -335,8 +340,26 @@ update msg model =
                             in
                             ( { model | page = PageLogin m, layout = LayoutNone }, Cmd.map MsgPageLogin c )
 
+                        ( UrlAdmin, Right token ) ->
+                            let
+                                ( layout_, cmd_1 ) =
+                                    DefaultLayout.init token.user
+
+                                ( model_, cmd_2 ) =
+                                    AdminPage.init token.key
+                            in
+                            ( { model
+                                | page = PageAdmin model_
+                                , layout = LayoutDefault layout_
+                              }
+                            , Cmd.batch
+                                [ Cmd.map MsgDefaultLayout cmd_1
+                                , Cmd.map MsgPageAdmin cmd_2
+                                ]
+                            )
+
                         ( _, _ ) ->
-                            ( { model | page = PageBlank }, Cmd.none )
+                            ( { model | page = PageNotFound }, Cmd.none )
             in
             ( { new_model | url = url }
             , Cmd.batch [ cmd, scrollIdIntoView "main_container" ]
@@ -417,6 +440,13 @@ update msg model =
             in
             ( { model | page = PageFront model__ }, Cmd.map MsgPageFront cmd_ )
 
+        ( MsgPageAdmin msg_, PageAdmin model_, LayoutDefault layout_ ) ->
+            let
+                ( model__, cmd_ ) =
+                    AdminPage.update msg_ model_
+            in
+            ( { model | page = PageAdmin model__ }, Cmd.map MsgPageAdmin cmd_ )
+
         _ ->
             ( model, Cmd.none )
 
@@ -475,6 +505,9 @@ viewPage model =
 
         PageUserProfile model_ ->
             Html.map MsgPageUserProfile <| PageUserProfile.view model_
+
+        PageAdmin model_ ->
+            Html.map MsgPageAdmin <| AdminPage.view model_
 
 
 viewLayout : Model -> Html Msg -> Html Msg

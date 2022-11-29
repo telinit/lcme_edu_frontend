@@ -71,9 +71,9 @@ applyFilter filter users =
         filterUser u =
             let
                 uStr =
-                    mb u.firstName
+                    mb u.lastName
                         ++ " "
-                        ++ mb u.lastName
+                        ++ mb u.firstName
                         ++ " "
                         ++ mb u.middleName
 

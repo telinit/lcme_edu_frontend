@@ -127,7 +127,7 @@ view map_msg model html =
                     Nothing
                 , --, Just { label = "Сообщения", href = "/messages", icon = "envelope outline" }
                   if user_has_all_roles model.user [ "admin" ] then
-                    Just { label = "Администрирование", href = "/admin", icon = "cog", target = Just "_blank" }
+                    Just { label = "Администрирование", href = "/admin", icon = "cog", target = Nothing }
 
                   else
                     Nothing

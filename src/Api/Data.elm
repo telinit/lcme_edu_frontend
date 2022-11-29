@@ -36,6 +36,8 @@ module Api.Data exposing
     , ImportForCourse
     , ImportForCourseResult
     , ImportForCourseResultObject
+    , ImportStudentsCSVRequest
+    , ImportStudentsCSVResult
     , Login
     , Mark
     , Message
@@ -49,7 +51,6 @@ module Api.Data exposing
     , UnreadObject
     , UnreadObjectType(..)
     , UserDeep
-    , UserDeepGroupsInner
     , UserShallow
     , activityContentTypeVariants
     , activityDecoder
@@ -83,6 +84,8 @@ module Api.Data exposing
     , encodeImportForCourse
     , encodeImportForCourseResult
     , encodeImportForCourseResultObject
+    , encodeImportStudentsCSVRequest
+    , encodeImportStudentsCSVResult
     , encodeLogin
     , encodeMark
     , encodeMessage
@@ -94,13 +97,14 @@ module Api.Data exposing
     , encodeToken
     , encodeUnreadObject
     , encodeUserDeep
-    , encodeUserDeepGroupsInner
     , encodeUserShallow
     , errorMessageDecoder
     , fileDecoder
     , importForCourseDecoder
     , importForCourseResultDecoder
     , importForCourseResultObjectDecoder
+    , importStudentsCSVRequestDecoder
+    , importStudentsCSVResultDecoder
     , loginDecoder
     , markDecoder
     , messageDecoder
@@ -115,7 +119,6 @@ module Api.Data exposing
     , unreadObjectDecoder
     , unreadObjectTypeVariants
     , userDeepDecoder
-    , userDeepGroupsInnerDecoder
     , userShallowDecoder
     )
 
@@ -401,6 +404,16 @@ type alias ImportForCourseResultObject =
     }
 
 
+type alias ImportStudentsCSVRequest =
+    { data : String
+    }
+
+
+type alias ImportStudentsCSVResult =
+    { data : List (List String)
+    }
+
+
 type alias Login =
     { username : String
     , password : String
@@ -547,14 +560,6 @@ type alias UserDeep =
     , middleName : Maybe String
     , birthDate : Maybe Posix
     , avatar : Maybe String
-    , groups : Maybe (List UserDeepGroupsInner)
-    }
-
-
-type alias UserDeepGroupsInner =
-    { id : Maybe Int
-    , name : String
-    , permissions : Maybe (List Int)
     }
 
 
@@ -577,7 +582,6 @@ type alias UserShallow =
     , middleName : Maybe String
     , birthDate : Maybe Posix
     , avatar : Maybe String
-    , groups : Maybe (List Int)
     , children : Maybe (List Uuid)
     }
 
@@ -1116,6 +1120,46 @@ encodeImportForCourseResultObjectPairs model =
     pairs
 
 
+encodeImportStudentsCSVRequest : ImportStudentsCSVRequest -> Json.Encode.Value
+encodeImportStudentsCSVRequest =
+    encodeObject << encodeImportStudentsCSVRequestPairs
+
+
+encodeImportStudentsCSVRequestWithTag : ( String, String ) -> ImportStudentsCSVRequest -> Json.Encode.Value
+encodeImportStudentsCSVRequestWithTag ( tagField, tag ) model =
+    encodeObject (encodeImportStudentsCSVRequestPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeImportStudentsCSVRequestPairs : ImportStudentsCSVRequest -> List EncodedField
+encodeImportStudentsCSVRequestPairs model =
+    let
+        pairs =
+            [ encode "data" Json.Encode.string model.data
+            ]
+    in
+    pairs
+
+
+encodeImportStudentsCSVResult : ImportStudentsCSVResult -> Json.Encode.Value
+encodeImportStudentsCSVResult =
+    encodeObject << encodeImportStudentsCSVResultPairs
+
+
+encodeImportStudentsCSVResultWithTag : ( String, String ) -> ImportStudentsCSVResult -> Json.Encode.Value
+encodeImportStudentsCSVResultWithTag ( tagField, tag ) model =
+    encodeObject (encodeImportStudentsCSVResultPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeImportStudentsCSVResultPairs : ImportStudentsCSVResult -> List EncodedField
+encodeImportStudentsCSVResultPairs model =
+    let
+        pairs =
+            [ encode "data" (Json.Encode.list (Json.Encode.list Json.Encode.string)) model.data
+            ]
+    in
+    pairs
+
+
 encodeLogin : Login -> Json.Encode.Value
 encodeLogin =
     encodeObject << encodeLoginPairs
@@ -1441,29 +1485,6 @@ encodeUserDeepPairs model =
             , maybeEncodeNullable "middle_name" Json.Encode.string model.middleName
             , maybeEncodeNullable "birth_date" Api.Time.encodeDate model.birthDate
             , maybeEncodeNullable "avatar" Json.Encode.string model.avatar
-            , maybeEncode "groups" (Json.Encode.list encodeUserDeepGroupsInner) model.groups
-            ]
-    in
-    pairs
-
-
-encodeUserDeepGroupsInner : UserDeepGroupsInner -> Json.Encode.Value
-encodeUserDeepGroupsInner =
-    encodeObject << encodeUserDeepGroupsInnerPairs
-
-
-encodeUserDeepGroupsInnerWithTag : ( String, String ) -> UserDeepGroupsInner -> Json.Encode.Value
-encodeUserDeepGroupsInnerWithTag ( tagField, tag ) model =
-    encodeObject (encodeUserDeepGroupsInnerPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeUserDeepGroupsInnerPairs : UserDeepGroupsInner -> List EncodedField
-encodeUserDeepGroupsInnerPairs model =
-    let
-        pairs =
-            [ maybeEncode "id" Json.Encode.int model.id
-            , encode "name" Json.Encode.string model.name
-            , maybeEncode "permissions" (Json.Encode.list Json.Encode.int) model.permissions
             ]
     in
     pairs
@@ -1501,7 +1522,6 @@ encodeUserShallowPairs model =
             , maybeEncodeNullable "middle_name" Json.Encode.string model.middleName
             , maybeEncodeNullable "birth_date" Api.Time.encodeDate model.birthDate
             , maybeEncodeNullable "avatar" Json.Encode.string model.avatar
-            , maybeEncode "groups" (Json.Encode.list Json.Encode.int) model.groups
             , maybeEncode "children" (Json.Encode.list Uuid.encode) model.children
             ]
     in
@@ -1844,6 +1864,18 @@ importForCourseResultObjectDecoder =
         |> decode "topic" Json.Decode.string
 
 
+importStudentsCSVRequestDecoder : Json.Decode.Decoder ImportStudentsCSVRequest
+importStudentsCSVRequestDecoder =
+    Json.Decode.succeed ImportStudentsCSVRequest
+        |> decode "data" Json.Decode.string
+
+
+importStudentsCSVResultDecoder : Json.Decode.Decoder ImportStudentsCSVResult
+importStudentsCSVResultDecoder =
+    Json.Decode.succeed ImportStudentsCSVResult
+        |> decode "data" (Json.Decode.list (Json.Decode.list Json.Decode.string))
+
+
 loginDecoder : Json.Decode.Decoder Login
 loginDecoder =
     Json.Decode.succeed Login
@@ -2022,15 +2054,6 @@ userDeepDecoder =
         |> maybeDecodeNullable "middle_name" Json.Decode.string Nothing
         |> maybeDecodeNullable "birth_date" Api.Time.dateDecoder Nothing
         |> maybeDecodeNullable "avatar" Json.Decode.string Nothing
-        |> maybeDecode "groups" (Json.Decode.list userDeepGroupsInnerDecoder) Nothing
-
-
-userDeepGroupsInnerDecoder : Json.Decode.Decoder UserDeepGroupsInner
-userDeepGroupsInnerDecoder =
-    Json.Decode.succeed UserDeepGroupsInner
-        |> maybeDecode "id" Json.Decode.int Nothing
-        |> decode "name" Json.Decode.string
-        |> maybeDecode "permissions" (Json.Decode.list Json.Decode.int) Nothing
 
 
 userShallowDecoder : Json.Decode.Decoder UserShallow
@@ -2054,7 +2077,6 @@ userShallowDecoder =
         |> maybeDecodeNullable "middle_name" Json.Decode.string Nothing
         |> maybeDecodeNullable "birth_date" Api.Time.dateDecoder Nothing
         |> maybeDecodeNullable "avatar" Json.Decode.string Nothing
-        |> maybeDecode "groups" (Json.Decode.list Json.Decode.int) Nothing
         |> maybeDecode "children" (Json.Decode.list Uuid.decoder) Nothing
 
 

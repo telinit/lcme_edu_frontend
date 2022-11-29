@@ -18412,7 +18412,7 @@ ol.ui.horizontal.list li:before,
   /* Solves #2550 MS Flex */
   margin: 0em;
   min-width: 0px;
-  background-color: transparent;
+  /* background-color: transparent; */
   border-radius: 0px;
   border: none;
   box-shadow: none;

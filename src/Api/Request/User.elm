@@ -19,6 +19,7 @@ module Api.Request.User exposing
     , userDelete
     , userGetDeep
     , userImpersonate
+    , userImportStudentsCsv
     , userList
     , userLogin
     , userLogout
@@ -86,6 +87,18 @@ userImpersonate id_path =
         []
         Nothing
         (Json.Decode.succeed ())
+
+
+userImportStudentsCsv : Api.Data.ImportStudentsCSVRequest -> Api.Request Api.Data.ImportStudentsCSVResult
+userImportStudentsCsv data_body =
+    Api.request
+        "POST"
+        "/user/import_students_csv/"
+        []
+        []
+        []
+        (Just (Api.Data.encodeImportStudentsCSVRequest data_body))
+        Api.Data.importStudentsCSVResultDecoder
 
 
 userList : Api.Request (List Api.Data.UserShallow)

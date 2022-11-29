@@ -319,7 +319,6 @@ user_deep_to_shallow userDeep =
     , middleName = userDeep.middleName
     , birthDate = userDeep.birthDate
     , avatar = userDeep.avatar
-    , groups = Maybe.map (List.filterMap .id) userDeep.groups
     , children = Just <| List.filterMap .id userDeep.children
     , currentClass = userDeep.currentClass
     , currentSpec = userDeep.currentSpec
