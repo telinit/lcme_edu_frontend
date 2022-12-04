@@ -17105,7 +17105,7 @@ var $author$project$Component$MarkTable$update = F2(
 						model,
 						{
 							selectedCoords: _Utils_Tuple2(x, y),
-							showMarkDetails: $elm$core$Maybe$Just(mark)
+							showMarkDetails: mark
 						}),
 					$elm$core$Platform$Cmd$none);
 			default:
@@ -38873,7 +38873,7 @@ var $author$project$Component$MarkTable$viewMarkSlot = F4(
 							$elm$html$Html$Events$onClick(
 							A2(
 								$author$project$Component$MarkTable$MsgMarkClicked,
-								mark,
+								$elm$core$Maybe$Just(mark),
 								_Utils_Tuple2(x, y)))
 						]),
 					_Utils_ap(
@@ -38893,7 +38893,12 @@ var $author$project$Component$MarkTable$viewMarkSlot = F4(
 				_Utils_ap(
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('mark_slot')
+							$elm$html$Html$Attributes$class('mark_slot'),
+							$elm$html$Html$Events$onClick(
+							A2(
+								$author$project$Component$MarkTable$MsgMarkClicked,
+								$elm$core$Maybe$Nothing,
+								_Utils_Tuple2(x, y)))
 						]),
 					_Utils_ap(
 						common_attrs,

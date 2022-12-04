@@ -100,7 +100,7 @@ type Msg
     | MsgSetStickyCol1 Bool
     | MsgSetStickyRow1 Bool
     | MsgSelectSwitchCell Select.Msg
-    | MsgMarkClicked Mark ( Int, Int )
+    | MsgMarkClicked (Maybe Mark) ( Int, Int )
     | MsgOnClickCloseMarkDetails
 
 
@@ -791,7 +791,7 @@ update msg model =
             ( { model | selectedCoords = ( x, y ) }, Cmd.none )
 
         ( MsgMarkClicked mark ( x, y ), _ ) ->
-            ( { model | showMarkDetails = Just mark, selectedCoords = ( x, y ) }, Cmd.none )
+            ( { model | showMarkDetails = mark, selectedCoords = ( x, y ) }, Cmd.none )
 
         ( MsgOnClickCloseMarkDetails, _ ) ->
             ( { model | showMarkDetails = Nothing }, Cmd.none )
@@ -923,7 +923,7 @@ viewMarkSlot y x s markSlot =
                  , style "padding" "5px"
                  , class "row center-xs middle-xs"
                  , style "font-weight" "bold"
-                 , onClick (MsgMarkClicked mark ( x, y ))
+                 , onClick (MsgMarkClicked (Just mark) ( x, y ))
                  ]
                     ++ common_attrs
                     ++ (if sel then
@@ -937,7 +937,9 @@ viewMarkSlot y x s markSlot =
 
         SlotVirtual sel _ _ ->
             div
-                ([ class "mark_slot" ]
+                ([ class "mark_slot"
+                 , onClick (MsgMarkClicked Nothing ( x, y ))
+                 ]
                     ++ common_attrs
                     ++ (if sel then
                             [ id "slot_selected" ]
