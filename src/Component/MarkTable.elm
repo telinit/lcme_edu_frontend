@@ -8,10 +8,11 @@ import Api.Request.Mark exposing (markCreate, markDelete, markList, markPartialU
 import Browser.Dom exposing (Error(..), focus)
 import Component.Misc exposing (user_link)
 import Component.MultiTask as MultiTask exposing (Msg(..))
+import Component.Select as Select
 import Dict as D exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (attribute, autofocus, checked, class, href, id, style, tabindex, type_, value)
-import Html.Events exposing (on, onCheck)
+import Html.Events exposing (on, onCheck, onClick)
 import Http
 import Json.Decode as JD
 import List as L
@@ -93,9 +94,11 @@ type Msg
     | MsgMarkCreated ( Int, Int ) Mark
     | MsgMarkUpdated ( Int, Int ) Mark
     | MsgMarkDeleted ( Int, Int )
+    | MsgMarkSelected ( Int, Int )
     | MsgNop
     | MsgSetStickyCol1 Bool
     | MsgSetStickyRow1 Bool
+    | MsgSelectSwitchCell Select.Msg
 
 
 type State
@@ -118,6 +121,8 @@ type alias Model =
     , size : ( Int, Int )
     , stickyRow1 : Bool
     , stickyCol1 : Bool
+    , switchCell : Maybe Select.Model
+    , selectedCoords : ( Int, Int )
     }
 
 
@@ -308,6 +313,8 @@ initForStudent token student_id =
       , tz = utc
       , stickyRow1 = True
       , stickyCol1 = True
+      , switchCell = Nothing
+      , selectedCoords = ( 0, 0 )
       }
     , Cmd.map MsgFetch c
     )
@@ -325,6 +332,14 @@ initForCourse token course_id teacher_id =
                   , "Получение оценок"
                   )
                 ]
+
+        ( sm, sc ) =
+            Select.init "Автопереход" False <|
+                D.fromList
+                    [ ( "", "Не переходить" )
+                    , ( "right", "Вправо" )
+                    , ( "bottom", "Вниз" )
+                    ]
     in
     ( { state = Loading m
       , token = token
@@ -339,8 +354,10 @@ initForCourse token course_id teacher_id =
       , tz = utc
       , stickyRow1 = True
       , stickyCol1 = True
+      , switchCell = Just sm
+      , selectedCoords = ( 0, 0 )
       }
-    , Cmd.map MsgFetch c
+    , Cmd.batch [ Cmd.map MsgFetch c, Cmd.map MsgSelectSwitchCell sc ]
     )
 
 
@@ -395,6 +412,41 @@ updateMark model ( cell_x, cell_y ) mb_mark =
                 )
                 model.cells
     }
+
+
+focusCell x y =
+    let
+        onResult r =
+            case r of
+                Ok _ ->
+                    MsgMarkSelected ( x, y )
+
+                Err _ ->
+                    MsgNop
+    in
+    Task.attempt onResult <| focus <| "slot-" ++ String.fromInt x ++ "-" ++ String.fromInt y
+
+
+switchMarkCmd : Model -> Cmd Msg
+switchMarkCmd model =
+    let
+        ( x, y ) =
+            model.selectedCoords
+    in
+    case model.switchCell of
+        Just sw ->
+            case sw.selected of
+                Just "right" ->
+                    focusCell (x + 1) y
+
+                Just "bottom" ->
+                    focusCell x (y + 1)
+
+                _ ->
+                    Cmd.none
+
+        _ ->
+            Cmd.none
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -631,8 +683,8 @@ update msg model =
             case cmd of
                 CmdMove _ ->
                     if check_coords ( nx, ny ) model.size then
-                        ( model
-                        , Task.attempt onResult <| focus <| "slot-" ++ String.fromInt nx ++ "-" ++ String.fromInt ny
+                        ( { model | selectedCoords = ( nx, ny ) }
+                        , focusCell nx ny
                         )
 
                     else
@@ -687,10 +739,10 @@ update msg model =
                             ( model, Cmd.none )
 
         ( MsgMarkCreated ( x, y ) mark, _ ) ->
-            ( updateMark model ( x, y ) (Just mark), Cmd.none )
+            ( updateMark model ( x, y ) (Just mark), switchMarkCmd model )
 
         ( MsgMarkUpdated ( x, y ) mark, _ ) ->
-            ( updateMark model ( x, y ) (Just mark), Cmd.none )
+            ( updateMark model ( x, y ) (Just mark), switchMarkCmd model )
 
         ( MsgMarkDeleted ( x, y ), _ ) ->
             ( updateMark model ( x, y ) Nothing, Cmd.none )
@@ -703,6 +755,21 @@ update msg model =
 
         ( MsgSetStickyRow1 v, _ ) ->
             ( { model | stickyRow1 = v }, Cmd.none )
+
+        ( MsgSelectSwitchCell msg_, _ ) ->
+            case model.switchCell of
+                Just model_ ->
+                    let
+                        ( m, c ) =
+                            Select.update msg_ model_
+                    in
+                    ( { model | switchCell = Just m }, Cmd.map MsgSelectSwitchCell c )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        ( MsgMarkSelected ( x, y ), _ ) ->
+            ( { model | selectedCoords = ( x, y ) }, Cmd.none )
 
 
 viewColumn : Zone -> Column -> Html Msg
@@ -740,17 +807,17 @@ markValueColors : String -> ( String, String )
 markValueColors val =
     let
         default =
-            ( "#BFC9CA", "#909497" )
+            ( "#BFC9CA", "#5c5e60" )
     in
     case val of
-        "5" ->
-            ( "#7DCEA0", "#1E8449" )
-
         "4" ->
-            ( "#76D7C4", "#148F77" )
+            ( "#7DCEA0", "#145931" )
+
+        "5" ->
+            ( "#76D7C4", "#0e6756" )
 
         "3" ->
-            ( "#F7DC6F", "#B7950B" )
+            ( "#F7DC6F", "rgb(119 97 5)" )
 
         "2" ->
             ( "#D98880", "#922B21" )
@@ -809,6 +876,7 @@ viewMarkSlot y x s markSlot =
                     )
                 <|
                     JD.at [ "code" ] JD.string
+            , onClick (MsgMarkSelected ( x, y ))
             ]
                 ++ [ autofocus is_first ]
     in
@@ -981,7 +1049,10 @@ viewTable model =
                         , label [] [ text "Закрепить первый столбец" ]
                         ]
                     ]
-                , div [ class "col-xs-12 col-sm-3 center-xs end-sm" ] [ text "" ]
+                , div [ class "col-xs-12 col-sm-3 center-xs end-sm" ]
+                    [ Maybe.withDefault (text "") <|
+                        Maybe.map (Html.map MsgSelectSwitchCell << Select.view) model.switchCell
+                    ]
                 ]
             ]
         , table

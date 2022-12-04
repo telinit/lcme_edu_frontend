@@ -10237,6 +10237,9 @@ var $author$project$Component$MarkTable$Loading = function (a) {
 var $author$project$Component$MarkTable$MsgFetch = function (a) {
 	return {$: 'MsgFetch', a: a};
 };
+var $author$project$Component$MarkTable$MsgSelectSwitchCell = function (a) {
+	return {$: 'MsgSelectSwitchCell', a: a};
+};
 var $author$project$Api$Data$Mark = F8(
 	function (id, createdAt, updatedAt, value, comment, author, student, activity) {
 		return {activity: activity, author: author, comment: comment, createdAt: createdAt, id: id, student: student, updatedAt: updatedAt, value: value};
@@ -10294,7 +10297,20 @@ var $danyx23$elm_uuid$Uuid$toString = function (_v0) {
 var $elm$time$Time$utc = A2($elm$time$Time$Zone, 0, _List_Nil);
 var $author$project$Component$MarkTable$initForCourse = F3(
 	function (token, course_id, teacher_id) {
-		var _v0 = $author$project$Component$MultiTask$init(
+		var _v0 = A3(
+			$author$project$Component$Select$init,
+			'Автопереход',
+			false,
+			$elm$core$Dict$fromList(
+				_List_fromArray(
+					[
+						_Utils_Tuple2('', 'Не переходить'),
+						_Utils_Tuple2('right', 'Вправо'),
+						_Utils_Tuple2('bottom', 'Вниз')
+					])));
+		var sm = _v0.a;
+		var sc = _v0.b;
+		var _v1 = $author$project$Component$MultiTask$init(
 			_List_fromArray(
 				[
 					_Utils_Tuple2(
@@ -10320,23 +10336,30 @@ var $author$project$Component$MarkTable$initForCourse = F3(
 						$author$project$Api$Request$Mark$markList),
 					'Получение оценок')
 				]));
-		var m = _v0.a;
-		var c = _v0.b;
+		var m = _v1.a;
+		var c = _v1.b;
 		return _Utils_Tuple2(
 			{
 				cells: _List_Nil,
 				columns: _List_Nil,
 				rows: _List_Nil,
+				selectedCoords: _Utils_Tuple2(0, 0),
 				size: _Utils_Tuple2(0, 0),
 				state: $author$project$Component$MarkTable$Loading(m),
 				stickyCol1: true,
 				stickyRow1: true,
 				student_id: $elm$core$Maybe$Nothing,
+				switchCell: $elm$core$Maybe$Just(sm),
 				teacher_id: teacher_id,
 				token: token,
 				tz: $elm$time$Time$utc
 			},
-			A2($elm$core$Platform$Cmd$map, $author$project$Component$MarkTable$MsgFetch, c));
+			$elm$core$Platform$Cmd$batch(
+				_List_fromArray(
+					[
+						A2($elm$core$Platform$Cmd$map, $author$project$Component$MarkTable$MsgFetch, c),
+						A2($elm$core$Platform$Cmd$map, $author$project$Component$MarkTable$MsgSelectSwitchCell, sc)
+					])));
 	});
 var $author$project$Page$MarksCourse$init = F3(
 	function (token, course_id, teacher_id) {
@@ -10422,11 +10445,13 @@ var $author$project$Component$MarkTable$initForStudent = F2(
 				cells: _List_Nil,
 				columns: _List_Nil,
 				rows: _List_Nil,
+				selectedCoords: _Utils_Tuple2(0, 0),
 				size: _Utils_Tuple2(0, 0),
 				state: $author$project$Component$MarkTable$Loading(m),
 				stickyCol1: true,
 				stickyRow1: true,
 				student_id: $elm$core$Maybe$Just(student_id),
+				switchCell: $elm$core$Maybe$Nothing,
 				teacher_id: $elm$core$Maybe$Nothing,
 				token: token,
 				tz: $elm$time$Time$utc
@@ -16333,7 +16358,26 @@ var $author$project$Component$MarkTable$doUpdateMark = F4(
 				},
 				old_mark.id));
 	});
+var $author$project$Component$MarkTable$MsgMarkSelected = function (a) {
+	return {$: 'MsgMarkSelected', a: a};
+};
 var $elm$browser$Browser$Dom$focus = _Browser_call('focus');
+var $author$project$Component$MarkTable$focusCell = F2(
+	function (x, y) {
+		var onResult = function (r) {
+			if (r.$ === 'Ok') {
+				return $author$project$Component$MarkTable$MsgMarkSelected(
+					_Utils_Tuple2(x, y));
+			} else {
+				return $author$project$Component$MarkTable$MsgNop;
+			}
+		};
+		return A2(
+			$elm$core$Task$attempt,
+			onResult,
+			$elm$browser$Browser$Dom$focus(
+				'slot-' + ($elm$core$String$fromInt(x) + ('-' + $elm$core$String$fromInt(y)))));
+	});
 var $author$project$Util$index_by = F2(
 	function (key, list) {
 		return $elm$core$Dict$fromList(
@@ -16367,6 +16411,34 @@ var $elm$core$List$repeat = F2(
 	function (n, value) {
 		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
 	});
+var $author$project$Component$MarkTable$switchMarkCmd = function (model) {
+	var _v0 = model.selectedCoords;
+	var x = _v0.a;
+	var y = _v0.b;
+	var _v1 = model.switchCell;
+	if (_v1.$ === 'Just') {
+		var sw = _v1.a;
+		var _v2 = sw.selected;
+		_v2$2:
+		while (true) {
+			if (_v2.$ === 'Just') {
+				switch (_v2.a) {
+					case 'right':
+						return A2($author$project$Component$MarkTable$focusCell, x + 1, y);
+					case 'bottom':
+						return A2($author$project$Component$MarkTable$focusCell, x, y + 1);
+					default:
+						break _v2$2;
+				}
+			} else {
+				break _v2$2;
+			}
+		}
+		return $elm$core$Platform$Cmd$none;
+	} else {
+		return $elm$core$Platform$Cmd$none;
+	}
+};
 var $author$project$Component$MarkTable$updateMark = F3(
 	function (model, _v0, mb_mark) {
 		var cell_x = _v0.a;
@@ -16860,12 +16932,12 @@ var $author$project$Component$MarkTable$update = F2(
 							check_coords,
 							_Utils_Tuple2(nx, ny),
 							model.size) ? _Utils_Tuple2(
-							model,
-							A2(
-								$elm$core$Task$attempt,
-								onResult,
-								$elm$browser$Browser$Dom$focus(
-									'slot-' + ($elm$core$String$fromInt(nx) + ('-' + $elm$core$String$fromInt(ny)))))) : _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+							_Utils_update(
+								model,
+								{
+									selectedCoords: _Utils_Tuple2(nx, ny)
+								}),
+							A2($author$project$Component$MarkTable$focusCell, nx, ny)) : _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					case 'CmdSetMark':
 						var new_mark = cmd.a;
 						if (mark_slot.$ === 'SlotMark') {
@@ -16937,7 +17009,7 @@ var $author$project$Component$MarkTable$update = F2(
 						model,
 						_Utils_Tuple2(x, y),
 						$elm$core$Maybe$Just(mark)),
-					$elm$core$Platform$Cmd$none);
+					$author$project$Component$MarkTable$switchMarkCmd(model));
 			case 'MsgMarkUpdated':
 				var _v30 = _v0.a;
 				var _v31 = _v30.a;
@@ -16950,7 +17022,7 @@ var $author$project$Component$MarkTable$update = F2(
 						model,
 						_Utils_Tuple2(x, y),
 						$elm$core$Maybe$Just(mark)),
-					$elm$core$Platform$Cmd$none);
+					$author$project$Component$MarkTable$switchMarkCmd(model));
 			case 'MsgMarkDeleted':
 				var _v32 = _v0.a.a;
 				var x = _v32.a;
@@ -16972,12 +17044,41 @@ var $author$project$Component$MarkTable$update = F2(
 						model,
 						{stickyCol1: v}),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'MsgSetStickyRow1':
 				var v = _v0.a.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{stickyRow1: v}),
+					$elm$core$Platform$Cmd$none);
+			case 'MsgSelectSwitchCell':
+				var msg_ = _v0.a.a;
+				var _v34 = model.switchCell;
+				if (_v34.$ === 'Just') {
+					var model_ = _v34.a;
+					var _v35 = A2($author$project$Component$Select$update, msg_, model_);
+					var m = _v35.a;
+					var c = _v35.b;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								switchCell: $elm$core$Maybe$Just(m)
+							}),
+						A2($elm$core$Platform$Cmd$map, $author$project$Component$MarkTable$MsgSelectSwitchCell, c));
+				} else {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			default:
+				var _v36 = _v0.a.a;
+				var x = _v36.a;
+				var y = _v36.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							selectedCoords: _Utils_Tuple2(x, y)
+						}),
 					$elm$core$Platform$Cmd$none);
 		}
 	});
@@ -31320,6 +31421,28 @@ var $author$project$Component$Activity$viewRead = function (model) {
 									$elm$html$Html$div,
 									_List_fromArray(
 										[
+											$elm$html$Html$Attributes$class('mt-10 mb-10'),
+											A2($elm$html$Html$Attributes$style, 'text-align', 'left')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$core$Maybe$withDefault,
+											$elm$html$Html$text(''),
+											A2(
+												$elm$core$Maybe$map,
+												function (b) {
+													return A2(
+														$elm$html$Html$map,
+														$author$project$Component$Activity$MsgMarkdownMsg,
+														A2($jxxcarlson$elm_markdown$Markdown$Render$toHtml, $jxxcarlson$elm_markdown$Markdown$Option$ExtendedMath, b));
+												},
+												activity.body))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
 											$elm$html$Html$Attributes$class('row between-xs middle-xs'),
 											A2($elm$html$Html$Attributes$style, 'font-size', 'smaller')
 										]),
@@ -32287,6 +32410,42 @@ var $author$project$Component$Activity$viewWrite = function (model) {
 															$elm$html$Html$Attributes$value(activity.title),
 															$elm$html$Html$Events$onInput(
 															$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldTitle))
+														]),
+													_List_Nil)
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row mt-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Описание')
+														])),
+													A2(
+													$elm$html$Html$textarea,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$placeholder('Описание темы'),
+															$elm$html$Html$Attributes$value(
+															A2($elm$core$Maybe$withDefault, '', activity.body)),
+															$elm$html$Html$Events$onInput(
+															$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldBody))
 														]),
 													_List_Nil)
 												]))
@@ -38562,14 +38721,14 @@ var $author$project$Component$MarkTable$markSelectedColors = _Utils_Tuple2('#7FB
 var $author$project$Component$MarkTable$markValueColors = function (val) {
 	markValueColors:
 	while (true) {
-		var _default = _Utils_Tuple2('#BFC9CA', '#909497');
+		var _default = _Utils_Tuple2('#BFC9CA', '#5c5e60');
 		switch (val) {
-			case '5':
-				return _Utils_Tuple2('#7DCEA0', '#1E8449');
 			case '4':
-				return _Utils_Tuple2('#76D7C4', '#148F77');
+				return _Utils_Tuple2('#7DCEA0', '#145931');
+			case '5':
+				return _Utils_Tuple2('#76D7C4', '#0e6756');
 			case '3':
-				return _Utils_Tuple2('#F7DC6F', '#B7950B');
+				return _Utils_Tuple2('#F7DC6F', 'rgb(119 97 5)');
 			case '2':
 				return _Utils_Tuple2('#D98880', '#922B21');
 			case '1':
@@ -38640,7 +38799,10 @@ var $author$project$Component$MarkTable$viewMarkSlot = F4(
 							$elm$json$Json$Decode$at,
 							_List_fromArray(
 								['code']),
-							$elm$json$Json$Decode$string)))
+							$elm$json$Json$Decode$string))),
+					$elm$html$Html$Events$onClick(
+					$author$project$Component$MarkTable$MsgMarkSelected(
+						_Utils_Tuple2(x, y)))
 				]),
 			_List_fromArray(
 				[
@@ -38870,7 +39032,16 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text('')
+										A2(
+										$elm$core$Maybe$withDefault,
+										$elm$html$Html$text(''),
+										A2(
+											$elm$core$Maybe$map,
+											A2(
+												$elm$core$Basics$composeL,
+												$elm$html$Html$map($author$project$Component$MarkTable$MsgSelectSwitchCell),
+												$author$project$Component$Select$view),
+											model.switchCell))
 									]))
 							]))
 					])),

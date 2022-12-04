@@ -418,6 +418,15 @@ viewRead model =
                         "#B6C6D5FF"
                         [ h3 [ class "row start-xs pl-10 pt-10" ]
                             [ text activity.title ]
+                        , div [ class "mt-10 mb-10", style "text-align" "left" ]
+                            [ Maybe.withDefault (text "") <|
+                                Maybe.map
+                                    (\b ->
+                                        Html.map MsgMarkdownMsg <|
+                                            Markdown.Render.toHtml Markdown.Option.ExtendedMath b
+                                    )
+                                    activity.body
+                            ]
                         , div [ class "row between-xs middle-xs", style "font-size" "smaller" ]
                             [ div [ class "col-xs-12 col-sm start-xs center-sm" ]
                                 [ strong [ class "mr-10 activity-property-label" ]
@@ -703,6 +712,17 @@ viewWrite model =
                                     , type_ "text"
                                     , value activity.title
                                     , onInput (MsgSetField FieldTitle)
+                                    ]
+                                    []
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12" ]
+                                [ label [] [ text "Описание" ]
+                                , textarea
+                                    [ placeholder "Описание темы"
+                                    , value <| Maybe.withDefault "" activity.body
+                                    , onInput (MsgSetField FieldBody)
                                     ]
                                     []
                                 ]
