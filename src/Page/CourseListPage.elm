@@ -364,7 +364,25 @@ view model =
         view_courses dSpecs cs =
             let
                 filtered =
-                    List.map (viewCourse dSpecs) <| List.sortBy .title <| filterCourses model.filter cs
+                    List.map (viewCourse dSpecs) <|
+                        List.sortBy
+                            (\c ->
+                                let
+                                    mbClassNumStr : Maybe String
+                                    mbClassNumStr =
+                                        Maybe.map (String.filter Char.isDigit) c.forClass
+
+                                    toIntOrZero : Maybe String -> Int
+                                    toIntOrZero =
+                                        Maybe.withDefault 0
+                                            << Maybe.andThen String.toInt
+                                in
+                                ( c.title
+                                , toIntOrZero mbClassNumStr
+                                )
+                            )
+                        <|
+                            filterCourses model.filter cs
             in
             [ div
                 [ class "ui link cards center-xs"

@@ -36724,6 +36724,7 @@ var $author$project$Page$Course$CoursePage$view = function (model) {
 				$elm$html$Html$text('Не удалось получить данные курса: ' + err));
 	}
 };
+var $elm$core$String$filter = _String_filter;
 var $author$project$Page$CourseListPage$filterCourses = F2(
 	function (filter, courses) {
 		var filterCourse = function (c) {
@@ -37138,8 +37139,18 @@ var $author$project$Page$CourseListPage$view = function (model) {
 				$author$project$Page$CourseListPage$viewCourse(dSpecs),
 				A2(
 					$elm$core$List$sortBy,
-					function ($) {
-						return $.title;
+					function (c) {
+						var toIntOrZero = A2(
+							$elm$core$Basics$composeL,
+							$elm$core$Maybe$withDefault(0),
+							$elm$core$Maybe$andThen($elm$core$String$toInt));
+						var mbClassNumStr = A2(
+							$elm$core$Maybe$map,
+							$elm$core$String$filter($elm$core$Char$isDigit),
+							c.forClass);
+						return _Utils_Tuple2(
+							c.title,
+							toIntOrZero(mbClassNumStr));
 					},
 					A2($author$project$Page$CourseListPage$filterCourses, model.filter, cs)));
 			return _List_fromArray(
