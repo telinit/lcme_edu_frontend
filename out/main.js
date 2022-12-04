@@ -10340,10 +10340,13 @@ var $author$project$Component$MarkTable$initForCourse = F3(
 		var c = _v1.b;
 		return _Utils_Tuple2(
 			{
+				canEdit: true,
+				canViewDetails: false,
 				cells: _List_Nil,
 				columns: _List_Nil,
 				rows: _List_Nil,
 				selectedCoords: _Utils_Tuple2(0, 0),
+				showMarkDetails: $elm$core$Maybe$Nothing,
 				size: _Utils_Tuple2(0, 0),
 				state: $author$project$Component$MarkTable$Loading(m),
 				stickyCol1: true,
@@ -10442,10 +10445,13 @@ var $author$project$Component$MarkTable$initForStudent = F2(
 		var c = _v0.b;
 		return _Utils_Tuple2(
 			{
+				canEdit: false,
+				canViewDetails: true,
 				cells: _List_Nil,
 				columns: _List_Nil,
 				rows: _List_Nil,
 				selectedCoords: _Utils_Tuple2(0, 0),
+				showMarkDetails: $elm$core$Maybe$Nothing,
 				size: _Utils_Tuple2(0, 0),
 				state: $author$project$Component$MarkTable$Loading(m),
 				stickyCol1: true,
@@ -16158,7 +16164,10 @@ var $author$project$Page$Login$update = F2(
 var $author$project$Component$MarkTable$Activity = function (a) {
 	return {$: 'Activity', a: a};
 };
-var $author$project$Component$MarkTable$Complete = {$: 'Complete'};
+var $author$project$Component$MarkTable$Complete = F3(
+	function (a, b, c) {
+		return {$: 'Complete', a: a, b: b, c: c};
+	});
 var $author$project$Component$MarkTable$Course = function (a) {
 	return {$: 'Course', a: a};
 };
@@ -16702,7 +16711,7 @@ var $author$project$Component$MarkTable$update = F2(
 																},
 																cells))),
 													$elm$core$List$length(rows)),
-												state: $author$project$Component$MarkTable$Complete
+												state: A3($author$project$Component$MarkTable$Complete, courses, acts, marks)
 											}),
 										A2($elm$core$Platform$Cmd$map, $author$project$Component$MarkTable$MsgFetch, c));
 								} else {
@@ -16847,7 +16856,7 @@ var $author$project$Component$MarkTable$update = F2(
 																},
 																cells))),
 													$elm$core$List$length(rows)),
-												state: $author$project$Component$MarkTable$Complete
+												state: A3($author$project$Component$MarkTable$Complete, _List_Nil, course.activities, marks)
 											}),
 										A2($elm$core$Platform$Cmd$map, $author$project$Component$MarkTable$MsgFetch, c));
 								} else {
@@ -16912,6 +16921,7 @@ var $author$project$Component$MarkTable$update = F2(
 						return $author$project$Component$MarkTable$MsgNop;
 					}
 				};
+				var ignore = _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				var check_coords = F2(
 					function (_v18, _v19) {
 						var x_ = _v18.a;
@@ -16926,76 +16936,80 @@ var $author$project$Component$MarkTable$update = F2(
 					vec);
 				var nx = _v14.a;
 				var ny = _v14.b;
-				switch (cmd.$) {
-					case 'CmdMove':
-						return A2(
-							check_coords,
-							_Utils_Tuple2(nx, ny),
-							model.size) ? _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									selectedCoords: _Utils_Tuple2(nx, ny)
-								}),
-							A2($author$project$Component$MarkTable$focusCell, nx, ny)) : _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-					case 'CmdSetMark':
-						var new_mark = cmd.a;
-						if (mark_slot.$ === 'SlotMark') {
-							var mark = mark_slot.b;
-							return _Utils_Tuple2(
-								model,
-								A4(
-									$author$project$Component$MarkTable$doUpdateMark,
-									model.token,
-									mark,
-									_Utils_Tuple2(x, y),
-									new_mark));
-						} else {
-							var activityID = mark_slot.b;
-							var studentID = mark_slot.c;
-							return _Utils_Tuple2(
-								model,
-								A2(
+				if (!model.canEdit) {
+					return ignore;
+				} else {
+					switch (cmd.$) {
+						case 'CmdMove':
+							return A2(
+								check_coords,
+								_Utils_Tuple2(nx, ny),
+								model.size) ? _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										selectedCoords: _Utils_Tuple2(nx, ny)
+									}),
+								A2($author$project$Component$MarkTable$focusCell, nx, ny)) : ignore;
+						case 'CmdSetMark':
+							var new_mark = cmd.a;
+							if (mark_slot.$ === 'SlotMark') {
+								var mark = mark_slot.b;
+								return _Utils_Tuple2(
+									model,
+									A4(
+										$author$project$Component$MarkTable$doUpdateMark,
+										model.token,
+										mark,
+										_Utils_Tuple2(x, y),
+										new_mark));
+							} else {
+								var activityID = mark_slot.b;
+								var studentID = mark_slot.c;
+								return _Utils_Tuple2(
+									model,
+									A2(
+										$elm$core$Maybe$withDefault,
+										$elm$core$Platform$Cmd$none,
+										A2(
+											$elm$core$Maybe$map,
+											function (author_id) {
+												return A6(
+													$author$project$Component$MarkTable$doCreateMark,
+													model.token,
+													activityID,
+													studentID,
+													author_id,
+													_Utils_Tuple2(x, y),
+													new_mark);
+											},
+											model.teacher_id)));
+							}
+						case 'CmdUnknown':
+							return ignore;
+						default:
+							if (mark_slot.$ === 'SlotMark') {
+								var isSelected = mark_slot.a;
+								var mark = mark_slot.b;
+								return A2(
 									$elm$core$Maybe$withDefault,
-									$elm$core$Platform$Cmd$none,
+									_Utils_Tuple2(model, $elm$core$Platform$Cmd$none),
 									A2(
 										$elm$core$Maybe$map,
-										function (author_id) {
-											return A6(
-												$author$project$Component$MarkTable$doCreateMark,
-												model.token,
-												activityID,
-												studentID,
-												author_id,
-												_Utils_Tuple2(x, y),
-												new_mark);
+										function (id) {
+											return _Utils_Tuple2(
+												model,
+												A3(
+													$author$project$Component$MarkTable$doDeleteMark,
+													model.token,
+													id,
+													_Utils_Tuple2(x, y)));
 										},
-										model.teacher_id)));
-						}
-					case 'CmdUnknown':
-						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-					default:
-						if (mark_slot.$ === 'SlotMark') {
-							var isSelected = mark_slot.a;
-							var mark = mark_slot.b;
-							return A2(
-								$elm$core$Maybe$withDefault,
-								_Utils_Tuple2(model, $elm$core$Platform$Cmd$none),
-								A2(
-									$elm$core$Maybe$map,
-									function (id) {
-										return _Utils_Tuple2(
-											model,
-											A3(
-												$author$project$Component$MarkTable$doDeleteMark,
-												model.token,
-												id,
-												_Utils_Tuple2(x, y)));
-									},
-									mark.id));
-						} else {
-							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-						}
+										mark.id));
+							} else {
+								return ignore;
+							}
+					}
 				}
 			case 'MsgMarkCreated':
 				var _v28 = _v0.a;
@@ -17033,7 +17047,7 @@ var $author$project$Component$MarkTable$update = F2(
 						model,
 						_Utils_Tuple2(x, y),
 						$elm$core$Maybe$Nothing),
-					$elm$core$Platform$Cmd$none);
+					$author$project$Component$MarkTable$switchMarkCmd(model));
 			case 'MsgNop':
 				var _v33 = _v0.a;
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -17069,7 +17083,7 @@ var $author$project$Component$MarkTable$update = F2(
 				} else {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
-			default:
+			case 'MsgMarkSelected':
 				var _v36 = _v0.a.a;
 				var x = _v36.a;
 				var y = _v36.b;
@@ -17079,6 +17093,27 @@ var $author$project$Component$MarkTable$update = F2(
 						{
 							selectedCoords: _Utils_Tuple2(x, y)
 						}),
+					$elm$core$Platform$Cmd$none);
+			case 'MsgMarkClicked':
+				var _v37 = _v0.a;
+				var mark = _v37.a;
+				var _v38 = _v37.b;
+				var x = _v38.a;
+				var y = _v38.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							selectedCoords: _Utils_Tuple2(x, y),
+							showMarkDetails: $elm$core$Maybe$Just(mark)
+						}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var _v39 = _v0.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{showMarkDetails: $elm$core$Maybe$Nothing}),
 					$elm$core$Platform$Cmd$none);
 		}
 	});
@@ -38457,6 +38492,7 @@ var $author$project$Component$MarkTable$showFetchedData = function (fetchedData)
 				$elm$core$List$length(activities));
 	}
 };
+var $author$project$Component$MarkTable$MsgOnClickCloseMarkDetails = {$: 'MsgOnClickCloseMarkDetails'};
 var $author$project$Component$MarkTable$MsgSetStickyCol1 = function (a) {
 	return {$: 'MsgSetStickyCol1', a: a};
 };
@@ -38537,8 +38573,14 @@ var $author$project$Component$MarkTable$viewColumn = F2(
 			}
 		} else {
 			var posix = column.a;
-			return $elm$html$Html$text(
-				A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, posix));
+			return A2(
+				$elm$html$Html$strong,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						A2($author$project$Util$posixToDDMMYYYY, $elm$time$Time$utc, posix))
+					]));
 		}
 	});
 var $author$project$Component$MarkTable$viewTableHeader = function (model) {
@@ -38652,6 +38694,10 @@ var $author$project$Component$MarkTable$viewRowsFirstCol = function (row) {
 				]));
 	}
 };
+var $author$project$Component$MarkTable$MsgMarkClicked = F2(
+	function (a, b) {
+		return {$: 'MsgMarkClicked', a: a, b: b};
+	});
 var $author$project$Component$MarkTable$MsgMarkKeyPress = F4(
 	function (a, b, c, d) {
 		return {$: 'MsgMarkKeyPress', a: a, b: b, c: c, d: d};
@@ -38781,6 +38827,7 @@ var $author$project$Component$MarkTable$viewMarkSlot = F4(
 					'slot-' + ($elm$core$String$fromInt(x + s) + ('-' + $elm$core$String$fromInt(y)))),
 					$elm$html$Html$Attributes$class('mark_slot'),
 					$elm$html$Html$Attributes$tabindex(1),
+					A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
 					A2(
 					$elm$html$Html$Events$on,
 					'keydown',
@@ -38799,10 +38846,7 @@ var $author$project$Component$MarkTable$viewMarkSlot = F4(
 							$elm$json$Json$Decode$at,
 							_List_fromArray(
 								['code']),
-							$elm$json$Json$Decode$string))),
-					$elm$html$Html$Events$onClick(
-					$author$project$Component$MarkTable$MsgMarkSelected(
-						_Utils_Tuple2(x, y)))
+							$elm$json$Json$Decode$string)))
 				]),
 			_List_fromArray(
 				[
@@ -38825,7 +38869,12 @@ var $author$project$Component$MarkTable$viewMarkSlot = F4(
 							A2($elm$html$Html$Attributes$style, 'font-size', '16pt'),
 							A2($elm$html$Html$Attributes$style, 'padding', '5px'),
 							$elm$html$Html$Attributes$class('row center-xs middle-xs'),
-							A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+							A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
+							$elm$html$Html$Events$onClick(
+							A2(
+								$author$project$Component$MarkTable$MsgMarkClicked,
+								mark,
+								_Utils_Tuple2(x, y)))
 						]),
 					_Utils_ap(
 						common_attrs,
@@ -38930,6 +38979,160 @@ var $author$project$Component$MarkTable$viewTableRow = F3(
 					cols).b));
 	});
 var $author$project$Component$MarkTable$viewTable = function (model) {
+	var markDetailsModal = function () {
+		var _v0 = model.showMarkDetails;
+		if (_v0.$ === 'Just') {
+			var mark = _v0.a;
+			var topic = function () {
+				var _v1 = model.state;
+				if (_v1.$ === 'Complete') {
+					var activities = _v1.b;
+					return $elm$html$Html$text(
+						A2(
+							$elm$core$Maybe$withDefault,
+							'(Неизвестна)',
+							A2(
+								$elm$core$Maybe$map,
+								function ($) {
+									return $.title;
+								},
+								$elm$core$List$head(
+									A2(
+										$elm$core$List$filter,
+										function (a) {
+											return _Utils_eq(
+												a.id,
+												$elm$core$Maybe$Just(mark.activity));
+										},
+										activities)))));
+				} else {
+					return $elm$html$Html$text('');
+				}
+			}();
+			var details = A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('row center-xs middle-xs')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('col-xs-12 col-md-6')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('row')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 end-xs')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$strong,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Оценка:')
+													]))
+											])),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 start-xs')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text(mark.value)
+											]))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('row')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 end-xs')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$strong,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Тема:')
+													]))
+											])),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 start-xs')
+											]),
+										_List_fromArray(
+											[topic]))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('row')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 end-xs')
+											]),
+										_List_Nil),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 start-xs')
+											]),
+										_List_Nil)
+									]))
+							]))
+					]));
+			return A6(
+				$author$project$Component$Modal$view,
+				'mark_details',
+				'Подробности',
+				details,
+				$author$project$Component$MarkTable$MsgOnClickCloseMarkDetails,
+				_List_fromArray(
+					[
+						_Utils_Tuple2('Закрыть', $author$project$Component$MarkTable$MsgOnClickCloseMarkDetails)
+					]),
+				true);
+		} else {
+			return $elm$html$Html$text('');
+		}
+	}();
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -38942,6 +39145,7 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 			]),
 		_List_fromArray(
 			[
+				markDetailsModal,
 				A2(
 				$elm$html$Html$div,
 				_List_fromArray(

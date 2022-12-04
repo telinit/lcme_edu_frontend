@@ -7,6 +7,7 @@ import Api.Request.Course exposing (courseGetDeep, courseList)
 import Api.Request.Mark exposing (markCreate, markDelete, markList, markPartialUpdate)
 import Browser.Dom exposing (Error(..), focus)
 import Component.Misc exposing (user_link)
+import Component.Modal as Modal
 import Component.MultiTask as MultiTask exposing (Msg(..))
 import Component.Select as Select
 import Dict as D exposing (Dict)
@@ -99,11 +100,13 @@ type Msg
     | MsgSetStickyCol1 Bool
     | MsgSetStickyRow1 Bool
     | MsgSelectSwitchCell Select.Msg
+    | MsgMarkClicked Mark ( Int, Int )
+    | MsgOnClickCloseMarkDetails
 
 
 type State
     = Loading (MultiTask.Model Http.Error FetchedData)
-    | Complete
+    | Complete (List CourseShallow) (List Activity) (List Mark)
     | Error String
 
 
@@ -123,6 +126,9 @@ type alias Model =
     , stickyCol1 : Bool
     , switchCell : Maybe Select.Model
     , selectedCoords : ( Int, Int )
+    , canEdit : Bool
+    , canViewDetails : Bool
+    , showMarkDetails : Maybe Mark
     }
 
 
@@ -315,6 +321,9 @@ initForStudent token student_id =
       , stickyCol1 = True
       , switchCell = Nothing
       , selectedCoords = ( 0, 0 )
+      , canViewDetails = True
+      , canEdit = False
+      , showMarkDetails = Nothing
       }
     , Cmd.map MsgFetch c
     )
@@ -356,6 +365,9 @@ initForCourse token course_id teacher_id =
       , stickyCol1 = True
       , switchCell = Just sm
       , selectedCoords = ( 0, 0 )
+      , canViewDetails = False
+      , canEdit = True
+      , showMarkDetails = Nothing
       }
     , Cmd.batch [ Cmd.map MsgFetch c, Cmd.map MsgSelectSwitchCell sc ]
     )
@@ -535,7 +547,7 @@ update msg model =
                                 rows
                     in
                     ( { model
-                        | state = Complete
+                        | state = Complete courses acts marks
                         , rows = rows
                         , columns = columns
                         , cells = cells
@@ -624,7 +636,7 @@ update msg model =
                                 rows
                     in
                     ( { model
-                        | state = Complete
+                        | state = Complete [] course.activities marks -- TODO: Convert deep to shallow
                         , rows = rows
                         , columns = columns
                         , cells = cells
@@ -646,6 +658,9 @@ update msg model =
 
         ( MsgMarkKeyPress mark_slot x y cmd, _ ) ->
             let
+                ignore =
+                    ( model, Cmd.none )
+
                 onResult res =
                     case res of
                         Ok r ->
@@ -680,63 +695,67 @@ update msg model =
                 ( nx, ny ) =
                     v2add ( x, y ) vec
             in
-            case cmd of
-                CmdMove _ ->
-                    if check_coords ( nx, ny ) model.size then
-                        ( { model | selectedCoords = ( nx, ny ) }
-                        , focusCell nx ny
-                        )
+            if not model.canEdit then
+                ignore
 
-                    else
-                        ( model, Cmd.none )
-
-                CmdSetMark new_mark ->
-                    case mark_slot of
-                        SlotMark _ mark ->
-                            ( model
-                            , doUpdateMark
-                                model.token
-                                mark
-                                ( x, y )
-                                new_mark
+            else
+                case cmd of
+                    CmdMove _ ->
+                        if check_coords ( nx, ny ) model.size then
+                            ( { model | selectedCoords = ( nx, ny ) }
+                            , focusCell nx ny
                             )
 
-                        SlotVirtual _ activityID studentID ->
-                            ( model
-                            , Maybe.withDefault Cmd.none <|
-                                Maybe.map
-                                    (\author_id ->
-                                        doCreateMark
-                                            model.token
-                                            activityID
-                                            studentID
-                                            author_id
-                                            ( x, y )
-                                            new_mark
-                                    )
-                                    model.teacher_id
-                            )
+                        else
+                            ignore
 
-                CmdUnknown _ ->
-                    ( model, Cmd.none )
+                    CmdSetMark new_mark ->
+                        case mark_slot of
+                            SlotMark _ mark ->
+                                ( model
+                                , doUpdateMark
+                                    model.token
+                                    mark
+                                    ( x, y )
+                                    new_mark
+                                )
 
-                CmdDeleteMark ->
-                    case mark_slot of
-                        SlotMark isSelected mark ->
-                            Maybe.withDefault ( model, Cmd.none ) <|
-                                Maybe.map
-                                    (\id ->
-                                        ( model
-                                        , doDeleteMark
-                                            model.token
-                                            id
-                                            ( x, y )
+                            SlotVirtual _ activityID studentID ->
+                                ( model
+                                , Maybe.withDefault Cmd.none <|
+                                    Maybe.map
+                                        (\author_id ->
+                                            doCreateMark
+                                                model.token
+                                                activityID
+                                                studentID
+                                                author_id
+                                                ( x, y )
+                                                new_mark
                                         )
-                                    )
-                                    mark.id
+                                        model.teacher_id
+                                )
 
-                        SlotVirtual _ _ _ ->
-                            ( model, Cmd.none )
+                    CmdUnknown _ ->
+                        ignore
+
+                    CmdDeleteMark ->
+                        case mark_slot of
+                            SlotMark isSelected mark ->
+                                Maybe.withDefault ( model, Cmd.none ) <|
+                                    Maybe.map
+                                        (\id ->
+                                            ( model
+                                            , doDeleteMark
+                                                model.token
+                                                id
+                                                ( x, y )
+                                            )
+                                        )
+                                        mark.id
+
+                            SlotVirtual _ _ _ ->
+                                ignore
 
         ( MsgMarkCreated ( x, y ) mark, _ ) ->
             ( updateMark model ( x, y ) (Just mark), switchMarkCmd model )
@@ -745,7 +764,7 @@ update msg model =
             ( updateMark model ( x, y ) (Just mark), switchMarkCmd model )
 
         ( MsgMarkDeleted ( x, y ), _ ) ->
-            ( updateMark model ( x, y ) Nothing, Cmd.none )
+            ( updateMark model ( x, y ) Nothing, switchMarkCmd model )
 
         ( MsgNop, _ ) ->
             ( model, Cmd.none )
@@ -771,6 +790,12 @@ update msg model =
         ( MsgMarkSelected ( x, y ), _ ) ->
             ( { model | selectedCoords = ( x, y ) }, Cmd.none )
 
+        ( MsgMarkClicked mark ( x, y ), _ ) ->
+            ( { model | showMarkDetails = Just mark, selectedCoords = ( x, y ) }, Cmd.none )
+
+        ( MsgOnClickCloseMarkDetails, _ ) ->
+            ( { model | showMarkDetails = Nothing }, Cmd.none )
+
 
 viewColumn : Zone -> Column -> Html Msg
 viewColumn tz column =
@@ -790,7 +815,7 @@ viewColumn tz column =
                         ]
 
         Date posix ->
-            text <| posixToDDMMYYYY T.utc posix
+            strong [] [ text <| posixToDDMMYYYY T.utc posix ]
 
 
 viewRowsFirstCol : Row -> Html Msg
@@ -867,6 +892,7 @@ viewMarkSlot y x s markSlot =
             , id <| "slot-" ++ String.fromInt (x + s) ++ "-" ++ String.fromInt y
             , class "mark_slot"
             , tabindex 1
+            , style "cursor" "pointer"
             , on "keydown" <|
                 JD.andThen
                     (\k ->
@@ -876,7 +902,6 @@ viewMarkSlot y x s markSlot =
                     )
                 <|
                     JD.at [ "code" ] JD.string
-            , onClick (MsgMarkSelected ( x, y ))
             ]
                 ++ [ autofocus is_first ]
     in
@@ -898,6 +923,7 @@ viewMarkSlot y x s markSlot =
                  , style "padding" "5px"
                  , class "row center-xs middle-xs"
                  , style "font-weight" "bold"
+                 , onClick (MsgMarkClicked mark ( x, y ))
                  ]
                     ++ common_attrs
                     ++ (if sel then
@@ -1024,6 +1050,52 @@ viewTableRow stickyCol1 y ( row, cols ) =
 
 viewTable : Model -> Html Msg
 viewTable model =
+    let
+        markDetailsModal =
+            case model.showMarkDetails of
+                Just mark ->
+                    let
+                        topic =
+                            case model.state of
+                                Complete _ activities _ ->
+                                    text <|
+                                        Maybe.withDefault "(Неизвестна)" <|
+                                            Maybe.map .title <|
+                                                List.head <|
+                                                    List.filter (\a -> a.id == Just mark.activity) activities
+
+                                _ ->
+                                    text ""
+
+                        details =
+                            div [ class "row center-xs middle-xs" ]
+                                [ div [ class "col-xs-12 col-md-6" ]
+                                    [ div [ class "row" ]
+                                        [ div [ class "col-xs-12 col-sm-6 end-xs" ] [ strong [] [ text "Оценка:" ] ]
+                                        , div [ class "col-xs-12 col-sm-6 start-xs" ] [ text mark.value ]
+                                        ]
+                                    , div [ class "row" ]
+                                        [ div [ class "col-xs-12 col-sm-6 end-xs" ] [ strong [] [ text "Тема:" ] ]
+                                        , div [ class "col-xs-12 col-sm-6 start-xs" ] [ topic ]
+                                        ]
+                                    , div [ class "row" ]
+                                        [ div [ class "col-xs-12 col-sm-6 end-xs" ] []
+                                        , div [ class "col-xs-12 col-sm-6 start-xs" ] []
+                                        ]
+                                    ]
+                                ]
+                    in
+                    Modal.view
+                        "mark_details"
+                        "Подробности"
+                        details
+                        MsgOnClickCloseMarkDetails
+                        [ ( "Закрыть", MsgOnClickCloseMarkDetails ) ]
+                        True
+
+                Nothing ->
+                    text ""
+    in
     div
         [ style "position" "absolute"
         , style "left" "0"
@@ -1031,7 +1103,8 @@ viewTable model =
         , style "bottom" "0"
         , style "top" "120px"
         ]
-        [ div
+        [ markDetailsModal
+        , div
             [ class "ui container segment"
             , style "height" "50px"
             , style "margin-bottom" "10px"
@@ -1074,7 +1147,7 @@ view model =
         Loading model_ ->
             Html.map MsgFetch <| MultiTask.view showFetchedData httpErrorToString model_
 
-        Complete ->
+        Complete _ _ _ ->
             if model.rows == [] || model.columns == [] then
                 h3 [] [ text "Нет данных" ]
 
