@@ -791,7 +791,17 @@ update msg model =
             ( { model | selectedCoords = ( x, y ) }, Cmd.none )
 
         ( MsgMarkClicked mark ( x, y ), _ ) ->
-            ( { model | showMarkDetails = mark, selectedCoords = ( x, y ) }, Cmd.none )
+            ( { model
+                | showMarkDetails =
+                    if model.canViewDetails then
+                        mark
+
+                    else
+                        Nothing
+                , selectedCoords = ( x, y )
+              }
+            , Cmd.none
+            )
 
         ( MsgOnClickCloseMarkDetails, _ ) ->
             ( { model | showMarkDetails = Nothing }, Cmd.none )

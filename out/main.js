@@ -17105,7 +17105,7 @@ var $author$project$Component$MarkTable$update = F2(
 						model,
 						{
 							selectedCoords: _Utils_Tuple2(x, y),
-							showMarkDetails: mark
+							showMarkDetails: model.canViewDetails ? mark : $elm$core$Maybe$Nothing
 						}),
 					$elm$core$Platform$Cmd$none);
 			default:
