@@ -12537,24 +12537,21 @@ var $author$project$Component$Activity$update = F2(
 									act,
 									{
 										keywords: $author$project$Page$CourseListPage$empty_to_nothing(
-											$elm$core$Maybe$Just(
-												$elm$core$String$trim(v)))
+											$elm$core$Maybe$Just(v))
 									});
 							case 'FieldSci':
 								return _Utils_update(
 									act,
 									{
 										scientificTopic: $author$project$Page$CourseListPage$empty_to_nothing(
-											$elm$core$Maybe$Just(
-												$elm$core$String$trim(v)))
+											$elm$core$Maybe$Just(v))
 									});
 							case 'FieldGroup':
 								return _Utils_update(
 									act,
 									{
 										group: $author$project$Page$CourseListPage$empty_to_nothing(
-											$elm$core$Maybe$Just(
-												$elm$core$String$trim(v)))
+											$elm$core$Maybe$Just(v))
 									});
 							case 'FieldHours':
 								return _Utils_update(
@@ -12591,8 +12588,7 @@ var $author$project$Component$Activity$update = F2(
 									act,
 									{
 										lessonType: $author$project$Page$CourseListPage$empty_to_nothing(
-											$elm$core$Maybe$Just(
-												$elm$core$String$trim(v)))
+											$elm$core$Maybe$Just(v))
 									});
 							case 'FieldBody':
 								return _Utils_update(
@@ -16489,7 +16485,34 @@ var $author$project$Component$MarkTable$update = F2(
 												return $.title;
 											},
 											courses));
-									var ix_acts = A2($author$project$Util$index_by, $author$project$Util$get_id_str, acts);
+									var existingActivityIDS = $elm$core$Set$fromList(
+										A2(
+											$elm$core$List$map,
+											A2(
+												$elm$core$Basics$composeR,
+												function ($) {
+													return $.activity;
+												},
+												$danyx23$elm_uuid$Uuid$toString),
+											marks));
+									var activity_timestamp = function (act) {
+										return A2(
+											$elm$core$Maybe$map,
+											A2($elm$core$Basics$composeL, $elm$core$String$fromInt, $elm$time$Time$posixToMillis),
+											act.date);
+									};
+									var activity_course_id = function (act) {
+										return $danyx23$elm_uuid$Uuid$toString(act.course);
+									};
+									var activities = A2(
+										$elm$core$List$filter,
+										function (a) {
+											return A2(
+												$elm$core$Set$member,
+												$author$project$Util$get_id_str(a),
+												existingActivityIDS);
+										},
+										acts);
 									var columns = A2(
 										$elm$core$List$map,
 										$author$project$Component$MarkTable$Date,
@@ -16511,16 +16534,8 @@ var $author$project$Component$MarkTable$update = F2(
 															function ($) {
 																return $.order;
 															},
-															acts))))));
-									var activity_timestamp = function (act) {
-										return A2(
-											$elm$core$Maybe$map,
-											A2($elm$core$Basics$composeL, $elm$core$String$fromInt, $elm$time$Time$posixToMillis),
-											act.date);
-									};
-									var activity_course_id = function (act) {
-										return $danyx23$elm_uuid$Uuid$toString(act.course);
-									};
+															activities))))));
+									var ix_acts = A2($author$project$Util$index_by, $author$project$Util$get_id_str, activities);
 									var mark_coords = function (mark) {
 										return A2(
 											$elm$core$Maybe$andThen,
@@ -16642,7 +16657,26 @@ var $author$project$Component$MarkTable$update = F2(
 												},
 												$author$project$Util$user_full_name),
 											course.enrollments));
-									var ix_acts = A2($author$project$Util$index_by, $author$project$Util$get_id_str, course.activities);
+									var activity_timestamp = function (act) {
+										return $elm$core$String$fromInt(
+											$elm$time$Time$posixToMillis(act.date));
+									};
+									var activities = A2(
+										$elm$core$List$filter,
+										function (a) {
+											return 0 < A2($elm$core$Maybe$withDefault, 0, a.marksLimit);
+										},
+										course.activities);
+									var columns = A2(
+										$elm$core$List$map,
+										$author$project$Component$MarkTable$Activity,
+										A2(
+											$elm$core$List$sortBy,
+											function ($) {
+												return $.order;
+											},
+											activities));
+									var ix_acts = A2($author$project$Util$index_by, $author$project$Util$get_id_str, activities);
 									var mark_coords = function (mark) {
 										return A2(
 											$elm$core$Maybe$andThen,
@@ -16684,15 +16718,6 @@ var $author$project$Component$MarkTable$update = F2(
 															$elm$core$Maybe$map($elm$time$Time$posixToMillis),
 															$elm$core$Maybe$withDefault(0))),
 													marks))));
-									var columns = A2(
-										$elm$core$List$map,
-										$author$project$Component$MarkTable$Activity,
-										A2(
-											$elm$core$List$sortBy,
-											function ($) {
-												return $.order;
-											},
-											course.activities));
 									var cells = A2(
 										$elm$core$List$map,
 										function (row) {
@@ -16730,10 +16755,6 @@ var $author$project$Component$MarkTable$update = F2(
 												columns);
 										},
 										rows);
-									var activity_timestamp = function (act) {
-										return $elm$core$String$fromInt(
-											$elm$time$Time$posixToMillis(act.date));
-									};
 									return _Utils_Tuple2(
 										_Utils_update(
 											model,
@@ -33630,6 +33651,75 @@ var $author$project$Component$Activity$viewWrite = function (model) {
 													_List_Nil,
 													_List_fromArray(
 														[
+															$elm$html$Html$text('Количество часов')
+														])),
+													A2(
+													$elm$html$Html$input,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$placeholder(''),
+															$elm$html$Html$Attributes$type_('number'),
+															$elm$html$Html$Attributes$min('0'),
+															$elm$html$Html$Attributes$value(
+															$elm$core$String$fromInt(
+																A2($elm$core$Maybe$withDefault, 1, activity.hours))),
+															$elm$html$Html$Events$onInput(
+															$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldHours))
+														]),
+													_List_Nil)
+												])),
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Лимит оценок')
+														])),
+													A2(
+													$elm$html$Html$input,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$placeholder(''),
+															$elm$html$Html$Attributes$type_('number'),
+															$elm$html$Html$Attributes$min('0'),
+															$elm$html$Html$Attributes$value(
+															$elm$core$String$fromInt(
+																A2($elm$core$Maybe$withDefault, 1, activity.marksLimit))),
+															$elm$html$Html$Events$onInput(
+															$author$project$Component$Activity$MsgSetField($author$project$Component$Activity$FieldLimit))
+														]),
+													_List_Nil)
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row mt-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('field start-xs col-xs-12 col-sm-6')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$label,
+													_List_Nil,
+													_List_fromArray(
+														[
 															$elm$html$Html$text('Соответствие ФГОС')
 														])),
 													A2(
@@ -38789,11 +38879,12 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$Attributes$class('ui celled striped unstackable table'),
-						A2($elm$html$Html$Attributes$style, 'max-width', '100%'),
+						A2($elm$html$Html$Attributes$style, 'max-width', 'fit-content'),
 						A2($elm$html$Html$Attributes$style, 'max-height', 'calc(100% - 60px)'),
 						A2($elm$html$Html$Attributes$style, 'display', 'block'),
 						A2($elm$html$Html$Attributes$style, 'overflow', 'scroll'),
-						A2($elm$html$Html$Attributes$style, 'margin-top', '10px')
+						A2($elm$html$Html$Attributes$style, 'margin-top', '10px'),
+						A2($elm$html$Html$Attributes$style, 'margin', 'auto')
 					]),
 				_Utils_ap(
 					_List_fromArray(

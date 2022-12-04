@@ -323,13 +323,13 @@ update msg model =
                             { act | title = v }
 
                         FieldKeywords ->
-                            { act | keywords = empty_to_nothing <| Just <| String.trim v }
+                            { act | keywords = empty_to_nothing <| Just v }
 
                         FieldSci ->
-                            { act | scientificTopic = empty_to_nothing <| Just <| String.trim v }
+                            { act | scientificTopic = empty_to_nothing <| Just v }
 
                         FieldGroup ->
-                            { act | group = empty_to_nothing <| Just <| String.trim v }
+                            { act | group = empty_to_nothing <| Just v }
 
                         FieldHours ->
                             { act | hours = String.toInt v }
@@ -347,7 +347,7 @@ update msg model =
                             { act | date = isoDateToPosix v }
 
                         FieldLessonType ->
-                            { act | lessonType = empty_to_nothing <| Just <| String.trim v }
+                            { act | lessonType = empty_to_nothing <| Just v }
 
                         FieldBody ->
                             { act | body = Just v }
@@ -1162,6 +1162,30 @@ viewWrite model =
                                     , type_ "text"
                                     , value <| Maybe.withDefault "" activity.group
                                     , onInput (MsgSetField FieldGroup)
+                                    ]
+                                    []
+                                ]
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Количество часов" ]
+                                , input
+                                    [ placeholder ""
+                                    , type_ "number"
+                                    , Html.Attributes.min "0"
+                                    , value <| String.fromInt <| Maybe.withDefault 1 activity.hours
+                                    , onInput (MsgSetField FieldHours)
+                                    ]
+                                    []
+                                ]
+                            , div [ class "field start-xs col-xs-12 col-sm-6" ]
+                                [ label [] [ text "Лимит оценок" ]
+                                , input
+                                    [ placeholder ""
+                                    , type_ "number"
+                                    , Html.Attributes.min "0"
+                                    , value <| String.fromInt <| Maybe.withDefault 1 activity.marksLimit
+                                    , onInput (MsgSetField FieldLimit)
                                     ]
                                     []
                                 ]

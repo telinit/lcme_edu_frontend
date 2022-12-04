@@ -409,11 +409,18 @@ update msg model =
                 --Marks for student
                 ( TaskFinishedAll [ Ok (FetchedCourseList courses), Ok (FetchedActivities acts), Ok (FetchedMarks marks) ], Just student_id ) ->
                     let
-                        ix_acts =
-                            index_by get_id_str acts
-
                         rows =
                             L.map Course <| List.sortBy .title courses
+
+                        -- TODO: Add time filters
+                        existingActivityIDS =
+                            Set.fromList <| List.map (.activity >> Uuid.toString) marks
+
+                        activities =
+                            List.filter (\a -> Set.member (get_id_str a) existingActivityIDS) acts
+
+                        ix_acts =
+                            index_by get_id_str activities
 
                         columns =
                             L.map Date <|
@@ -421,7 +428,7 @@ update msg model =
                                     Set.toList <|
                                         Set.fromList <|
                                             L.filterMap (.date >> Maybe.map T.posixToMillis) <|
-                                                L.sortBy .order acts
+                                                L.sortBy .order activities
 
                         activity_timestamp act =
                             Maybe.map (String.fromInt << T.posixToMillis) act.date
@@ -493,7 +500,7 @@ update msg model =
                 ( TaskFinishedAll [ Ok (FetchedCourse course), Ok (FetchedMarks marks) ], _ ) ->
                     let
                         ix_acts =
-                            index_by get_id_str course.activities
+                            index_by get_id_str activities
 
                         rows =
                             L.filterMap
@@ -508,10 +515,13 @@ update msg model =
                                 List.sortBy (.person >> user_full_name) course.enrollments
 
                         columns =
-                            L.map Activity <| L.sortBy .order course.activities
+                            L.map Activity <| L.sortBy .order activities
 
                         activity_timestamp act =
                             String.fromInt <| T.posixToMillis act.date
+
+                        activities =
+                            List.filter (\a -> 0 < Maybe.withDefault 0 a.marksLimit) course.activities
 
                         mark_coords mark =
                             D.get (Uuid.toString mark.activity) ix_acts
@@ -976,11 +986,12 @@ viewTable model =
             ]
         , table
             [ class "ui celled striped unstackable table"
-            , style "max-width" "100%"
+            , style "max-width" "fit-content"
             , style "max-height" "calc(100% - 60px)"
             , style "display" "block"
             , style "overflow" "scroll"
             , style "margin-top" "10px"
+            , style "margin" "auto"
             ]
             ((++) [ viewTableHeader model ] <| L.indexedMap (viewTableRow model.stickyCol1) <| zip model.rows model.cells)
         ]
