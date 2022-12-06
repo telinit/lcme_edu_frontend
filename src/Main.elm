@@ -147,21 +147,20 @@ init { token } url key =
                 _ ->
                     urlStr
     in
-    Debug.log "init"
-        ( { key = key
-          , url = url
-          , init_url = initUrl
-          , token = Left token
-          , page = PageBlank
-          , layout = LayoutNone
-          }
-        , case urlParsed of
-            UrlPasswordReset _ ->
-                Task.perform identity <| Task.succeed (MsgUrlChanged url)
+    ( { key = key
+      , url = url
+      , init_url = initUrl
+      , token = Left token
+      , page = PageBlank
+      , layout = LayoutNone
+      }
+    , case urlParsed of
+        UrlPasswordReset _ ->
+            Task.perform identity <| Task.succeed (MsgUrlChanged url)
 
-            _ ->
-                Nav.pushUrl key "/login"
-        )
+        _ ->
+            Nav.pushUrl key "/login"
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

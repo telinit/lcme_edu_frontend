@@ -5856,7 +5856,6 @@ var $author$project$Util$Left = function (a) {
 	return {$: 'Left', a: a};
 };
 var $author$project$Main$PageBlank = {$: 'PageBlank'};
-var $elm$core$Debug$log = _Debug_log;
 var $author$project$Main$UrlAdmin = {$: 'UrlAdmin'};
 var $author$project$Main$UrlCourse = function (a) {
 	return {$: 'UrlCourse', a: a};
@@ -6932,29 +6931,26 @@ var $author$project$Main$init = F3(
 					return urlStr;
 			}
 		}();
-		return A2(
-			$elm$core$Debug$log,
-			'init',
-			_Utils_Tuple2(
-				{
-					init_url: initUrl,
-					key: key,
-					layout: $author$project$Main$LayoutNone,
-					page: $author$project$Main$PageBlank,
-					token: $author$project$Util$Left(token),
-					url: url
-				},
-				function () {
-					if (urlParsed.$ === 'UrlPasswordReset') {
-						return A2(
-							$elm$core$Task$perform,
-							$elm$core$Basics$identity,
-							$elm$core$Task$succeed(
-								$author$project$Main$MsgUrlChanged(url)));
-					} else {
-						return A2($elm$browser$Browser$Navigation$pushUrl, key, '/login');
-					}
-				}()));
+		return _Utils_Tuple2(
+			{
+				init_url: initUrl,
+				key: key,
+				layout: $author$project$Main$LayoutNone,
+				page: $author$project$Main$PageBlank,
+				token: $author$project$Util$Left(token),
+				url: url
+			},
+			function () {
+				if (urlParsed.$ === 'UrlPasswordReset') {
+					return A2(
+						$elm$core$Task$perform,
+						$elm$core$Basics$identity,
+						$elm$core$Task$succeed(
+							$author$project$Main$MsgUrlChanged(url)));
+				} else {
+					return A2($elm$browser$Browser$Navigation$pushUrl, key, '/login');
+				}
+			}());
 	});
 var $elm$json$Json$Decode$string = _Json_decodeString;
 var $author$project$Main$MsgPageCourse = function (a) {
