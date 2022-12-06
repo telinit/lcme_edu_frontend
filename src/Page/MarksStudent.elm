@@ -82,8 +82,6 @@ update msg model =
     let
         ignore =
             ( model, Cmd.none )
-
-        _ = Debug.log "update" ( msg, model )
     in
     case ( msg, model.state ) of
         ( MsgTable msg_, MarksTable t ) ->
