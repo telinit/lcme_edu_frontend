@@ -992,7 +992,7 @@ viewTableHeader model =
                             [ style "background-color" "#EEF6FFFF" ]
 
                 Date _ ->
-                    []
+                    [style "background-color" "white"]
     in
     thead
         (if model.stickyRow1 then

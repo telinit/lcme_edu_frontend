@@ -38727,7 +38727,10 @@ var $author$project$Component$MarkTable$viewTableHeader = function (model) {
 					A2($elm$html$Html$Attributes$style, 'background-color', '#EEF6FFFF')
 				]);
 		} else {
-			return _List_Nil;
+			return _List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'background-color', 'white')
+				]);
 		}
 	};
 	return A2(
