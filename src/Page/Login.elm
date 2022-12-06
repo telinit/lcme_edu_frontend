@@ -3,6 +3,7 @@ module Page.Login exposing (..)
 import Api exposing (ext_task, send, task, withToken)
 import Api.Data exposing (Token, UserDeep)
 import Api.Request.User exposing (userLogin, userResetPasswordComplete, userResetPasswordRequest, userSelf)
+import Browser.Navigation as Nav exposing (Key)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -18,13 +19,14 @@ type UserMessage
     | Info String
     | Error String
 
+type PasswordResetStage = Start | Finish
 
 type ModelState
     = Login
     | PasswordReset (Maybe String)
     | CheckingStored
     | LoggingIn
-    | ResettingPassword Int
+    | ResettingPassword PasswordResetStage
     | Success { token : String, user : UserDeep }
 
 
@@ -34,6 +36,7 @@ type alias Model =
     , message : UserMessage
     , state : ModelState
     , token : String
+    , key : Key
     }
 
 
@@ -45,7 +48,7 @@ type Msg
     | LoginCompleted Token
     | LoginFailed String
     | CheckSessionFailed String
-    | PasswordResetFinished Int (Result String ())
+    | PasswordResetFinished PasswordResetStage (Result String ())
     | CloseMessage
     | ModelSetUsername String
     | ModelSetPassword String
@@ -110,23 +113,23 @@ doSaveToken token =
 -- TODO: Password reset
 
 
-doPasswordResetS1 : String -> Cmd Msg
-doPasswordResetS1 login =
+doPasswordResetStart : String -> Cmd Msg
+doPasswordResetStart login =
     let
         onResult res =
             case res of
                 Ok _ ->
-                    PasswordResetFinished 1 (Ok ())
+                    PasswordResetFinished Start (Ok ())
 
                 Err e ->
-                    PasswordResetFinished 1 (Err <| httpErrorToString e)
+                    PasswordResetFinished Start (Err <| httpErrorToString e)
     in
     Task.attempt onResult <| task <| userResetPasswordRequest { login = login }
 
 
-doPasswordResetS2 : String -> String -> Cmd Msg
-doPasswordResetS2 token password =
-    Task.attempt (PasswordResetFinished 2) <|
+doPasswordResetFinish : String -> String -> Cmd Msg
+doPasswordResetFinish token password =
+    Task.attempt (PasswordResetFinished Finish) <|
         mapError httpErrorToString <|
             task <|
                 userResetPasswordComplete
@@ -135,25 +138,27 @@ doPasswordResetS2 token password =
                     }
 
 
-init : String -> ( Model, Cmd Msg )
-init token =
+init : Key -> String -> ( Model, Cmd Msg )
+init key token =
     ( { username = ""
       , password = ""
       , message = None
       , state = CheckingStored
       , token = token
+      , key = key
       }
     , doCheckSession token
     )
 
 
-init_password_reset_fin : String -> ( Model, Cmd Msg )
-init_password_reset_fin reset_token =
+init_password_reset_fin : Key -> String -> ( Model, Cmd Msg )
+init_password_reset_fin key reset_token =
     ( { username = ""
       , password = ""
       , message = None
       , state = PasswordReset (Just reset_token)
       , token = ""
+      , key = key
       }
     , Cmd.none
     )
@@ -166,7 +171,7 @@ update msg model =
             ( { model | state = LoggingIn }, doLogin model.username model.password )
 
         ( DoPasswordResetStartStage, PasswordReset Nothing ) ->
-            ( { model | state = ResettingPassword 1 }, doPasswordResetS1 model.username )
+            ( { model | state = ResettingPassword Start }, doPasswordResetStart model.username )
 
         ( CheckSessionFailed err, CheckingStored ) ->
             ( { model | message = Error err, state = Login }, Cmd.none )
@@ -192,11 +197,11 @@ update msg model =
         ( ModelSetPassword p, _ ) ->
             ( { model | password = p }, Cmd.none )
 
-        ( PasswordResetFinished 1 res, ResettingPassword 1 ) ->
+        ( PasswordResetFinished Start res, ResettingPassword Start ) ->
             case res of
                 Ok _ ->
                     ( { model
-                        | state = PasswordReset Nothing
+                        | state = Login
                         , message =
                             Info <|
                                 "Запрос на сброс пароля выполнен успешно. "
@@ -207,38 +212,41 @@ update msg model =
 
                 Err err ->
                     ( { model
-                        | state = PasswordReset Nothing
+                        | state = Login
                         , message = Error <| "Произошла ошибка при запросе смены пароля: " ++ err
                       }
                     , Cmd.none
                     )
 
-        ( PasswordResetFinished 2 res, ResettingPassword 2 ) ->
+        ( PasswordResetFinished Finish res, ResettingPassword Finish ) ->
+            let
+                cmd = Cmd.none --Nav.replaceUrl model.key "/login"
+            in
             case res of
                 Ok _ ->
                     ( { model
-                        | state = PasswordReset (Just "")
+                        | state = Login
                         , message =
                             Info <|
                                 "Запрос на изменение пароля выполнен успешно. "
                                     ++ "Вы можете войти в систему с новым паролем."
                       }
-                    , Cmd.none
+                    , cmd
                     )
 
                 Err err ->
                     ( { model
-                        | state = PasswordReset (Just "")
+                        | state = Login
                         , message = Error <| "Произошла ошибка при запросе смены пароля: " ++ err
                       }
-                    , Cmd.none
+                    , cmd
                     )
 
         ( DoPasswordResetFinishStage, PasswordReset (Just token) ) ->
             ( { model
-                | state = ResettingPassword 2
+                | state = ResettingPassword Finish
               }
-            , doPasswordResetS2 token model.password
+            , doPasswordResetFinish token model.password
             )
 
         ( _, _ ) ->
@@ -343,14 +351,11 @@ view model =
 
                 ResettingPassword stage ->
                     case stage of
-                        1 ->
+                        Start ->
                             progress "Выполняется запрос на сброс пароля"
 
-                        2 ->
+                        Finish ->
                             progress "Выполняется запрос на изменение пароля"
-
-                        _ ->
-                            text ""
     in
     div
         [ class "row center-xs middle-xs"

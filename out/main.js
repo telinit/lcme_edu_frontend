@@ -5856,6 +5856,7 @@ var $author$project$Util$Left = function (a) {
 	return {$: 'Left', a: a};
 };
 var $author$project$Main$PageBlank = {$: 'PageBlank'};
+var $elm$core$Debug$log = _Debug_log;
 var $author$project$Main$UrlAdmin = {$: 'UrlAdmin'};
 var $author$project$Main$UrlCourse = function (a) {
 	return {$: 'UrlCourse', a: a};
@@ -6919,27 +6920,41 @@ var $elm$url$Url$toString = function (url) {
 var $author$project$Main$init = F3(
 	function (_v0, url, key) {
 		var token = _v0.token;
-		return _Utils_Tuple2(
-			{
-				init_url: $elm$url$Url$toString(url),
-				key: key,
-				layout: $author$project$Main$LayoutNone,
-				page: $author$project$Main$PageBlank,
-				token: $author$project$Util$Left(token),
-				url: url
-			},
-			function () {
-				var _v1 = $author$project$Main$parse_url(url);
-				if (_v1.$ === 'UrlPasswordReset') {
-					return A2(
-						$elm$core$Task$perform,
-						$elm$core$Basics$identity,
-						$elm$core$Task$succeed(
-							$author$project$Main$MsgUrlChanged(url)));
-				} else {
-					return A2($elm$browser$Browser$Navigation$pushUrl, key, '/login');
-				}
-			}());
+		var urlStr = $elm$url$Url$toString(url);
+		var urlParsed = $author$project$Main$parse_url(url);
+		var initUrl = function () {
+			switch (urlParsed.$) {
+				case 'UrlLogin':
+					return '/';
+				case 'UrlPasswordReset':
+					return '/';
+				default:
+					return urlStr;
+			}
+		}();
+		return A2(
+			$elm$core$Debug$log,
+			'init',
+			_Utils_Tuple2(
+				{
+					init_url: initUrl,
+					key: key,
+					layout: $author$project$Main$LayoutNone,
+					page: $author$project$Main$PageBlank,
+					token: $author$project$Util$Left(token),
+					url: url
+				},
+				function () {
+					if (urlParsed.$ === 'UrlPasswordReset') {
+						return A2(
+							$elm$core$Task$perform,
+							$elm$core$Basics$identity,
+							$elm$core$Task$succeed(
+								$author$project$Main$MsgUrlChanged(url)));
+					} else {
+						return A2($elm$browser$Browser$Navigation$pushUrl, key, '/login');
+					}
+				}()));
 	});
 var $elm$json$Json$Decode$string = _Json_decodeString;
 var $author$project$Main$MsgPageCourse = function (a) {
@@ -10217,11 +10232,12 @@ var $author$project$Page$Login$doCheckSession = function (token) {
 			task_user,
 			task_date));
 };
-var $author$project$Page$Login$init = function (token) {
-	return _Utils_Tuple2(
-		{message: $author$project$Page$Login$None, password: '', state: $author$project$Page$Login$CheckingStored, token: token, username: ''},
-		$author$project$Page$Login$doCheckSession(token));
-};
+var $author$project$Page$Login$init = F2(
+	function (key, token) {
+		return _Utils_Tuple2(
+			{key: key, message: $author$project$Page$Login$None, password: '', state: $author$project$Page$Login$CheckingStored, token: token, username: ''},
+			$author$project$Page$Login$doCheckSession(token));
+	});
 var $author$project$Page$MarksCourse$MsgTable = function (a) {
 	return {$: 'MsgTable', a: a};
 };
@@ -10731,18 +10747,20 @@ var $author$project$Page$UserProfile$init = F3(
 var $author$project$Page$Login$PasswordReset = function (a) {
 	return {$: 'PasswordReset', a: a};
 };
-var $author$project$Page$Login$init_password_reset_fin = function (reset_token) {
-	return _Utils_Tuple2(
-		{
-			message: $author$project$Page$Login$None,
-			password: '',
-			state: $author$project$Page$Login$PasswordReset(
-				$elm$core$Maybe$Just(reset_token)),
-			token: '',
-			username: ''
-		},
-		$elm$core$Platform$Cmd$none);
-};
+var $author$project$Page$Login$init_password_reset_fin = F2(
+	function (key, reset_token) {
+		return _Utils_Tuple2(
+			{
+				key: key,
+				message: $author$project$Page$Login$None,
+				password: '',
+				state: $author$project$Page$Login$PasswordReset(
+					$elm$core$Maybe$Just(reset_token)),
+				token: '',
+				username: ''
+			},
+			$elm$core$Platform$Cmd$none);
+	});
 var $elm$browser$Browser$Navigation$load = _Browser_load;
 var $author$project$Ports$scrollIdIntoView = _Platform_outgoingPort('scrollIdIntoView', $elm$json$Json$Encode$string);
 var $author$project$Page$Admin$AdminPage$MsgSubpageImportStudents = function (a) {
@@ -15705,6 +15723,7 @@ var $author$project$Page$FrontPage$update = F2(
 var $author$project$Page$Login$Error = function (a) {
 	return {$: 'Error', a: a};
 };
+var $author$project$Page$Login$Finish = {$: 'Finish'};
 var $author$project$Page$Login$Info = function (a) {
 	return {$: 'Info', a: a};
 };
@@ -15713,6 +15732,7 @@ var $author$project$Page$Login$Login = {$: 'Login'};
 var $author$project$Page$Login$ResettingPassword = function (a) {
 	return {$: 'ResettingPassword', a: a};
 };
+var $author$project$Page$Login$Start = {$: 'Start'};
 var $author$project$Page$Login$Success = function (a) {
 	return {$: 'Success', a: a};
 };
@@ -15974,49 +15994,6 @@ var $author$project$Page$Login$PasswordResetFinished = F2(
 	function (a, b) {
 		return {$: 'PasswordResetFinished', a: a, b: b};
 	});
-var $author$project$Api$Data$encodeResetPasswordRequestPairs = function (model) {
-	var pairs = _List_fromArray(
-		[
-			A3($author$project$Api$Data$encode, 'login', $elm$json$Json$Encode$string, model.login)
-		]);
-	return pairs;
-};
-var $author$project$Api$Data$encodeResetPasswordRequest = A2($elm$core$Basics$composeL, $author$project$Api$Data$encodeObject, $author$project$Api$Data$encodeResetPasswordRequestPairs);
-var $author$project$Api$Request$User$userResetPasswordRequest = function (data_body) {
-	return A7(
-		$author$project$Api$request,
-		'POST',
-		'/user/reset_password_request/',
-		_List_Nil,
-		_List_Nil,
-		_List_Nil,
-		$elm$core$Maybe$Just(
-			$author$project$Api$Data$encodeResetPasswordRequest(data_body)),
-		$elm$json$Json$Decode$succeed(_Utils_Tuple0));
-};
-var $author$project$Page$Login$doPasswordResetS1 = function (login) {
-	var onResult = function (res) {
-		if (res.$ === 'Ok') {
-			return A2(
-				$author$project$Page$Login$PasswordResetFinished,
-				1,
-				$elm$core$Result$Ok(_Utils_Tuple0));
-		} else {
-			var e = res.a;
-			return A2(
-				$author$project$Page$Login$PasswordResetFinished,
-				1,
-				$elm$core$Result$Err(
-					$author$project$Util$httpErrorToString(e)));
-		}
-	};
-	return A2(
-		$elm$core$Task$attempt,
-		onResult,
-		$author$project$Api$task(
-			$author$project$Api$Request$User$userResetPasswordRequest(
-				{login: login})));
-};
 var $author$project$Api$Data$encodeResetPasswordCompletePairs = function (model) {
 	var pairs = _List_fromArray(
 		[
@@ -16038,11 +16015,11 @@ var $author$project$Api$Request$User$userResetPasswordComplete = function (data_
 			$author$project$Api$Data$encodeResetPasswordComplete(data_body)),
 		$elm$json$Json$Decode$succeed(_Utils_Tuple0));
 };
-var $author$project$Page$Login$doPasswordResetS2 = F2(
+var $author$project$Page$Login$doPasswordResetFinish = F2(
 	function (token, password) {
 		return A2(
 			$elm$core$Task$attempt,
-			$author$project$Page$Login$PasswordResetFinished(2),
+			$author$project$Page$Login$PasswordResetFinished($author$project$Page$Login$Finish),
 			A2(
 				$elm$core$Task$mapError,
 				$author$project$Util$httpErrorToString,
@@ -16050,6 +16027,49 @@ var $author$project$Page$Login$doPasswordResetS2 = F2(
 					$author$project$Api$Request$User$userResetPasswordComplete(
 						{password: password, token: token}))));
 	});
+var $author$project$Api$Data$encodeResetPasswordRequestPairs = function (model) {
+	var pairs = _List_fromArray(
+		[
+			A3($author$project$Api$Data$encode, 'login', $elm$json$Json$Encode$string, model.login)
+		]);
+	return pairs;
+};
+var $author$project$Api$Data$encodeResetPasswordRequest = A2($elm$core$Basics$composeL, $author$project$Api$Data$encodeObject, $author$project$Api$Data$encodeResetPasswordRequestPairs);
+var $author$project$Api$Request$User$userResetPasswordRequest = function (data_body) {
+	return A7(
+		$author$project$Api$request,
+		'POST',
+		'/user/reset_password_request/',
+		_List_Nil,
+		_List_Nil,
+		_List_Nil,
+		$elm$core$Maybe$Just(
+			$author$project$Api$Data$encodeResetPasswordRequest(data_body)),
+		$elm$json$Json$Decode$succeed(_Utils_Tuple0));
+};
+var $author$project$Page$Login$doPasswordResetStart = function (login) {
+	var onResult = function (res) {
+		if (res.$ === 'Ok') {
+			return A2(
+				$author$project$Page$Login$PasswordResetFinished,
+				$author$project$Page$Login$Start,
+				$elm$core$Result$Ok(_Utils_Tuple0));
+		} else {
+			var e = res.a;
+			return A2(
+				$author$project$Page$Login$PasswordResetFinished,
+				$author$project$Page$Login$Start,
+				$elm$core$Result$Err(
+					$author$project$Util$httpErrorToString(e)));
+		}
+	};
+	return A2(
+		$elm$core$Task$attempt,
+		onResult,
+		$author$project$Api$task(
+			$author$project$Api$Request$User$userResetPasswordRequest(
+				{login: login})));
+};
 var $author$project$Page$Login$update = F2(
 	function (msg, model) {
 		var _v0 = _Utils_Tuple2(msg, model.state);
@@ -16076,9 +16096,9 @@ var $author$project$Page$Login$update = F2(
 							_Utils_update(
 								model,
 								{
-									state: $author$project$Page$Login$ResettingPassword(1)
+									state: $author$project$Page$Login$ResettingPassword($author$project$Page$Login$Start)
 								}),
-							$author$project$Page$Login$doPasswordResetS1(model.username));
+							$author$project$Page$Login$doPasswordResetStart(model.username));
 					} else {
 						break _v0$13;
 					}
@@ -16157,81 +16177,77 @@ var $author$project$Page$Login$update = F2(
 							{password: p}),
 						$elm$core$Platform$Cmd$none);
 				case 'PasswordResetFinished':
-					if (_v0.b.$ === 'ResettingPassword') {
-						switch (_v0.a.a) {
-							case 1:
-								if (_v0.b.a === 1) {
-									var _v9 = _v0.a;
-									var res = _v9.b;
-									if (res.$ === 'Ok') {
-										return _Utils_Tuple2(
-											_Utils_update(
-												model,
-												{
-													message: $author$project$Page$Login$Info('Запрос на сброс пароля выполнен успешно. ' + 'Проверьте вашу электронную почту - на нее должно прийти письмо с дальнейшими инструкциями'),
-													state: $author$project$Page$Login$PasswordReset($elm$core$Maybe$Nothing)
-												}),
-											$elm$core$Platform$Cmd$none);
-									} else {
-										var err = res.a;
-										return _Utils_Tuple2(
-											_Utils_update(
-												model,
-												{
-													message: $author$project$Page$Login$Error('Произошла ошибка при запросе смены пароля: ' + err),
-													state: $author$project$Page$Login$PasswordReset($elm$core$Maybe$Nothing)
-												}),
-											$elm$core$Platform$Cmd$none);
-									}
-								} else {
-									break _v0$13;
-								}
-							case 2:
-								if (_v0.b.a === 2) {
-									var _v11 = _v0.a;
-									var res = _v11.b;
-									if (res.$ === 'Ok') {
-										return _Utils_Tuple2(
-											_Utils_update(
-												model,
-												{
-													message: $author$project$Page$Login$Info('Запрос на изменение пароля выполнен успешно. ' + 'Вы можете войти в систему с новым паролем.'),
-													state: $author$project$Page$Login$PasswordReset(
-														$elm$core$Maybe$Just(''))
-												}),
-											$elm$core$Platform$Cmd$none);
-									} else {
-										var err = res.a;
-										return _Utils_Tuple2(
-											_Utils_update(
-												model,
-												{
-													message: $author$project$Page$Login$Error('Произошла ошибка при запросе смены пароля: ' + err),
-													state: $author$project$Page$Login$PasswordReset(
-														$elm$core$Maybe$Just(''))
-												}),
-											$elm$core$Platform$Cmd$none);
-									}
-								} else {
-									break _v0$13;
-								}
-							default:
-								break _v0$13;
+					if (_v0.a.a.$ === 'Start') {
+						if ((_v0.b.$ === 'ResettingPassword') && (_v0.b.a.$ === 'Start')) {
+							var _v9 = _v0.a;
+							var _v10 = _v9.a;
+							var res = _v9.b;
+							var _v11 = _v0.b.a;
+							if (res.$ === 'Ok') {
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											message: $author$project$Page$Login$Info('Запрос на сброс пароля выполнен успешно. ' + 'Проверьте вашу электронную почту - на нее должно прийти письмо с дальнейшими инструкциями'),
+											state: $author$project$Page$Login$Login
+										}),
+									$elm$core$Platform$Cmd$none);
+							} else {
+								var err = res.a;
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											message: $author$project$Page$Login$Error('Произошла ошибка при запросе смены пароля: ' + err),
+											state: $author$project$Page$Login$Login
+										}),
+									$elm$core$Platform$Cmd$none);
+							}
+						} else {
+							break _v0$13;
 						}
 					} else {
-						break _v0$13;
+						if ((_v0.b.$ === 'ResettingPassword') && (_v0.b.a.$ === 'Finish')) {
+							var _v13 = _v0.a;
+							var _v14 = _v13.a;
+							var res = _v13.b;
+							var _v15 = _v0.b.a;
+							var cmd = $elm$core$Platform$Cmd$none;
+							if (res.$ === 'Ok') {
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											message: $author$project$Page$Login$Info('Запрос на изменение пароля выполнен успешно. ' + 'Вы можете войти в систему с новым паролем.'),
+											state: $author$project$Page$Login$Login
+										}),
+									cmd);
+							} else {
+								var err = res.a;
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											message: $author$project$Page$Login$Error('Произошла ошибка при запросе смены пароля: ' + err),
+											state: $author$project$Page$Login$Login
+										}),
+									cmd);
+							}
+						} else {
+							break _v0$13;
+						}
 					}
 				default:
 					if ((_v0.b.$ === 'PasswordReset') && (_v0.b.a.$ === 'Just')) {
-						var _v13 = _v0.a;
+						var _v17 = _v0.a;
 						var token = _v0.b.a.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
 								{
-									state: $author$project$Page$Login$ResettingPassword(2)
+									state: $author$project$Page$Login$ResettingPassword($author$project$Page$Login$Finish)
 								}),
-							A2($author$project$Page$Login$doPasswordResetS2, token, model.password));
+							A2($author$project$Page$Login$doPasswordResetFinish, token, model.password));
 					} else {
 						break _v0$13;
 					}
@@ -17705,7 +17721,9 @@ var $author$project$Main$update = F2(
 								case 'UrlLogin':
 									var _v7 = _v4.a;
 									var token = _v4.b;
-									var _v8 = $author$project$Page$Login$init(
+									var _v8 = A2(
+										$author$project$Page$Login$init,
+										model.key,
 										A3(
 											$author$project$Util$either_map,
 											$elm$core$Basics$identity,
@@ -17966,7 +17984,7 @@ var $author$project$Main$update = F2(
 								case 'UrlPasswordReset':
 									if (_v4.a.a.$ === 'Just') {
 										var token = _v4.a.a.a;
-										var _v31 = $author$project$Page$Login$init_password_reset_fin(token);
+										var _v31 = A2($author$project$Page$Login$init_password_reset_fin, model.key, token);
 										var m = _v31.a;
 										var c = _v31.b;
 										return _Utils_Tuple2(
@@ -38511,13 +38529,10 @@ var $author$project$Page$Login$view = function (model) {
 				return progress('Выполняется вход');
 			default:
 				var stage = _v0.a;
-				switch (stage) {
-					case 1:
-						return progress('Выполняется запрос на сброс пароля');
-					case 2:
-						return progress('Выполняется запрос на изменение пароля');
-					default:
-						return $elm$html$Html$text('');
+				if (stage.$ === 'Start') {
+					return progress('Выполняется запрос на сброс пароля');
+				} else {
+					return progress('Выполняется запрос на изменение пароля');
 				}
 		}
 	}();

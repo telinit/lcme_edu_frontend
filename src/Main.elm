@@ -129,20 +129,39 @@ parse_url url =
 
 init : State -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init { token } url key =
-    ( { key = key
-      , url = url
-      , init_url = Url.toString url
-      , token = Left token
-      , page = PageBlank
-      , layout = LayoutNone
-      }
-    , case parse_url url of
-        UrlPasswordReset _ ->
-            Task.perform identity <| Task.succeed (MsgUrlChanged url)
+    let
+        urlStr =
+            Url.toString url
 
-        _ ->
-            Nav.pushUrl key "/login"
-    )
+        urlParsed =
+            parse_url url
+
+        initUrl =
+            case urlParsed of
+                UrlLogin ->
+                    "/"
+
+                UrlPasswordReset _ ->
+                    "/"
+
+                _ ->
+                    urlStr
+    in
+    Debug.log "init"
+        ( { key = key
+          , url = url
+          , init_url = initUrl
+          , token = Left token
+          , page = PageBlank
+          , layout = LayoutNone
+          }
+        , case urlParsed of
+            UrlPasswordReset _ ->
+                Task.perform identity <| Task.succeed (MsgUrlChanged url)
+
+            _ ->
+                Nav.pushUrl key "/login"
+        )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -185,7 +204,7 @@ update msg model =
                         ( UrlLogin, token ) ->
                             let
                                 ( m, c ) =
-                                    Login.init <| either_map identity .key token
+                                    Login.init model.key <| either_map identity .key token
                             in
                             ( { model | page = PageLogin m, layout = LayoutNone }, Cmd.map MsgPageLogin c )
 
@@ -336,7 +355,7 @@ update msg model =
                         ( UrlPasswordReset (Just token), _ ) ->
                             let
                                 ( m, c ) =
-                                    Login.init_password_reset_fin token
+                                    Login.init_password_reset_fin model.key token
                             in
                             ( { model | page = PageLogin m, layout = LayoutNone }, Cmd.map MsgPageLogin c )
 
