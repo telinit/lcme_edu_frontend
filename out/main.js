@@ -10330,7 +10330,7 @@ var $author$project$Component$MarkTable$initForCourse = F3(
 						_List_fromArray(
 							[
 								_Utils_Tuple2(
-								'course',
+								'activity__course',
 								$danyx23$elm_uuid$Uuid$toString(course_id))
 							]),
 						$author$project$Api$Request$Mark$markList),
@@ -10445,7 +10445,7 @@ var $author$project$Component$MarkTable$initForStudent = F2(
 						_List_fromArray(
 							[
 								_Utils_Tuple2(
-								'student',
+								'course__enrollments__person',
 								$danyx23$elm_uuid$Uuid$toString(student_id))
 							]),
 						$author$project$Api$Request$Activity$activityList),
@@ -17220,22 +17220,17 @@ var $author$project$Page$MarksCourse$update = F2(
 				A2($elm$core$Platform$Cmd$map, $author$project$Page$MarksCourse$MsgTable, c));
 		}
 	});
-var $elm$core$Debug$log = _Debug_log;
 var $author$project$Page$MarksStudent$update = F2(
 	function (msg, model) {
 		var ignore = _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-		var _v0 = A2(
-			$elm$core$Debug$log,
-			'update',
-			_Utils_Tuple2(msg, model));
-		var _v1 = _Utils_Tuple2(msg, model.state);
-		if (_v1.a.$ === 'MsgTable') {
-			if (_v1.b.$ === 'MarksTable') {
-				var msg_ = _v1.a.a;
-				var t = _v1.b.a;
-				var _v2 = A2($author$project$Component$MarkTable$update, msg_, t);
-				var m = _v2.a;
-				var c = _v2.b;
+		var _v0 = _Utils_Tuple2(msg, model.state);
+		if (_v0.a.$ === 'MsgTable') {
+			if (_v0.b.$ === 'MarksTable') {
+				var msg_ = _v0.a.a;
+				var t = _v0.b.a;
+				var _v1 = A2($author$project$Component$MarkTable$update, msg_, t);
+				var m = _v1.a;
+				var c = _v1.b;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -17244,12 +17239,12 @@ var $author$project$Page$MarksStudent$update = F2(
 						}),
 					A2($elm$core$Platform$Cmd$map, $author$project$Page$MarksStudent$MsgTable, c));
 			} else {
-				var _v3 = _v1.b;
+				var _v2 = _v0.b;
 				return ignore;
 			}
 		} else {
-			if (_v1.b.$ === 'MarksTable') {
-				var r = _v1.a.a;
+			if (_v0.b.$ === 'MarksTable') {
+				var r = _v0.a.a;
 				if (r.$ === 'Ok') {
 					var student = r.a;
 					return _Utils_Tuple2(
@@ -17263,7 +17258,7 @@ var $author$project$Page$MarksStudent$update = F2(
 					return ignore;
 				}
 			} else {
-				var _v5 = _v1.b;
+				var _v4 = _v0.b;
 				return ignore;
 			}
 		}

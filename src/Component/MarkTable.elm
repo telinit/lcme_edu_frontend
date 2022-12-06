@@ -300,7 +300,7 @@ initForStudent token student_id =
                 [ ( ext_task FetchedCourseList token [ ( "enrollments__person", Uuid.toString student_id ), ( "enrollments__role", "s" ) ] courseList
                   , "Получение данных о курсах"
                   )
-                , ( ext_task FetchedActivities token [ ( "student", Uuid.toString student_id ) ] activityList
+                , ( ext_task FetchedActivities token [ ( "course__enrollments__person", Uuid.toString student_id ) ] activityList
                   , "Получение тем занятий"
                   )
                 , ( ext_task FetchedMarks token [ ( "student", Uuid.toString student_id ) ] markList
@@ -337,7 +337,7 @@ initForCourse token course_id teacher_id =
                 [ ( ext_task FetchedCourse token [] <| courseGetDeep <| Uuid.toString course_id
                   , "Получение данных о курсе"
                   )
-                , ( ext_task FetchedMarks token [ ( "course", Uuid.toString course_id ) ] markList
+                , ( ext_task FetchedMarks token [ ( "activity__course", Uuid.toString course_id ) ] markList
                   , "Получение оценок"
                   )
                 ]
