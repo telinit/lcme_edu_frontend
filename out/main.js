@@ -10376,10 +10376,33 @@ var $author$project$Page$MarksCourse$init = F3(
 var $author$project$Page$MarksStudent$MarksTable = function (a) {
 	return {$: 'MarksTable', a: a};
 };
+var $author$project$Page$MarksStudent$MsgStudentFetchFinished = function (a) {
+	return {$: 'MsgStudentFetchFinished', a: a};
+};
 var $author$project$Page$MarksStudent$MsgTable = function (a) {
 	return {$: 'MsgTable', a: a};
 };
 var $author$project$Page$MarksStudent$StudentSelection = {$: 'StudentSelection'};
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
 var $author$project$Component$MarkTable$FetchedActivities = function (a) {
 	return {$: 'FetchedActivities', a: a};
 };
@@ -10464,6 +10487,51 @@ var $author$project$Component$MarkTable$initForStudent = F2(
 			},
 			A2($elm$core$Platform$Cmd$map, $author$project$Component$MarkTable$MsgFetch, c));
 	});
+var $author$project$Api$Request$User$userRead = function (id_path) {
+	return A7(
+		$author$project$Api$request,
+		'GET',
+		'/user/{id}/',
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'id',
+				$elm$core$Basics$identity(id_path))
+			]),
+		_List_Nil,
+		_List_Nil,
+		$elm$core$Maybe$Nothing,
+		$author$project$Api$Data$userShallowDecoder);
+};
+var $author$project$Util$user_deep_to_shallow = function (userDeep) {
+	return {
+		avatar: userDeep.avatar,
+		birthDate: userDeep.birthDate,
+		children: $elm$core$Maybe$Just(
+			A2(
+				$elm$core$List$filterMap,
+				function ($) {
+					return $.id;
+				},
+				userDeep.children)),
+		createdAt: userDeep.createdAt,
+		currentClass: userDeep.currentClass,
+		currentSpec: userDeep.currentSpec,
+		dateJoined: userDeep.dateJoined,
+		email: userDeep.email,
+		firstName: userDeep.firstName,
+		id: userDeep.id,
+		isActive: userDeep.isActive,
+		isStaff: userDeep.isStaff,
+		isSuperuser: userDeep.isSuperuser,
+		lastLogin: userDeep.lastLogin,
+		lastName: userDeep.lastName,
+		middleName: userDeep.middleName,
+		roles: userDeep.roles,
+		updatedAt: userDeep.updatedAt,
+		username: userDeep.username
+	};
+};
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
@@ -10534,20 +10602,50 @@ var $author$project$Page$MarksStudent$init = F3(
 		}();
 		if (student_id.$ === 'Just') {
 			var id = student_id.a;
+			var student = $elm$core$List$head(
+				A2(
+					$elm$core$List$filter,
+					A2(
+						$elm$core$Basics$composeR,
+						function ($) {
+							return $.id;
+						},
+						$elm$core$Basics$eq(student_id)),
+					_Utils_ap(
+						_List_fromArray(
+							[
+								$author$project$Util$user_deep_to_shallow(user)
+							]),
+						user.children)));
+			var fetchStudent = _Utils_eq(student, $elm$core$Maybe$Nothing) ? A2(
+				$elm$core$Task$attempt,
+				$author$project$Page$MarksStudent$MsgStudentFetchFinished,
+				A4(
+					$author$project$Api$ext_task,
+					$elm$core$Basics$identity,
+					token,
+					_List_Nil,
+					$author$project$Api$Request$User$userRead(
+						$danyx23$elm_uuid$Uuid$toString(id)))) : $elm$core$Platform$Cmd$none;
 			var _v1 = A2($author$project$Component$MarkTable$initForStudent, token, id);
 			var m = _v1.a;
 			var c = _v1.b;
 			return _Utils_Tuple2(
 				{
 					state: $author$project$Page$MarksStudent$MarksTable(m),
-					student_id: student_id,
+					student: student,
 					token: token,
 					user: user
 				},
-				A2($elm$core$Platform$Cmd$map, $author$project$Page$MarksStudent$MsgTable, c));
+				$elm$core$Platform$Cmd$batch(
+					_List_fromArray(
+						[
+							A2($elm$core$Platform$Cmd$map, $author$project$Page$MarksStudent$MsgTable, c),
+							fetchStudent
+						])));
 		} else {
 			return _Utils_Tuple2(
-				{state: $author$project$Page$MarksStudent$StudentSelection, student_id: student_id, token: token, user: user},
+				{state: $author$project$Page$MarksStudent$StudentSelection, student: $elm$core$Maybe$Nothing, token: token, user: user},
 				$elm$core$Platform$Cmd$none);
 		}
 	});
@@ -11645,17 +11743,6 @@ var $author$project$Component$Activity$doScrollInto = function (model) {
 			A2($elm$core$Basics$composeR, $danyx23$elm_uuid$Uuid$toString, $author$project$Ports$scrollIdIntoView),
 			model.internal_id));
 };
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
 var $author$project$Component$Activity$ControlsUpDown = F2(
 	function (a, b) {
 		return {$: 'ControlsUpDown', a: a, b: b};
@@ -11721,15 +11808,6 @@ var $author$project$Component$Activity$getActivity = function (model) {
 	if (_v0.$ === 'StateActivity') {
 		var activity = _v0.a;
 		return $elm$core$Maybe$Just(activity);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
 	} else {
 		return $elm$core$Maybe$Nothing;
 	}
@@ -17142,25 +17220,52 @@ var $author$project$Page$MarksCourse$update = F2(
 				A2($elm$core$Platform$Cmd$map, $author$project$Page$MarksCourse$MsgTable, c));
 		}
 	});
+var $elm$core$Debug$log = _Debug_log;
 var $author$project$Page$MarksStudent$update = F2(
 	function (msg, model) {
-		var _v0 = _Utils_Tuple2(msg, model.state);
-		if (_v0.b.$ === 'MarksTable') {
-			var msg_ = _v0.a.a;
-			var t = _v0.b.a;
-			var _v1 = A2($author$project$Component$MarkTable$update, msg_, t);
-			var m = _v1.a;
-			var c = _v1.b;
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{
-						state: $author$project$Page$MarksStudent$MarksTable(m)
-					}),
-				A2($elm$core$Platform$Cmd$map, $author$project$Page$MarksStudent$MsgTable, c));
+		var ignore = _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		var _v0 = A2(
+			$elm$core$Debug$log,
+			'update',
+			_Utils_Tuple2(msg, model));
+		var _v1 = _Utils_Tuple2(msg, model.state);
+		if (_v1.a.$ === 'MsgTable') {
+			if (_v1.b.$ === 'MarksTable') {
+				var msg_ = _v1.a.a;
+				var t = _v1.b.a;
+				var _v2 = A2($author$project$Component$MarkTable$update, msg_, t);
+				var m = _v2.a;
+				var c = _v2.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							state: $author$project$Page$MarksStudent$MarksTable(m)
+						}),
+					A2($elm$core$Platform$Cmd$map, $author$project$Page$MarksStudent$MsgTable, c));
+			} else {
+				var _v3 = _v1.b;
+				return ignore;
+			}
 		} else {
-			var _v2 = _v0.b;
-			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			if (_v1.b.$ === 'MarksTable') {
+				var r = _v1.a.a;
+				if (r.$ === 'Ok') {
+					var student = r.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								student: $elm$core$Maybe$Just(student)
+							}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					return ignore;
+				}
+			} else {
+				var _v5 = _v1.b;
+				return ignore;
+			}
 		}
 	});
 var $author$project$Page$UserProfile$MsgImpersonationFinished = function (a) {
@@ -39430,44 +39535,10 @@ var $author$project$Page$MarksCourse$view = function (model) {
 					]))
 			]));
 };
-var $author$project$Util$user_deep_to_shallow = function (userDeep) {
-	return {
-		avatar: userDeep.avatar,
-		birthDate: userDeep.birthDate,
-		children: $elm$core$Maybe$Just(
-			A2(
-				$elm$core$List$filterMap,
-				function ($) {
-					return $.id;
-				},
-				userDeep.children)),
-		createdAt: userDeep.createdAt,
-		currentClass: userDeep.currentClass,
-		currentSpec: userDeep.currentSpec,
-		dateJoined: userDeep.dateJoined,
-		email: userDeep.email,
-		firstName: userDeep.firstName,
-		id: userDeep.id,
-		isActive: userDeep.isActive,
-		isStaff: userDeep.isStaff,
-		isSuperuser: userDeep.isSuperuser,
-		lastLogin: userDeep.lastLogin,
-		lastName: userDeep.lastName,
-		middleName: userDeep.middleName,
-		roles: userDeep.roles,
-		updatedAt: userDeep.updatedAt,
-		username: userDeep.username
-	};
-};
 var $author$project$Page$MarksStudent$view = function (model) {
 	var _v0 = model.state;
 	if (_v0.$ === 'MarksTable') {
 		var t = _v0.a;
-		var u2 = model.user.children;
-		var u1 = _List_fromArray(
-			[
-				$author$project$Util$user_deep_to_shallow(model.user)
-			]);
 		return A2(
 			$elm$html$Html$div,
 			_List_Nil,
@@ -39506,16 +39577,7 @@ var $author$project$Page$MarksStudent$view = function (model) {
 											]))
 									]));
 						},
-						$elm$core$List$head(
-							A2(
-								$elm$core$List$filter,
-								A2(
-									$elm$core$Basics$composeR,
-									function ($) {
-										return $.id;
-									},
-									$elm$core$Basics$eq(model.student_id)),
-								_Utils_ap(u1, u2))))),
+						model.student)),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -40350,13 +40412,6 @@ var $author$project$Page$UserProfile$view = function (model) {
 					$elm$core$List$map($author$project$Page$UserProfile$viewRole),
 					$elm$html$Html$div(_List_Nil)),
 				user.roles));
-		var is_staff_or_own_page = A2(
-			$author$project$Util$user_has_any_role,
-			model.current_user,
-			_List_fromArray(
-				['staff', 'admin'])) || _Utils_eq(model.current_user.id, user.id);
-		var show_email = is_staff_or_own_page;
-		var show_password = is_staff_or_own_page;
 		var is_related = A2(
 			$elm$core$List$any,
 			$elm$core$Basics$eq(model.current_user.id),
@@ -40366,8 +40421,16 @@ var $author$project$Page$UserProfile$view = function (model) {
 					return $.id;
 				},
 				_Utils_ap(user.children, user.parents)));
+		var is_own_page = _Utils_eq(model.current_user.id, user.id);
+		var is_staff_or_own_page = A2(
+			$author$project$Util$user_has_any_role,
+			model.current_user,
+			_List_fromArray(
+				['staff', 'admin'])) || is_own_page;
 		var show_children = is_staff_or_own_page || is_related;
+		var show_email = is_staff_or_own_page;
 		var show_parents = is_staff_or_own_page || is_related;
+		var show_password = is_staff_or_own_page;
 		var is_admin = A2(
 			$author$project$Util$user_has_any_role,
 			model.current_user,
@@ -40455,7 +40518,44 @@ var $author$project$Page$UserProfile$view = function (model) {
 											$elm$html$Html$Attributes$height(300)
 										]),
 									_List_Nil),
-									(is_admin && (!_Utils_eq(user.id, model.current_user.id))) ? A2(
+									((is_staff_or_own_page || is_related) && (!is_own_page)) ? A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row center-xs mb-10')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$a,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('col-xs-12'),
+													$elm$html$Html$Attributes$href(
+													'/marks/student/' + $author$project$Util$get_id_str(user))
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$button,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('ui fluid button')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$i,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$class('chart bar outline icon')
+																]),
+															_List_Nil),
+															$elm$html$Html$text('Оценки')
+														]))
+												]))
+										])) : $elm$html$Html$text(''),
+									(is_admin && (!is_own_page)) ? A2(
 									$elm$html$Html$div,
 									_List_fromArray(
 										[
@@ -40464,16 +40564,25 @@ var $author$project$Page$UserProfile$view = function (model) {
 									_List_fromArray(
 										[
 											A2(
-											$elm$html$Html$button,
+											$elm$html$Html$a,
 											_List_fromArray(
 												[
-													$elm$html$Html$Attributes$class('ui button'),
+													$elm$html$Html$Attributes$class('col-xs-12'),
 													$elm$html$Html$Events$onClick($author$project$Page$UserProfile$MsgOnClickImpersonate)
 												]),
 											_List_fromArray(
 												[
-													impersonation_icon,
-													$elm$html$Html$text('Зайти от имени пользователя')
+													A2(
+													$elm$html$Html$button,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('ui fluid button')
+														]),
+													_List_fromArray(
+														[
+															impersonation_icon,
+															$elm$html$Html$text('Зайти от имени пользователя')
+														]))
 												]))
 										])) : $elm$html$Html$text('')
 								])),

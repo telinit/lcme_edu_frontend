@@ -12,7 +12,7 @@ import Html.Events exposing (onClick, onInput)
 import Http exposing (Error)
 import Task
 import Time
-import Util exposing (httpErrorToString, link_span, posixToFullDate, user_deep_to_shallow, user_full_name, user_has_any_role)
+import Util exposing (get_id_str, httpErrorToString, link_span, posixToFullDate, user_deep_to_shallow, user_full_name, user_has_any_role)
 import Uuid exposing (Uuid)
 
 
@@ -479,8 +479,11 @@ view model =
                 is_admin =
                     user_has_any_role model.current_user [ "admin" ]
 
+                is_own_page =
+                    model.current_user.id == user.id
+
                 is_staff_or_own_page =
-                    user_has_any_role model.current_user [ "staff", "admin" ] || model.current_user.id == user.id
+                    user_has_any_role model.current_user [ "staff", "admin" ] || is_own_page
 
                 is_related =
                     List.any ((==) model.current_user.id) <|
@@ -500,7 +503,7 @@ view model =
                     is_staff_or_own_page || is_related
 
                 education =
-                    List.map viewEducation <| List.sortBy (.started >> Time.posixToMillis >> ((*) (-1))) user.education
+                    List.map viewEducation <| List.sortBy (.started >> Time.posixToMillis >> (*) -1) user.education
 
                 impersonation_icon =
                     case model.result_impersonation of
@@ -523,11 +526,25 @@ view model =
                             , height 300
                             ]
                             []
-                        , if is_admin && user.id /= model.current_user.id then
+                        , if (is_staff_or_own_page || is_related) && not is_own_page then
+                            div [ class "row center-xs mb-10" ]
+                                [ a [ class "col-xs-12", href <| "/marks/student/" ++ get_id_str user ]
+                                    [ button [ class "ui fluid button" ]
+                                        [ i [ class "chart bar outline icon" ] []
+                                        , text "Оценки"
+                                        ]
+                                    ]
+                                ]
+
+                          else
+                            text ""
+                        , if is_admin && not is_own_page then
                             div [ class "row center-xs" ]
-                                [ button [ class "ui button", onClick MsgOnClickImpersonate ]
-                                    [ impersonation_icon
-                                    , text "Зайти от имени пользователя"
+                                [ a [ class "col-xs-12", onClick MsgOnClickImpersonate ]
+                                    [ button [ class "ui fluid button" ]
+                                        [ impersonation_icon
+                                        , text "Зайти от имени пользователя"
+                                        ]
                                     ]
                                 ]
 
