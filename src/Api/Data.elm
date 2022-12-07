@@ -145,6 +145,7 @@ type alias Activity =
     , isHidden : Maybe Bool
     , marksLimit : Maybe Int
     , hours : Maybe Int
+    , weight : Maybe Float
     , fgosComplient : Maybe Bool
     , order : Int
     , date : Maybe Posix
@@ -505,7 +506,6 @@ type alias UnreadObject =
     , updatedAt : Maybe Posix
     , obj : Uuid
     , type_ : Maybe UnreadObjectType
-    , created : Posix
     , user : Uuid
     }
 
@@ -614,6 +614,7 @@ encodeActivityPairs model =
             , maybeEncode "is_hidden" Json.Encode.bool model.isHidden
             , maybeEncode "marks_limit" Json.Encode.int model.marksLimit
             , maybeEncode "hours" Json.Encode.int model.hours
+            , maybeEncode "weight" Json.Encode.float model.weight
             , maybeEncode "fgos_complient" Json.Encode.bool model.fgosComplient
             , encode "order" Json.Encode.int model.order
             , maybeEncodeNullable "date" Api.Time.encodeDate model.date
@@ -1404,7 +1405,6 @@ encodeUnreadObjectPairs model =
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "obj" Uuid.encode model.obj
             , maybeEncode "type" encodeUnreadObjectType model.type_
-            , encode "created" Api.Time.encodeDateTime model.created
             , encode "user" Uuid.encode model.user
             ]
     in
@@ -1545,6 +1545,7 @@ activityDecoder =
         |> maybeDecode "is_hidden" Json.Decode.bool Nothing
         |> maybeDecode "marks_limit" Json.Decode.int Nothing
         |> maybeDecode "hours" Json.Decode.int Nothing
+        |> maybeDecode "weight" Json.Decode.float Nothing
         |> maybeDecode "fgos_complient" Json.Decode.bool Nothing
         |> decode "order" Json.Decode.int
         |> maybeDecodeNullable "date" Api.Time.dateDecoder Nothing
@@ -1985,7 +1986,6 @@ unreadObjectDecoder =
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "obj" Uuid.decoder
         |> maybeDecode "type" unreadObjectTypeDecoder Nothing
-        |> decode "created" Api.Time.dateTimeDecoder
         |> decode "user" Uuid.decoder
 
 

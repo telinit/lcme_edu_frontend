@@ -880,6 +880,7 @@ update msg model =
                                 , files = Nothing
                                 , linkedActivity = Nothing
                                 , submittable = Just False
+                                , weight = Just 1
                                 }
 
                         ( EditOn AddFin _, Just cid ) ->
@@ -908,6 +909,7 @@ update msg model =
                                 , files = Nothing
                                 , linkedActivity = Nothing
                                 , submittable = Just False
+                                , weight = Just 1
                                 }
 
                         ( EditOn AddTsk _, Just cid ) ->
@@ -936,6 +938,7 @@ update msg model =
                                 , files = Nothing
                                 , linkedActivity = Nothing
                                 , submittable = Just False
+                                , weight = Just 1
                                 }
 
                         ( EditOn AddTxt _, Just cid ) ->
@@ -964,6 +967,7 @@ update msg model =
                                 , files = Nothing
                                 , linkedActivity = Nothing
                                 , submittable = Just False
+                                , weight = Just 1
                                 }
 
                         _ ->
@@ -1202,6 +1206,7 @@ update msg model =
                             , files = Nothing
                             , linkedActivity = Nothing
                             , submittable = Just False
+                            , weight = Just 1
                             }
                         )
                         c.id

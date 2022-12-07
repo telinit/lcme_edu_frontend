@@ -7854,21 +7854,23 @@ var $author$project$Api$Data$Activity = function (id) {
 							return function (isHidden) {
 								return function (marksLimit) {
 									return function (hours) {
-										return function (fgosComplient) {
-											return function (order) {
-												return function (date) {
-													return function (group) {
-														return function (scientificTopic) {
-															return function (body) {
-																return function (dueDate) {
-																	return function (submittable) {
-																		return function (link) {
-																			return function (embed) {
-																				return function (finalType) {
-																					return function (course) {
-																						return function (linkedActivity) {
-																							return function (files) {
-																								return {body: body, contentType: contentType, course: course, createdAt: createdAt, date: date, dueDate: dueDate, embed: embed, fgosComplient: fgosComplient, files: files, finalType: finalType, group: group, hours: hours, id: id, isHidden: isHidden, keywords: keywords, lessonType: lessonType, link: link, linkedActivity: linkedActivity, marksLimit: marksLimit, order: order, scientificTopic: scientificTopic, submittable: submittable, title: title, updatedAt: updatedAt};
+										return function (weight) {
+											return function (fgosComplient) {
+												return function (order) {
+													return function (date) {
+														return function (group) {
+															return function (scientificTopic) {
+																return function (body) {
+																	return function (dueDate) {
+																		return function (submittable) {
+																			return function (link) {
+																				return function (embed) {
+																					return function (finalType) {
+																						return function (course) {
+																							return function (linkedActivity) {
+																								return function (files) {
+																									return {body: body, contentType: contentType, course: course, createdAt: createdAt, date: date, dueDate: dueDate, embed: embed, fgosComplient: fgosComplient, files: files, finalType: finalType, group: group, hours: hours, id: id, isHidden: isHidden, keywords: keywords, lessonType: lessonType, link: link, linkedActivity: linkedActivity, marksLimit: marksLimit, order: order, scientificTopic: scientificTopic, submittable: submittable, title: title, updatedAt: updatedAt, weight: weight};
+																								};
 																							};
 																						};
 																					};
@@ -8761,6 +8763,7 @@ var $danyx23$elm_uuid$Uuid$decoder = A2(
 		}
 	},
 	$elm$json$Json$Decode$string);
+var $elm$json$Json$Decode$float = _Json_decodeFloat;
 var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$json$Json$Decode$list = _Json_decodeList;
 var $elm$json$Json$Decode$decodeValue = _Json_run;
@@ -8875,54 +8878,59 @@ var $author$project$Api$Data$activityDecoder = A4(
 														$elm$core$Maybe$Nothing,
 														A4(
 															$author$project$Api$Data$maybeDecode,
-															'hours',
-															$elm$json$Json$Decode$int,
+															'weight',
+															$elm$json$Json$Decode$float,
 															$elm$core$Maybe$Nothing,
 															A4(
 																$author$project$Api$Data$maybeDecode,
-																'marks_limit',
+																'hours',
 																$elm$json$Json$Decode$int,
 																$elm$core$Maybe$Nothing,
 																A4(
 																	$author$project$Api$Data$maybeDecode,
-																	'is_hidden',
-																	$elm$json$Json$Decode$bool,
+																	'marks_limit',
+																	$elm$json$Json$Decode$int,
 																	$elm$core$Maybe$Nothing,
 																	A4(
 																		$author$project$Api$Data$maybeDecode,
-																		'lesson_type',
-																		$elm$json$Json$Decode$string,
+																		'is_hidden',
+																		$elm$json$Json$Decode$bool,
 																		$elm$core$Maybe$Nothing,
 																		A4(
 																			$author$project$Api$Data$maybeDecode,
-																			'keywords',
+																			'lesson_type',
 																			$elm$json$Json$Decode$string,
 																			$elm$core$Maybe$Nothing,
-																			A3(
-																				$author$project$Api$Data$decode,
-																				'title',
+																			A4(
+																				$author$project$Api$Data$maybeDecode,
+																				'keywords',
 																				$elm$json$Json$Decode$string,
-																				A4(
-																					$author$project$Api$Data$maybeDecode,
-																					'content_type',
-																					$author$project$Api$Data$activityContentTypeDecoder,
-																					$elm$core$Maybe$Nothing,
+																				$elm$core$Maybe$Nothing,
+																				A3(
+																					$author$project$Api$Data$decode,
+																					'title',
+																					$elm$json$Json$Decode$string,
 																					A4(
 																						$author$project$Api$Data$maybeDecode,
-																						'updated_at',
-																						$author$project$Api$Time$dateTimeDecoder,
+																						'content_type',
+																						$author$project$Api$Data$activityContentTypeDecoder,
 																						$elm$core$Maybe$Nothing,
 																						A4(
 																							$author$project$Api$Data$maybeDecode,
-																							'created_at',
+																							'updated_at',
 																							$author$project$Api$Time$dateTimeDecoder,
 																							$elm$core$Maybe$Nothing,
 																							A4(
 																								$author$project$Api$Data$maybeDecode,
-																								'id',
-																								$danyx23$elm_uuid$Uuid$decoder,
+																								'created_at',
+																								$author$project$Api$Time$dateTimeDecoder,
 																								$elm$core$Maybe$Nothing,
-																								$elm$json$Json$Decode$succeed($author$project$Api$Data$Activity)))))))))))))))))))))))));
+																								A4(
+																									$author$project$Api$Data$maybeDecode,
+																									'id',
+																									$danyx23$elm_uuid$Uuid$decoder,
+																									$elm$core$Maybe$Nothing,
+																									$elm$json$Json$Decode$succeed($author$project$Api$Data$Activity))))))))))))))))))))))))));
 var $author$project$Api$Data$CourseDeepTypeCLB = {$: 'CourseDeepTypeCLB'};
 var $author$project$Api$Data$CourseDeepTypeEDU = {$: 'CourseDeepTypeEDU'};
 var $author$project$Api$Data$CourseDeepTypeELE = {$: 'CourseDeepTypeELE'};
@@ -11648,6 +11656,7 @@ var $author$project$Api$Time$dateToString = A2(
 	$author$project$Api$Time$dateTimeToString);
 var $author$project$Api$Time$encodeDate = A2($elm$core$Basics$composeL, $elm$json$Json$Encode$string, $author$project$Api$Time$dateToString);
 var $author$project$Api$Time$encodeDateTime = A2($elm$core$Basics$composeL, $elm$json$Json$Encode$string, $author$project$Api$Time$dateTimeToString);
+var $elm$json$Json$Encode$float = _Json_wrap;
 var $elm$json$Json$Encode$int = _Json_wrap;
 var $elm$json$Json$Encode$list = F2(
 	function (func, entries) {
@@ -11691,6 +11700,7 @@ var $author$project$Api$Data$encodeActivityPairs = function (model) {
 			A3($author$project$Api$Data$maybeEncode, 'is_hidden', $elm$json$Json$Encode$bool, model.isHidden),
 			A3($author$project$Api$Data$maybeEncode, 'marks_limit', $elm$json$Json$Encode$int, model.marksLimit),
 			A3($author$project$Api$Data$maybeEncode, 'hours', $elm$json$Json$Encode$int, model.hours),
+			A3($author$project$Api$Data$maybeEncode, 'weight', $elm$json$Json$Encode$float, model.weight),
 			A3($author$project$Api$Data$maybeEncode, 'fgos_complient', $elm$json$Json$Encode$bool, model.fgosComplient),
 			A3($author$project$Api$Data$encode, 'order', $elm$json$Json$Encode$int, model.order),
 			A3($author$project$Api$Data$maybeEncodeNullable, 'date', $author$project$Api$Time$encodeDate, model.date),
@@ -14815,7 +14825,8 @@ var $author$project$Page$Course$CoursePage$update = F2(
 														scientificTopic: $elm$core$Maybe$Nothing,
 														submittable: $elm$core$Maybe$Just(false),
 														title: '',
-														updatedAt: $elm$core$Maybe$Nothing
+														updatedAt: $elm$core$Maybe$Nothing,
+														weight: $elm$core$Maybe$Just(1)
 													});
 											case 'AddFin':
 												var _v32 = _v29.a;
@@ -14846,7 +14857,8 @@ var $author$project$Page$Course$CoursePage$update = F2(
 														scientificTopic: $elm$core$Maybe$Nothing,
 														submittable: $elm$core$Maybe$Just(false),
 														title: '',
-														updatedAt: $elm$core$Maybe$Nothing
+														updatedAt: $elm$core$Maybe$Nothing,
+														weight: $elm$core$Maybe$Just(1)
 													});
 											case 'AddTsk':
 												var _v34 = _v29.a;
@@ -14877,7 +14889,8 @@ var $author$project$Page$Course$CoursePage$update = F2(
 														scientificTopic: $elm$core$Maybe$Nothing,
 														submittable: $elm$core$Maybe$Just(false),
 														title: '',
-														updatedAt: $elm$core$Maybe$Nothing
+														updatedAt: $elm$core$Maybe$Nothing,
+														weight: $elm$core$Maybe$Just(1)
 													});
 											case 'AddTxt':
 												var _v36 = _v29.a;
@@ -14908,7 +14921,8 @@ var $author$project$Page$Course$CoursePage$update = F2(
 														scientificTopic: $elm$core$Maybe$Nothing,
 														submittable: $elm$core$Maybe$Just(false),
 														title: '',
-														updatedAt: $elm$core$Maybe$Nothing
+														updatedAt: $elm$core$Maybe$Nothing,
+														weight: $elm$core$Maybe$Just(1)
 													});
 											default:
 												break _v29$4;
@@ -15311,7 +15325,8 @@ var $author$project$Page$Course$CoursePage$update = F2(
 											scientificTopic: $elm$core$Maybe$Nothing,
 											submittable: $elm$core$Maybe$Just(false),
 											title: t,
-											updatedAt: $elm$core$Maybe$Nothing
+											updatedAt: $elm$core$Maybe$Nothing,
+											weight: $elm$core$Maybe$Just(1)
 										};
 									},
 									c.id);
