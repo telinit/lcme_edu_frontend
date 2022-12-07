@@ -39102,30 +39102,21 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 		var _v0 = model.showMarkDetails;
 		if (_v0.$ === 'Just') {
 			var mark = _v0.a;
-			var topic = function () {
+			var activity = function () {
 				var _v1 = model.state;
 				if (_v1.$ === 'Complete') {
 					var activities = _v1.b;
-					return $elm$html$Html$text(
+					return $elm$core$List$head(
 						A2(
-							$elm$core$Maybe$withDefault,
-							'(Неизвестна)',
-							A2(
-								$elm$core$Maybe$map,
-								function ($) {
-									return $.title;
-								},
-								$elm$core$List$head(
-									A2(
-										$elm$core$List$filter,
-										function (a) {
-											return _Utils_eq(
-												a.id,
-												$elm$core$Maybe$Just(mark.activity));
-										},
-										activities)))));
+							$elm$core$List$filter,
+							function (a) {
+								return _Utils_eq(
+									a.id,
+									$elm$core$Maybe$Just(mark.activity));
+							},
+							activities));
 				} else {
-					return $elm$html$Html$text('');
+					return $elm$core$Maybe$Nothing;
 				}
 			}();
 			var details = A2(
@@ -39210,7 +39201,18 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 												$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 start-xs')
 											]),
 										_List_fromArray(
-											[topic]))
+											[
+												$elm$html$Html$text(
+												A2(
+													$elm$core$Maybe$withDefault,
+													'(Неизвестна)',
+													A2(
+														$elm$core$Maybe$map,
+														function ($) {
+															return $.title;
+														},
+														activity)))
+											]))
 									])),
 								A2(
 								$elm$html$Html$div,
@@ -39226,14 +39228,35 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 											[
 												$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 end-xs')
 											]),
-										_List_Nil),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$strong,
+												_List_Nil,
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Описание:')
+													]))
+											])),
 										A2(
 										$elm$html$Html$div,
 										_List_fromArray(
 											[
 												$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 start-xs')
 											]),
-										_List_Nil)
+										_List_fromArray(
+											[
+												$elm$html$Html$text(
+												A2(
+													$elm$core$Maybe$withDefault,
+													'(Неизвестно)',
+													A2(
+														$elm$core$Maybe$andThen,
+														function ($) {
+															return $.body;
+														},
+														activity)))
+											]))
 									]))
 							]))
 					]));

@@ -992,7 +992,7 @@ viewTableHeader model =
                             [ style "background-color" "#EEF6FFFF" ]
 
                 Date _ ->
-                    [style "background-color" "white"]
+                    [ style "background-color" "white" ]
     in
     thead
         (if model.stickyRow1 then
@@ -1067,17 +1067,14 @@ viewTable model =
             case model.showMarkDetails of
                 Just mark ->
                     let
-                        topic =
+                        activity =
                             case model.state of
                                 Complete _ activities _ ->
-                                    text <|
-                                        Maybe.withDefault "(Неизвестна)" <|
-                                            Maybe.map .title <|
-                                                List.head <|
-                                                    List.filter (\a -> a.id == Just mark.activity) activities
+                                    List.head <|
+                                        List.filter (\a -> a.id == Just mark.activity) activities
 
                                 _ ->
-                                    text ""
+                                    Nothing
 
                         details =
                             div [ class "row center-xs middle-xs" ]
@@ -1088,11 +1085,19 @@ viewTable model =
                                         ]
                                     , div [ class "row" ]
                                         [ div [ class "col-xs-12 col-sm-6 end-xs" ] [ strong [] [ text "Тема:" ] ]
-                                        , div [ class "col-xs-12 col-sm-6 start-xs" ] [ topic ]
+                                        , div [ class "col-xs-12 col-sm-6 start-xs" ]
+                                            [ text <|
+                                                Maybe.withDefault "(Неизвестна)" <|
+                                                    Maybe.map .title activity
+                                            ]
                                         ]
                                     , div [ class "row" ]
-                                        [ div [ class "col-xs-12 col-sm-6 end-xs" ] []
-                                        , div [ class "col-xs-12 col-sm-6 start-xs" ] []
+                                        [ div [ class "col-xs-12 col-sm-6 end-xs" ] [ strong [] [ text "Описание:" ] ]
+                                        , div [ class "col-xs-12 col-sm-6 start-xs" ]
+                                            [ text <|
+                                                Maybe.withDefault "(Неизвестно)" <|
+                                                    Maybe.andThen .body activity
+                                            ]
                                         ]
                                     ]
                                 ]
