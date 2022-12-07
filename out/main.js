@@ -39250,12 +39250,13 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 												A2(
 													$elm$core$Maybe$withDefault,
 													'(Неизвестно)',
-													A2(
-														$elm$core$Maybe$andThen,
-														function ($) {
-															return $.body;
-														},
-														activity)))
+													$author$project$Page$CourseListPage$empty_to_nothing(
+														A2(
+															$elm$core$Maybe$andThen,
+															function ($) {
+																return $.body;
+															},
+															activity))))
 											]))
 									]))
 							]))

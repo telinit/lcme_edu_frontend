@@ -18,6 +18,7 @@ import Http
 import Json.Decode as JD
 import List as L
 import Maybe as M
+import Page.CourseListPage exposing (empty_to_nothing)
 import Set
 import Task
 import Time as T exposing (Posix, Zone, millisToPosix, utc)
@@ -1096,7 +1097,8 @@ viewTable model =
                                         , div [ class "col-xs-12 col-sm-6 start-xs" ]
                                             [ text <|
                                                 Maybe.withDefault "(Неизвестно)" <|
-                                                    Maybe.andThen .body activity
+                                                    empty_to_nothing <|
+                                                        Maybe.andThen .body activity
                                             ]
                                         ]
                                     ]
