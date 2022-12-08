@@ -6,7 +6,7 @@ import Api.Request.Activity exposing (activityList)
 import Api.Request.Course exposing (courseEnrollmentList, courseList, courseRead)
 import Api.Request.Mark exposing (markCreate, markDelete, markList, markPartialUpdate)
 import Browser.Dom exposing (Error(..), focus)
-import Component.Misc exposing (user_link)
+import Component.Misc exposing (checkbox, user_link)
 import Component.Modal as Modal
 import Component.MultiTask as MultiTask exposing (Msg(..))
 import Component.Select as Select
@@ -22,7 +22,7 @@ import Page.CourseListPage exposing (empty_to_nothing)
 import Set
 import Task
 import Time as T exposing (Posix, Zone, millisToPosix, utc)
-import Util exposing (Either, dictFromTupleListMany, eitherGetRight, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, maybeToList, posixToDDMMYYYY, resultIsOK, user_full_name, zip)
+import Util exposing (Either, dictFromTupleListMany, dictGroupBy, eitherGetRight, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, maybeToList, posixToDDMMYYYY, resultIsOK, user_full_name, zip)
 import Uuid exposing (Uuid)
 
 
@@ -113,6 +113,7 @@ type Msg
     | MsgMarkClicked (Maybe Mark) ( Int, Int )
     | MsgOnClickCloseMarkDetails
     | MsgSetDateFilter DateFilter
+    | MsgOnCheckGroupByDate Bool
 
 
 type State
@@ -152,6 +153,7 @@ type alias Model =
     , dateFilter : DateFilter
     , mode : Mode
     , fetchedData : FetchedData
+    , marksGroupByDate : Maybe Bool
     }
 
 
@@ -356,6 +358,7 @@ initForStudent token student_id =
             , marks = []
             , enrollments = []
             }
+      , marksGroupByDate = Just False
       }
     , Cmd.map MsgFetch c
     )
@@ -412,6 +415,7 @@ initForCourse token course_id teacher_id =
             , marks = []
             , enrollments = []
             }
+      , marksGroupByDate = Nothing
       }
     , Cmd.batch [ Cmd.map MsgFetch c, Cmd.map MsgSelectSwitchCell sc ]
     )
@@ -685,19 +689,27 @@ updateTable model =
 
                 activities =
                     List.filter (\a -> Set.member (get_id_str a) existingActivityIDS) <|
-                        dateFilter model.dateFilter <|
-                            model.fetchedData.activities
+                        L.concat <|
+                            L.map (L.sortBy .order >> dateFilter model.dateFilter) <|
+                                D.values <|
+                                    dictGroupBy
+                                        (.course >> Uuid.toString)
+                                        model.fetchedData.activities
 
                 ix_acts =
                     index_by get_id_str activities
 
                 columns =
-                    (L.map Date <|
-                        L.map (Just << T.millisToPosix) <|
-                            Set.toList <|
-                                Set.fromList <|
-                                    L.filterMap (.date >> M.map T.posixToMillis) <|
-                                        L.sortBy .order activities
+                    (if M.withDefault False <| model.marksGroupByDate then
+                        L.map Date <|
+                            L.map (Just << T.millisToPosix) <|
+                                Set.toList <|
+                                    Set.fromList <|
+                                        L.filterMap (.date >> M.map T.posixToMillis) <|
+                                            L.sortBy .order activities
+
+                     else
+                        []
                     )
                         ++ [ Date Nothing ]
 
@@ -709,7 +721,11 @@ updateTable model =
                         |> M.map
                             (\act ->
                                 ( mark
-                                , String.fromInt <| M.withDefault 0 <| M.map T.posixToMillis act.date
+                                , if M.withDefault False <| model.marksGroupByDate then
+                                    String.fromInt <| M.withDefault 0 <| M.map T.posixToMillis act.date
+
+                                  else
+                                    "0"
                                 , activity_course_id act
                                 )
                             )
@@ -959,9 +975,12 @@ update msg model =
         ( MsgSetDateFilter f, _ ) ->
             ignore
 
+        (MsgOnCheckGroupByDate val , _) ->
+            ( updateTable { model | marksGroupByDate = Just val }, Cmd.none )
 
-viewColumn : Zone -> Column -> Html Msg
-viewColumn tz column =
+
+viewColumn : Bool -> Zone -> Column -> Html Msg
+viewColumn showNoDate tz column =
     case column of
         Activity activity ->
             case activity.contentType of
@@ -980,7 +999,14 @@ viewColumn tz column =
         Date posix ->
             strong []
                 [ text <|
-                    M.withDefault "(без даты)" <|
+                    M.withDefault
+                        (if showNoDate then
+                            "(без даты)"
+
+                         else
+                            "Оценки"
+                        )
+                    <|
                         M.map (posixToDDMMYYYY T.utc) posix
                 ]
 
@@ -1176,7 +1202,7 @@ viewTableHeader model =
                              ]
                                 ++ td_attrs col
                             )
-                            [ viewColumn model.tz col ]
+                            [ viewColumn (M.withDefault False <| model.marksGroupByDate) model.tz col ]
                     )
                     model.columns
             )
@@ -1331,6 +1357,8 @@ viewTable model =
                     ]
                 , div [ class "col-xs-12 col-sm center-xs end-sm mt-5" ]
                     [ Maybe.withDefault (text "") <|
+                        Maybe.map (\val -> checkbox "Группировать по дате" val MsgOnCheckGroupByDate) model.marksGroupByDate
+                    , Maybe.withDefault (text "") <|
                         Maybe.map (Html.map MsgSelectSwitchCell << Select.view) model.switchCell
                     ]
                 ]

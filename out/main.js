@@ -10305,6 +10305,7 @@ var $author$project$Component$MarkTable$initForCourse = F3(
 				columns: _List_Nil,
 				dateFilter: $author$project$Component$MarkTable$DateFilterAll,
 				fetchedData: {activities: _List_Nil, courses: _List_Nil, enrollments: _List_Nil, marks: _List_Nil},
+				marksGroupByDate: $elm$core$Maybe$Nothing,
 				mode: $author$project$Component$MarkTable$MarksOfCourse,
 				rows: _List_Nil,
 				selectedCoords: _Utils_Tuple2(0, 0),
@@ -10414,6 +10415,7 @@ var $author$project$Component$MarkTable$initForStudent = F2(
 				columns: _List_Nil,
 				dateFilter: $author$project$Component$MarkTable$DateFilterAll,
 				fetchedData: {activities: _List_Nil, courses: _List_Nil, enrollments: _List_Nil, marks: _List_Nil},
+				marksGroupByDate: $elm$core$Maybe$Just(false),
 				mode: $author$project$Component$MarkTable$MarksOfStudent,
 				rows: _List_Nil,
 				selectedCoords: _Utils_Tuple2(0, 0),
@@ -16788,6 +16790,29 @@ var $author$project$Util$dictFromTupleListMany = function () {
 		},
 		$elm$core$Dict$empty);
 }();
+var $author$project$Util$dictGroupBy = F2(
+	function (key, list) {
+		var f = F2(
+			function (x, acc) {
+				return A3(
+					$elm$core$Dict$update,
+					key(x),
+					A2(
+						$elm$core$Basics$composeL,
+						A2(
+							$elm$core$Basics$composeL,
+							$elm$core$Maybe$Just,
+							$elm$core$Maybe$withDefault(
+								_List_fromArray(
+									[x]))),
+						$elm$core$Maybe$map(
+							function (old_list) {
+								return A2($elm$core$List$cons, x, old_list);
+							})),
+					acc);
+			});
+		return A3($elm$core$List$foldl, f, $elm$core$Dict$empty, list);
+	});
 var $author$project$Util$index_by = F2(
 	function (key, list) {
 		return $elm$core$Dict$fromList(
@@ -16987,9 +17012,28 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 					$author$project$Util$get_id_str(a),
 					existingActivityIDS);
 			},
-			A2($author$project$Component$MarkTable$dateFilter, model.dateFilter, model.fetchedData.activities));
+			$elm$core$List$concat(
+				A2(
+					$elm$core$List$map,
+					A2(
+						$elm$core$Basics$composeR,
+						$elm$core$List$sortBy(
+							function ($) {
+								return $.order;
+							}),
+						$author$project$Component$MarkTable$dateFilter(model.dateFilter)),
+					$elm$core$Dict$values(
+						A2(
+							$author$project$Util$dictGroupBy,
+							A2(
+								$elm$core$Basics$composeR,
+								function ($) {
+									return $.course;
+								},
+								$danyx23$elm_uuid$Uuid$toString),
+							model.fetchedData.activities)))));
 		var columns = _Utils_ap(
-			A2(
+			A2($elm$core$Maybe$withDefault, false, model.marksGroupByDate) ? A2(
 				$elm$core$List$map,
 				$author$project$Component$MarkTable$Date,
 				A2(
@@ -17010,7 +17054,7 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 									function ($) {
 										return $.order;
 									},
-									activities)))))),
+									activities)))))) : _List_Nil,
 			_List_fromArray(
 				[
 					$author$project$Component$MarkTable$Date($elm$core$Maybe$Nothing)
@@ -17022,11 +17066,11 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 				function (act) {
 					return _Utils_Tuple3(
 						mark,
-						$elm$core$String$fromInt(
+						A2($elm$core$Maybe$withDefault, false, model.marksGroupByDate) ? $elm$core$String$fromInt(
 							A2(
 								$elm$core$Maybe$withDefault,
 								0,
-								A2($elm$core$Maybe$map, $elm$time$Time$posixToMillis, act.date))),
+								A2($elm$core$Maybe$map, $elm$time$Time$posixToMillis, act.date))) : '0',
 						activity_course_id(act));
 				},
 				A2(
@@ -17429,7 +17473,7 @@ var $author$project$Component$MarkTable$update = F2(
 						model,
 						{showMarkDetails: $elm$core$Maybe$Nothing}),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'MsgSetDateFilter':
 				if (_v0.b.$ === 'StateComplete') {
 					var f = _v0.a.a;
 					var _v33 = _v0.b;
@@ -17443,6 +17487,16 @@ var $author$project$Component$MarkTable$update = F2(
 					var f = _v0.a.a;
 					return ignore;
 				}
+			default:
+				var val = _v0.a.a;
+				return _Utils_Tuple2(
+					$author$project$Component$MarkTable$updateTable(
+						_Utils_update(
+							model,
+							{
+								marksGroupByDate: $elm$core$Maybe$Just(val)
+							})),
+					$elm$core$Platform$Cmd$none);
 		}
 	});
 var $author$project$Page$MarksCourse$update = F2(
@@ -37416,29 +37470,6 @@ var $author$project$Page$CourseListPage$getGroupBy = function (model) {
 		return $author$project$Page$CourseListPage$GroupByNone;
 	}
 };
-var $author$project$Util$dictGroupBy = F2(
-	function (key, list) {
-		var f = F2(
-			function (x, acc) {
-				return A3(
-					$elm$core$Dict$update,
-					key(x),
-					A2(
-						$elm$core$Basics$composeL,
-						A2(
-							$elm$core$Basics$composeL,
-							$elm$core$Maybe$Just,
-							$elm$core$Maybe$withDefault(
-								_List_fromArray(
-									[x]))),
-						$elm$core$Maybe$map(
-							function (old_list) {
-								return A2($elm$core$List$cons, x, old_list);
-							})),
-					acc);
-			});
-		return A3($elm$core$List$foldl, f, $elm$core$Dict$empty, list);
-	});
 var $author$project$Page$CourseListPage$groupBy = F3(
 	function (group_by, courses, specs) {
 		if (group_by.$ === 'GroupByNone') {
@@ -38844,6 +38875,38 @@ var $author$project$Component$MarkTable$showFetchedData = function (fetchedData)
 				$elm$core$List$length(enr));
 	}
 };
+var $author$project$Component$MarkTable$MsgOnCheckGroupByDate = function (a) {
+	return {$: 'MsgOnCheckGroupByDate', a: a};
+};
+var $author$project$Component$Misc$checkbox = F3(
+	function (label_, value_, onCheck_) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('ui checkbox')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$input,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$type_('checkbox'),
+							A2($elm$html$Html$Attributes$attribute, 'tabindex', '0'),
+							$elm$html$Html$Attributes$checked(value_),
+							$elm$html$Html$Events$onCheck(onCheck_)
+						]),
+					_List_Nil),
+					A2(
+					$elm$html$Html$label,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text(label_)
+						]))
+				]));
+	});
 var $author$project$Component$MarkTable$DateFilterH1 = {$: 'DateFilterH1'};
 var $author$project$Component$MarkTable$DateFilterH2 = {$: 'DateFilterH2'};
 var $author$project$Component$MarkTable$DateFilterQ1 = {$: 'DateFilterQ1'};
@@ -39100,8 +39163,8 @@ var $author$project$Component$MarkTable$viewMarkDetailsModal = function (model) 
 	}
 };
 var $elm$html$Html$thead = _VirtualDom_node('thead');
-var $author$project$Component$MarkTable$viewColumn = F2(
-	function (tz, column) {
+var $author$project$Component$MarkTable$viewColumn = F3(
+	function (showNoDate, tz, column) {
 		if (column.$ === 'Activity') {
 			var activity = column.a;
 			var _v1 = activity.contentType;
@@ -39181,7 +39244,7 @@ var $author$project$Component$MarkTable$viewColumn = F2(
 						$elm$html$Html$text(
 						A2(
 							$elm$core$Maybe$withDefault,
-							'(без даты)',
+							showNoDate ? '(без даты)' : 'Оценки',
 							A2(
 								$elm$core$Maybe$map,
 								$author$project$Util$posixToDDMMYYYY($elm$time$Time$utc),
@@ -39270,7 +39333,11 @@ var $author$project$Component$MarkTable$viewTableHeader = function (model) {
 									td_attrs(col)),
 								_List_fromArray(
 									[
-										A2($author$project$Component$MarkTable$viewColumn, model.tz, col)
+										A3(
+										$author$project$Component$MarkTable$viewColumn,
+										A2($elm$core$Maybe$withDefault, false, model.marksGroupByDate),
+										model.tz,
+										col)
 									]));
 						},
 						model.columns)))
@@ -39643,6 +39710,15 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 									]),
 								_List_fromArray(
 									[
+										A2(
+										$elm$core$Maybe$withDefault,
+										$elm$html$Html$text(''),
+										A2(
+											$elm$core$Maybe$map,
+											function (val) {
+												return A3($author$project$Component$Misc$checkbox, 'Группировать по дате', val, $author$project$Component$MarkTable$MsgOnCheckGroupByDate);
+											},
+											model.marksGroupByDate)),
 										A2(
 										$elm$core$Maybe$withDefault,
 										$elm$html$Html$text(''),
