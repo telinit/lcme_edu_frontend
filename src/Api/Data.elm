@@ -20,14 +20,12 @@ module Api.Data exposing
     , ActivityFinalType(..)
     , BulkSetActivities
     , Counters
-    , CourseDeep
-    , CourseDeepType(..)
+    , Course
     , CourseEnrollmentRead
     , CourseEnrollmentReadRole(..)
     , CourseEnrollmentWrite
     , CourseEnrollmentWriteRole(..)
-    , CourseShallow
-    , CourseShallowType(..)
+    , CourseType(..)
     , Department
     , EducationShallow
     , EducationSpecialization
@@ -58,24 +56,21 @@ module Api.Data exposing
     , activityFinalTypeVariants
     , bulkSetActivitiesDecoder
     , countersDecoder
-    , courseDeepDecoder
-    , courseDeepTypeVariants
+    , courseDecoder
     , courseEnrollmentReadDecoder
     , courseEnrollmentReadRoleVariants
     , courseEnrollmentWriteDecoder
     , courseEnrollmentWriteRoleVariants
-    , courseShallowDecoder
-    , courseShallowTypeVariants
+    , courseTypeVariants
     , departmentDecoder
     , educationShallowDecoder
     , educationSpecializationDecoder
     , encodeActivity
     , encodeBulkSetActivities
     , encodeCounters
-    , encodeCourseDeep
+    , encodeCourse
     , encodeCourseEnrollmentRead
     , encodeCourseEnrollmentWrite
-    , encodeCourseShallow
     , encodeDepartment
     , encodeEducationShallow
     , encodeEducationSpecialization
@@ -223,38 +218,36 @@ type alias Counters =
     }
 
 
-type alias CourseDeep =
+type alias Course =
     { id : Maybe Uuid
-    , forSpecialization : Maybe EducationSpecialization
-    , logo : Maybe File
-    , cover : Maybe File
-    , activities : List Activity
-    , enrollments : List CourseEnrollmentRead
     , createdAt : Maybe Posix
     , updatedAt : Maybe Posix
-    , type_ : Maybe CourseDeepType
+    , type_ : Maybe CourseType
     , title : String
     , description : Maybe String
     , forClass : Maybe String
     , forGroup : Maybe String
+    , forSpecialization : Maybe Uuid
+    , logo : Maybe Uuid
+    , cover : Maybe Uuid
     }
 
 
-type CourseDeepType
-    = CourseDeepTypeGEN
-    | CourseDeepTypeEDU
-    | CourseDeepTypeSEM
-    | CourseDeepTypeCLB
-    | CourseDeepTypeELE
+type CourseType
+    = CourseTypeGEN
+    | CourseTypeEDU
+    | CourseTypeSEM
+    | CourseTypeCLB
+    | CourseTypeELE
 
 
-courseDeepTypeVariants : List CourseDeepType
-courseDeepTypeVariants =
-    [ CourseDeepTypeGEN
-    , CourseDeepTypeEDU
-    , CourseDeepTypeSEM
-    , CourseDeepTypeCLB
-    , CourseDeepTypeELE
+courseTypeVariants : List CourseType
+courseTypeVariants =
+    [ CourseTypeGEN
+    , CourseTypeEDU
+    , CourseTypeSEM
+    , CourseTypeCLB
+    , CourseTypeELE
     ]
 
 
@@ -304,39 +297,6 @@ courseEnrollmentWriteRoleVariants =
     ]
 
 
-type alias CourseShallow =
-    { id : Maybe Uuid
-    , createdAt : Maybe Posix
-    , updatedAt : Maybe Posix
-    , type_ : Maybe CourseShallowType
-    , title : String
-    , description : Maybe String
-    , forClass : Maybe String
-    , forGroup : Maybe String
-    , forSpecialization : Maybe Uuid
-    , logo : Maybe Uuid
-    , cover : Maybe Uuid
-    }
-
-
-type CourseShallowType
-    = CourseShallowTypeGEN
-    | CourseShallowTypeEDU
-    | CourseShallowTypeSEM
-    | CourseShallowTypeCLB
-    | CourseShallowTypeELE
-
-
-courseShallowTypeVariants : List CourseShallowType
-courseShallowTypeVariants =
-    [ CourseShallowTypeGEN
-    , CourseShallowTypeEDU
-    , CourseShallowTypeSEM
-    , CourseShallowTypeCLB
-    , CourseShallowTypeELE
-    ]
-
-
 type alias Department =
     { id : Maybe Uuid
     , organization : Organization
@@ -348,7 +308,7 @@ type alias Department =
 
 type alias EducationShallow =
     { id : Maybe Uuid
-    , specialization : Maybe EducationSpecialization
+    , specialization : EducationSpecialization
     , createdAt : Maybe Posix
     , updatedAt : Maybe Posix
     , started : Posix
@@ -359,6 +319,8 @@ type alias EducationShallow =
     }
 
 
+{-| Student's current education specialization. null if none.
+-}
 type alias EducationSpecialization =
     { id : Maybe Uuid
     , department : Department
@@ -741,60 +703,58 @@ encodeCountersPairs model =
     pairs
 
 
-encodeCourseDeep : CourseDeep -> Json.Encode.Value
-encodeCourseDeep =
-    encodeObject << encodeCourseDeepPairs
+encodeCourse : Course -> Json.Encode.Value
+encodeCourse =
+    encodeObject << encodeCoursePairs
 
 
-encodeCourseDeepWithTag : ( String, String ) -> CourseDeep -> Json.Encode.Value
-encodeCourseDeepWithTag ( tagField, tag ) model =
-    encodeObject (encodeCourseDeepPairs model ++ [ encode tagField Json.Encode.string tag ])
+encodeCourseWithTag : ( String, String ) -> Course -> Json.Encode.Value
+encodeCourseWithTag ( tagField, tag ) model =
+    encodeObject (encodeCoursePairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
-encodeCourseDeepPairs : CourseDeep -> List EncodedField
-encodeCourseDeepPairs model =
+encodeCoursePairs : Course -> List EncodedField
+encodeCoursePairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
-            , encodeNullable "for_specialization" encodeEducationSpecialization model.forSpecialization
-            , encodeNullable "logo" encodeFile model.logo
-            , encodeNullable "cover" encodeFile model.cover
-            , encode "activities" (Json.Encode.list encodeActivity) model.activities
-            , encode "enrollments" (Json.Encode.list encodeCourseEnrollmentRead) model.enrollments
             , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
-            , maybeEncode "type" encodeCourseDeepType model.type_
+            , maybeEncode "type" encodeCourseType model.type_
             , encode "title" Json.Encode.string model.title
             , maybeEncodeNullable "description" Json.Encode.string model.description
             , maybeEncode "for_class" Json.Encode.string model.forClass
             , maybeEncodeNullable "for_group" Json.Encode.string model.forGroup
+            , maybeEncodeNullable "for_specialization" Uuid.encode model.forSpecialization
+            , maybeEncodeNullable "logo" Uuid.encode model.logo
+            , maybeEncodeNullable "cover" Uuid.encode model.cover
             ]
     in
     pairs
 
 
-stringFromCourseDeepType : CourseDeepType -> String
-stringFromCourseDeepType model =
+stringFromCourseType : CourseType -> String
+stringFromCourseType model =
     case model of
-        CourseDeepTypeGEN ->
+        CourseTypeGEN ->
             "GEN"
 
-        CourseDeepTypeEDU ->
+        CourseTypeEDU ->
             "EDU"
 
-        CourseDeepTypeSEM ->
+        CourseTypeSEM ->
             "SEM"
 
-        CourseDeepTypeCLB ->
+        CourseTypeCLB ->
             "CLB"
 
-        CourseDeepTypeELE ->
+        CourseTypeELE ->
             "ELE"
 
 
-encodeCourseDeepType : CourseDeepType -> Json.Encode.Value
-encodeCourseDeepType =
-    Json.Encode.string << stringFromCourseDeepType
+encodeCourseType : CourseType -> Json.Encode.Value
+encodeCourseType =
+    Json.Encode.string << stringFromCourseType
 
 
 encodeCourseEnrollmentRead : CourseEnrollmentRead -> Json.Encode.Value
@@ -879,60 +839,6 @@ encodeCourseEnrollmentWriteRole =
     Json.Encode.string << stringFromCourseEnrollmentWriteRole
 
 
-encodeCourseShallow : CourseShallow -> Json.Encode.Value
-encodeCourseShallow =
-    encodeObject << encodeCourseShallowPairs
-
-
-encodeCourseShallowWithTag : ( String, String ) -> CourseShallow -> Json.Encode.Value
-encodeCourseShallowWithTag ( tagField, tag ) model =
-    encodeObject (encodeCourseShallowPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeCourseShallowPairs : CourseShallow -> List EncodedField
-encodeCourseShallowPairs model =
-    let
-        pairs =
-            [ maybeEncode "id" Uuid.encode model.id
-            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
-            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
-            , maybeEncode "type" encodeCourseShallowType model.type_
-            , encode "title" Json.Encode.string model.title
-            , maybeEncodeNullable "description" Json.Encode.string model.description
-            , maybeEncode "for_class" Json.Encode.string model.forClass
-            , maybeEncodeNullable "for_group" Json.Encode.string model.forGroup
-            , maybeEncodeNullable "for_specialization" Uuid.encode model.forSpecialization
-            , maybeEncodeNullable "logo" Uuid.encode model.logo
-            , maybeEncodeNullable "cover" Uuid.encode model.cover
-            ]
-    in
-    pairs
-
-
-stringFromCourseShallowType : CourseShallowType -> String
-stringFromCourseShallowType model =
-    case model of
-        CourseShallowTypeGEN ->
-            "GEN"
-
-        CourseShallowTypeEDU ->
-            "EDU"
-
-        CourseShallowTypeSEM ->
-            "SEM"
-
-        CourseShallowTypeCLB ->
-            "CLB"
-
-        CourseShallowTypeELE ->
-            "ELE"
-
-
-encodeCourseShallowType : CourseShallowType -> Json.Encode.Value
-encodeCourseShallowType =
-    Json.Encode.string << stringFromCourseShallowType
-
-
 encodeDepartment : Department -> Json.Encode.Value
 encodeDepartment =
     encodeObject << encodeDepartmentPairs
@@ -972,7 +878,7 @@ encodeEducationShallowPairs model =
     let
         pairs =
             [ maybeEncode "id" Uuid.encode model.id
-            , encodeNullable "specialization" encodeEducationSpecialization model.specialization
+            , encode "specialization" encodeEducationSpecialization model.specialization
             , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , encode "started" Api.Time.encodeDate model.started
@@ -1467,7 +1373,7 @@ encodeUserDeepPairs model =
             [ maybeEncode "id" Uuid.encode model.id
             , maybeEncode "roles" (Json.Encode.list Json.Encode.string) model.roles
             , maybeEncode "current_class" Json.Encode.string model.currentClass
-            , maybeEncodeNullable "current_spec" encodeEducationSpecialization model.currentSpec
+            , maybeEncode "current_spec" encodeEducationSpecialization model.currentSpec
             , encode "children" (Json.Encode.list encodeUserShallow) model.children
             , encode "parents" (Json.Encode.list encodeUserShallow) model.parents
             , encode "education" (Json.Encode.list encodeEducationShallow) model.education
@@ -1507,7 +1413,7 @@ encodeUserShallowPairs model =
             [ maybeEncode "id" Uuid.encode model.id
             , maybeEncode "roles" (Json.Encode.list Json.Encode.string) model.roles
             , maybeEncode "current_class" Json.Encode.string model.currentClass
-            , maybeEncodeNullable "current_spec" encodeEducationSpecialization model.currentSpec
+            , maybeEncode "current_spec" encodeEducationSpecialization model.currentSpec
             , maybeEncodeNullable "last_login" Api.Time.encodeDateTime model.lastLogin
             , maybeEncode "is_superuser" Json.Encode.bool model.isSuperuser
             , encode "username" Json.Encode.string model.username
@@ -1645,44 +1551,42 @@ countersDecoder =
         |> decode "marks" Json.Decode.int
 
 
-courseDeepDecoder : Json.Decode.Decoder CourseDeep
-courseDeepDecoder =
-    Json.Decode.succeed CourseDeep
+courseDecoder : Json.Decode.Decoder Course
+courseDecoder =
+    Json.Decode.succeed Course
         |> maybeDecode "id" Uuid.decoder Nothing
-        |> decodeNullable "for_specialization" educationSpecializationDecoder
-        |> decodeNullable "logo" fileDecoder
-        |> decodeNullable "cover" fileDecoder
-        |> decode "activities" (Json.Decode.list activityDecoder)
-        |> decode "enrollments" (Json.Decode.list courseEnrollmentReadDecoder)
         |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
-        |> maybeDecode "type" courseDeepTypeDecoder Nothing
+        |> maybeDecode "type" courseTypeDecoder Nothing
         |> decode "title" Json.Decode.string
         |> maybeDecodeNullable "description" Json.Decode.string Nothing
         |> maybeDecode "for_class" Json.Decode.string Nothing
         |> maybeDecodeNullable "for_group" Json.Decode.string Nothing
+        |> maybeDecodeNullable "for_specialization" Uuid.decoder Nothing
+        |> maybeDecodeNullable "logo" Uuid.decoder Nothing
+        |> maybeDecodeNullable "cover" Uuid.decoder Nothing
 
 
-courseDeepTypeDecoder : Json.Decode.Decoder CourseDeepType
-courseDeepTypeDecoder =
+courseTypeDecoder : Json.Decode.Decoder CourseType
+courseTypeDecoder =
     Json.Decode.string
         |> Json.Decode.andThen
             (\value ->
                 case value of
                     "GEN" ->
-                        Json.Decode.succeed CourseDeepTypeGEN
+                        Json.Decode.succeed CourseTypeGEN
 
                     "EDU" ->
-                        Json.Decode.succeed CourseDeepTypeEDU
+                        Json.Decode.succeed CourseTypeEDU
 
                     "SEM" ->
-                        Json.Decode.succeed CourseDeepTypeSEM
+                        Json.Decode.succeed CourseTypeSEM
 
                     "CLB" ->
-                        Json.Decode.succeed CourseDeepTypeCLB
+                        Json.Decode.succeed CourseTypeCLB
 
                     "ELE" ->
-                        Json.Decode.succeed CourseDeepTypeELE
+                        Json.Decode.succeed CourseTypeELE
 
                     other ->
                         Json.Decode.fail <| "Unknown type: " ++ other
@@ -1747,48 +1651,6 @@ courseEnrollmentWriteRoleDecoder =
             )
 
 
-courseShallowDecoder : Json.Decode.Decoder CourseShallow
-courseShallowDecoder =
-    Json.Decode.succeed CourseShallow
-        |> maybeDecode "id" Uuid.decoder Nothing
-        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
-        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
-        |> maybeDecode "type" courseShallowTypeDecoder Nothing
-        |> decode "title" Json.Decode.string
-        |> maybeDecodeNullable "description" Json.Decode.string Nothing
-        |> maybeDecode "for_class" Json.Decode.string Nothing
-        |> maybeDecodeNullable "for_group" Json.Decode.string Nothing
-        |> maybeDecodeNullable "for_specialization" Uuid.decoder Nothing
-        |> maybeDecodeNullable "logo" Uuid.decoder Nothing
-        |> maybeDecodeNullable "cover" Uuid.decoder Nothing
-
-
-courseShallowTypeDecoder : Json.Decode.Decoder CourseShallowType
-courseShallowTypeDecoder =
-    Json.Decode.string
-        |> Json.Decode.andThen
-            (\value ->
-                case value of
-                    "GEN" ->
-                        Json.Decode.succeed CourseShallowTypeGEN
-
-                    "EDU" ->
-                        Json.Decode.succeed CourseShallowTypeEDU
-
-                    "SEM" ->
-                        Json.Decode.succeed CourseShallowTypeSEM
-
-                    "CLB" ->
-                        Json.Decode.succeed CourseShallowTypeCLB
-
-                    "ELE" ->
-                        Json.Decode.succeed CourseShallowTypeELE
-
-                    other ->
-                        Json.Decode.fail <| "Unknown type: " ++ other
-            )
-
-
 departmentDecoder : Json.Decode.Decoder Department
 departmentDecoder =
     Json.Decode.succeed Department
@@ -1803,7 +1665,7 @@ educationShallowDecoder : Json.Decode.Decoder EducationShallow
 educationShallowDecoder =
     Json.Decode.succeed EducationShallow
         |> maybeDecode "id" Uuid.decoder Nothing
-        |> decodeNullable "specialization" educationSpecializationDecoder
+        |> decode "specialization" educationSpecializationDecoder
         |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "started" Api.Time.dateDecoder
@@ -2036,7 +1898,7 @@ userDeepDecoder =
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecode "roles" (Json.Decode.list Json.Decode.string) Nothing
         |> maybeDecode "current_class" Json.Decode.string Nothing
-        |> maybeDecodeNullable "current_spec" educationSpecializationDecoder Nothing
+        |> maybeDecode "current_spec" educationSpecializationDecoder Nothing
         |> decode "children" (Json.Decode.list userShallowDecoder)
         |> decode "parents" (Json.Decode.list userShallowDecoder)
         |> decode "education" (Json.Decode.list educationShallowDecoder)
@@ -2062,7 +1924,7 @@ userShallowDecoder =
         |> maybeDecode "id" Uuid.decoder Nothing
         |> maybeDecode "roles" (Json.Decode.list Json.Decode.string) Nothing
         |> maybeDecode "current_class" Json.Decode.string Nothing
-        |> maybeDecodeNullable "current_spec" educationSpecializationDecoder Nothing
+        |> maybeDecode "current_spec" educationSpecializationDecoder Nothing
         |> maybeDecodeNullable "last_login" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "is_superuser" Json.Decode.bool Nothing
         |> decode "username" Json.Decode.string

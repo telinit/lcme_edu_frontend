@@ -1,28 +1,27 @@
 module Page.Course.CoursePage exposing (..)
 
 import Api exposing (ext_task, task, withToken)
-import Api.Data exposing (Activity, ActivityContentType(..), CourseDeep, CourseEnrollmentRead, CourseEnrollmentReadRole(..), ImportForCourseResult, UserDeep)
-import Api.Request.Activity exposing (activityImportForCourse)
-import Api.Request.Course exposing (courseBulkSetActivities, courseGetDeep, courseRead)
+import Api.Data exposing (Activity, ActivityContentType(..), Course, CourseEnrollmentRead, CourseEnrollmentReadRole(..), EducationSpecialization, ImportForCourseResult, UserDeep)
+import Api.Request.Activity exposing (activityImportForCourse, activityList)
+import Api.Request.Course exposing (courseBulkSetActivities, courseEnrollmentList, courseRead)
+import Api.Request.Education exposing (educationSpecializationList, educationSpecializationRead)
 import Component.Activity as CA exposing (Msg(..), getOrder, setOrder)
 import Component.FileInput as FI
 import Component.MessageBox as MessageBox exposing (Type(..))
-import Component.Misc exposing (user_link)
 import Component.Modal as Modal
 import Component.MultiTask as MultiTask exposing (Msg(..))
 import Csv.Parser
 import Dict exposing (Dict)
 import File
-import File.Download
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Http exposing (Error(..))
-import List exposing (filterMap)
+import List
 import Page.Course.CourseMembers as CourseMembers
 import Page.CourseListPage exposing (empty_to_nothing)
 import Set
-import String exposing (trim)
+import String
 import Task
 import Time exposing (Posix)
 import Util exposing (assoc_update, get_id_str, httpErrorToString, list_insert_at, maybeFilter, task_to_cmd, user_full_name, zip)
@@ -46,9 +45,17 @@ type EditMode
     | EditOn AddMode IsModified
 
 
+type alias FetchedData =
+    { course : Course
+    , spec : Maybe EducationSpecialization
+    , enrollments : List CourseEnrollmentRead
+    , activities : List Activity
+    }
+
+
 type State
     = Fetching (MultiTask.Model Http.Error FetchResult)
-    | FetchDone CourseDeep (List ( Int, CA.Model )) CourseMembers.Model
+    | FetchDone FetchedData (List ( Int, CA.Model )) CourseMembers.Model
     | FetchFailed String
 
 
@@ -83,7 +90,10 @@ type Msg
 
 
 type FetchResult
-    = ResCourse CourseDeep
+    = FetchedCourse Course
+    | FetchedEnrollments (List CourseEnrollmentRead)
+    | FetchedActivities (List Activity)
+    | FetchedSpec (Maybe EducationSpecialization)
 
 
 type IssueKind
@@ -125,14 +135,8 @@ type alias Model =
 
 
 showFetchResult : FetchResult -> String
-showFetchResult fetchResult =
-    case fetchResult of
-        ResCourse courseRead ->
-            courseRead.title
-
-
-taskCourse token cid =
-    Task.map ResCourse <| task <| withToken (Just token) <| courseGetDeep cid
+showFetchResult _ =
+    "OK"
 
 
 init : String -> String -> UserDeep -> ( Model, Cmd Msg )
@@ -140,7 +144,18 @@ init token course_id user =
     let
         ( m, c ) =
             MultiTask.init
-                [ ( taskCourse token course_id, "Получаем данные о курсе" )
+                [ ( ext_task FetchedCourse token [] <| courseRead course_id
+                  , "Получение данных о курсе"
+                  )
+                , ( ext_task (List.head >> FetchedSpec) token [ ( "courses", course_id ) ] educationSpecializationList
+                  , "Получение направления обучения"
+                  )
+                , ( ext_task FetchedEnrollments token [ ( "course", course_id ) ] <| courseEnrollmentList
+                  , "Получение данных об участниках"
+                  )
+                , ( ext_task FetchedActivities token [ ( "course", course_id ) ] activityList
+                  , "Получение тем занятий"
+                  )
                 ]
     in
     ( { state = Fetching m
@@ -160,16 +175,6 @@ init token course_id user =
       }
     , Cmd.map MsgFetch c
     )
-
-
-collectFetchResults : List (Result e FetchResult) -> Maybe CourseDeep
-collectFetchResults fetchResults =
-    case fetchResults of
-        [ Ok (ResCourse crs) ] ->
-            Just crs
-
-        _ ->
-            Nothing
 
 
 subscriptions : Model -> Sub Msg
@@ -258,8 +263,8 @@ setEditMode edt model =
     let
         new_state =
             case model.state of
-                FetchDone courseDeep acts members ->
-                    FetchDone courseDeep (List.map (\( k, v ) -> ( k, CA.setEditable edt v )) acts) members
+                FetchDone course acts members ->
+                    FetchDone course (List.map (\( k, v ) -> ( k, CA.setEditable edt v )) acts) members
 
                 _ ->
                     model.state
@@ -655,13 +660,14 @@ validateActivityCSV sep data =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let
-        parse_course course =
+        parse_course : FetchedData -> ( Model, Cmd Msg )
+        parse_course ({ course, spec, enrollments, activities } as data) =
             let
-                activities =
-                    List.sortBy .order course.activities
+                activities_ =
+                    List.sortBy .order activities
 
                 ( ms, cs ) =
-                    List.unzip <| List.map (CA.init_from_activity model.token) activities
+                    List.unzip <| List.map (CA.init_from_activity model.token) activities_
 
                 len =
                     List.length ms
@@ -683,14 +689,14 @@ update msg model =
                         (\enr ->
                             enr.role == CourseEnrollmentReadRoleT && enr.person.id == model.user.id
                         )
-                        course.enrollments
+                        enrollments
 
                 ( mMembers, cMembers ) =
-                    CourseMembers.init model.token course.id course.enrollments teaching_here model.is_staff
+                    CourseMembers.init model.token course.id enrollments teaching_here model.is_staff
             in
             ( { model
                 | state =
-                    FetchDone course pairs_id_comp mMembers
+                    FetchDone data pairs_id_comp mMembers
                 , activity_component_pk = model.activity_component_pk + len
                 , teaching_here = teaching_here
               }
@@ -704,13 +710,8 @@ update msg model =
                     MultiTask.update msg_ model_
             in
             case msg_ of
-                TaskFinishedAll results ->
-                    case collectFetchResults results of
-                        Just course ->
-                            parse_course course
-
-                        Nothing ->
-                            ( { model | state = FetchFailed "Не удалось разобрать результаты запросов" }, Cmd.none )
+                TaskFinishedAll [ Ok (FetchedCourse course), Ok (FetchedSpec spec), Ok (FetchedEnrollments enrollments), Ok (FetchedActivities activities) ] ->
+                    parse_course { course = course, spec = spec, enrollments = enrollments, activities = activities }
 
                 _ ->
                     ( { model | state = Fetching m }, Cmd.map MsgFetch c )
@@ -850,7 +851,7 @@ update msg model =
         ( MsgOnClickAddBefore i Nothing, _ ) ->
             ( model, Task.perform (Just >> MsgOnClickAddBefore i) <| Time.now )
 
-        ( MsgOnClickAddBefore i (Just t), FetchDone course act_components members ) ->
+        ( MsgOnClickAddBefore i (Just t), FetchDone ({ course, spec, enrollments, activities } as data) act_components members ) ->
             let
                 act =
                     case ( model.edit_mode, course.id ) of
@@ -989,7 +990,7 @@ update msg model =
 
                                 --, edit_mode = EditOn AddNone
                                 , state =
-                                    FetchDone course
+                                    FetchDone data
                                         (list_insert_at
                                             i
                                             ( model.activity_component_pk, CA.setEditable True m )
@@ -1000,14 +1001,14 @@ update msg model =
                     , Cmd.map (MsgActivity model.activity_component_pk) c
                     )
 
-        ( MsgOnClickEditCancel, FetchDone course _ _ ) ->
+        ( MsgOnClickEditCancel, FetchDone ({ course, spec, enrollments, activities } as data) _ _ ) ->
             let
                 ( m, c ) =
-                    parse_course course
+                    parse_course data
             in
             ( setEditMode False m, c )
 
-        ( MsgOnClickSave, FetchDone course act_components _ ) ->
+        ( MsgOnClickSave, FetchDone ({ course, spec, enrollments, activities } as data) act_components _ ) ->
             let
                 ac_to_tuple : CA.Model -> Maybe ( String, Activity )
                 ac_to_tuple c =
@@ -1052,7 +1053,7 @@ update msg model =
         ( MsgCourseSaveError e, FetchDone course act_components _ ) ->
             ( { model | save_error = Just e }, Cmd.none )
 
-        ( MsgCourseSaved, FetchDone course act_components _ ) ->
+        ( MsgCourseSaved, FetchDone ({ course, spec, enrollments, activities } as data) act_components _ ) ->
             let
                 ( m, c ) =
                     init model.token (Maybe.withDefault "" <| Maybe.map Uuid.toString course.id) model.user
@@ -1103,7 +1104,7 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        ( MsgOnClickActivitiesImport, FetchDone course _ _ ) ->
+        ( MsgOnClickActivitiesImport, FetchDone ({ course, spec, enrollments, activities } as data) _ _ ) ->
             case model.activity_import_state of
                 ActivityImportStateDataInput _ _ _ ->
                     ( model, Cmd.none )
@@ -1176,7 +1177,7 @@ update msg model =
         ( MsgOnInputActivityPrimitiveImport v, _ ) ->
             ( { model | activity_primitive_import = Just v }, Cmd.none )
 
-        ( MsgOnClickActivityPrimitiveImport, FetchDone c la members ) ->
+        ( MsgOnClickActivityPrimitiveImport, FetchDone ({ course, spec, enrollments, activities } as data) la members ) ->
             let
                 new_act : Int -> String -> Maybe Activity
                 new_act i t =
@@ -1209,7 +1210,7 @@ update msg model =
                             , weight = Just 1
                             }
                         )
-                        c.id
+                        course.id
 
                 topics =
                     List.filter ((/=) "") <|
@@ -1239,7 +1240,7 @@ update msg model =
                                 topics
             in
             ( { model
-                | state = FetchDone c (la ++ zip listPK (List.map (CA.setEditable True) lm)) members
+                | state = FetchDone data (la ++ zip listPK (List.map (CA.setEditable True) lm)) members
                 , activity_component_pk = model.activity_component_pk + lenTopics
                 , activity_primitive_import = Nothing
               }
@@ -1608,8 +1609,8 @@ viewActivitiesImport model =
                                     ]
 
 
-viewCourse : CourseDeep -> List ( Int, CA.Model ) -> CourseMembers.Model -> Model -> Html Msg
-viewCourse courseRead components_activity members model =
+viewCourse : FetchedData -> List ( Int, CA.Model ) -> CourseMembers.Model -> Model -> Html Msg
+viewCourse data components_activity members model =
     let
         breadcrumbs =
             div [ class "ui large breadcrumb" ]
@@ -1618,7 +1619,7 @@ viewCourse courseRead components_activity members model =
                 , i [ class "right chevron icon divider" ]
                     []
                 , div [ class "active section" ]
-                    [ text courseRead.title ]
+                    [ text data.course.title ]
                 ]
 
         header =
@@ -1631,18 +1632,18 @@ viewCourse courseRead components_activity members model =
 
                 cover_img =
                     Maybe.withDefault default_cover_url <|
-                        Maybe.map (\f -> "/api/file/" ++ get_id_str f ++ "/download") courseRead.cover
+                        Maybe.map (\f -> "/api/file/" ++ Uuid.toString f ++ "/download") data.course.cover
 
                 logo_img =
                     Maybe.withDefault default_logo_url <|
-                        Maybe.map (\f -> "/api/file/" ++ get_id_str f ++ "/download") courseRead.logo
+                        Maybe.map (\f -> "/api/file/" ++ Uuid.toString f ++ "/download") data.course.logo
 
                 for_class =
                     let
                         classes =
                             [ class "users icon", style "color" "#679", style "white-space" "nowrap" ]
                     in
-                    case ( courseRead.forClass, courseRead.forSpecialization ) of
+                    case ( data.course.forClass, data.spec ) of
                         ( Just cls, Just spec ) ->
                             span []
                                 [ i classes []
@@ -1659,7 +1660,7 @@ viewCourse courseRead components_activity members model =
                             text ""
 
                 for_group =
-                    case empty_to_nothing courseRead.forGroup of
+                    case empty_to_nothing data.course.forGroup of
                         Just g ->
                             span [ style "white-space" "nowrap" ]
                                 [ i [ class "list ol icon", style "color" "#679" ] []
@@ -1670,14 +1671,14 @@ viewCourse courseRead components_activity members model =
                             text ""
 
                 description =
-                    if (String.trim <| Maybe.withDefault "" courseRead.description) == "" then
+                    if (String.trim <| Maybe.withDefault "" data.course.description) == "" then
                         "(нет описания)"
 
                     else
-                        Maybe.withDefault "" courseRead.description
+                        Maybe.withDefault "" data.course.description
 
                 teacher =
-                    case List.head <| List.filter (\e -> e.role == CourseEnrollmentReadRoleT) courseRead.enrollments of
+                    case List.head <| List.filter (\e -> e.role == CourseEnrollmentReadRoleT) data.enrollments of
                         Just t ->
                             span [ class "ml-10", style "white-space" "nowrap" ]
                                 [ i [ class "user icon", style "color" "#679" ] []
@@ -1762,7 +1763,7 @@ viewCourse courseRead components_activity members model =
                                 [ class "col"
                                 , style "margin" "0"
                                 ]
-                                [ text courseRead.title ]
+                                [ text data.course.title ]
                             , div
                                 [ class "col ml-10"
                                 ]
@@ -1937,7 +1938,7 @@ viewCourse courseRead components_activity members model =
                 [ text "Содержание"
                 , div []
                     [ if model.is_staff || model.teaching_here then
-                        a [ href <| "/marks/course/" ++ get_id_str courseRead ]
+                        a [ href <| "/marks/course/" ++ get_id_str data.course ]
                             [ button [ class "ui button" ]
                                 [ i [ class "chart bar outline icon" ] []
                                 , text "Оценки"
@@ -1976,8 +1977,8 @@ view model =
             in
             div [ class "ui text container" ] [ Html.map MsgFetch fetcher ]
 
-        FetchDone courseRead components_activity members ->
-            viewCourse courseRead components_activity members model
+        FetchDone data components_activity members ->
+            viewCourse data components_activity members model
 
         FetchFailed err ->
             MessageBox.view Error False Nothing (text "Ошибка") (text <| "Не удалось получить данные курса: " ++ err)

@@ -1,7 +1,7 @@
 module Page.CourseListPage exposing (..)
 
 import Api exposing (ext_task, task, withToken)
-import Api.Data exposing (CourseShallow, EducationSpecialization, File)
+import Api.Data exposing (Course, Course, EducationSpecialization, File)
 import Api.Request.Course exposing (courseList)
 import Api.Request.Education exposing (educationSpecializationList)
 import Component.MultiTask as MT
@@ -30,7 +30,7 @@ type Msg
 
 
 type FetchedData
-    = FetchedCourses (List CourseShallow)
+    = FetchedCourses (List Course)
     | FetchedSpecs (List EducationSpecialization)
 
 
@@ -45,7 +45,7 @@ type alias Filter =
 
 type State
     = StateLoading (MT.Model Http.Error FetchedData)
-    | StateCompleted (List CourseShallow) (Dict String EducationSpecialization)
+    | StateCompleted (List Course) (Dict String EducationSpecialization)
     | StateError String
 
 
@@ -86,7 +86,7 @@ getGroupBy model =
             GroupByNone
 
 
-filterCourses : Filter -> List CourseShallow -> List CourseShallow
+filterCourses : Filter -> List Course -> List Course
 filterCourses filter courses =
     let
         filterCourse c =
@@ -118,7 +118,7 @@ filterCourses filter courses =
     List.filter filterCourse courses
 
 
-groupBy : GroupBy -> List CourseShallow -> Dict String EducationSpecialization -> Dict String (List CourseShallow)
+groupBy : GroupBy -> List Course -> Dict String EducationSpecialization -> Dict String (List Course)
 groupBy group_by courses specs =
     case group_by of
         GroupByNone ->
@@ -310,7 +310,7 @@ viewFilter filter =
         ]
 
 
-viewCourse : Dict String EducationSpecialization -> CourseShallow -> Html Msg
+viewCourse : Dict String EducationSpecialization -> Course -> Html Msg
 viewCourse specs course =
     let
         mbSpec =

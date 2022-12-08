@@ -24,9 +24,7 @@ module Api.Request.Course exposing
     , courseEnrollmentPartialUpdate
     , courseEnrollmentRead
     , courseEnrollmentUpdate
-    , courseGetDeep
     , courseList
-    , courseListDeep
     , coursePartialUpdate
     , courseRead
     , courseUpdate
@@ -52,7 +50,7 @@ courseBulkSetActivities id_path data_body =
         (Json.Decode.succeed ())
 
 
-courseCreate : Api.Data.CourseShallow -> Api.Request Api.Data.CourseShallow
+courseCreate : Api.Data.Course -> Api.Request Api.Data.Course
 courseCreate data_body =
     Api.request
         "POST"
@@ -60,8 +58,8 @@ courseCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeCourseShallow data_body))
-        Api.Data.courseShallowDecoder
+        (Just (Api.Data.encodeCourse data_body))
+        Api.Data.courseDecoder
 
 
 courseDelete : String -> Api.Request ()
@@ -148,19 +146,7 @@ courseEnrollmentUpdate id_path data_body =
         Api.Data.courseEnrollmentWriteDecoder
 
 
-courseGetDeep : String -> Api.Request Api.Data.CourseDeep
-courseGetDeep id_path =
-    Api.request
-        "GET"
-        "/course/{id}/deep/"
-        [ ( "id", identity id_path ) ]
-        []
-        []
-        Nothing
-        Api.Data.courseDeepDecoder
-
-
-courseList : Api.Request (List Api.Data.CourseShallow)
+courseList : Api.Request (List Api.Data.Course)
 courseList =
     Api.request
         "GET"
@@ -169,22 +155,10 @@ courseList =
         []
         []
         Nothing
-        (Json.Decode.list Api.Data.courseShallowDecoder)
+        (Json.Decode.list Api.Data.courseDecoder)
 
 
-courseListDeep : Api.Request Api.Data.CourseDeep
-courseListDeep =
-    Api.request
-        "GET"
-        "/course/deep/"
-        []
-        []
-        []
-        Nothing
-        Api.Data.courseDeepDecoder
-
-
-coursePartialUpdate : String -> Api.Data.CourseShallow -> Api.Request Api.Data.CourseShallow
+coursePartialUpdate : String -> Api.Data.Course -> Api.Request Api.Data.Course
 coursePartialUpdate id_path data_body =
     Api.request
         "PATCH"
@@ -192,11 +166,11 @@ coursePartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeCourseShallow data_body))
-        Api.Data.courseShallowDecoder
+        (Just (Api.Data.encodeCourse data_body))
+        Api.Data.courseDecoder
 
 
-courseRead : String -> Api.Request Api.Data.CourseShallow
+courseRead : String -> Api.Request Api.Data.Course
 courseRead id_path =
     Api.request
         "GET"
@@ -205,10 +179,10 @@ courseRead id_path =
         []
         []
         Nothing
-        Api.Data.courseShallowDecoder
+        Api.Data.courseDecoder
 
 
-courseUpdate : String -> Api.Data.CourseShallow -> Api.Request Api.Data.CourseShallow
+courseUpdate : String -> Api.Data.Course -> Api.Request Api.Data.Course
 courseUpdate id_path data_body =
     Api.request
         "PUT"
@@ -216,5 +190,5 @@ courseUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeCourseShallow data_body))
-        Api.Data.courseShallowDecoder
+        (Just (Api.Data.encodeCourse data_body))
+        Api.Data.courseDecoder

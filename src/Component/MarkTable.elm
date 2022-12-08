@@ -3,7 +3,7 @@ module Component.MarkTable exposing (..)
 import Api exposing (ext_task)
 import Api.Data as Data exposing (..)
 import Api.Request.Activity exposing (activityList)
-import Api.Request.Course exposing (courseGetDeep, courseList)
+import Api.Request.Course exposing (courseEnrollmentList, courseList, courseRead)
 import Api.Request.Mark exposing (markCreate, markDelete, markList, markPartialUpdate)
 import Browser.Dom exposing (Error(..), focus)
 import Component.Misc exposing (user_link)
@@ -22,18 +22,18 @@ import Page.CourseListPage exposing (empty_to_nothing)
 import Set
 import Task
 import Time as T exposing (Posix, Zone, millisToPosix, utc)
-import Util exposing (dictFromTupleListMany, finalTypeToStr, get_id_str, httpErrorToString, index_by, posixToDDMMYYYY, user_full_name, zip)
+import Util exposing (Either, dictFromTupleListMany, eitherGetRight, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, maybeToList, posixToDDMMYYYY, resultIsOK, user_full_name, zip)
 import Uuid exposing (Uuid)
 
 
 type Column
     = Activity Data.Activity
-    | Date Posix
+    | Date (Maybe Posix)
 
 
 type Row
     = User Data.UserShallow
-    | Course Data.CourseShallow
+    | Course Data.Course
 
 
 type alias ActivityID =
@@ -71,6 +71,16 @@ type MarkCmd
     | CmdUnknown String
 
 
+type DateFilter
+    = DateFilterQ1
+    | DateFilterQ2
+    | DateFilterQ3
+    | DateFilterQ4
+    | DateFilterH1
+    | DateFilterH2
+    | DateFilterAll
+
+
 type alias SlotList =
     List MarkSlot
 
@@ -83,39 +93,50 @@ type alias RowList =
     List ColList
 
 
-type FetchedData
+type FetchedDataEvent
     = FetchedMarks (List Mark)
-    | FetchedCourseList (List CourseShallow)
-    | FetchedCourse CourseDeep
+    | FetchedCourseList (List Course)
+    | FetchedCourse Course
     | FetchedActivities (List Activity)
+    | FetchedEnrollments (List CourseEnrollmentRead)
 
 
 type Msg
-    = MsgFetch (MultiTask.Msg Http.Error FetchedData)
+    = MsgFetch (MultiTask.Msg Http.Error FetchedDataEvent)
     | MsgMarkKeyPress MarkSlot Int Int MarkCmd
     | MsgMarkCreated ( Int, Int ) Mark
     | MsgMarkUpdated ( Int, Int ) Mark
-    | MsgMarkDeleted ( Int, Int )
+    | MsgMarkDeleted ( Int, Int ) Uuid
     | MsgMarkSelected ( Int, Int )
     | MsgNop
-    | MsgSetStickyCol1 Bool
-    | MsgSetStickyRow1 Bool
     | MsgSelectSwitchCell Select.Msg
     | MsgMarkClicked (Maybe Mark) ( Int, Int )
     | MsgOnClickCloseMarkDetails
+    | MsgSetDateFilter DateFilter
 
 
 type State
-    = Loading (MultiTask.Model Http.Error FetchedData)
-    | Complete (List CourseShallow) (List Activity) (List Mark)
-    | Error String
+    = StateLoading (MultiTask.Model Http.Error FetchedDataEvent)
+    | StateComplete
+    | StateError String
+
+
+type Mode
+    = MarksOfCourse
+    | MarksOfStudent
+
+
+type alias FetchedData =
+    { courses : List Course
+    , activities : List Activity
+    , marks : List Mark
+    , enrollments : List CourseEnrollmentRead
+    }
 
 
 type alias Model =
     { columns : List Column
     , rows : List Row
-
-    --, marks : MarkIndex
     , cells : List (List (List MarkSlot))
     , state : State
     , token : String
@@ -123,13 +144,14 @@ type alias Model =
     , student_id : Maybe Uuid
     , teacher_id : Maybe Uuid
     , size : ( Int, Int )
-    , stickyRow1 : Bool
-    , stickyCol1 : Bool
     , switchCell : Maybe Select.Model
     , selectedCoords : ( Int, Int )
     , canEdit : Bool
     , canViewDetails : Bool
     , showMarkDetails : Maybe Mark
+    , dateFilter : DateFilter
+    , mode : Mode
+    , fetchedData : FetchedData
     }
 
 
@@ -200,7 +222,7 @@ keyCodeToMarkCmd code =
             CmdUnknown code
 
 
-showFetchedData : FetchedData -> String
+showFetchedData : FetchedDataEvent -> String
 showFetchedData fetchedData =
     case fetchedData of
         FetchedMarks marks ->
@@ -214,6 +236,9 @@ showFetchedData fetchedData =
 
         FetchedActivities activities ->
             "Активности: " ++ (String.fromInt <| List.length activities)
+
+        FetchedEnrollments enr ->
+            "Записи: " ++ (String.fromInt <| List.length enr)
 
 
 doCreateMark : String -> Uuid -> Uuid -> Uuid -> ( Int, Int ) -> String -> Cmd Msg
@@ -269,7 +294,7 @@ doDeleteMark token mark_id coords =
         onResult res =
             case res of
                 Ok r ->
-                    MsgMarkDeleted coords
+                    MsgMarkDeleted coords mark_id
 
                 Err _ ->
                     MsgNop
@@ -309,7 +334,7 @@ initForStudent token student_id =
                   )
                 ]
     in
-    ( { state = Loading m
+    ( { state = StateLoading m
       , token = token
       , rows = []
       , columns = []
@@ -318,13 +343,19 @@ initForStudent token student_id =
       , teacher_id = Nothing
       , size = ( 0, 0 )
       , tz = utc
-      , stickyRow1 = True
-      , stickyCol1 = True
       , switchCell = Nothing
       , selectedCoords = ( 0, 0 )
       , canViewDetails = True
       , canEdit = False
       , showMarkDetails = Nothing
+      , dateFilter = DateFilterAll
+      , mode = MarksOfStudent
+      , fetchedData =
+            { courses = []
+            , activities = []
+            , marks = []
+            , enrollments = []
+            }
       }
     , Cmd.map MsgFetch c
     )
@@ -335,8 +366,14 @@ initForCourse token course_id teacher_id =
     let
         ( m, c ) =
             MultiTask.init
-                [ ( ext_task FetchedCourse token [] <| courseGetDeep <| Uuid.toString course_id
+                [ ( ext_task FetchedCourse token [] <| courseRead <| Uuid.toString course_id
                   , "Получение данных о курсе"
+                  )
+                , ( ext_task FetchedEnrollments token [ ( "course", Uuid.toString course_id ) ] <| courseEnrollmentList
+                  , "Получение данных об участниках"
+                  )
+                , ( ext_task FetchedActivities token [ ( "course", Uuid.toString course_id ) ] activityList
+                  , "Получение тем занятий"
                   )
                 , ( ext_task FetchedMarks token [ ( "activity__course", Uuid.toString course_id ) ] markList
                   , "Получение оценок"
@@ -351,7 +388,7 @@ initForCourse token course_id teacher_id =
                     , ( "bottom", "Вниз" )
                     ]
     in
-    ( { state = Loading m
+    ( { state = StateLoading m
       , token = token
       , rows = []
       , columns = []
@@ -362,21 +399,28 @@ initForCourse token course_id teacher_id =
       , teacher_id = teacher_id
       , size = ( 0, 0 )
       , tz = utc
-      , stickyRow1 = True
-      , stickyCol1 = True
       , switchCell = Just sm
       , selectedCoords = ( 0, 0 )
       , canViewDetails = False
       , canEdit = True
       , showMarkDetails = Nothing
+      , dateFilter = DateFilterAll
+      , mode = MarksOfCourse
+      , fetchedData =
+            { courses = []
+            , activities = []
+            , marks = []
+            , enrollments = []
+            }
       }
     , Cmd.batch [ Cmd.map MsgFetch c, Cmd.map MsgSelectSwitchCell sc ]
     )
 
 
-updateMark : Model -> ( Int, Int ) -> Maybe Mark -> Model
-updateMark model ( cell_x, cell_y ) mb_mark =
+updateMark : Model -> ( Int, Int ) -> Either Uuid Mark -> Model
+updateMark model ( cell_x, cell_y ) markIdOrRec =
     let
+        update_slot : MarkSlot -> M.Maybe Mark -> MarkSlot
         update_slot slot mb_mark_ =
             case ( slot, mb_mark_ ) of
                 ( SlotMark sel _, Just new_mark ) ->
@@ -402,6 +446,27 @@ updateMark model ( cell_x, cell_y ) mb_mark =
 
                 ( _, [] ) ->
                     []
+
+        oldFetchedData : FetchedData
+        oldFetchedData =
+            model.fetchedData
+
+        updateData marks =
+            case markIdOrRec of
+                Util.Left mid ->
+                    List.filter (.id >> (/=) (Just mid)) marks
+
+                Util.Right newMark ->
+                    case marks of
+                        [] ->
+                            [ newMark ]
+
+                        oldMark :: rest ->
+                            if oldMark.id == newMark.id then
+                                newMark :: rest
+
+                            else
+                                oldMark :: updateData rest
     in
     { model
         | cells =
@@ -413,7 +478,7 @@ updateMark model ( cell_x, cell_y ) mb_mark =
                                 (\col ( slots_cnt, res ) ->
                                     let
                                         new_col =
-                                            update_col (cell_x - slots_cnt) col mb_mark
+                                            update_col (cell_x - slots_cnt) col <| eitherGetRight markIdOrRec
                                     in
                                     ( slots_cnt + L.length new_col, res ++ [ new_col ] )
                                 )
@@ -424,6 +489,10 @@ updateMark model ( cell_x, cell_y ) mb_mark =
                         row
                 )
                 model.cells
+        , fetchedData =
+            { oldFetchedData
+                | marks = updateData oldFetchedData.marks
+            }
     }
 
 
@@ -462,206 +531,289 @@ switchMarkCmd model =
             Cmd.none
 
 
+dateFilter : DateFilter -> List Activity -> List Activity
+dateFilter filter orderSortedActs =
+    case filter of
+        DateFilterQ1 ->
+            let
+                ( l, r ) =
+                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeQ1)) orderSortedActs
+            in
+            l ++ maybeToList (List.head r)
+
+        DateFilterQ2 ->
+            let
+                ( l, r ) =
+                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeQ2)) <|
+                        List.drop 1 <|
+                            listDropWhile (.finalType >> (/=) (Just ActivityFinalTypeQ1)) orderSortedActs
+            in
+            l ++ maybeToList (List.head r)
+
+        DateFilterQ3 ->
+            let
+                ( l, r ) =
+                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeQ3)) <|
+                        List.drop 1 <|
+                            listDropWhile (.finalType >> (/=) (Just ActivityFinalTypeQ2)) orderSortedActs
+            in
+            l ++ maybeToList (List.head r)
+
+        DateFilterQ4 ->
+            let
+                ( l, r ) =
+                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeQ4)) <|
+                        List.drop 1 <|
+                            listDropWhile (.finalType >> (/=) (Just ActivityFinalTypeQ3)) orderSortedActs
+            in
+            l ++ maybeToList (List.head r)
+
+        DateFilterH1 ->
+            let
+                ( l, r ) =
+                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeH1)) orderSortedActs
+            in
+            l ++ maybeToList (List.head r)
+
+        DateFilterH2 ->
+            let
+                ( l, r ) =
+                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeH2)) <|
+                        List.drop 1 <|
+                            listDropWhile (.finalType >> (/=) (Just ActivityFinalTypeH1)) orderSortedActs
+            in
+            l ++ maybeToList (List.head r)
+
+        DateFilterAll ->
+            orderSortedActs
+
+
+updateTable : Model -> Model
+updateTable model =
+    case model.mode of
+        MarksOfCourse ->
+            let
+                ix_acts =
+                    index_by get_id_str activities
+
+                rows =
+                    L.filterMap
+                        (\enr ->
+                            if enr.role == CourseEnrollmentReadRoleS then
+                                enr.person |> User |> Just
+
+                            else
+                                Nothing
+                        )
+                    <|
+                        List.sortBy (.person >> user_full_name) model.fetchedData.enrollments
+
+                columns =
+                    L.map Activity <| L.sortBy .order activities
+
+                activities =
+                    dateFilter model.dateFilter <|
+                        List.filter (\a -> 0 < Maybe.withDefault 0 a.marksLimit) model.fetchedData.activities
+
+                mark_coords mark =
+                    D.get (Uuid.toString mark.activity) ix_acts
+                        |> M.andThen
+                            (\act ->
+                                Just
+                                    ( mark
+                                    , get_id_str act
+                                    , Uuid.toString mark.student
+                                    )
+                            )
+
+                marks_ix =
+                    dictFromTupleListMany <|
+                        L.map (\( a, b, c_ ) -> ( ( b, c_ ), SlotMark False a )) <|
+                            L.filterMap mark_coords <|
+                                L.sortBy (.createdAt >> M.map T.posixToMillis >> M.withDefault 0) model.fetchedData.marks
+
+                cells =
+                    L.map
+                        (\row ->
+                            L.map
+                                (\col ->
+                                    case ( row, col ) of
+                                        ( User student, Activity act ) ->
+                                            let
+                                                coords =
+                                                    ( get_id_str act, get_id_str student )
+
+                                                mark_slots =
+                                                    M.withDefault [] <| D.get coords marks_ix
+                                            in
+                                            case ( act.id, student.id ) of
+                                                ( Just aid, Just sid ) ->
+                                                    mark_slots
+                                                        ++ L.repeat
+                                                            (M.withDefault 0 act.marksLimit - L.length mark_slots)
+                                                            (SlotVirtual False aid sid)
+
+                                                _ ->
+                                                    mark_slots
+
+                                        ( _, _ ) ->
+                                            []
+                                )
+                                columns
+                        )
+                        rows
+            in
+            { model
+                | rows = rows
+                , columns = columns
+                , cells = cells
+                , size =
+                    ( M.withDefault 0 <|
+                        L.maximum <|
+                            L.map (\row -> L.sum <| L.map L.length row) cells
+                    , L.length rows
+                    )
+            }
+
+        MarksOfStudent ->
+            let
+                rows =
+                    L.map Course <| List.sortBy .title model.fetchedData.courses
+
+                existingActivityIDS =
+                    Set.fromList <| List.map (.activity >> Uuid.toString) model.fetchedData.marks
+
+                activities =
+                    List.filter (\a -> Set.member (get_id_str a) existingActivityIDS) <|
+                        dateFilter model.dateFilter <|
+                            model.fetchedData.activities
+
+                ix_acts =
+                    index_by get_id_str activities
+
+                columns =
+                    (L.map Date <|
+                        L.map (Just << T.millisToPosix) <|
+                            Set.toList <|
+                                Set.fromList <|
+                                    L.filterMap (.date >> M.map T.posixToMillis) <|
+                                        L.sortBy .order activities
+                    )
+                        ++ [ Date Nothing ]
+
+                activity_course_id act =
+                    Uuid.toString act.course
+
+                mark_coords mark =
+                    D.get (Uuid.toString mark.activity) ix_acts
+                        |> M.map
+                            (\act ->
+                                ( mark
+                                , String.fromInt <| M.withDefault 0 <| M.map T.posixToMillis act.date
+                                , activity_course_id act
+                                )
+                            )
+
+                marks_ix =
+                    dictFromTupleListMany <|
+                        L.map (\( mark, x, y ) -> ( ( x, y ), SlotMark False mark )) <|
+                            L.filterMap mark_coords <|
+                                L.sortBy
+                                    (.createdAt >> M.map T.posixToMillis >> M.withDefault 0)
+                                    model.fetchedData.marks
+
+                cells =
+                    L.map
+                        (\row ->
+                            L.map
+                                (\col ->
+                                    case ( row, col ) of
+                                        ( Course course, Date date ) ->
+                                            let
+                                                mark_slots =
+                                                    M.withDefault [] <|
+                                                        D.get
+                                                            ( String.fromInt <|
+                                                                M.withDefault 0 <|
+                                                                    M.map T.posixToMillis date
+                                                            , get_id_str course
+                                                            )
+                                                            marks_ix
+                                            in
+                                            mark_slots
+
+                                        ( _, _ ) ->
+                                            []
+                                )
+                                columns
+                        )
+                        rows
+            in
+            { model
+                | rows = rows
+                , columns = columns
+                , cells = cells
+                , size =
+                    ( M.withDefault 0 <|
+                        L.maximum <|
+                            L.map (\row -> L.sum <| L.map L.length row) cells
+                    , L.length rows
+                    )
+            }
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
+    let
+        ignore =
+            ( model, Cmd.none )
+    in
     case ( msg, model.state ) of
-        ( MsgFetch msg_, Loading model_ ) ->
+        ( MsgFetch msg_, StateLoading model_ ) ->
             let
                 ( m, c ) =
                     MultiTask.update msg_ model_
             in
             case ( msg_, model.student_id ) of
-                --Marks for student
-                ( TaskFinishedAll [ Ok (FetchedCourseList courses), Ok (FetchedActivities acts), Ok (FetchedMarks marks) ], Just student_id ) ->
+                ( TaskCompleted _ r, _ ) ->
                     let
-                        rows =
-                            L.map Course <| List.sortBy .title courses
+                        oldFetchedData =
+                            model.fetchedData
 
-                        -- TODO: Add time filters
-                        existingActivityIDS =
-                            Set.fromList <| List.map (.activity >> Uuid.toString) marks
+                        newFetchedData =
+                            case r of
+                                FetchedCourseList courses ->
+                                    { oldFetchedData | courses = courses }
 
-                        activities =
-                            List.filter (\a -> Set.member (get_id_str a) existingActivityIDS) acts
+                                FetchedMarks marks ->
+                                    { oldFetchedData | marks = marks }
 
-                        ix_acts =
-                            index_by get_id_str activities
+                                FetchedCourse course ->
+                                    { oldFetchedData | courses = [ course ] }
 
-                        columns =
-                            L.map Date <|
-                                L.map T.millisToPosix <|
-                                    Set.toList <|
-                                        Set.fromList <|
-                                            L.filterMap (.date >> Maybe.map T.posixToMillis) <|
-                                                L.sortBy .order activities
+                                FetchedActivities activities ->
+                                    { oldFetchedData | activities = List.sortBy .order activities }
 
-                        activity_timestamp act =
-                            Maybe.map (String.fromInt << T.posixToMillis) act.date
-
-                        activity_course_id act =
-                            Uuid.toString act.course
-
-                        mark_coords mark =
-                            D.get (Uuid.toString mark.activity) ix_acts
-                                |> M.andThen
-                                    (\act ->
-                                        M.map
-                                            (\date ->
-                                                ( mark
-                                                , String.fromInt <| T.posixToMillis date
-                                                , activity_course_id act
-                                                )
-                                            )
-                                            act.date
-                                    )
-
-                        marks_ix =
-                            dictFromTupleListMany <|
-                                L.map (\( mark, x, y ) -> ( ( x, y ), SlotMark False mark )) <|
-                                    L.filterMap mark_coords <|
-                                        L.sortBy (.createdAt >> M.map T.posixToMillis >> M.withDefault 0) marks
-
-                        cells =
-                            L.map
-                                (\row ->
-                                    L.map
-                                        (\col ->
-                                            case ( row, col ) of
-                                                ( Course course, Date date ) ->
-                                                    let
-                                                        mark_slots =
-                                                            M.withDefault [] <|
-                                                                D.get
-                                                                    ( String.fromInt <|
-                                                                        T.posixToMillis date
-                                                                    , get_id_str course
-                                                                    )
-                                                                    marks_ix
-                                                    in
-                                                    mark_slots
-
-                                                ( _, _ ) ->
-                                                    []
-                                        )
-                                        columns
-                                )
-                                rows
+                                FetchedEnrollments enrollments ->
+                                    { oldFetchedData | enrollments = enrollments }
                     in
-                    ( { model
-                        | state = Complete courses acts marks
-                        , rows = rows
-                        , columns = columns
-                        , cells = cells
-                        , size =
-                            ( M.withDefault 0 <|
-                                L.maximum <|
-                                    L.map (\row -> L.sum <| L.map L.length row) cells
-                            , L.length rows
-                            )
-                      }
-                    , Cmd.map MsgFetch c
-                    )
+                    ( { model | fetchedData = newFetchedData, state = StateLoading m }, Cmd.map MsgFetch c )
 
-                ( TaskFinishedAll [ Ok (FetchedCourse course), Ok (FetchedMarks marks) ], _ ) ->
-                    let
-                        ix_acts =
-                            index_by get_id_str activities
+                ( TaskFinishedAll results, _ ) ->
+                    if List.all resultIsOK results then
+                        ( updateTable { model | state = StateComplete }, Cmd.none )
 
-                        rows =
-                            L.filterMap
-                                (\enr ->
-                                    if enr.role == CourseEnrollmentReadRoleS then
-                                        enr.person |> User |> Just
-
-                                    else
-                                        Nothing
-                                )
-                            <|
-                                List.sortBy (.person >> user_full_name) course.enrollments
-
-                        columns =
-                            L.map Activity <| L.sortBy .order activities
-
-                        activity_timestamp act =
-                            String.fromInt <| T.posixToMillis act.date
-
-                        activities =
-                            List.filter (\a -> 0 < Maybe.withDefault 0 a.marksLimit) course.activities
-
-                        mark_coords mark =
-                            D.get (Uuid.toString mark.activity) ix_acts
-                                |> M.andThen
-                                    (\act ->
-                                        Just
-                                            ( mark
-                                            , get_id_str act
-                                            , Uuid.toString mark.student
-                                            )
-                                    )
-
-                        marks_ix =
-                            dictFromTupleListMany <|
-                                L.map (\( a, b, c_ ) -> ( ( b, c_ ), SlotMark False a )) <|
-                                    L.filterMap mark_coords <|
-                                        L.sortBy (.createdAt >> M.map T.posixToMillis >> M.withDefault 0) marks
-
-                        cells =
-                            L.map
-                                (\row ->
-                                    L.map
-                                        (\col ->
-                                            case ( row, col ) of
-                                                ( User student, Activity act ) ->
-                                                    let
-                                                        coords =
-                                                            ( get_id_str act, get_id_str student )
-
-                                                        mark_slots =
-                                                            M.withDefault [] <| D.get coords marks_ix
-                                                    in
-                                                    case ( act.id, student.id ) of
-                                                        ( Just aid, Just sid ) ->
-                                                            mark_slots
-                                                                ++ L.repeat
-                                                                    (M.withDefault 0 act.marksLimit - L.length mark_slots)
-                                                                    (SlotVirtual False aid sid)
-
-                                                        _ ->
-                                                            mark_slots
-
-                                                ( _, _ ) ->
-                                                    []
-                                        )
-                                        columns
-                                )
-                                rows
-                    in
-                    ( { model
-                        | state = Complete [] course.activities marks -- TODO: Convert deep to shallow
-                        , rows = rows
-                        , columns = columns
-                        , cells = cells
-                        , size =
-                            ( M.withDefault 0 <|
-                                L.maximum <|
-                                    L.map (\row -> L.sum <| L.map L.length row) cells
-                            , L.length rows
-                            )
-                      }
-                    , Cmd.map MsgFetch c
-                    )
+                    else
+                        ( { model | state = StateLoading m }, Cmd.map MsgFetch c )
 
                 _ ->
-                    ( { model | state = Loading m }, Cmd.map MsgFetch c )
+                    ( { model | state = StateLoading m }, Cmd.map MsgFetch c )
 
         ( MsgFetch msg_, _ ) ->
-            ( model, Cmd.none )
+            ignore
 
         ( MsgMarkKeyPress mark_slot x y cmd, _ ) ->
             let
-                ignore =
-                    ( model, Cmd.none )
-
                 onResult res =
                     case res of
                         Ok r ->
@@ -759,22 +911,16 @@ update msg model =
                                 ignore
 
         ( MsgMarkCreated ( x, y ) mark, _ ) ->
-            ( updateMark model ( x, y ) (Just mark), switchMarkCmd model )
+            ( updateMark model ( x, y ) (Util.Right mark), switchMarkCmd model )
 
         ( MsgMarkUpdated ( x, y ) mark, _ ) ->
-            ( updateMark model ( x, y ) (Just mark), switchMarkCmd model )
+            ( updateMark model ( x, y ) (Util.Right mark), switchMarkCmd model )
 
-        ( MsgMarkDeleted ( x, y ), _ ) ->
-            ( updateMark model ( x, y ) Nothing, switchMarkCmd model )
+        ( MsgMarkDeleted ( x, y ) mid, _ ) ->
+            ( updateMark model ( x, y ) (Util.Left mid), switchMarkCmd model )
 
         ( MsgNop, _ ) ->
-            ( model, Cmd.none )
-
-        ( MsgSetStickyCol1 v, _ ) ->
-            ( { model | stickyCol1 = v }, Cmd.none )
-
-        ( MsgSetStickyRow1 v, _ ) ->
-            ( { model | stickyRow1 = v }, Cmd.none )
+            ignore
 
         ( MsgSelectSwitchCell msg_, _ ) ->
             case model.switchCell of
@@ -786,7 +932,7 @@ update msg model =
                     ( { model | switchCell = Just m }, Cmd.map MsgSelectSwitchCell c )
 
                 Nothing ->
-                    ( model, Cmd.none )
+                    ignore
 
         ( MsgMarkSelected ( x, y ), _ ) ->
             ( { model | selectedCoords = ( x, y ) }, Cmd.none )
@@ -807,6 +953,12 @@ update msg model =
         ( MsgOnClickCloseMarkDetails, _ ) ->
             ( { model | showMarkDetails = Nothing }, Cmd.none )
 
+        ( MsgSetDateFilter f, StateComplete ) ->
+            ( updateTable { model | dateFilter = f }, Cmd.none )
+
+        ( MsgSetDateFilter f, _ ) ->
+            ignore
+
 
 viewColumn : Zone -> Column -> Html Msg
 viewColumn tz column =
@@ -826,7 +978,11 @@ viewColumn tz column =
                         ]
 
         Date posix ->
-            strong [] [ text <| posixToDDMMYYYY T.utc posix ]
+            strong []
+                [ text <|
+                    M.withDefault "(без даты)" <|
+                        M.map (posixToDDMMYYYY T.utc) posix
+                ]
 
 
 viewRowsFirstCol : Row -> Html Msg
@@ -996,25 +1152,18 @@ viewTableHeader model =
                     [ style "background-color" "white" ]
     in
     thead
-        (if model.stickyRow1 then
-            [ style "position" "sticky", style "top" "0", style "z-index" "2" ]
-
-         else
-            []
-        )
+        [ style "position" "sticky"
+        , style "top" "0"
+        , style "z-index" "2"
+        ]
         [ tr []
             ((++)
                 [ td
-                    (if model.stickyCol1 then
-                        [ style "position" "sticky"
-                        , style "left" "0"
-                        , style "top" "0"
-                        , style "background-color" "#F6F6F6"
-                        ]
-
-                     else
-                        []
-                    )
+                    [ style "position" "sticky"
+                    , style "left" "0"
+                    , style "top" "0"
+                    , style "background-color" "#F6F6F6"
+                    ]
                     []
                 ]
              <|
@@ -1023,8 +1172,7 @@ viewTableHeader model =
                         td
                             ([ style "text-align" "center"
                              , style "vertical-align" "top"
-
-                             --, style "white-space" "nowrap"
+                             , style "border-bottom" "2px solid #DDD"
                              ]
                                 ++ td_attrs col
                             )
@@ -1035,21 +1183,17 @@ viewTableHeader model =
         ]
 
 
-viewTableRow : Bool -> Int -> ( Row, ColList ) -> Html Msg
-viewTableRow stickyCol1 y ( row, cols ) =
+viewTableRow : Int -> ( Row, ColList ) -> Html Msg
+viewTableRow y ( row, cols ) =
     tr []
         ([ td
-            ([ style "vertical-align" "middle"
-             , style "white-space" "nowrap"
-             , style "background-color" "white"
-             ]
-                ++ (if stickyCol1 then
-                        [ style "position" "sticky", style "left" "0" ]
-
-                    else
-                        []
-                   )
-            )
+            [ style "vertical-align" "middle"
+            , style "white-space" "nowrap"
+            , style "background-color" "white"
+            , style "position" "sticky"
+            , style "left" "0"
+            , style "border-right" "2px solid #DDD"
+            ]
             [ viewRowsFirstCol row ]
          ]
             ++ (Tuple.second <|
@@ -1061,60 +1205,109 @@ viewTableRow stickyCol1 y ( row, cols ) =
         )
 
 
-viewTable : Model -> Html Msg
-viewTable model =
-    let
-        markDetailsModal =
-            case model.showMarkDetails of
-                Just mark ->
-                    let
-                        activity =
-                            case model.state of
-                                Complete _ activities _ ->
-                                    List.head <|
-                                        List.filter (\a -> a.id == Just mark.activity) activities
+viewMarkDetailsModal : Model -> Html Msg
+viewMarkDetailsModal model =
+    case model.showMarkDetails of
+        Just mark ->
+            let
+                activity =
+                    case model.state of
+                        StateComplete ->
+                            List.head <|
+                                List.filter (\a -> a.id == Just mark.activity) model.fetchedData.activities
 
-                                _ ->
-                                    Nothing
+                        _ ->
+                            Nothing
 
-                        details =
-                            div [ class "row center-xs middle-xs" ]
-                                [ div [ class "col-xs-12 col-md-6" ]
-                                    [ div [ class "row" ]
-                                        [ div [ class "col-xs-12 col-sm-6 end-xs" ] [ strong [] [ text "Оценка:" ] ]
-                                        , div [ class "col-xs-12 col-sm-6 start-xs" ] [ text mark.value ]
-                                        ]
-                                    , div [ class "row" ]
-                                        [ div [ class "col-xs-12 col-sm-6 end-xs" ] [ strong [] [ text "Тема:" ] ]
-                                        , div [ class "col-xs-12 col-sm-6 start-xs" ]
-                                            [ text <|
-                                                Maybe.withDefault "(Неизвестна)" <|
-                                                    Maybe.map .title activity
-                                            ]
-                                        ]
-                                    , div [ class "row" ]
-                                        [ div [ class "col-xs-12 col-sm-6 end-xs" ] [ strong [] [ text "Описание:" ] ]
-                                        , div [ class "col-xs-12 col-sm-6 start-xs" ]
-                                            [ text <|
-                                                Maybe.withDefault "(Неизвестно)" <|
-                                                    empty_to_nothing <|
-                                                        Maybe.andThen .body activity
-                                            ]
-                                        ]
+                details =
+                    div [ class "row center-xs middle-xs" ]
+                        [ div [ class "col-xs-12 col-md-6" ]
+                            [ div [ class "row" ]
+                                [ div [ class "col-xs-12 col-sm-6 end-xs" ] [ strong [] [ text "Оценка:" ] ]
+                                , div [ class "col-xs-12 col-sm-6 start-xs" ] [ text mark.value ]
+                                ]
+                            , div [ class "row" ]
+                                [ div [ class "col-xs-12 col-sm-6 end-xs" ] [ strong [] [ text "Тема:" ] ]
+                                , div [ class "col-xs-12 col-sm-6 start-xs" ]
+                                    [ text <|
+                                        Maybe.withDefault "(Неизвестна)" <|
+                                            Maybe.map .title activity
                                     ]
                                 ]
-                    in
-                    Modal.view
-                        "mark_details"
-                        "Подробности"
-                        details
-                        MsgOnClickCloseMarkDetails
-                        [ ( "Закрыть", MsgOnClickCloseMarkDetails ) ]
-                        True
+                            , div [ class "row" ]
+                                [ div [ class "col-xs-12 col-sm-6 end-xs" ] [ strong [] [ text "Описание:" ] ]
+                                , div [ class "col-xs-12 col-sm-6 start-xs" ]
+                                    [ text <|
+                                        Maybe.withDefault "(Неизвестно)" <|
+                                            empty_to_nothing <|
+                                                Maybe.andThen .body activity
+                                    ]
+                                ]
+                            ]
+                        ]
+            in
+            Modal.view
+                "mark_details"
+                "Подробности"
+                details
+                MsgOnClickCloseMarkDetails
+                [ ( "Закрыть", MsgOnClickCloseMarkDetails ) ]
+                True
 
-                Nothing ->
-                    text ""
+        Nothing ->
+            text ""
+
+
+viewDateFilter : Model -> Html Msg
+viewDateFilter model =
+    let
+        viewItem ( s, f ) =
+            let
+                selStyle =
+                    if model.dateFilter == f then
+                        [ style "background-color" "rgb(65, 131, 196)"
+                        , style "color" "white"
+                        , style "border-radius" "5px"
+                        ]
+
+                    else
+                        []
+            in
+            div
+                [ class "item mr-5"
+                , style "padding" "0"
+                , onClick (MsgSetDateFilter f)
+                ]
+                [ div
+                    ([ class "content"
+                     , style "margin" "5px 10px 5px 10px"
+                     , style "padding" "5px"
+                     ]
+                        ++ selStyle
+                    )
+                    [ div
+                        ([ class "header"
+                         ]
+                            ++ selStyle
+                        )
+                        [ text s ]
+                    ]
+                ]
     in
+    div [ class "ui mini horizontal divided list" ] <|
+        List.map viewItem
+            [ ( "1 четверть", DateFilterQ1 )
+            , ( "2 четверть", DateFilterQ2 )
+            , ( "3 четверть", DateFilterQ3 )
+            , ( "4 четверть", DateFilterQ4 )
+            , ( "1 полугодие", DateFilterH1 )
+            , ( "2 полугодие", DateFilterH2 )
+            , ( "Все", DateFilterAll )
+            ]
+
+
+viewTable : Model -> Html Msg
+viewTable model =
     div
         [ style "position" "absolute"
         , style "left" "0"
@@ -1122,56 +1315,51 @@ viewTable model =
         , style "bottom" "0"
         , style "top" "120px"
         ]
-        [ markDetailsModal
+        [ viewMarkDetailsModal model
         , div
             [ class "ui container segment"
-            , style "height" "50px"
             , style "margin-bottom" "10px"
             , style "background-color" "#EEE"
             , style "padding" "5px"
             ]
             [ div [ class "row between-xs middle-xs", style "height" "100%" ]
-                [ div [ class "col-xs-12 col-sm center-xs start-sm" ]
-                    [ div [ class "ui checkbox" ]
-                        [ input [ type_ "checkbox", attribute "tabindex" "0", checked model.stickyRow1, onCheck MsgSetStickyRow1 ] []
-                        , label [] [ text "Закрепить первую строку" ]
-                        ]
-                    , div [ class "ui checkbox ml-10" ]
-                        [ input [ type_ "checkbox", attribute "tabindex" "0", checked model.stickyCol1, onCheck MsgSetStickyCol1 ] []
-                        , label [] [ text "Закрепить первый столбец" ]
-                        ]
+                [ div
+                    [ class "col-xs-12 col-sm center-xs start-sm"
+                    , style "flex-grow" "2"
                     ]
-                , div [ class "col-xs-12 col-sm-3 center-xs end-sm" ]
+                    [ viewDateFilter model
+                    ]
+                , div [ class "col-xs-12 col-sm center-xs end-sm mt-5" ]
                     [ Maybe.withDefault (text "") <|
                         Maybe.map (Html.map MsgSelectSwitchCell << Select.view) model.switchCell
                     ]
                 ]
             ]
-        , table
-            [ class "ui celled striped unstackable table"
-            , style "max-width" "fit-content"
-            , style "max-height" "calc(100% - 60px)"
-            , style "display" "block"
-            , style "overflow" "scroll"
-            , style "margin-top" "10px"
-            , style "margin" "auto"
-            ]
-            ((++) [ viewTableHeader model ] <| L.indexedMap (viewTableRow model.stickyCol1) <| zip model.rows model.cells)
+        , if model.rows == [] || model.columns == [] then
+            h3 [] [ text "Нет данных" ]
+
+          else
+            table
+                [ class "ui celled striped unstackable table"
+                , style "max-width" "fit-content"
+                , style "max-height" "calc(100% - 60px)"
+                , style "display" "block"
+                , style "overflow" "scroll"
+                , style "margin-top" "10px"
+                , style "margin" "auto"
+                ]
+                ((++) [ viewTableHeader model ] <| L.indexedMap viewTableRow <| zip model.rows model.cells)
         ]
 
 
 view : Model -> Html Msg
 view model =
     case model.state of
-        Loading model_ ->
+        StateLoading model_ ->
             Html.map MsgFetch <| MultiTask.view showFetchedData httpErrorToString model_
 
-        Complete _ _ _ ->
-            if model.rows == [] || model.columns == [] then
-                h3 [] [ text "Нет данных" ]
+        StateComplete ->
+            viewTable model
 
-            else
-                viewTable model
-
-        Error string ->
+        StateError string ->
             text string

@@ -11,6 +11,7 @@ import Iso8601 exposing (fromTime, toTime)
 import Json.Decode as JD
 import Task
 import Time exposing (Month(..))
+import Tuple exposing (first, second)
 import Uuid exposing (Uuid)
 
 
@@ -448,3 +449,71 @@ fileSizeToISO size =
 get_id_str : { a | id : Maybe Uuid } -> String
 get_id_str record =
     Maybe.withDefault "" <| Maybe.map Uuid.toString record.id
+
+
+resultIsOK : Result a b -> Bool
+resultIsOK result =
+    case result of
+        Ok _ ->
+            True
+
+        Err _ ->
+            False
+
+
+listTakeWhile : (a -> Bool) -> List a -> List a
+listTakeWhile pred =
+    listSplitWhile pred >> first
+
+
+listDropWhile : (a -> Bool) -> List a -> List a
+listDropWhile pred =
+    listSplitWhile pred >> second
+
+
+listSplitWhile : (a -> Bool) -> List a -> ( List a, List a )
+listSplitWhile pred =
+    let
+        listSplitAt1 left right =
+            case right of
+                [] ->
+                    ( List.reverse left, [] )
+
+                hd :: tl ->
+                    if pred hd then
+                        listSplitAt1 (hd :: left) tl
+
+                    else
+                        ( List.reverse left, right )
+    in
+    listSplitAt1 []
+
+
+maybeToList : Maybe a -> List a
+maybeToList mb =
+    List.filterMap identity [ mb ]
+
+
+listTailWithEmpty : List a -> List a
+listTailWithEmpty =
+    List.drop 1
+
+
+eitherGetRight : Either a b -> Maybe b
+eitherGetRight either =
+    case either of
+        Left _ ->
+            Nothing
+
+        Right b ->
+            Just b
+
+
+eitherGetLeft : Either a b -> Maybe a
+eitherGetLeft either =
+    case either of
+        Left a ->
+            Just a
+
+        Right _ ->
+            Nothing

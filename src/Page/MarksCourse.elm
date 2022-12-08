@@ -1,6 +1,6 @@
 module Page.MarksCourse exposing (..)
 
-import Api.Data exposing (CourseDeep)
+import Api.Data exposing (Course)
 import Component.MarkTable as MT
 import Component.MultiTask exposing (Msg(..))
 import Html exposing (Html, a, div, i, text)
@@ -15,7 +15,7 @@ type Msg
 type alias Model =
     { table : MT.Model
     , token : String
-    , course : Maybe CourseDeep
+    , course : Maybe Course
     }
 
 

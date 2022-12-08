@@ -267,32 +267,27 @@ viewEducation edu =
                             ]
                         ]
             in
-            case edu.specialization of
-                Just spec ->
-                    case ( spec.name, spec.department.name, spec.department.organization.nameShort ) of
-                        ( "Математическое", _, Just "ЛНМО" ) ->
-                            view_spec "Математическое направление" "qrcode" "#2185d0" "ЛНМО"
+            case ( edu.specialization.name, edu.specialization.department.name, edu.specialization.department.organization.nameShort ) of
+                ( "Математическое", _, Just "ЛНМО" ) ->
+                    view_spec "Математическое направление" "qrcode" "#2185d0" "ЛНМО"
 
-                        ( "Биологическое", _, Just "ЛНМО" ) ->
-                            view_spec "Биологическое направление" "leaf" "#21ba45" "ЛНМО"
+                ( "Биологическое", _, Just "ЛНМО" ) ->
+                    view_spec "Биологическое направление" "leaf" "#21ba45" "ЛНМО"
 
-                        ( "Инженерное", _, Just "ЛНМО" ) ->
-                            view_spec "Инженерное направление" "cogs" "#db2828" "ЛНМО"
+                ( "Инженерное", _, Just "ЛНМО" ) ->
+                    view_spec "Инженерное направление" "cogs" "#db2828" "ЛНМО"
 
-                        ( "Гуманитарное", _, Just "ЛНМО" ) ->
-                            view_spec "Гуманитарное направление" "users" "#fbbd08" "ЛНМО"
+                ( "Гуманитарное", _, Just "ЛНМО" ) ->
+                    view_spec "Гуманитарное направление" "users" "#fbbd08" "ЛНМО"
 
-                        ( "Академическое", _, Just "ЛНМО" ) ->
-                            view_spec "Академическое направление" "book" "#00b5ad" "ЛНМО"
+                ( "Академическое", _, Just "ЛНМО" ) ->
+                    view_spec "Академическое направление" "book" "#00b5ad" "ЛНМО"
 
-                        ( s, _, Just o ) ->
-                            view_spec s "question" "black" o
+                ( s, _, Just o ) ->
+                    view_spec s "question" "black" o
 
-                        ( s, _, Nothing ) ->
-                            view_spec s "question" "black" "Неизвестная организация"
-
-                Nothing ->
-                    div [] [ i [ class "question icon" ] [], text "Направление неизвестно" ]
+                ( s, _, Nothing ) ->
+                    view_spec s "question" "black" "Неизвестная организация"
 
         start =
             div []
