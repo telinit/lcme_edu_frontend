@@ -975,7 +975,7 @@ update msg model =
         ( MsgSetDateFilter f, _ ) ->
             ignore
 
-        (MsgOnCheckGroupByDate val , _) ->
+        ( MsgOnCheckGroupByDate val, _ ) ->
             ( updateTable { model | marksGroupByDate = Just val }, Cmd.none )
 
 
@@ -1144,13 +1144,21 @@ viewMarkSlot y x s markSlot =
                 []
 
 
-viewTableCell : Int -> Int -> SlotList -> Html Msg
-viewTableCell y x slot_list =
+viewTableCell : Bool -> Int -> Int -> SlotList -> Html Msg
+viewTableCell alignStart y x slot_list =
     td
         [ style "white-space" "nowrap"
         ]
         [ div
-            [ class "row start-xs"
+            [ class
+                ("row "
+                    ++ (if alignStart then
+                            "start-xs"
+
+                        else
+                            "center-xs"
+                       )
+                )
             , style "min-width" (String.fromInt (List.length slot_list * 50) ++ "px") -- TODO: change with something better
             ]
           <|
@@ -1209,8 +1217,8 @@ viewTableHeader model =
         ]
 
 
-viewTableRow : Int -> ( Row, ColList ) -> Html Msg
-viewTableRow y ( row, cols ) =
+viewTableRow : Bool -> Int -> ( Row, ColList ) -> Html Msg
+viewTableRow alignStart y ( row, cols ) =
     tr []
         ([ td
             [ style "vertical-align" "middle"
@@ -1224,7 +1232,7 @@ viewTableRow y ( row, cols ) =
          ]
             ++ (Tuple.second <|
                     L.foldl
-                        (\col ( x, res ) -> ( x + L.length col, res ++ [ viewTableCell y x col ] ))
+                        (\col ( x, res ) -> ( x + L.length col, res ++ [ viewTableCell alignStart y x col ] ))
                         ( 0, [] )
                         cols
                )
@@ -1377,7 +1385,15 @@ viewTable model =
                 , style "margin-top" "10px"
                 , style "margin" "auto"
                 ]
-                ((++) [ viewTableHeader model ] <| L.indexedMap viewTableRow <| zip model.rows model.cells)
+                ((++) [ viewTableHeader model ] <|
+                    L.indexedMap
+                        (viewTableRow <|
+                            not <|
+                                M.withDefault False model.marksGroupByDate
+                        )
+                    <|
+                        zip model.rows model.cells
+                )
         ]
 
 

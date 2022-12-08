@@ -39587,8 +39587,8 @@ var $author$project$Component$MarkTable$viewMarkSlot = F4(
 				_List_Nil);
 		}
 	});
-var $author$project$Component$MarkTable$viewTableCell = F3(
-	function (y, x, slot_list) {
+var $author$project$Component$MarkTable$viewTableCell = F4(
+	function (alignStart, y, x, slot_list) {
 		return A2(
 			$elm$html$Html$td,
 			_List_fromArray(
@@ -39601,7 +39601,8 @@ var $author$project$Component$MarkTable$viewTableCell = F3(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('row start-xs'),
+							$elm$html$Html$Attributes$class(
+							'row ' + (alignStart ? 'start-xs' : 'center-xs')),
 							A2(
 							$elm$html$Html$Attributes$style,
 							'min-width',
@@ -39614,8 +39615,8 @@ var $author$project$Component$MarkTable$viewTableCell = F3(
 						slot_list))
 				]));
 	});
-var $author$project$Component$MarkTable$viewTableRow = F2(
-	function (y, _v0) {
+var $author$project$Component$MarkTable$viewTableRow = F3(
+	function (alignStart, y, _v0) {
 		var row = _v0.a;
 		var cols = _v0.b;
 		return A2(
@@ -39652,7 +39653,7 @@ var $author$project$Component$MarkTable$viewTableRow = F2(
 									res,
 									_List_fromArray(
 										[
-											A3($author$project$Component$MarkTable$viewTableCell, y, x, col)
+											A4($author$project$Component$MarkTable$viewTableCell, alignStart, y, x, col)
 										])));
 						}),
 					_Utils_Tuple2(0, _List_Nil),
@@ -39758,7 +39759,8 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 						]),
 					A2(
 						$elm$core$List$indexedMap,
-						$author$project$Component$MarkTable$viewTableRow,
+						$author$project$Component$MarkTable$viewTableRow(
+							!A2($elm$core$Maybe$withDefault, false, model.marksGroupByDate)),
 						A2($author$project$Util$zip, model.rows, model.cells))))
 			]));
 };
