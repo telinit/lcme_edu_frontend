@@ -699,6 +699,7 @@ updateTable model =
                 ix_acts =
                     index_by get_id_str activities
 
+                columns : List Column
                 columns =
                     (if M.withDefault False <| model.marksGroupByDate then
                         L.map Date <|
@@ -713,9 +714,11 @@ updateTable model =
                     )
                         ++ [ Date Nothing ]
 
+                activity_course_id : Activity -> String
                 activity_course_id act =
                     Uuid.toString act.course
 
+                mark_coords : Mark -> Maybe ( Mark, String, String )
                 mark_coords mark =
                     D.get (Uuid.toString mark.activity) ix_acts
                         |> M.map
@@ -730,13 +733,14 @@ updateTable model =
                                 )
                             )
 
+                marks_ix : Dict ( String, String ) (List MarkSlot)
                 marks_ix =
                     dictFromTupleListMany <|
                         L.map (\( mark, x, y ) -> ( ( x, y ), SlotMark False mark )) <|
                             L.filterMap mark_coords <|
                                 L.sortBy
                                     (\m ->
-                                        ( D.get (Uuid.toString m.activity) ix_acts |> M.map .order |> M.withDefault 0
+                                        ( D.get (Uuid.toString m.activity) ix_acts |> M.map (.order >> (*) (-1)) |> M.withDefault 0
                                         , m.createdAt |> M.map T.posixToMillis |> M.withDefault 0
                                         )
                                     )

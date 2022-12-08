@@ -17101,9 +17101,12 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 									0,
 									A2(
 										$elm$core$Maybe$map,
-										function ($) {
-											return $.order;
-										},
+										A2(
+											$elm$core$Basics$composeR,
+											function ($) {
+												return $.order;
+											},
+											$elm$core$Basics$mul(-1)),
 										A2(
 											$elm$core$Dict$get,
 											$danyx23$elm_uuid$Uuid$toString(m.activity),
