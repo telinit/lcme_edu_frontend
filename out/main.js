@@ -17094,15 +17094,25 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 					mark_coords,
 					A2(
 						$elm$core$List$sortBy,
-						A2(
-							$elm$core$Basics$composeR,
-							function ($) {
-								return $.createdAt;
-							},
-							A2(
-								$elm$core$Basics$composeR,
-								$elm$core$Maybe$map($elm$time$Time$posixToMillis),
-								$elm$core$Maybe$withDefault(0))),
+						function (m) {
+							return _Utils_Tuple2(
+								A2(
+									$elm$core$Maybe$withDefault,
+									0,
+									A2(
+										$elm$core$Maybe$map,
+										function ($) {
+											return $.order;
+										},
+										A2(
+											$elm$core$Dict$get,
+											$danyx23$elm_uuid$Uuid$toString(m.activity),
+											ix_acts))),
+								A2(
+									$elm$core$Maybe$withDefault,
+									0,
+									A2($elm$core$Maybe$map, $elm$time$Time$posixToMillis, m.createdAt)));
+						},
 						model.fetchedData.marks))));
 		var cells = A2(
 			$elm$core$List$map,

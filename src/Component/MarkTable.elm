@@ -735,9 +735,14 @@ updateTable model =
                         L.map (\( mark, x, y ) -> ( ( x, y ), SlotMark False mark )) <|
                             L.filterMap mark_coords <|
                                 L.sortBy
-                                    (.createdAt >> M.map T.posixToMillis >> M.withDefault 0)
+                                    (\m ->
+                                        ( D.get (Uuid.toString m.activity) ix_acts |> M.map .order |> M.withDefault 0
+                                        , m.createdAt |> M.map T.posixToMillis |> M.withDefault 0
+                                        )
+                                    )
                                     model.fetchedData.marks
 
+                cells : List (List (List MarkSlot))
                 cells =
                     L.map
                         (\row ->
