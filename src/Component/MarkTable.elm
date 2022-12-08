@@ -1302,6 +1302,7 @@ viewDateFilter model =
             div
                 [ class "item mr-5"
                 , style "padding" "0"
+                , style "cursor" "pointer"
                 , onClick (MsgSetDateFilter f)
                 ]
                 [ div

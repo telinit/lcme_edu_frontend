@@ -38932,6 +38932,7 @@ var $author$project$Component$MarkTable$viewDateFilter = function (model) {
 				[
 					$elm$html$Html$Attributes$class('item mr-5'),
 					A2($elm$html$Html$Attributes$style, 'padding', '0'),
+					A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
 					$elm$html$Html$Events$onClick(
 					$author$project$Component$MarkTable$MsgSetDateFilter(f))
 				]),
