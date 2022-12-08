@@ -1150,7 +1150,7 @@ viewTableCell y x slot_list =
         [ style "white-space" "nowrap"
         ]
         [ div
-            [ class "row center-xs"
+            [ class "row start-xs"
             , style "min-width" (String.fromInt (List.length slot_list * 50) ++ "px") -- TODO: change with something better
             ]
           <|

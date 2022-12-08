@@ -39600,7 +39600,7 @@ var $author$project$Component$MarkTable$viewTableCell = F3(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('row center-xs'),
+							$elm$html$Html$Attributes$class('row start-xs'),
 							A2(
 							$elm$html$Html$Attributes$style,
 							'min-width',
