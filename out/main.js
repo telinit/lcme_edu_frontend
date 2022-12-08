@@ -39145,6 +39145,97 @@ var $author$project$Component$MarkTable$viewMarkDetailsModal = function (model) 
 														},
 														activity))))
 										]))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('row')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 end-xs')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$strong,
+											_List_Nil,
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Дата темы:')
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 start-xs')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text(
+											A2(
+												$elm$core$Maybe$withDefault,
+												'(Неизвестно)',
+												$author$project$Page$CourseListPage$empty_to_nothing(
+													A2(
+														$elm$core$Maybe$map,
+														$author$project$Util$posixToDDMMYYYY($elm$time$Time$utc),
+														A2(
+															$elm$core$Maybe$andThen,
+															function ($) {
+																return $.date;
+															},
+															activity)))))
+										]))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('row')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 end-xs')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$strong,
+											_List_Nil,
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Дата выставления:')
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 start-xs')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text(
+											A2(
+												$elm$core$Maybe$withDefault,
+												'(Неизвестно)',
+												$author$project$Page$CourseListPage$empty_to_nothing(
+													A2(
+														$elm$core$Maybe$map,
+														$author$project$Util$posixToDDMMYYYY($elm$time$Time$utc),
+														mark.createdAt))))
+										]))
 								]))
 						]))
 				]));

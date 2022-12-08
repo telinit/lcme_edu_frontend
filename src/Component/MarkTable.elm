@@ -1277,6 +1277,26 @@ viewMarkDetailsModal model =
                                                 Maybe.andThen .body activity
                                     ]
                                 ]
+                            , div [ class "row" ]
+                                [ div [ class "col-xs-12 col-sm-6 end-xs" ] [ strong [] [ text "Дата темы:" ] ]
+                                , div [ class "col-xs-12 col-sm-6 start-xs" ]
+                                    [ text <|
+                                        Maybe.withDefault "(Неизвестно)" <|
+                                            empty_to_nothing <|
+                                                M.map (posixToDDMMYYYY T.utc) <|
+                                                    M.andThen .date activity
+                                    ]
+                                ]
+                            , div [ class "row" ]
+                                [ div [ class "col-xs-12 col-sm-6 end-xs" ] [ strong [] [ text "Дата выставления:" ] ]
+                                , div [ class "col-xs-12 col-sm-6 start-xs" ]
+                                    [ text <|
+                                        Maybe.withDefault "(Неизвестно)" <|
+                                            empty_to_nothing <|
+                                                M.map (posixToDDMMYYYY T.utc) <|
+                                                    mark.createdAt
+                                    ]
+                                ]
                             ]
                         ]
             in
