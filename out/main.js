@@ -39623,11 +39623,20 @@ var $author$project$Component$MarkTable$viewTableHeader = function (model) {
 									td_attrs(col)),
 								_List_fromArray(
 									[
-										A3(
-										$author$project$Component$MarkTable$viewColumnHeader,
-										A2($elm$core$Maybe$withDefault, false, model.marksGroupByDate),
-										model.tz,
-										col)
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												A2($elm$html$Html$Attributes$style, 'max-width', '150px')
+											]),
+										_List_fromArray(
+											[
+												A3(
+												$author$project$Component$MarkTable$viewColumnHeader,
+												A2($elm$core$Maybe$withDefault, false, model.marksGroupByDate),
+												model.tz,
+												col)
+											]))
 									]));
 						},
 						model.columns)))
@@ -39962,17 +39971,8 @@ var $author$project$Component$MarkTable$viewTableCell = F6(
 						[
 							$elm$html$Html$Attributes$class(
 							'row ' + (alignStart ? 'start-xs' : 'center-xs')),
-							A2(
-							$elm$html$Html$Attributes$style,
-							'min-width',
-							$elm$core$String$fromInt(
-								$elm$core$List$length(slot_list) * 50) + 'px'),
-							A2(
-							$elm$html$Html$Attributes$style,
-							'max-width',
-							$elm$core$String$fromInt(
-								$elm$core$List$length(slot_list) * 70) + 'px'),
-							A2($elm$html$Html$Attributes$style, 'margin', '0')
+							A2($elm$html$Html$Attributes$style, 'margin', '0'),
+							A2($elm$html$Html$Attributes$style, 'width', '100%')
 						]),
 					A2(
 						$elm$core$List$indexedMap,
