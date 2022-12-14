@@ -149,6 +149,8 @@ zip : List a -> List b -> List ( a, b )
 zip =
     List.map2 Tuple.pair
 
+zip3 : List a -> List b -> List c -> List (a, b, c)
+zip3 = List.map3 (\x y z -> (x,y,z))
 
 monthToInt : Month -> Int
 monthToInt month =

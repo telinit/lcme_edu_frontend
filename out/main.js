@@ -16437,21 +16437,21 @@ var $author$project$Util$eitherGetRight = function (either) {
 		return $elm$core$Maybe$Just(b);
 	}
 };
-var $author$project$Component$MarkTable$Activity = function (a) {
-	return {$: 'Activity', a: a};
+var $author$project$Component$MarkTable$ColumnHeaderActivity = function (a) {
+	return {$: 'ColumnHeaderActivity', a: a};
 };
-var $author$project$Component$MarkTable$Course = function (a) {
-	return {$: 'Course', a: a};
+var $author$project$Component$MarkTable$ColumnHeaderDate = function (a) {
+	return {$: 'ColumnHeaderDate', a: a};
 };
-var $author$project$Component$MarkTable$Date = function (a) {
-	return {$: 'Date', a: a};
+var $author$project$Component$MarkTable$ColumnHeaderMean = {$: 'ColumnHeaderMean'};
+var $author$project$Component$MarkTable$RowHeaderCourse = function (a) {
+	return {$: 'RowHeaderCourse', a: a};
 };
-var $author$project$Component$MarkTable$Mean = {$: 'Mean'};
+var $author$project$Component$MarkTable$RowHeaderUser = function (a) {
+	return {$: 'RowHeaderUser', a: a};
+};
 var $author$project$Component$MarkTable$SlotMean = function (a) {
 	return {$: 'SlotMean', a: a};
-};
-var $author$project$Component$MarkTable$User = function (a) {
-	return {$: 'User', a: a};
 };
 var $author$project$Util$listSplitWhile = function (pred) {
 	var listSplitAt1 = F2(
@@ -16774,7 +16774,7 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 			$elm$core$List$filterMap,
 			function (enr) {
 				return _Utils_eq(enr.role, $author$project$Api$Data$CourseEnrollmentReadRoleS) ? $elm$core$Maybe$Just(
-					$author$project$Component$MarkTable$User(enr.person)) : $elm$core$Maybe$Nothing;
+					$author$project$Component$MarkTable$RowHeaderUser(enr.person)) : $elm$core$Maybe$Nothing;
 			},
 			A2(
 				$elm$core$List$sortBy,
@@ -16860,7 +16860,7 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 		var columns = _Utils_ap(
 			A2(
 				$elm$core$List$map,
-				$author$project$Component$MarkTable$Activity,
+				$author$project$Component$MarkTable$ColumnHeaderActivity,
 				A2(
 					$elm$core$List$sortBy,
 					function ($) {
@@ -16868,7 +16868,7 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 					},
 					activities)),
 			_List_fromArray(
-				[$author$project$Component$MarkTable$Mean]));
+				[$author$project$Component$MarkTable$ColumnHeaderMean]));
 		var cells = A2(
 			$elm$core$List$map,
 			function (row) {
@@ -16878,9 +16878,9 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 						var _v1 = _Utils_Tuple2(row, col);
 						_v1$2:
 						while (true) {
-							if (_v1.a.$ === 'User') {
+							if (_v1.a.$ === 'RowHeaderUser') {
 								switch (_v1.b.$) {
-									case 'Activity':
+									case 'ColumnHeaderActivity':
 										var student = _v1.a.a;
 										var act = _v1.b.a;
 										var mark_slots = A2(
@@ -16904,7 +16904,7 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 										} else {
 											return mark_slots;
 										}
-									case 'Mean':
+									case 'ColumnHeaderMean':
 										var student = _v1.a.a;
 										var _v3 = _v1.b;
 										var slotToNum = function (s) {
@@ -16973,7 +16973,7 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 	} else {
 		var rows = A2(
 			$elm$core$List$map,
-			$author$project$Component$MarkTable$Course,
+			$author$project$Component$MarkTable$RowHeaderCourse,
 			A2(
 				$elm$core$List$sortBy,
 				function ($) {
@@ -17024,7 +17024,7 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 		var columns = _Utils_ap(
 			A2($elm$core$Maybe$withDefault, false, model.marksGroupByDate) ? A2(
 				$elm$core$List$map,
-				$author$project$Component$MarkTable$Date,
+				$author$project$Component$MarkTable$ColumnHeaderDate,
 				A2(
 					$elm$core$List$map,
 					A2($elm$core$Basics$composeL, $elm$core$Maybe$Just, $elm$time$Time$millisToPosix),
@@ -17047,7 +17047,7 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 			_Utils_ap(
 				_List_fromArray(
 					[
-						$author$project$Component$MarkTable$Date($elm$core$Maybe$Nothing)
+						$author$project$Component$MarkTable$ColumnHeaderDate($elm$core$Maybe$Nothing)
 					]),
 				(!_Utils_eq(model.dateFilter, $author$project$Component$MarkTable$DateFilterAll)) ? _List_Nil : _List_Nil));
 		var ix_acts = A2($author$project$Util$index_by, $author$project$Util$get_id_str, activities);
@@ -17115,7 +17115,7 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 					$elm$core$List$map,
 					function (col) {
 						var _v6 = _Utils_Tuple2(row, col);
-						if ((_v6.a.$ === 'Course') && (_v6.b.$ === 'Date')) {
+						if ((_v6.a.$ === 'RowHeaderCourse') && (_v6.b.$ === 'ColumnHeaderDate')) {
 							var course = _v6.a.a;
 							var date = _v6.b.a;
 							var mark_slots = A2(
@@ -19771,6 +19771,28 @@ var $elm$html$Html$Attributes$src = function (url) {
 var $jxxcarlson$elm_markdown$Markdown$Option$ExtendedMath = {$: 'ExtendedMath'};
 var $author$project$Component$Activity$MsgMarkdownMsg = function (a) {
 	return {$: 'MsgMarkdownMsg', a: a};
+};
+var $author$project$Theme$default = {
+	colors: {
+		activities: {
+			empty: _Utils_Tuple2('#FFF', '#000'),
+			_final: _Utils_Tuple2('#FFEFE2FF', '#D9C6C1FF'),
+			general: _Utils_Tuple2('#EEF6FFFF', '#B6C6D5FF'),
+			mean: _Utils_Tuple2('rgb(246, 246, 246)', '#000'),
+			task: _Utils_Tuple2('hsl(266, 100%, 97%)', 'hsl(266, 27%, 77%)')
+		},
+		marks: {
+			average: _Utils_Tuple2('#F7DC6F', 'rgb(119 97 5)'),
+			bad: _Utils_Tuple2('#D98880', '#922B21'),
+			empty: _Utils_Tuple2('#FFF', '#5c5e60'),
+			excellent: _Utils_Tuple2('#76D7C4', '#0e6756'),
+			good: _Utils_Tuple2('#7DCEA0', '#145931'),
+			neutral: _Utils_Tuple2('#BFC9CA', '#5c5e60'),
+			selected: _Utils_Tuple2('#7FB3D5', '#1F618D')
+		},
+		ui: {primary: 'rgb(65, 131, 196)'}
+	},
+	fonts: {}
 };
 var $author$project$Util$monthToInt = function (month) {
 	switch (month.$) {
@@ -31989,8 +32011,8 @@ var $author$project$Component$Activity$viewRead = function (model) {
 						return A4(
 							view_with_label,
 							'Тема',
-							'#EEF6FFFF',
-							'#B6C6D5FF',
+							$author$project$Theme$default.colors.activities.general.a,
+							$author$project$Theme$default.colors.activities.general.b,
 							_List_fromArray(
 								[
 									A2(
@@ -32144,8 +32166,8 @@ var $author$project$Component$Activity$viewRead = function (model) {
 						return A4(
 							view_with_label,
 							'Итоговый контроль',
-							'#FFEFE2FF',
-							'#D9C6C1FF',
+							$author$project$Theme$default.colors.activities._final.a,
+							$author$project$Theme$default.colors.activities._final.b,
 							_List_fromArray(
 								[
 									A2(
@@ -32249,8 +32271,8 @@ var $author$project$Component$Activity$viewRead = function (model) {
 						return A4(
 							view_with_label,
 							'Материал',
-							'#EEF6FFFF',
-							'#B6C6D5FF',
+							$author$project$Theme$default.colors.activities.general.a,
+							$author$project$Theme$default.colors.activities.general.b,
 							_List_fromArray(
 								[
 									A2(
@@ -32350,8 +32372,8 @@ var $author$project$Component$Activity$viewRead = function (model) {
 						return A4(
 							view_with_label,
 							'Задание',
-							'hsl(266, 100%, 97%)',
-							'hsl(266, 27%, 77%)',
+							$author$project$Theme$default.colors.activities.task.a,
+							$author$project$Theme$default.colors.activities.task.b,
 							_List_fromArray(
 								[
 									A2(
@@ -32501,8 +32523,8 @@ var $author$project$Component$Activity$viewRead = function (model) {
 						return A4(
 							view_with_label,
 							'Ссылка',
-							'#EEF6FFFF',
-							'#B6C6D5FF',
+							$author$project$Theme$default.colors.activities.general.a,
+							$author$project$Theme$default.colors.activities.general.b,
 							_List_fromArray(
 								[
 									A2(
@@ -32960,8 +32982,8 @@ var $author$project$Component$Activity$viewWrite = function (model) {
 						return A4(
 							view_with_label,
 							'Тема',
-							'#EEF6FFFF',
-							'#B6C6D5FF',
+							$author$project$Theme$default.colors.activities.general.a,
+							$author$project$Theme$default.colors.activities.general.b,
 							_List_fromArray(
 								[
 									A2(
@@ -33480,8 +33502,8 @@ var $author$project$Component$Activity$viewWrite = function (model) {
 							return A4(
 								view_with_label,
 								'Итоговый контроль',
-								'#FFEFE2FF',
-								'#D9C6C1FF',
+								$author$project$Theme$default.colors.activities._final.a,
+								$author$project$Theme$default.colors.activities._final.b,
 								_List_fromArray(
 									[
 										A2(
@@ -33734,8 +33756,8 @@ var $author$project$Component$Activity$viewWrite = function (model) {
 						return A4(
 							view_with_label,
 							'Материал',
-							'#EEF6FFFF',
-							'#B6C6D5FF',
+							$author$project$Theme$default.colors.activities.general.a,
+							$author$project$Theme$default.colors.activities.general.b,
 							_List_fromArray(
 								[
 									A2(
@@ -34145,8 +34167,8 @@ var $author$project$Component$Activity$viewWrite = function (model) {
 						return A4(
 							view_with_label,
 							'Задание',
-							'hsl(266, 100%, 97%)',
-							'hsl(266, 27%, 77%)',
+							$author$project$Theme$default.colors.activities.task.a,
+							$author$project$Theme$default.colors.activities.task.b,
 							_List_fromArray(
 								[
 									A2(
@@ -39069,7 +39091,7 @@ var $author$project$Component$MarkTable$viewDateFilter = function (model) {
 		var f = _v0.b;
 		var selStyle = _Utils_eq(model.dateFilter, f) ? _List_fromArray(
 			[
-				A2($elm$html$Html$Attributes$style, 'background-color', 'rgb(65, 131, 196)'),
+				A2($elm$html$Html$Attributes$style, 'background-color', $author$project$Theme$default.colors.ui.primary),
 				A2($elm$html$Html$Attributes$style, 'color', 'white'),
 				A2($elm$html$Html$Attributes$style, 'border-radius', '5px')
 			]) : _List_Nil;
@@ -39405,7 +39427,7 @@ var $elm$html$Html$thead = _VirtualDom_node('thead');
 var $author$project$Component$MarkTable$viewColumn = F3(
 	function (showNoDate, tz, column) {
 		switch (column.$) {
-			case 'Activity':
+			case 'ColumnHeaderActivity':
 				var activity = column.a;
 				var _v1 = activity.contentType;
 				if ((_v1.$ === 'Just') && (_v1.a.$ === 'ActivityContentTypeFIN')) {
@@ -39474,7 +39496,7 @@ var $author$project$Component$MarkTable$viewColumn = F3(
 									]))
 							]));
 				}
-			case 'Date':
+			case 'ColumnHeaderDate':
 				var posix = column.a;
 				return A2(
 					$elm$html$Html$strong,
@@ -39490,7 +39512,7 @@ var $author$project$Component$MarkTable$viewColumn = F3(
 									$author$project$Util$posixToDDMMYYYY($elm$time$Time$utc),
 									posix)))
 						]));
-			case 'Mean':
+			case 'ColumnHeaderMean':
 				return A2(
 					$elm$html$Html$strong,
 					_List_Nil,
@@ -39512,7 +39534,7 @@ var $author$project$Component$MarkTable$viewColumn = F3(
 var $author$project$Component$MarkTable$viewTableHeader = function (model) {
 	var td_attrs = function (col) {
 		switch (col.$) {
-			case 'Activity':
+			case 'ColumnHeaderActivity':
 				var act = col.a;
 				var _v1 = act.contentType;
 				_v1$2:
@@ -39523,13 +39545,13 @@ var $author$project$Component$MarkTable$viewTableHeader = function (model) {
 								var _v2 = _v1.a;
 								return _List_fromArray(
 									[
-										A2($elm$html$Html$Attributes$style, 'background-color', '#FFEFE2FF')
+										A2($elm$html$Html$Attributes$style, 'background-color', $author$project$Theme$default.colors.activities._final.a)
 									]);
 							case 'ActivityContentTypeTSK':
 								var _v3 = _v1.a;
 								return _List_fromArray(
 									[
-										A2($elm$html$Html$Attributes$style, 'background-color', 'hsl(266, 100%, 97%)')
+										A2($elm$html$Html$Attributes$style, 'background-color', $author$project$Theme$default.colors.activities.task.a)
 									]);
 							default:
 								break _v1$2;
@@ -39540,22 +39562,22 @@ var $author$project$Component$MarkTable$viewTableHeader = function (model) {
 				}
 				return _List_fromArray(
 					[
-						A2($elm$html$Html$Attributes$style, 'background-color', '#EEF6FFFF')
+						A2($elm$html$Html$Attributes$style, 'background-color', $author$project$Theme$default.colors.activities.general.a)
 					]);
-			case 'Date':
+			case 'ColumnHeaderDate':
 				return _List_fromArray(
 					[
-						A2($elm$html$Html$Attributes$style, 'background-color', 'white')
+						A2($elm$html$Html$Attributes$style, 'background-color', $author$project$Theme$default.colors.activities.empty.a)
 					]);
-			case 'Mean':
+			case 'ColumnHeaderMean':
 				return _List_fromArray(
 					[
-						A2($elm$html$Html$Attributes$style, 'background-color', 'rgb(246, 246, 246)')
+						A2($elm$html$Html$Attributes$style, 'background-color', $author$project$Theme$default.colors.activities.mean.a)
 					]);
 			default:
 				return _List_fromArray(
 					[
-						A2($elm$html$Html$Attributes$style, 'background-color', '#AAA')
+						A2($elm$html$Html$Attributes$style, 'background-color', $author$project$Theme$default.colors.activities._final.a)
 					]);
 		}
 	};
@@ -39612,7 +39634,7 @@ var $author$project$Component$MarkTable$viewTableHeader = function (model) {
 			]));
 };
 var $author$project$Component$MarkTable$viewRowsFirstCol = function (row) {
-	if (row.$ === 'User') {
+	if (row.$ === 'RowHeaderUser') {
 		var user = row.a;
 		return A2(
 			$elm$html$Html$div,
@@ -39709,45 +39731,31 @@ var $author$project$Component$MarkTable$keyCodeToMarkCmd = function (code) {
 	}
 };
 var $author$project$Component$MarkTable$markValueColors = function (val) {
-	markValueColors:
-	while (true) {
-		var _default = _Utils_Tuple2('#BFC9CA', '#5c5e60');
-		switch (val) {
-			case '4':
-				return _Utils_Tuple2('#7DCEA0', '#145931');
-			case '5':
-				return _Utils_Tuple2('#76D7C4', '#0e6756');
-			case '3':
-				return _Utils_Tuple2('#F7DC6F', 'rgb(119 97 5)');
-			case '2':
-				return _Utils_Tuple2('#D98880', '#922B21');
-			case '1':
-				var $temp$val = '2';
-				val = $temp$val;
-				continue markValueColors;
-			case '0':
-				return _default;
-			case 'н':
-				return _default;
-			case 'зч':
-				var $temp$val = '5';
-				val = $temp$val;
-				continue markValueColors;
-			case 'нз':
-				var $temp$val = '2';
-				val = $temp$val;
-				continue markValueColors;
-			case '+':
-				var $temp$val = '5';
-				val = $temp$val;
-				continue markValueColors;
-			case '-':
-				var $temp$val = '2';
-				val = $temp$val;
-				continue markValueColors;
-			default:
-				return _default;
-		}
+	switch (val) {
+		case '4':
+			return $author$project$Theme$default.colors.marks.good;
+		case '5':
+			return $author$project$Theme$default.colors.marks.excellent;
+		case '3':
+			return $author$project$Theme$default.colors.marks.average;
+		case '2':
+			return $author$project$Theme$default.colors.marks.bad;
+		case '1':
+			return $author$project$Theme$default.colors.marks.bad;
+		case '0':
+			return $author$project$Theme$default.colors.marks.neutral;
+		case 'н':
+			return $author$project$Theme$default.colors.marks.neutral;
+		case 'зч':
+			return $author$project$Theme$default.colors.marks.excellent;
+		case 'нз':
+			return $author$project$Theme$default.colors.marks.bad;
+		case '+':
+			return $author$project$Theme$default.colors.marks.excellent;
+		case '-':
+			return $author$project$Theme$default.colors.marks.bad;
+		default:
+			return $author$project$Theme$default.colors.marks.neutral;
 	}
 };
 var $author$project$Component$MarkTable$markNumberValueColor = function (v) {
@@ -39758,7 +39766,6 @@ var $author$project$Component$MarkTable$markNumberValueColor = function (v) {
 		$author$project$Component$MarkTable$markValueColors('4')) : sel(
 		$author$project$Component$MarkTable$markValueColors('5'))));
 };
-var $author$project$Component$MarkTable$markSelectedColors = _Utils_Tuple2('#7FB3D5', '#1F618D');
 var $elm$html$Html$Attributes$tabindex = function (n) {
 	return A2(
 		_VirtualDom_attribute,
@@ -39810,7 +39817,7 @@ var $author$project$Component$MarkTable$viewMarkSlot = F4(
 			case 'SlotMark':
 				var sel = markSlot.a;
 				var mark = markSlot.b;
-				var _v1 = sel ? $author$project$Component$MarkTable$markSelectedColors : $author$project$Component$MarkTable$markValueColors(mark.value);
+				var _v1 = sel ? $author$project$Theme$default.colors.marks.selected : $author$project$Component$MarkTable$markValueColors(mark.value);
 				var bg = _v1.a;
 				var fg = _v1.b;
 				return A2(
@@ -39843,6 +39850,9 @@ var $author$project$Component$MarkTable$viewMarkSlot = F4(
 						]));
 			case 'SlotVirtual':
 				var sel = markSlot.a;
+				var _v2 = sel ? $author$project$Theme$default.colors.marks.selected : $author$project$Theme$default.colors.marks.empty;
+				var bg = _v2.a;
+				var fg = _v2.b;
 				return A2(
 					$elm$html$Html$div,
 					_Utils_ap(
@@ -39853,7 +39863,8 @@ var $author$project$Component$MarkTable$viewMarkSlot = F4(
 								A2(
 									$author$project$Component$MarkTable$MsgMarkClicked,
 									$elm$core$Maybe$Nothing,
-									_Utils_Tuple2(x, y)))
+									_Utils_Tuple2(x, y))),
+								A2($elm$html$Html$Attributes$style, 'background-color', bg)
 							]),
 						_Utils_ap(
 							common_attrs,
@@ -39883,7 +39894,7 @@ var $author$project$Component$MarkTable$viewMarkSlot = F4(
 									A3($author$project$Util$prec, true, 2, v)))
 							]));
 				} else {
-					var _v2 = markSlot.a;
+					var _v3 = markSlot.a;
 					return A2(
 						$elm$html$Html$strong,
 						_List_fromArray(
@@ -39902,13 +39913,46 @@ var $author$project$Component$MarkTable$viewMarkSlot = F4(
 				}
 		}
 	});
-var $author$project$Component$MarkTable$viewTableCell = F4(
-	function (alignStart, y, x, slot_list) {
+var $author$project$Component$MarkTable$viewTableCell = F6(
+	function (alignStart, y, x, rowHeader, colHeader, slot_list) {
+		var bgColor = function () {
+			switch (colHeader.$) {
+				case 'ColumnHeaderActivity':
+					var act = colHeader.a;
+					var _v1 = act.contentType;
+					if (_v1.$ === 'Just') {
+						var ct = _v1.a;
+						switch (ct.$) {
+							case 'ActivityContentTypeGEN':
+								return $author$project$Theme$default.colors.activities.empty.a;
+							case 'ActivityContentTypeTXT':
+								return $author$project$Theme$default.colors.activities.empty.a;
+							case 'ActivityContentTypeTSK':
+								return $author$project$Theme$default.colors.activities.empty.a;
+							case 'ActivityContentTypeLNK':
+								return $author$project$Theme$default.colors.activities.empty.a;
+							case 'ActivityContentTypeMED':
+								return $author$project$Theme$default.colors.activities.empty.a;
+							default:
+								return $author$project$Theme$default.colors.activities._final.a;
+						}
+					} else {
+						return $author$project$Theme$default.colors.activities.empty.a;
+					}
+				case 'ColumnHeaderDate':
+					return $author$project$Theme$default.colors.activities.empty.a;
+				case 'ColumnHeaderMean':
+					return $author$project$Theme$default.colors.activities.mean.a;
+				default:
+					return $author$project$Theme$default.colors.activities._final.a;
+			}
+		}();
 		return A2(
 			$elm$html$Html$td,
 			_List_fromArray(
 				[
-					A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap')
+					A2($elm$html$Html$Attributes$style, 'white-space', 'nowrap'),
+					A2($elm$html$Html$Attributes$style, 'background-color', bgColor)
 				]),
 			_List_fromArray(
 				[
@@ -39930,10 +39974,10 @@ var $author$project$Component$MarkTable$viewTableCell = F4(
 						slot_list))
 				]));
 	});
-var $author$project$Component$MarkTable$viewTableRow = F3(
-	function (alignStart, y, _v0) {
-		var row = _v0.a;
-		var cols = _v0.b;
+var $author$project$Component$MarkTable$viewTableRow = F4(
+	function (columnHeaders, alignStart, y, _v0) {
+		var rowHeader = _v0.a;
+		var columnContentList = _v0.b;
 		return A2(
 			$elm$html$Html$tr,
 			_List_Nil,
@@ -39953,26 +39997,28 @@ var $author$project$Component$MarkTable$viewTableRow = F3(
 							]),
 						_List_fromArray(
 							[
-								$author$project$Component$MarkTable$viewRowsFirstCol(row)
+								$author$project$Component$MarkTable$viewRowsFirstCol(rowHeader)
 							]))
 					]),
 				A3(
 					$elm$core$List$foldl,
 					F2(
-						function (col, _v1) {
-							var x = _v1.a;
-							var res = _v1.b;
+						function (_v1, _v2) {
+							var col = _v1.a;
+							var colContent = _v1.b;
+							var x = _v2.a;
+							var res = _v2.b;
 							return _Utils_Tuple2(
-								x + $elm$core$List$length(col),
+								x + $elm$core$List$length(colContent),
 								_Utils_ap(
 									res,
 									_List_fromArray(
 										[
-											A4($author$project$Component$MarkTable$viewTableCell, alignStart, y, x, col)
+											A6($author$project$Component$MarkTable$viewTableCell, alignStart, y, x, rowHeader, col, colContent)
 										])));
 						}),
 					_Utils_Tuple2(0, _List_Nil),
-					cols).b));
+					A2($author$project$Util$zip, columnHeaders, columnContentList)).b));
 	});
 var $author$project$Component$MarkTable$viewTable = function (model) {
 	return A2(
@@ -40074,7 +40120,9 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 						]),
 					A2(
 						$elm$core$List$indexedMap,
-						$author$project$Component$MarkTable$viewTableRow(
+						A2(
+							$author$project$Component$MarkTable$viewTableRow,
+							model.columns,
 							!(A2($elm$core$Maybe$withDefault, false, model.marksGroupByDate) || model.canEdit)),
 						A2($author$project$Util$zip, model.rows, model.cells))))
 			]));

@@ -21,22 +21,23 @@ import Maybe as M
 import Page.CourseListPage exposing (empty_to_nothing)
 import Set
 import Task
+import Theme
 import Time as T exposing (Posix, Zone, millisToPosix, utc)
 import Tuple exposing (first, second)
-import Util exposing (Either, dict2DGet, dictFromTupleListMany, dictGroupBy, eitherGetRight, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, maybeToList, posixToDDMMYYYY, prec, resultIsOK, user_full_name, zip)
+import Util exposing (Either, dict2DGet, dictFromTupleListMany, dictGroupBy, eitherGetRight, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, maybeToList, posixToDDMMYYYY, prec, resultIsOK, user_full_name, zip, zip3)
 import Uuid exposing (Uuid)
 
 
-type Column
-    = Activity Data.Activity
-    | Date (Maybe Posix)
-    | Mean
-    | Final String
+type ColumnHeader
+    = ColumnHeaderActivity Data.Activity
+    | ColumnHeaderDate (Maybe Posix)
+    | ColumnHeaderMean
+    | ColumnHeaderFinal String
 
 
-type Row
-    = User Data.UserShallow
-    | Course Data.Course
+type RowHeader
+    = RowHeaderUser Data.UserShallow
+    | RowHeaderCourse Data.Course
 
 
 type alias ActivityID =
@@ -89,12 +90,12 @@ type alias SlotList =
     List MarkSlot
 
 
-type alias ColList =
+type alias ColumnList =
     List SlotList
 
 
 type alias RowList =
-    List ColList
+    List ColumnList
 
 
 type FetchedDataEvent
@@ -140,8 +141,8 @@ type alias FetchedData =
 
 
 type alias Model =
-    { columns : List Column
-    , rows : List Row
+    { columns : List ColumnHeader
+    , rows : List RowHeader
     , cells : List (List (List MarkSlot))
     , state : State
     , token : String
@@ -513,32 +514,33 @@ updateMark model ( cell_x, cell_y ) markIdOrRec =
                             else
                                 oldMark :: updateData rest
     in
-    updateTable { model
-        | cells =
-            L.indexedMap
-                (\y row ->
-                    if y == cell_y then
-                        Tuple.second <|
-                            L.foldl
-                                (\col ( slots_cnt, res ) ->
-                                    let
-                                        new_col =
-                                            update_col (cell_x - slots_cnt) col <| eitherGetRight markIdOrRec
-                                    in
-                                    ( slots_cnt + L.length new_col, res ++ [ new_col ] )
-                                )
-                                ( 0, [] )
-                                row
+    updateTable
+        { model
+            | cells =
+                L.indexedMap
+                    (\y row ->
+                        if y == cell_y then
+                            Tuple.second <|
+                                L.foldl
+                                    (\col ( slots_cnt, res ) ->
+                                        let
+                                            new_col =
+                                                update_col (cell_x - slots_cnt) col <| eitherGetRight markIdOrRec
+                                        in
+                                        ( slots_cnt + L.length new_col, res ++ [ new_col ] )
+                                    )
+                                    ( 0, [] )
+                                    row
 
-                    else
-                        row
-                )
-                model.cells
-        , fetchedData =
-            { oldFetchedData
-                | marks = updateData oldFetchedData.marks
-            }
-    }
+                        else
+                            row
+                    )
+                    model.cells
+            , fetchedData =
+                { oldFetchedData
+                    | marks = updateData oldFetchedData.marks
+                }
+        }
 
 
 focusCell : Int -> Int -> Cmd Msg
@@ -643,14 +645,15 @@ updateTable model =
                 actsIX =
                     index_by get_id_str activities
 
-                actsFinIX = D.filter (\id a -> a.contentType == Just ActivityContentTypeFIN) actsIX
+                actsFinIX =
+                    D.filter (\id a -> a.contentType == Just ActivityContentTypeFIN) actsIX
 
-                rows : List Row
+                rows : List RowHeader
                 rows =
                     L.filterMap
                         (\enr ->
                             if enr.role == CourseEnrollmentReadRoleS then
-                                enr.person |> User |> Just
+                                enr.person |> RowHeaderUser |> Just
 
                             else
                                 Nothing
@@ -658,9 +661,9 @@ updateTable model =
                     <|
                         List.sortBy (.person >> user_full_name) model.fetchedData.enrollments
 
-                columns : List Column
+                columns : List ColumnHeader
                 columns =
-                    (L.map Activity <| L.sortBy .order activities) ++ [ Mean ]
+                    (L.map ColumnHeaderActivity <| L.sortBy .order activities) ++ [ ColumnHeaderMean ]
 
                 activities : List Activity
                 activities =
@@ -720,7 +723,7 @@ updateTable model =
                             L.map
                                 (\col ->
                                     case ( row, col ) of
-                                        ( User student, Activity act ) ->
+                                        ( RowHeaderUser student, ColumnHeaderActivity act ) ->
                                             let
                                                 mark_slots =
                                                     M.withDefault [] <| dict2DGet (get_id_str student) (get_id_str act) markSlotIX
@@ -735,7 +738,7 @@ updateTable model =
                                                 _ ->
                                                     mark_slots
 
-                                        ( User student, Mean ) ->
+                                        ( RowHeaderUser student, ColumnHeaderMean ) ->
                                             let
                                                 slotToNum s =
                                                     case s of
@@ -790,7 +793,7 @@ updateTable model =
         MarksOfStudent ->
             let
                 rows =
-                    L.map Course <| List.sortBy .title model.fetchedData.courses
+                    L.map RowHeaderCourse <| List.sortBy .title model.fetchedData.courses
 
                 existingActivityIDS =
                     Set.fromList <| List.map (.activity >> Uuid.toString) model.fetchedData.marks
@@ -807,10 +810,10 @@ updateTable model =
                 ix_acts =
                     index_by get_id_str activities
 
-                columns : List Column
+                columns : List ColumnHeader
                 columns =
                     (if M.withDefault False <| model.marksGroupByDate then
-                        L.map Date <|
+                        L.map ColumnHeaderDate <|
                             L.map (Just << T.millisToPosix) <|
                                 Set.toList <|
                                     Set.fromList <|
@@ -820,7 +823,7 @@ updateTable model =
                      else
                         []
                     )
-                        ++ [ Date Nothing ]
+                        ++ [ ColumnHeaderDate Nothing ]
                         ++ (if model.dateFilter /= DateFilterAll then
                                 []
 
@@ -867,7 +870,7 @@ updateTable model =
                             L.map
                                 (\col ->
                                     case ( row, col ) of
-                                        ( Course course, Date date ) ->
+                                        ( RowHeaderCourse course, ColumnHeaderDate date ) ->
                                             let
                                                 mark_slots =
                                                     M.withDefault [] <|
@@ -1108,10 +1111,10 @@ update msg model =
             ( updateTable { model | marksGroupByDate = Just val }, Cmd.none )
 
 
-viewColumn : Bool -> Zone -> Column -> Html Msg
+viewColumn : Bool -> Zone -> ColumnHeader -> Html Msg
 viewColumn showNoDate tz column =
     case column of
-        Activity activity ->
+        ColumnHeaderActivity activity ->
             case activity.contentType of
                 Just ActivityContentTypeFIN ->
                     div []
@@ -1125,7 +1128,7 @@ viewColumn showNoDate tz column =
                         , div [] [ text <| Maybe.withDefault "" activity.keywords ]
                         ]
 
-        Date posix ->
+        ColumnHeaderDate posix ->
             strong []
                 [ text <|
                     M.withDefault
@@ -1139,67 +1142,63 @@ viewColumn showNoDate tz column =
                         M.map (posixToDDMMYYYY T.utc) posix
                 ]
 
-        Mean ->
+        ColumnHeaderMean ->
             strong []
                 [ text "Средняя оценка" ]
 
-        Final v ->
+        ColumnHeaderFinal v ->
             strong []
                 [ text v ]
 
 
-viewRowsFirstCol : Row -> Html Msg
+viewRowsFirstCol : RowHeader -> Html Msg
 viewRowsFirstCol row =
     case row of
-        User user ->
+        RowHeaderUser user ->
             div [ style "margin" "0 1em" ] [ user_link Nothing user ]
 
-        Course course ->
+        RowHeaderCourse course ->
             a [ href <| "/course/" ++ get_id_str course ] [ text course.title ]
 
 
 markValueColors : String -> ( String, String )
 markValueColors val =
-    let
-        default =
-            ( "#BFC9CA", "#5c5e60" )
-    in
     case val of
         "4" ->
-            ( "#7DCEA0", "#145931" )
+            Theme.default.colors.marks.good
 
         "5" ->
-            ( "#76D7C4", "#0e6756" )
+            Theme.default.colors.marks.excellent
 
         "3" ->
-            ( "#F7DC6F", "rgb(119 97 5)" )
+            Theme.default.colors.marks.average
 
         "2" ->
-            ( "#D98880", "#922B21" )
+            Theme.default.colors.marks.bad
 
         "1" ->
-            markValueColors "2"
+            Theme.default.colors.marks.bad
 
         "0" ->
-            default
+            Theme.default.colors.marks.neutral
 
         "н" ->
-            default
+            Theme.default.colors.marks.neutral
 
         "зч" ->
-            markValueColors "5"
+            Theme.default.colors.marks.excellent
 
         "нз" ->
-            markValueColors "2"
+            Theme.default.colors.marks.bad
 
         "+" ->
-            markValueColors "5"
+            Theme.default.colors.marks.excellent
 
         "-" ->
-            markValueColors "2"
+            Theme.default.colors.marks.bad
 
         _ ->
-            default
+            Theme.default.colors.marks.neutral
 
 
 markNumberValueColor : Float -> String
@@ -1219,11 +1218,6 @@ markNumberValueColor v =
 
     else
         sel <| markValueColors "5"
-
-
-markSelectedColors : ( String, String )
-markSelectedColors =
-    ( "#7FB3D5", "#1F618D" )
 
 
 viewMarkSlot : Int -> Int -> Int -> MarkSlot -> Html Msg
@@ -1262,7 +1256,7 @@ viewMarkSlot y x s markSlot =
             let
                 ( bg, fg ) =
                     if sel then
-                        markSelectedColors
+                        Theme.default.colors.marks.selected
 
                     else
                         markValueColors mark.value
@@ -1288,9 +1282,18 @@ viewMarkSlot y x s markSlot =
                 [ text mark.value ]
 
         SlotVirtual sel _ _ ->
+            let
+                ( bg, fg ) =
+                    if sel then
+                        Theme.default.colors.marks.selected
+
+                    else
+                        Theme.default.colors.marks.empty
+            in
             div
                 ([ class "mark_slot"
                  , onClick (MsgMarkClicked Nothing ( x, y ))
+                 , style "background-color" bg
                  ]
                     ++ common_attrs
                     ++ (if sel then
@@ -1319,10 +1322,48 @@ viewMarkSlot y x s markSlot =
                 [ text "Н/Д" ]
 
 
-viewTableCell : Bool -> Int -> Int -> SlotList -> Html Msg
-viewTableCell alignStart y x slot_list =
+viewTableCell : Bool -> Int -> Int -> RowHeader -> ColumnHeader -> SlotList -> Html Msg
+viewTableCell alignStart y x rowHeader colHeader slot_list =
+    let
+        bgColor =
+            case colHeader of
+                ColumnHeaderActivity act ->
+                    case act.contentType of
+                        Just ct ->
+                            case ct of
+                                ActivityContentTypeGEN ->
+                                    first Theme.default.colors.activities.empty
+
+                                ActivityContentTypeTXT ->
+                                    first Theme.default.colors.activities.empty
+
+                                ActivityContentTypeTSK ->
+                                    first Theme.default.colors.activities.empty
+
+                                ActivityContentTypeLNK ->
+                                    first Theme.default.colors.activities.empty
+
+                                ActivityContentTypeMED ->
+                                    first Theme.default.colors.activities.empty
+
+                                ActivityContentTypeFIN ->
+                                    first Theme.default.colors.activities.final
+
+                        Nothing ->
+                            first Theme.default.colors.activities.empty
+
+                ColumnHeaderDate _ ->
+                    first Theme.default.colors.activities.empty
+
+                ColumnHeaderMean ->
+                    first Theme.default.colors.activities.mean
+
+                ColumnHeaderFinal _ ->
+                    first Theme.default.colors.activities.final
+    in
     td
         [ style "white-space" "nowrap"
+        , style "background-color" bgColor
         ]
         [ div
             [ class
@@ -1346,25 +1387,25 @@ viewTableHeader model =
     let
         td_attrs col =
             case col of
-                Activity act ->
+                ColumnHeaderActivity act ->
                     case act.contentType of
                         Just ActivityContentTypeFIN ->
-                            [ style "background-color" "#FFEFE2FF" ]
+                            [ style "background-color" <| first Theme.default.colors.activities.final ]
 
                         Just ActivityContentTypeTSK ->
-                            [ style "background-color" "hsl(266, 100%, 97%)" ]
+                            [ style "background-color" <| first Theme.default.colors.activities.task ]
 
                         _ ->
-                            [ style "background-color" "#EEF6FFFF" ]
+                            [ style "background-color" <| first Theme.default.colors.activities.general ]
 
-                Date _ ->
-                    [ style "background-color" "white" ]
+                ColumnHeaderDate _ ->
+                    [ style "background-color" <| first Theme.default.colors.activities.empty ]
 
-                Mean ->
-                    [ style "background-color" "rgb(246, 246, 246)" ]
+                ColumnHeaderMean ->
+                    [ style "background-color" <| first Theme.default.colors.activities.mean ]
 
-                Final _ ->
-                    [ style "background-color" "#AAA" ]
+                ColumnHeaderFinal _ ->
+                    [ style "background-color" <| first Theme.default.colors.activities.final ]
     in
     thead
         [ style "position" "sticky"
@@ -1398,8 +1439,8 @@ viewTableHeader model =
         ]
 
 
-viewTableRow : Bool -> Int -> ( Row, ColList ) -> Html Msg
-viewTableRow alignStart y ( row, cols ) =
+viewTableRow : List ColumnHeader -> Bool -> Int -> ( RowHeader, ColumnList ) -> Html Msg
+viewTableRow columnHeaders alignStart y ( rowHeader, columnContentList ) =
     tr []
         ([ td
             [ style "vertical-align" "middle"
@@ -1409,13 +1450,15 @@ viewTableRow alignStart y ( row, cols ) =
             , style "left" "0"
             , style "border-right" "2px solid #DDD"
             ]
-            [ viewRowsFirstCol row ]
+            [ viewRowsFirstCol rowHeader ]
          ]
             ++ (Tuple.second <|
                     L.foldl
-                        (\col ( x, res ) -> ( x + L.length col, res ++ [ viewTableCell alignStart y x col ] ))
+                        (\( col, colContent ) ( x, res ) ->
+                            ( x + L.length colContent, res ++ [ viewTableCell alignStart y x rowHeader col colContent ] )
+                        )
                         ( 0, [] )
-                        cols
+                        (zip columnHeaders columnContentList)
                )
         )
 
@@ -1500,7 +1543,7 @@ viewDateFilter model =
             let
                 selStyle =
                     if model.dateFilter == f then
-                        [ style "background-color" "rgb(65, 131, 196)"
+                        [ style "background-color" Theme.default.colors.ui.primary
                         , style "color" "white"
                         , style "border-radius" "5px"
                         ]
@@ -1588,7 +1631,7 @@ viewTable model =
                 ]
                 ((++) [ viewTableHeader model ] <|
                     L.indexedMap
-                        (viewTableRow <|
+                        (viewTableRow model.columns <|
                             not <|
                                 M.withDefault False model.marksGroupByDate
                                     || model.canEdit

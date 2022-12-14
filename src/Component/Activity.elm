@@ -17,7 +17,9 @@ import Ports exposing (initDropdown, scrollIdIntoView)
 import Process
 import Random
 import Task
+import Theme
 import Time exposing (utc)
+import Tuple exposing (first, second)
 import Util exposing (finalTypeToStr, httpErrorToString, isoDateToPosix, posixToDDMMYYYY, posixToFullDate, posixToISODate, task_to_cmd)
 import Uuid exposing (Uuid, uuidGenerator)
 
@@ -414,8 +416,8 @@ viewRead model =
             case activity.contentType of
                 Just ActivityContentTypeGEN ->
                     view_with_label "Тема"
-                        "#EEF6FFFF"
-                        "#B6C6D5FF"
+                        (first Theme.default.colors.activities.general)
+                        (second Theme.default.colors.activities.general)
                         [ h3 [ class "row start-xs pl-10 pt-10" ]
                             [ text activity.title ]
                         , div [ class "mt-10 mb-10", style "text-align" "left" ]
@@ -467,8 +469,8 @@ viewRead model =
 
                 Just ActivityContentTypeFIN ->
                     view_with_label "Итоговый контроль"
-                        "#FFEFE2FF"
-                        "#D9C6C1FF"
+                        (first Theme.default.colors.activities.final)
+                        (second Theme.default.colors.activities.final)
                         [ h3 [ class "row start-xs pl-10 pt-10" ]
                             [ text <| finalTypeToStr activity
                             ]
@@ -501,8 +503,8 @@ viewRead model =
 
                 Just ActivityContentTypeTXT ->
                     view_with_label "Материал"
-                        "#EEF6FFFF"
-                        "#B6C6D5FF"
+                        (first Theme.default.colors.activities.general)
+                        (second Theme.default.colors.activities.general)
                         [ h3 [ class "row start-xs pl-10 pt-10" ]
                             [ text activity.title ]
                         , div [ class "mt-10 mb-10", style "text-align" "left" ]
@@ -532,8 +534,8 @@ viewRead model =
 
                 Just ActivityContentTypeTSK ->
                     view_with_label "Задание"
-                        "hsl(266, 100%, 97%)"
-                        "hsl(266, 27%, 77%)"
+                        (first Theme.default.colors.activities.task)
+                        (second Theme.default.colors.activities.task)
                         [ h3 [ class "row start-xs pl-10 pt-10" ]
                             [ text activity.title ]
                         , div
@@ -584,8 +586,8 @@ viewRead model =
 
                 Just ActivityContentTypeLNK ->
                     view_with_label "Ссылка"
-                        "#EEF6FFFF"
-                        "#B6C6D5FF"
+                        (first Theme.default.colors.activities.general)
+                        (second Theme.default.colors.activities.general)
                         [ h3 [ class "row start-xs pl-10 pt-10" ]
                             [ text activity.title ]
                         , div
@@ -702,8 +704,8 @@ viewWrite model =
             case activity.contentType of
                 Just ActivityContentTypeGEN ->
                     view_with_label "Тема"
-                        "#EEF6FFFF"
-                        "#B6C6D5FF"
+                        (first Theme.default.colors.activities.general)
+                        (second Theme.default.colors.activities.general)
                         [ div [ class "row mt-10" ]
                             [ div [ class "field start-xs col-xs-12" ]
                                 [ label [] [ text "Название" ]
@@ -885,8 +887,8 @@ viewWrite model =
                     case model.component_fin_type of
                         Just s ->
                             view_with_label "Итоговый контроль"
-                                "#FFEFE2FF"
-                                "#D9C6C1FF"
+                                (first Theme.default.colors.activities.final)
+                                (second Theme.default.colors.activities.final)
                                 [ div [ class "row mt-10" ]
                                     [ div [ class "field start-xs col-xs-12" ]
                                         [ label [] [ text "Тип контроля" ]
@@ -965,8 +967,8 @@ viewWrite model =
 
                 Just ActivityContentTypeTXT ->
                     view_with_label "Материал"
-                        "#EEF6FFFF"
-                        "#B6C6D5FF"
+                        (first Theme.default.colors.activities.general)
+                        (second Theme.default.colors.activities.general)
                         [ div [ class "row mt-10" ]
                             [ div [ class "field start-xs col-xs-12" ]
                                 [ label [] [ text "Название" ]
@@ -1110,8 +1112,8 @@ viewWrite model =
 
                 Just ActivityContentTypeTSK ->
                     view_with_label "Задание"
-                        "hsl(266, 100%, 97%)"
-                        "hsl(266, 27%, 77%)"
+                        (first Theme.default.colors.activities.task)
+                        (second Theme.default.colors.activities.task)
                         [ div [ class "row mt-10" ]
                             [ div [ class "field start-xs col-xs-12" ]
                                 [ label [] [ text "Название" ]
