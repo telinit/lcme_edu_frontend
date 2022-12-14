@@ -93,7 +93,7 @@ type FetchResult
     = FetchedCourse Course
     | FetchedEnrollments (List CourseEnrollmentRead)
     | FetchedActivities (List Activity)
-    | FetchedSpec (Maybe EducationSpecialization)
+    | FetchedSpec (List EducationSpecialization)
 
 
 type IssueKind
@@ -147,7 +147,7 @@ init token course_id user =
                 [ ( ext_task FetchedCourse token [] <| courseRead course_id
                   , "Получение данных о курсе"
                   )
-                , ( ext_task (List.head >> FetchedSpec) token [ ( "courses", course_id ) ] educationSpecializationList
+                , ( ext_task FetchedSpec token [ ( "courses", course_id ) ] educationSpecializationList
                   , "Получение направления обучения"
                   )
                 , ( ext_task FetchedEnrollments token [ ( "course", course_id ) ] <| courseEnrollmentList
@@ -711,7 +711,12 @@ update msg model =
             in
             case msg_ of
                 TaskFinishedAll [ Ok (FetchedCourse course), Ok (FetchedSpec spec), Ok (FetchedEnrollments enrollments), Ok (FetchedActivities activities) ] ->
-                    parse_course { course = course, spec = spec, enrollments = enrollments, activities = activities }
+                    parse_course
+                        { course = course
+                        , spec = List.head <| List.filter (.id >> (==) course.forSpecialization) spec
+                        , enrollments = enrollments
+                        , activities = activities
+                        }
 
                 _ ->
                     ( { model | state = Fetching m }, Cmd.map MsgFetch c )

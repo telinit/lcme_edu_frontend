@@ -8856,11 +8856,6 @@ var $author$project$Api$Request$Activity$activityList = A7(
 	_List_Nil,
 	$elm$core$Maybe$Nothing,
 	$elm$json$Json$Decode$list($author$project$Api$Data$activityDecoder));
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
 var $author$project$Api$Data$CourseEnrollmentRead = F7(
 	function (id, person, createdAt, updatedAt, role, finishedOn, course) {
 		return {course: course, createdAt: createdAt, finishedOn: finishedOn, id: id, person: person, role: role, updatedAt: updatedAt};
@@ -9442,15 +9437,6 @@ var $elm$core$Set$insert = F2(
 var $elm$core$Set$fromList = function (list) {
 	return A3($elm$core$List$foldl, $elm$core$Set$insert, $elm$core$Set$empty, list);
 };
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $author$project$Component$MultiTask$Running = {$: 'Running'};
 var $author$project$Component$MultiTask$TaskCompleted = F2(
 	function (a, b) {
@@ -9653,7 +9639,7 @@ var $author$project$Page$Course$CoursePage$init = F3(
 					_Utils_Tuple2(
 					A4(
 						$author$project$Api$ext_task,
-						A2($elm$core$Basics$composeR, $elm$core$List$head, $author$project$Page$Course$CoursePage$FetchedSpec),
+						$author$project$Page$Course$CoursePage$FetchedSpec,
 						token,
 						_List_fromArray(
 							[
@@ -9826,6 +9812,11 @@ var $author$project$Component$Stats$FetchCompleted = function (a) {
 var $author$project$Component$Stats$FetchFailed = function (a) {
 	return {$: 'FetchFailed', a: a};
 };
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
 var $author$project$Util$httpErrorToString = function (error) {
 	switch (error.$) {
 		case 'BadUrl':
@@ -10355,6 +10346,15 @@ var $elm$core$List$filter = F2(
 			_List_Nil,
 			list);
 	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
 var $author$project$Component$MarkTable$FetchedCourseList = function (a) {
 	return {$: 'FetchedCourseList', a: a};
 };
@@ -14450,7 +14450,21 @@ var $author$project$Page$Course$CoursePage$update = F2(
 							var _v6 = _v5.b;
 							var activities = _v6.a.a.a;
 							return parse_course(
-								{activities: activities, course: course, enrollments: enrollments, spec: spec});
+								{
+									activities: activities,
+									course: course,
+									enrollments: enrollments,
+									spec: $elm$core$List$head(
+										A2(
+											$elm$core$List$filter,
+											A2(
+												$elm$core$Basics$composeR,
+												function ($) {
+													return $.id;
+												},
+												$elm$core$Basics$eq(course.forSpecialization)),
+											spec))
+								});
 						} else {
 							return _Utils_Tuple2(
 								_Utils_update(
@@ -16423,129 +16437,6 @@ var $author$project$Util$eitherGetRight = function (either) {
 		return $elm$core$Maybe$Just(b);
 	}
 };
-var $author$project$Component$MarkTable$updateMark = F3(
-	function (model, _v0, markIdOrRec) {
-		var cell_x = _v0.a;
-		var cell_y = _v0.b;
-		var update_slot = F2(
-			function (slot, mb_mark_) {
-				var _v7 = _Utils_Tuple2(slot, mb_mark_);
-				if (_v7.a.$ === 'SlotMark') {
-					if (_v7.b.$ === 'Just') {
-						var _v8 = _v7.a;
-						var sel = _v8.a;
-						var new_mark = _v7.b.a;
-						return A2($author$project$Component$MarkTable$SlotMark, sel, new_mark);
-					} else {
-						var _v9 = _v7.a;
-						var sel = _v9.a;
-						var old_mark = _v9.b;
-						var _v10 = _v7.b;
-						return A3($author$project$Component$MarkTable$SlotVirtual, sel, old_mark.activity, old_mark.student);
-					}
-				} else {
-					if (_v7.b.$ === 'Just') {
-						var _v11 = _v7.a;
-						var sel = _v11.a;
-						var new_mark = _v7.b.a;
-						return A2($author$project$Component$MarkTable$SlotMark, sel, new_mark);
-					} else {
-						var _v12 = _v7.a;
-						var _v13 = _v7.b;
-						return slot;
-					}
-				}
-			});
-		var update_col = F3(
-			function (x, col, mb_mark_) {
-				var _v1 = _Utils_Tuple2(x, col);
-				if (_v1.b.b) {
-					if (!_v1.a) {
-						var _v2 = _v1.b;
-						var slot = _v2.a;
-						var tl = _v2.b;
-						return A2(
-							$elm$core$List$cons,
-							A2(update_slot, slot, mb_mark_),
-							tl);
-					} else {
-						var _v3 = _v1.b;
-						var slot = _v3.a;
-						var tl = _v3.b;
-						return A2(
-							$elm$core$List$cons,
-							slot,
-							A3(update_col, x - 1, tl, mb_mark_));
-					}
-				} else {
-					return _List_Nil;
-				}
-			});
-		var updateData = function (marks) {
-			if (markIdOrRec.$ === 'Left') {
-				var mid = markIdOrRec.a;
-				return A2(
-					$elm$core$List$filter,
-					A2(
-						$elm$core$Basics$composeR,
-						function ($) {
-							return $.id;
-						},
-						$elm$core$Basics$neq(
-							$elm$core$Maybe$Just(mid))),
-					marks);
-			} else {
-				var newMark = markIdOrRec.a;
-				if (!marks.b) {
-					return _List_fromArray(
-						[newMark]);
-				} else {
-					var oldMark = marks.a;
-					var rest = marks.b;
-					return _Utils_eq(oldMark.id, newMark.id) ? A2($elm$core$List$cons, newMark, rest) : A2(
-						$elm$core$List$cons,
-						oldMark,
-						updateData(rest));
-				}
-			}
-		};
-		var oldFetchedData = model.fetchedData;
-		return _Utils_update(
-			model,
-			{
-				cells: A2(
-					$elm$core$List$indexedMap,
-					F2(
-						function (y, row) {
-							return _Utils_eq(y, cell_y) ? A3(
-								$elm$core$List$foldl,
-								F2(
-									function (col, _v6) {
-										var slots_cnt = _v6.a;
-										var res = _v6.b;
-										var new_col = A3(
-											update_col,
-											cell_x - slots_cnt,
-											col,
-											$author$project$Util$eitherGetRight(markIdOrRec));
-										return _Utils_Tuple2(
-											slots_cnt + $elm$core$List$length(new_col),
-											_Utils_ap(
-												res,
-												_List_fromArray(
-													[new_col])));
-									}),
-								_Utils_Tuple2(0, _List_Nil),
-								row).b : row;
-						}),
-					model.cells),
-				fetchedData: _Utils_update(
-					oldFetchedData,
-					{
-						marks: updateData(oldFetchedData.marks)
-					})
-			});
-	});
 var $author$project$Component$MarkTable$Activity = function (a) {
 	return {$: 'Activity', a: a};
 };
@@ -16555,18 +16446,13 @@ var $author$project$Component$MarkTable$Course = function (a) {
 var $author$project$Component$MarkTable$Date = function (a) {
 	return {$: 'Date', a: a};
 };
+var $author$project$Component$MarkTable$Mean = {$: 'Mean'};
+var $author$project$Component$MarkTable$SlotMean = function (a) {
+	return {$: 'SlotMean', a: a};
+};
 var $author$project$Component$MarkTable$User = function (a) {
 	return {$: 'User', a: a};
 };
-var $elm$core$Maybe$andThen = F2(
-	function (callback, maybeValue) {
-		if (maybeValue.$ === 'Just') {
-			var value = maybeValue.a;
-			return callback(value);
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
 var $author$project$Util$listSplitWhile = function (pred) {
 	var listSplitAt1 = F2(
 		function (left, right) {
@@ -16765,6 +16651,16 @@ var $author$project$Component$MarkTable$dateFilter = F2(
 				return orderSortedActs;
 		}
 	});
+var $author$project$Util$dict2DGet = F2(
+	function (x, y) {
+		return A2(
+			$elm$core$Basics$composeR,
+			$elm$core$Dict$get(x),
+			A2(
+				$elm$core$Basics$composeR,
+				$elm$core$Maybe$withDefault($elm$core$Dict$empty),
+				$elm$core$Dict$get(y)));
+	});
 var $author$project$Util$dictFromTupleListMany = function () {
 	var update_ = F2(
 		function (_new, mb) {
@@ -16825,6 +16721,31 @@ var $author$project$Util$index_by = F2(
 				},
 				list));
 	});
+var $author$project$Component$MarkTable$markToNum = function (m) {
+	var _v0 = m.value;
+	switch (_v0) {
+		case '1':
+			return 1;
+		case '2':
+			return 2;
+		case '3':
+			return 3;
+		case '4':
+			return 4;
+		case '5':
+			return 5;
+		case '+':
+			return 5;
+		case '-':
+			return 2;
+		case 'зч':
+			return 5;
+		case 'нз':
+			return 2;
+		default:
+			return 0;
+	}
+};
 var $elm$core$List$repeatHelp = F3(
 	function (result, n, value) {
 		repeatHelp:
@@ -16873,57 +16794,81 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 					return 0 < A2($elm$core$Maybe$withDefault, 0, a.marksLimit);
 				},
 				model.fetchedData.activities));
-		var columns = A2(
-			$elm$core$List$map,
-			$author$project$Component$MarkTable$Activity,
-			A2(
-				$elm$core$List$sortBy,
-				function ($) {
-					return $.order;
-				},
-				activities));
-		var ix_acts = A2($author$project$Util$index_by, $author$project$Util$get_id_str, activities);
-		var mark_coords = function (mark) {
+		var actsIX = A2($author$project$Util$index_by, $author$project$Util$get_id_str, activities);
+		var actsFinIX = A2(
+			$elm$core$Dict$filter,
+			F2(
+				function (id, a) {
+					return _Utils_eq(
+						a.contentType,
+						$elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeFIN));
+				}),
+			actsIX);
+		var markIsFinal = function (mark) {
 			return A2(
-				$elm$core$Maybe$andThen,
-				function (act) {
-					return $elm$core$Maybe$Just(
-						_Utils_Tuple3(
-							mark,
-							$author$project$Util$get_id_str(act),
-							$danyx23$elm_uuid$Uuid$toString(mark.student)));
-				},
-				A2(
-					$elm$core$Dict$get,
-					$danyx23$elm_uuid$Uuid$toString(mark.activity),
-					ix_acts));
+				$elm$core$Dict$member,
+				$danyx23$elm_uuid$Uuid$toString(mark.activity),
+				actsFinIX);
 		};
-		var marks_ix = $author$project$Util$dictFromTupleListMany(
+		var markSlotIX = A3(
+			$elm$core$List$foldl,
+			F2(
+				function (mark, resD) {
+					var sID = $danyx23$elm_uuid$Uuid$toString(mark.student);
+					var mbAct = A2(
+						$elm$core$Dict$get,
+						$danyx23$elm_uuid$Uuid$toString(mark.activity),
+						actsIX);
+					if (mbAct.$ === 'Just') {
+						var act = mbAct.a;
+						var y = $author$project$Util$get_id_str(act);
+						var x = sID;
+						return A3(
+							$elm$core$Dict$update,
+							x,
+							function (mbSubD) {
+								var subD = A2($elm$core$Maybe$withDefault, $elm$core$Dict$empty, mbSubD);
+								var slot = A2($author$project$Component$MarkTable$SlotMark, false, mark);
+								var subDNew = A3(
+									$elm$core$Dict$update,
+									y,
+									A2(
+										$elm$core$Basics$composeL,
+										A2(
+											$elm$core$Basics$composeL,
+											$elm$core$Maybe$Just,
+											$elm$core$Maybe$withDefault(
+												_List_fromArray(
+													[slot]))),
+										$elm$core$Maybe$map(
+											function (l) {
+												return _Utils_ap(
+													l,
+													_List_fromArray(
+														[slot]));
+											})),
+									subD);
+								return $elm$core$Maybe$Just(subDNew);
+							},
+							resD);
+					} else {
+						return resD;
+					}
+				}),
+			$elm$core$Dict$empty,
+			model.fetchedData.marks);
+		var columns = _Utils_ap(
 			A2(
 				$elm$core$List$map,
-				function (_v3) {
-					var a = _v3.a;
-					var b = _v3.b;
-					var c_ = _v3.c;
-					return _Utils_Tuple2(
-						_Utils_Tuple2(b, c_),
-						A2($author$project$Component$MarkTable$SlotMark, false, a));
-				},
+				$author$project$Component$MarkTable$Activity,
 				A2(
-					$elm$core$List$filterMap,
-					mark_coords,
-					A2(
-						$elm$core$List$sortBy,
-						A2(
-							$elm$core$Basics$composeR,
-							function ($) {
-								return $.createdAt;
-							},
-							A2(
-								$elm$core$Basics$composeR,
-								$elm$core$Maybe$map($elm$time$Time$posixToMillis),
-								$elm$core$Maybe$withDefault(0))),
-						model.fetchedData.marks))));
+					$elm$core$List$sortBy,
+					function ($) {
+						return $.order;
+					},
+					activities)),
+			_List_fromArray(
+				[$author$project$Component$MarkTable$Mean]));
 		var cells = A2(
 			$elm$core$List$map,
 			function (row) {
@@ -16931,32 +16876,76 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 					$elm$core$List$map,
 					function (col) {
 						var _v1 = _Utils_Tuple2(row, col);
-						if ((_v1.a.$ === 'User') && (_v1.b.$ === 'Activity')) {
-							var student = _v1.a.a;
-							var act = _v1.b.a;
-							var coords = _Utils_Tuple2(
-								$author$project$Util$get_id_str(act),
-								$author$project$Util$get_id_str(student));
-							var mark_slots = A2(
-								$elm$core$Maybe$withDefault,
-								_List_Nil,
-								A2($elm$core$Dict$get, coords, marks_ix));
-							var _v2 = _Utils_Tuple2(act.id, student.id);
-							if ((_v2.a.$ === 'Just') && (_v2.b.$ === 'Just')) {
-								var aid = _v2.a.a;
-								var sid = _v2.b.a;
-								return _Utils_ap(
-									mark_slots,
-									A2(
-										$elm$core$List$repeat,
-										A2($elm$core$Maybe$withDefault, 0, act.marksLimit) - $elm$core$List$length(mark_slots),
-										A3($author$project$Component$MarkTable$SlotVirtual, false, aid, sid)));
+						_v1$2:
+						while (true) {
+							if (_v1.a.$ === 'User') {
+								switch (_v1.b.$) {
+									case 'Activity':
+										var student = _v1.a.a;
+										var act = _v1.b.a;
+										var mark_slots = A2(
+											$elm$core$Maybe$withDefault,
+											_List_Nil,
+											A3(
+												$author$project$Util$dict2DGet,
+												$author$project$Util$get_id_str(student),
+												$author$project$Util$get_id_str(act),
+												markSlotIX));
+										var _v2 = _Utils_Tuple2(act.id, student.id);
+										if ((_v2.a.$ === 'Just') && (_v2.b.$ === 'Just')) {
+											var aid = _v2.a.a;
+											var sid = _v2.b.a;
+											return _Utils_ap(
+												mark_slots,
+												A2(
+													$elm$core$List$repeat,
+													A2($elm$core$Maybe$withDefault, 0, act.marksLimit) - $elm$core$List$length(mark_slots),
+													A3($author$project$Component$MarkTable$SlotVirtual, false, aid, sid)));
+										} else {
+											return mark_slots;
+										}
+									case 'Mean':
+										var student = _v1.a.a;
+										var _v3 = _v1.b;
+										var slotToNum = function (s) {
+											if (s.$ === 'SlotMark') {
+												var m = s.b;
+												return ((m.value === 'н') || markIsFinal(m)) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
+													$author$project$Component$MarkTable$markToNum(m));
+											} else {
+												return $elm$core$Maybe$Nothing;
+											}
+										};
+										var marks = A2(
+											$elm$core$List$filterMap,
+											slotToNum,
+											$elm$core$List$concat(
+												$elm$core$Dict$values(
+													A2(
+														$elm$core$Maybe$withDefault,
+														$elm$core$Dict$empty,
+														A2(
+															$elm$core$Dict$get,
+															$author$project$Util$get_id_str(student),
+															markSlotIX)))));
+										var sum = $elm$core$List$sum(marks);
+										var len = $elm$core$List$length(marks);
+										return (len > 0) ? _List_fromArray(
+											[
+												$author$project$Component$MarkTable$SlotMean(
+												$elm$core$Maybe$Just(sum / len))
+											]) : _List_fromArray(
+											[
+												$author$project$Component$MarkTable$SlotMean($elm$core$Maybe$Nothing)
+											]);
+									default:
+										break _v1$2;
+								}
 							} else {
-								return mark_slots;
+								break _v1$2;
 							}
-						} else {
-							return _List_Nil;
 						}
+						return _List_Nil;
 					},
 					columns);
 			},
@@ -17055,10 +17044,12 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 										return $.order;
 									},
 									activities)))))) : _List_Nil,
-			_List_fromArray(
-				[
-					$author$project$Component$MarkTable$Date($elm$core$Maybe$Nothing)
-				]));
+			_Utils_ap(
+				_List_fromArray(
+					[
+						$author$project$Component$MarkTable$Date($elm$core$Maybe$Nothing)
+					]),
+				(!_Utils_eq(model.dateFilter, $author$project$Component$MarkTable$DateFilterAll)) ? _List_Nil : _List_Nil));
 		var ix_acts = A2($author$project$Util$index_by, $author$project$Util$get_id_str, activities);
 		var mark_coords = function (mark) {
 			return A2(
@@ -17081,10 +17072,10 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 		var marks_ix = $author$project$Util$dictFromTupleListMany(
 			A2(
 				$elm$core$List$map,
-				function (_v5) {
-					var mark = _v5.a;
-					var x = _v5.b;
-					var y = _v5.c;
+				function (_v7) {
+					var mark = _v7.a;
+					var x = _v7.b;
+					var y = _v7.c;
 					return _Utils_Tuple2(
 						_Utils_Tuple2(x, y),
 						A2($author$project$Component$MarkTable$SlotMark, false, mark));
@@ -17123,10 +17114,10 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 				return A2(
 					$elm$core$List$map,
 					function (col) {
-						var _v4 = _Utils_Tuple2(row, col);
-						if ((_v4.a.$ === 'Course') && (_v4.b.$ === 'Date')) {
-							var course = _v4.a.a;
-							var date = _v4.b.a;
+						var _v6 = _Utils_Tuple2(row, col);
+						if ((_v6.a.$ === 'Course') && (_v6.b.$ === 'Date')) {
+							var course = _v6.a.a;
+							var date = _v6.b.a;
 							var mark_slots = A2(
 								$elm$core$Maybe$withDefault,
 								_List_Nil,
@@ -17170,6 +17161,133 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 			});
 	}
 };
+var $author$project$Component$MarkTable$updateMark = F3(
+	function (model, _v0, markIdOrRec) {
+		var cell_x = _v0.a;
+		var cell_y = _v0.b;
+		var update_slot = F2(
+			function (slot, mb_mark_) {
+				var _v7 = _Utils_Tuple2(slot, mb_mark_);
+				switch (_v7.a.$) {
+					case 'SlotMark':
+						if (_v7.b.$ === 'Just') {
+							var _v8 = _v7.a;
+							var sel = _v8.a;
+							var new_mark = _v7.b.a;
+							return A2($author$project$Component$MarkTable$SlotMark, sel, new_mark);
+						} else {
+							var _v9 = _v7.a;
+							var sel = _v9.a;
+							var old_mark = _v9.b;
+							var _v10 = _v7.b;
+							return A3($author$project$Component$MarkTable$SlotVirtual, sel, old_mark.activity, old_mark.student);
+						}
+					case 'SlotVirtual':
+						if (_v7.b.$ === 'Just') {
+							var _v11 = _v7.a;
+							var sel = _v11.a;
+							var new_mark = _v7.b.a;
+							return A2($author$project$Component$MarkTable$SlotMark, sel, new_mark);
+						} else {
+							var _v12 = _v7.a;
+							var _v13 = _v7.b;
+							return slot;
+						}
+					default:
+						return slot;
+				}
+			});
+		var update_col = F3(
+			function (x, col, mb_mark_) {
+				var _v1 = _Utils_Tuple2(x, col);
+				if (_v1.b.b) {
+					if (!_v1.a) {
+						var _v2 = _v1.b;
+						var slot = _v2.a;
+						var tl = _v2.b;
+						return A2(
+							$elm$core$List$cons,
+							A2(update_slot, slot, mb_mark_),
+							tl);
+					} else {
+						var _v3 = _v1.b;
+						var slot = _v3.a;
+						var tl = _v3.b;
+						return A2(
+							$elm$core$List$cons,
+							slot,
+							A3(update_col, x - 1, tl, mb_mark_));
+					}
+				} else {
+					return _List_Nil;
+				}
+			});
+		var updateData = function (marks) {
+			if (markIdOrRec.$ === 'Left') {
+				var mid = markIdOrRec.a;
+				return A2(
+					$elm$core$List$filter,
+					A2(
+						$elm$core$Basics$composeR,
+						function ($) {
+							return $.id;
+						},
+						$elm$core$Basics$neq(
+							$elm$core$Maybe$Just(mid))),
+					marks);
+			} else {
+				var newMark = markIdOrRec.a;
+				if (!marks.b) {
+					return _List_fromArray(
+						[newMark]);
+				} else {
+					var oldMark = marks.a;
+					var rest = marks.b;
+					return _Utils_eq(oldMark.id, newMark.id) ? A2($elm$core$List$cons, newMark, rest) : A2(
+						$elm$core$List$cons,
+						oldMark,
+						updateData(rest));
+				}
+			}
+		};
+		var oldFetchedData = model.fetchedData;
+		return $author$project$Component$MarkTable$updateTable(
+			_Utils_update(
+				model,
+				{
+					cells: A2(
+						$elm$core$List$indexedMap,
+						F2(
+							function (y, row) {
+								return _Utils_eq(y, cell_y) ? A3(
+									$elm$core$List$foldl,
+									F2(
+										function (col, _v6) {
+											var slots_cnt = _v6.a;
+											var res = _v6.b;
+											var new_col = A3(
+												update_col,
+												cell_x - slots_cnt,
+												col,
+												$author$project$Util$eitherGetRight(markIdOrRec));
+											return _Utils_Tuple2(
+												slots_cnt + $elm$core$List$length(new_col),
+												_Utils_ap(
+													res,
+													_List_fromArray(
+														[new_col])));
+										}),
+									_Utils_Tuple2(0, _List_Nil),
+									row).b : row;
+							}),
+						model.cells),
+					fetchedData: _Utils_update(
+						oldFetchedData,
+						{
+							marks: updateData(oldFetchedData.marks)
+						})
+				}));
+	});
 var $author$project$Component$MarkTable$update = F2(
 	function (msg, model) {
 		var ignore = _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -17336,61 +17454,67 @@ var $author$project$Component$MarkTable$update = F2(
 								A2($author$project$Component$MarkTable$focusCell, nx, ny)) : ignore;
 						case 'CmdSetMark':
 							var new_mark = cmd.a;
-							if (mark_slot.$ === 'SlotMark') {
-								var mark = mark_slot.b;
-								return _Utils_Tuple2(
-									model,
-									A4(
-										$author$project$Component$MarkTable$doUpdateMark,
-										model.token,
-										mark,
-										_Utils_Tuple2(x, y),
-										new_mark));
-							} else {
-								var activityID = mark_slot.b;
-								var studentID = mark_slot.c;
-								return _Utils_Tuple2(
-									model,
-									A2(
-										$elm$core$Maybe$withDefault,
-										$elm$core$Platform$Cmd$none,
+							switch (mark_slot.$) {
+								case 'SlotMark':
+									var mark = mark_slot.b;
+									return _Utils_Tuple2(
+										model,
+										A4(
+											$author$project$Component$MarkTable$doUpdateMark,
+											model.token,
+											mark,
+											_Utils_Tuple2(x, y),
+											new_mark));
+								case 'SlotVirtual':
+									var activityID = mark_slot.b;
+									var studentID = mark_slot.c;
+									return _Utils_Tuple2(
+										model,
 										A2(
-											$elm$core$Maybe$map,
-											function (author_id) {
-												return A6(
-													$author$project$Component$MarkTable$doCreateMark,
-													model.token,
-													activityID,
-													studentID,
-													author_id,
-													_Utils_Tuple2(x, y),
-													new_mark);
-											},
-											model.teacher_id)));
+											$elm$core$Maybe$withDefault,
+											$elm$core$Platform$Cmd$none,
+											A2(
+												$elm$core$Maybe$map,
+												function (author_id) {
+													return A6(
+														$author$project$Component$MarkTable$doCreateMark,
+														model.token,
+														activityID,
+														studentID,
+														author_id,
+														_Utils_Tuple2(x, y),
+														new_mark);
+												},
+												model.teacher_id)));
+								default:
+									return ignore;
 							}
 						case 'CmdUnknown':
 							return ignore;
 						default:
-							if (mark_slot.$ === 'SlotMark') {
-								var isSelected = mark_slot.a;
-								var mark = mark_slot.b;
-								return A2(
-									$elm$core$Maybe$withDefault,
-									_Utils_Tuple2(model, $elm$core$Platform$Cmd$none),
-									A2(
-										$elm$core$Maybe$map,
-										function (id) {
-											return _Utils_Tuple2(
-												model,
-												A3(
-													$author$project$Component$MarkTable$doDeleteMark,
-													model.token,
-													id,
-													_Utils_Tuple2(x, y)));
-										},
-										mark.id));
-							} else {
-								return ignore;
+							switch (mark_slot.$) {
+								case 'SlotMark':
+									var isSelected = mark_slot.a;
+									var mark = mark_slot.b;
+									return A2(
+										$elm$core$Maybe$withDefault,
+										_Utils_Tuple2(model, $elm$core$Platform$Cmd$none),
+										A2(
+											$elm$core$Maybe$map,
+											function (id) {
+												return _Utils_Tuple2(
+													model,
+													A3(
+														$author$project$Component$MarkTable$doDeleteMark,
+														model.token,
+														id,
+														_Utils_Tuple2(x, y)));
+											},
+											mark.id));
+								case 'SlotVirtual':
+									return ignore;
+								default:
+									return ignore;
 							}
 					}
 				}
@@ -30352,6 +30476,15 @@ var $jxxcarlson$htree$HTree$appendAtFocus = F2(
 			t);
 		return A2($zwilias$elm_rosetree$Tree$Zipper$replaceTree, newTree, z);
 	});
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (maybeValue.$ === 'Just') {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
 var $jxxcarlson$htree$HTree$iterate = F3(
 	function (remaining, f, accumulator) {
 		iterate:
@@ -35363,10 +35496,11 @@ var $author$project$Component$MessageBox$Warning = {$: 'Warning'};
 var $author$project$Component$FileInput$MsgDoSelectFile = {$: 'MsgDoSelectFile'};
 var $elm$core$Basics$pow = _Basics_pow;
 var $elm$core$Basics$truncate = _Basics_truncate;
-var $author$project$Util$prec = F2(
-	function (digits, x) {
+var $author$project$Util$prec = F3(
+	function (doRound, digits, x) {
 		var m = A2($elm$core$Basics$pow, 10.0, digits);
-		var tr = (x * m) | 0;
+		var v = x * m;
+		var tr = (doRound ? $elm$core$Basics$round(v) : v) | 0;
 		return tr / m;
 	});
 var $author$project$Util$fileSizeToISO = function (size) {
@@ -35376,10 +35510,10 @@ var $author$project$Util$fileSizeToISO = function (size) {
 	var kib = 1024;
 	var gib = (1024 * 1024) * 1024;
 	return (_Utils_cmp(sizef, tib) > -1) ? ($elm$core$String$fromFloat(
-		A2($author$project$Util$prec, 2, sizef / tib)) + ' ТиБ') : ((_Utils_cmp(sizef, gib) > -1) ? ($elm$core$String$fromFloat(
-		A2($author$project$Util$prec, 2, sizef / gib)) + ' ГиБ') : ((_Utils_cmp(sizef, mib) > -1) ? ($elm$core$String$fromFloat(
-		A2($author$project$Util$prec, 2, sizef / mib)) + ' МиБ') : ((_Utils_cmp(sizef, kib) > -1) ? ($elm$core$String$fromFloat(
-		A2($author$project$Util$prec, 2, sizef / kib)) + ' КиБ') : ($elm$core$String$fromInt(size) + ' байт'))));
+		A3($author$project$Util$prec, true, 2, sizef / tib)) + ' ТиБ') : ((_Utils_cmp(sizef, gib) > -1) ? ($elm$core$String$fromFloat(
+		A3($author$project$Util$prec, true, 2, sizef / gib)) + ' ГиБ') : ((_Utils_cmp(sizef, mib) > -1) ? ($elm$core$String$fromFloat(
+		A3($author$project$Util$prec, true, 2, sizef / mib)) + ' МиБ') : ((_Utils_cmp(sizef, kib) > -1) ? ($elm$core$String$fromFloat(
+		A3($author$project$Util$prec, true, 2, sizef / kib)) + ' КиБ') : ($elm$core$String$fromInt(size) + ' байт'))));
 };
 var $elm$file$File$name = _File_name;
 var $elm$file$File$size = _File_size;
@@ -38277,7 +38411,7 @@ var $author$project$Component$Stats$view = function (model) {
 													[
 														$elm$html$Html$text(
 														$elm$core$String$fromFloat(
-															A2($author$project$Util$prec, 2, obj.activities / obj.courses)))
+															A3($author$project$Util$prec, true, 2, obj.activities / obj.courses)))
 													]))
 											]))
 									])),
@@ -38316,7 +38450,7 @@ var $author$project$Component$Stats$view = function (model) {
 													[
 														$elm$html$Html$text(
 														$elm$core$String$fromFloat(
-															A2($author$project$Util$prec, 2, obj.marks / obj.activities)))
+															A3($author$project$Util$prec, true, 2, obj.marks / obj.activities)))
 													]))
 											]))
 									]))
@@ -39270,130 +39404,159 @@ var $author$project$Component$MarkTable$viewMarkDetailsModal = function (model) 
 var $elm$html$Html$thead = _VirtualDom_node('thead');
 var $author$project$Component$MarkTable$viewColumn = F3(
 	function (showNoDate, tz, column) {
-		if (column.$ === 'Activity') {
-			var activity = column.a;
-			var _v1 = activity.contentType;
-			if ((_v1.$ === 'Just') && (_v1.a.$ === 'ActivityContentTypeFIN')) {
-				var _v2 = _v1.a;
+		switch (column.$) {
+			case 'Activity':
+				var activity = column.a;
+				var _v1 = activity.contentType;
+				if ((_v1.$ === 'Just') && (_v1.a.$ === 'ActivityContentTypeFIN')) {
+					var _v2 = _v1.a;
+					return A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										A2(
+											$elm$core$Maybe$withDefault,
+											'(нет даты)',
+											A2(
+												$elm$core$Maybe$map,
+												$author$project$Util$posixToDDMMYYYY(tz),
+												activity.date)))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										$author$project$Util$finalTypeToStr(activity))
+									]))
+							]));
+				} else {
+					return A2(
+						$elm$html$Html$div,
+						_List_Nil,
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										A2(
+											$elm$core$Maybe$withDefault,
+											'(нет даты)',
+											A2(
+												$elm$core$Maybe$map,
+												$author$project$Util$posixToDDMMYYYY(tz),
+												activity.date)))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										A2($elm$core$Maybe$withDefault, '', activity.keywords))
+									]))
+							]));
+				}
+			case 'Date':
+				var posix = column.a;
 				return A2(
-					$elm$html$Html$div,
+					$elm$html$Html$strong,
 					_List_Nil,
 					_List_fromArray(
 						[
+							$elm$html$Html$text(
 							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text(
-									A2(
-										$elm$core$Maybe$withDefault,
-										'(нет даты)',
-										A2(
-											$elm$core$Maybe$map,
-											$author$project$Util$posixToDDMMYYYY(tz),
-											activity.date)))
-								])),
-							A2(
-							$elm$html$Html$div,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text(
-									$author$project$Util$finalTypeToStr(activity))
-								]))
+								$elm$core$Maybe$withDefault,
+								showNoDate ? '(без даты)' : 'Оценки',
+								A2(
+									$elm$core$Maybe$map,
+									$author$project$Util$posixToDDMMYYYY($elm$time$Time$utc),
+									posix)))
 						]));
-			} else {
+			case 'Mean':
 				return A2(
-					$elm$html$Html$div,
+					$elm$html$Html$strong,
 					_List_Nil,
 					_List_fromArray(
 						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text(
-									A2(
-										$elm$core$Maybe$withDefault,
-										'(нет даты)',
-										A2(
-											$elm$core$Maybe$map,
-											$author$project$Util$posixToDDMMYYYY(tz),
-											activity.date)))
-								])),
-							A2(
-							$elm$html$Html$div,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text(
-									A2($elm$core$Maybe$withDefault, '', activity.keywords))
-								]))
+							$elm$html$Html$text('Средняя оценка')
 						]));
-			}
-		} else {
-			var posix = column.a;
-			return A2(
-				$elm$html$Html$strong,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text(
-						A2(
-							$elm$core$Maybe$withDefault,
-							showNoDate ? '(без даты)' : 'Оценки',
-							A2(
-								$elm$core$Maybe$map,
-								$author$project$Util$posixToDDMMYYYY($elm$time$Time$utc),
-								posix)))
-					]));
+			default:
+				var v = column.a;
+				return A2(
+					$elm$html$Html$strong,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text(v)
+						]));
 		}
 	});
 var $author$project$Component$MarkTable$viewTableHeader = function (model) {
 	var td_attrs = function (col) {
-		if (col.$ === 'Activity') {
-			var act = col.a;
-			var _v1 = act.contentType;
-			_v1$2:
-			while (true) {
-				if (_v1.$ === 'Just') {
-					switch (_v1.a.$) {
-						case 'ActivityContentTypeFIN':
-							var _v2 = _v1.a;
-							return _List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'background-color', '#FFEFE2FF')
-								]);
-						case 'ActivityContentTypeTSK':
-							var _v3 = _v1.a;
-							return _List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'background-color', 'hsl(266, 100%, 97%)')
-								]);
-						default:
-							break _v1$2;
+		switch (col.$) {
+			case 'Activity':
+				var act = col.a;
+				var _v1 = act.contentType;
+				_v1$2:
+				while (true) {
+					if (_v1.$ === 'Just') {
+						switch (_v1.a.$) {
+							case 'ActivityContentTypeFIN':
+								var _v2 = _v1.a;
+								return _List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'background-color', '#FFEFE2FF')
+									]);
+							case 'ActivityContentTypeTSK':
+								var _v3 = _v1.a;
+								return _List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'background-color', 'hsl(266, 100%, 97%)')
+									]);
+							default:
+								break _v1$2;
+						}
+					} else {
+						break _v1$2;
 					}
-				} else {
-					break _v1$2;
 				}
-			}
-			return _List_fromArray(
-				[
-					A2($elm$html$Html$Attributes$style, 'background-color', '#EEF6FFFF')
-				]);
-		} else {
-			return _List_fromArray(
-				[
-					A2($elm$html$Html$Attributes$style, 'background-color', 'white')
-				]);
+				return _List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'background-color', '#EEF6FFFF')
+					]);
+			case 'Date':
+				return _List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'background-color', 'white')
+					]);
+			case 'Mean':
+				return _List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'background-color', 'rgb(246, 246, 246)')
+					]);
+			default:
+				return _List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'background-color', '#AAA')
+					]);
 		}
 	};
 	return A2(
@@ -39545,7 +39708,6 @@ var $author$project$Component$MarkTable$keyCodeToMarkCmd = function (code) {
 			return $author$project$Component$MarkTable$CmdUnknown(code);
 	}
 };
-var $author$project$Component$MarkTable$markSelectedColors = _Utils_Tuple2('#7FB3D5', '#1F618D');
 var $author$project$Component$MarkTable$markValueColors = function (val) {
 	markValueColors:
 	while (true) {
@@ -39588,6 +39750,15 @@ var $author$project$Component$MarkTable$markValueColors = function (val) {
 		}
 	}
 };
+var $author$project$Component$MarkTable$markNumberValueColor = function (v) {
+	var sel = $elm$core$Tuple$second;
+	return (v < 2.5) ? sel(
+		$author$project$Component$MarkTable$markValueColors('2')) : ((v < 3.5) ? sel(
+		$author$project$Component$MarkTable$markValueColors('3')) : ((v < 4.5) ? sel(
+		$author$project$Component$MarkTable$markValueColors('4')) : sel(
+		$author$project$Component$MarkTable$markValueColors('5'))));
+};
+var $author$project$Component$MarkTable$markSelectedColors = _Utils_Tuple2('#7FB3D5', '#1F618D');
 var $elm$html$Html$Attributes$tabindex = function (n) {
 	return A2(
 		_VirtualDom_attribute,
@@ -39597,6 +39768,8 @@ var $elm$html$Html$Attributes$tabindex = function (n) {
 var $author$project$Component$MarkTable$viewMarkSlot = F4(
 	function (y, x, s, markSlot) {
 		var is_first = (!y) && (!(x + s));
+		var id_ = $elm$html$Html$Attributes$id(
+			'slot-' + ($elm$core$String$fromInt(x + s) + ('-' + $elm$core$String$fromInt(y))));
 		var common_attrs = _Utils_ap(
 			_List_fromArray(
 				[
@@ -39605,8 +39778,7 @@ var $author$project$Component$MarkTable$viewMarkSlot = F4(
 					A2($elm$html$Html$Attributes$style, 'min-height', '40px'),
 					A2($elm$html$Html$Attributes$style, 'max-height', '40px'),
 					A2($elm$html$Html$Attributes$style, 'margin', '5px'),
-					$elm$html$Html$Attributes$id(
-					'slot-' + ($elm$core$String$fromInt(x + s) + ('-' + $elm$core$String$fromInt(y)))),
+					id_,
 					$elm$html$Html$Attributes$class('mark_slot'),
 					$elm$html$Html$Attributes$tabindex(1),
 					A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
@@ -39634,61 +39806,100 @@ var $author$project$Component$MarkTable$viewMarkSlot = F4(
 				[
 					$elm$html$Html$Attributes$autofocus(is_first)
 				]));
-		if (markSlot.$ === 'SlotMark') {
-			var sel = markSlot.a;
-			var mark = markSlot.b;
-			var _v1 = sel ? $author$project$Component$MarkTable$markSelectedColors : $author$project$Component$MarkTable$markValueColors(mark.value);
-			var bg = _v1.a;
-			var fg = _v1.b;
-			return A2(
-				$elm$html$Html$div,
-				_Utils_ap(
+		switch (markSlot.$) {
+			case 'SlotMark':
+				var sel = markSlot.a;
+				var mark = markSlot.b;
+				var _v1 = sel ? $author$project$Component$MarkTable$markSelectedColors : $author$project$Component$MarkTable$markValueColors(mark.value);
+				var bg = _v1.a;
+				var fg = _v1.b;
+				return A2(
+					$elm$html$Html$div,
+					_Utils_ap(
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'background-color', bg),
+								A2($elm$html$Html$Attributes$style, 'border', '1px solid ' + fg),
+								A2($elm$html$Html$Attributes$style, 'color', fg),
+								A2($elm$html$Html$Attributes$style, 'font-size', '16pt'),
+								A2($elm$html$Html$Attributes$style, 'padding', '5px'),
+								$elm$html$Html$Attributes$class('row center-xs middle-xs'),
+								A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
+								$elm$html$Html$Events$onClick(
+								A2(
+									$author$project$Component$MarkTable$MsgMarkClicked,
+									$elm$core$Maybe$Just(mark),
+									_Utils_Tuple2(x, y)))
+							]),
+						_Utils_ap(
+							common_attrs,
+							sel ? _List_fromArray(
+								[
+									$elm$html$Html$Attributes$id('slot_selected')
+								]) : _List_Nil)),
 					_List_fromArray(
 						[
-							A2($elm$html$Html$Attributes$style, 'background-color', bg),
-							A2($elm$html$Html$Attributes$style, 'border', '1px solid ' + fg),
-							A2($elm$html$Html$Attributes$style, 'color', fg),
-							A2($elm$html$Html$Attributes$style, 'font-size', '16pt'),
-							A2($elm$html$Html$Attributes$style, 'padding', '5px'),
-							$elm$html$Html$Attributes$class('row center-xs middle-xs'),
-							A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
-							$elm$html$Html$Events$onClick(
-							A2(
-								$author$project$Component$MarkTable$MsgMarkClicked,
-								$elm$core$Maybe$Just(mark),
-								_Utils_Tuple2(x, y)))
-						]),
+							$elm$html$Html$text(mark.value)
+						]));
+			case 'SlotVirtual':
+				var sel = markSlot.a;
+				return A2(
+					$elm$html$Html$div,
 					_Utils_ap(
-						common_attrs,
-						sel ? _List_fromArray(
+						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$id('slot_selected')
-							]) : _List_Nil)),
-				_List_fromArray(
-					[
-						$elm$html$Html$text(mark.value)
-					]));
-		} else {
-			var sel = markSlot.a;
-			return A2(
-				$elm$html$Html$div,
-				_Utils_ap(
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('mark_slot'),
-							$elm$html$Html$Events$onClick(
-							A2(
-								$author$project$Component$MarkTable$MsgMarkClicked,
-								$elm$core$Maybe$Nothing,
-								_Utils_Tuple2(x, y)))
-						]),
-					_Utils_ap(
-						common_attrs,
-						sel ? _List_fromArray(
+								$elm$html$Html$Attributes$class('mark_slot'),
+								$elm$html$Html$Events$onClick(
+								A2(
+									$author$project$Component$MarkTable$MsgMarkClicked,
+									$elm$core$Maybe$Nothing,
+									_Utils_Tuple2(x, y)))
+							]),
+						_Utils_ap(
+							common_attrs,
+							sel ? _List_fromArray(
+								[
+									$elm$html$Html$Attributes$id('slot_selected')
+								]) : _List_Nil)),
+					_List_Nil);
+			default:
+				if (markSlot.a.$ === 'Just') {
+					var v = markSlot.a.a;
+					return A2(
+						$elm$html$Html$strong,
+						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$id('slot_selected')
-							]) : _List_Nil)),
-				_List_Nil);
+								A2(
+								$elm$html$Html$Attributes$style,
+								'color',
+								$author$project$Component$MarkTable$markNumberValueColor(v)),
+								A2($elm$html$Html$Attributes$style, 'font-size', '16pt'),
+								id_
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								$elm$core$String$fromFloat(
+									A3($author$project$Util$prec, true, 2, v)))
+							]));
+				} else {
+					var _v2 = markSlot.a;
+					return A2(
+						$elm$html$Html$strong,
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$Attributes$style,
+								'color',
+								$author$project$Component$MarkTable$markValueColors('н').b),
+								A2($elm$html$Html$Attributes$style, 'font-size', '16pt'),
+								id_
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Н/Д')
+							]));
+				}
 		}
 	});
 var $author$project$Component$MarkTable$viewTableCell = F4(
@@ -39864,7 +40075,7 @@ var $author$project$Component$MarkTable$viewTable = function (model) {
 					A2(
 						$elm$core$List$indexedMap,
 						$author$project$Component$MarkTable$viewTableRow(
-							!A2($elm$core$Maybe$withDefault, false, model.marksGroupByDate)),
+							!(A2($elm$core$Maybe$withDefault, false, model.marksGroupByDate) || model.canEdit)),
 						A2($author$project$Util$zip, model.rows, model.cells))))
 			]));
 };
@@ -40554,7 +40765,7 @@ var $author$project$Page$UserProfile$viewEmailRow = function (model) {
 									_List_fromArray(
 										[
 											A2($elm$html$Html$Attributes$style, 'color', 'rgb(219, 40, 40)'),
-											$elm$html$Html$Attributes$class('check icon')
+											$elm$html$Html$Attributes$class('x icon')
 										]),
 									_List_Nil),
 									$elm$html$Html$text('Ошибка: ' + err)
@@ -40752,7 +40963,7 @@ var $author$project$Page$UserProfile$viewPassword = function (model) {
 									_List_fromArray(
 										[
 											A2($elm$html$Html$Attributes$style, 'color', 'rgb(219, 40, 40)'),
-											$elm$html$Html$Attributes$class('check icon')
+											$elm$html$Html$Attributes$class('x icon')
 										]),
 									_List_Nil),
 									$elm$html$Html$text('Ошибка: ' + err)

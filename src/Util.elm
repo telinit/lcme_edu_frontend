@@ -401,13 +401,23 @@ list_insert_at i x l =
             x :: l
 
 
-prec digits x =
+prec doRound digits x =
     let
         m =
             10.0 ^ toFloat digits
 
+        v =
+            x * m
+
         tr =
-            toFloat <| truncate (x * m)
+            toFloat <|
+                truncate
+                    (if doRound then
+                        toFloat <| round v
+
+                     else
+                        v
+                    )
     in
     tr / m
 
@@ -431,16 +441,16 @@ fileSizeToISO size =
             toFloat size
     in
     if sizef >= tib then
-        String.fromFloat (prec 2 <| sizef / tib) ++ " ТиБ"
+        String.fromFloat (prec True 2 <| sizef / tib) ++ " ТиБ"
 
     else if sizef >= gib then
-        String.fromFloat (prec 2 <| sizef / gib) ++ " ГиБ"
+        String.fromFloat (prec True 2 <| sizef / gib) ++ " ГиБ"
 
     else if sizef >= mib then
-        String.fromFloat (prec 2 <| sizef / mib) ++ " МиБ"
+        String.fromFloat (prec True 2 <| sizef / mib) ++ " МиБ"
 
     else if sizef >= kib then
-        String.fromFloat (prec 2 <| sizef / kib) ++ " КиБ"
+        String.fromFloat (prec True 2 <| sizef / kib) ++ " КиБ"
 
     else
         String.fromInt size ++ " байт"
@@ -517,3 +527,8 @@ eitherGetLeft either =
 
         Right _ ->
             Nothing
+
+
+dict2DGet : comparable1 -> comparable2 -> Dict comparable1 (Dict comparable2 c) -> Maybe c
+dict2DGet x y =
+    Dict.get x >> Maybe.withDefault Dict.empty >> Dict.get y

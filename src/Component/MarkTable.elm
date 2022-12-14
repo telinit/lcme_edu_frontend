@@ -22,13 +22,16 @@ import Page.CourseListPage exposing (empty_to_nothing)
 import Set
 import Task
 import Time as T exposing (Posix, Zone, millisToPosix, utc)
-import Util exposing (Either, dictFromTupleListMany, dictGroupBy, eitherGetRight, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, maybeToList, posixToDDMMYYYY, resultIsOK, user_full_name, zip)
+import Tuple exposing (first, second)
+import Util exposing (Either, dict2DGet, dictFromTupleListMany, dictGroupBy, eitherGetRight, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, maybeToList, posixToDDMMYYYY, prec, resultIsOK, user_full_name, zip)
 import Uuid exposing (Uuid)
 
 
 type Column
     = Activity Data.Activity
     | Date (Maybe Posix)
+    | Mean
+    | Final String
 
 
 type Row
@@ -55,6 +58,7 @@ type alias IsSelected =
 type MarkSlot
     = SlotMark IsSelected Data.Mark
     | SlotVirtual IsSelected ActivityID StudentID
+    | SlotMean (Maybe Float)
 
 
 type Direction
@@ -222,6 +226,40 @@ keyCodeToMarkCmd code =
 
         _ ->
             CmdUnknown code
+
+
+markToNum : Mark -> number
+markToNum m =
+    case m.value of
+        "1" ->
+            1
+
+        "2" ->
+            2
+
+        "3" ->
+            3
+
+        "4" ->
+            4
+
+        "5" ->
+            5
+
+        "+" ->
+            5
+
+        "-" ->
+            2
+
+        "зч" ->
+            5
+
+        "нз" ->
+            2
+
+        _ ->
+            0
 
 
 showFetchedData : FetchedDataEvent -> String
@@ -439,6 +477,9 @@ updateMark model ( cell_x, cell_y ) markIdOrRec =
                 ( SlotVirtual _ _ _, Nothing ) ->
                     slot
 
+                ( SlotMean _, _ ) ->
+                    slot
+
         update_col : Int -> List MarkSlot -> Maybe Mark -> List MarkSlot
         update_col x col mb_mark_ =
             case ( x, col ) of
@@ -472,7 +513,7 @@ updateMark model ( cell_x, cell_y ) markIdOrRec =
                             else
                                 oldMark :: updateData rest
     in
-    { model
+    updateTable { model
         | cells =
             L.indexedMap
                 (\y row ->
@@ -500,6 +541,7 @@ updateMark model ( cell_x, cell_y ) markIdOrRec =
     }
 
 
+focusCell : Int -> Int -> Cmd Msg
 focusCell x y =
     let
         onResult r =
@@ -597,9 +639,13 @@ updateTable model =
     case model.mode of
         MarksOfCourse ->
             let
-                ix_acts =
+                actsIX : Dict String Activity
+                actsIX =
                     index_by get_id_str activities
 
+                actsFinIX = D.filter (\id a -> a.contentType == Just ActivityContentTypeFIN) actsIX
+
+                rows : List Row
                 rows =
                     L.filterMap
                         (\enr ->
@@ -612,30 +658,62 @@ updateTable model =
                     <|
                         List.sortBy (.person >> user_full_name) model.fetchedData.enrollments
 
+                columns : List Column
                 columns =
-                    L.map Activity <| L.sortBy .order activities
+                    (L.map Activity <| L.sortBy .order activities) ++ [ Mean ]
 
+                activities : List Activity
                 activities =
                     dateFilter model.dateFilter <|
                         List.filter (\a -> 0 < Maybe.withDefault 0 a.marksLimit) model.fetchedData.activities
 
-                mark_coords mark =
-                    D.get (Uuid.toString mark.activity) ix_acts
-                        |> M.andThen
-                            (\act ->
-                                Just
-                                    ( mark
-                                    , get_id_str act
-                                    , Uuid.toString mark.student
-                                    )
-                            )
+                markSlotIX : Dict String (Dict String (List MarkSlot))
+                markSlotIX =
+                    L.foldl
+                        (\mark resD ->
+                            let
+                                mbAct =
+                                    D.get (Uuid.toString mark.activity) actsIX
 
-                marks_ix =
-                    dictFromTupleListMany <|
-                        L.map (\( a, b, c_ ) -> ( ( b, c_ ), SlotMark False a )) <|
-                            L.filterMap mark_coords <|
-                                L.sortBy (.createdAt >> M.map T.posixToMillis >> M.withDefault 0) model.fetchedData.marks
+                                sID =
+                                    Uuid.toString mark.student
+                            in
+                            case mbAct of
+                                Just act ->
+                                    let
+                                        y =
+                                            get_id_str act
 
+                                        x =
+                                            sID
+                                    in
+                                    D.update x
+                                        (\mbSubD ->
+                                            let
+                                                slot =
+                                                    SlotMark False mark
+
+                                                subD =
+                                                    M.withDefault D.empty mbSubD
+
+                                                subDNew =
+                                                    D.update y (Just << M.withDefault [ slot ] << M.map (\l -> l ++ [ slot ])) subD
+                                            in
+                                            Just subDNew
+                                        )
+                                        resD
+
+                                Nothing ->
+                                    resD
+                        )
+                        D.empty
+                        model.fetchedData.marks
+
+                markIsFinal : Mark -> Bool
+                markIsFinal mark =
+                    D.member (Uuid.toString mark.activity) actsFinIX
+
+                cells : List (List (List MarkSlot))
                 cells =
                     L.map
                         (\row ->
@@ -644,11 +722,8 @@ updateTable model =
                                     case ( row, col ) of
                                         ( User student, Activity act ) ->
                                             let
-                                                coords =
-                                                    ( get_id_str act, get_id_str student )
-
                                                 mark_slots =
-                                                    M.withDefault [] <| D.get coords marks_ix
+                                                    M.withDefault [] <| dict2DGet (get_id_str student) (get_id_str act) markSlotIX
                                             in
                                             case ( act.id, student.id ) of
                                                 ( Just aid, Just sid ) ->
@@ -659,6 +734,39 @@ updateTable model =
 
                                                 _ ->
                                                     mark_slots
+
+                                        ( User student, Mean ) ->
+                                            let
+                                                slotToNum s =
+                                                    case s of
+                                                        SlotMark _ m ->
+                                                            if m.value == "н" || markIsFinal m then
+                                                                Nothing
+
+                                                            else
+                                                                markToNum m |> Just
+
+                                                        _ ->
+                                                            Nothing
+
+                                                marks =
+                                                    L.filterMap slotToNum <|
+                                                        L.concat <|
+                                                            D.values <|
+                                                                M.withDefault D.empty <|
+                                                                    D.get (get_id_str student) markSlotIX
+
+                                                len =
+                                                    L.length marks
+
+                                                sum =
+                                                    L.sum marks
+                                            in
+                                            if len > 0 then
+                                                [ SlotMean (Just <| sum / toFloat len) ]
+
+                                            else
+                                                [ SlotMean Nothing ]
 
                                         ( _, _ ) ->
                                             []
@@ -713,6 +821,12 @@ updateTable model =
                         []
                     )
                         ++ [ Date Nothing ]
+                        ++ (if model.dateFilter /= DateFilterAll then
+                                []
+
+                            else
+                                []
+                           )
 
                 activity_course_id : Activity -> String
                 activity_course_id act =
@@ -740,7 +854,7 @@ updateTable model =
                             L.filterMap mark_coords <|
                                 L.sortBy
                                     (\m ->
-                                        ( D.get (Uuid.toString m.activity) ix_acts |> M.map (.order >> (*) (-1)) |> M.withDefault 0
+                                        ( D.get (Uuid.toString m.activity) ix_acts |> M.map (.order >> (*) -1) |> M.withDefault 0
                                         , m.createdAt |> M.map T.posixToMillis |> M.withDefault 0
                                         )
                                     )
@@ -914,6 +1028,9 @@ update msg model =
                                         model.teacher_id
                                 )
 
+                            SlotMean _ ->
+                                ignore
+
                     CmdUnknown _ ->
                         ignore
 
@@ -933,6 +1050,9 @@ update msg model =
                                         mark.id
 
                             SlotVirtual _ _ _ ->
+                                ignore
+
+                            SlotMean _ ->
                                 ignore
 
         ( MsgMarkCreated ( x, y ) mark, _ ) ->
@@ -1019,6 +1139,14 @@ viewColumn showNoDate tz column =
                         M.map (posixToDDMMYYYY T.utc) posix
                 ]
 
+        Mean ->
+            strong []
+                [ text "Средняя оценка" ]
+
+        Final v ->
+            strong []
+                [ text v ]
+
 
 viewRowsFirstCol : Row -> Html Msg
 viewRowsFirstCol row =
@@ -1074,6 +1202,25 @@ markValueColors val =
             default
 
 
+markNumberValueColor : Float -> String
+markNumberValueColor v =
+    let
+        sel =
+            second
+    in
+    if v < 2.5 then
+        sel <| markValueColors "2"
+
+    else if v < 3.5 then
+        sel <| markValueColors "3"
+
+    else if v < 4.5 then
+        sel <| markValueColors "4"
+
+    else
+        sel <| markValueColors "5"
+
+
 markSelectedColors : ( String, String )
 markSelectedColors =
     ( "#7FB3D5", "#1F618D" )
@@ -1085,13 +1232,16 @@ viewMarkSlot y x s markSlot =
         is_first =
             y == 0 && (x + s) == 0
 
+        id_ =
+            id <| "slot-" ++ String.fromInt (x + s) ++ "-" ++ String.fromInt y
+
         common_attrs =
             [ style "min-width" "40px"
             , style "max-width" "40px"
             , style "min-height" "40px"
             , style "max-height" "40px"
             , style "margin" "5px"
-            , id <| "slot-" ++ String.fromInt (x + s) ++ "-" ++ String.fromInt y
+            , id_
             , class "mark_slot"
             , tabindex 1
             , style "cursor" "pointer"
@@ -1152,6 +1302,22 @@ viewMarkSlot y x s markSlot =
                 )
                 []
 
+        SlotMean (Just v) ->
+            strong
+                [ style "color" <| markNumberValueColor v
+                , style "font-size" "16pt"
+                , id_
+                ]
+                [ text <| String.fromFloat <| prec True 2 v ]
+
+        SlotMean Nothing ->
+            strong
+                [ style "color" <| second <| markValueColors "н"
+                , style "font-size" "16pt"
+                , id_
+                ]
+                [ text "Н/Д" ]
+
 
 viewTableCell : Bool -> Int -> Int -> SlotList -> Html Msg
 viewTableCell alignStart y x slot_list =
@@ -1193,6 +1359,12 @@ viewTableHeader model =
 
                 Date _ ->
                     [ style "background-color" "white" ]
+
+                Mean ->
+                    [ style "background-color" "rgb(246, 246, 246)" ]
+
+                Final _ ->
+                    [ style "background-color" "#AAA" ]
     in
     thead
         [ style "position" "sticky"
@@ -1419,6 +1591,7 @@ viewTable model =
                         (viewTableRow <|
                             not <|
                                 M.withDefault False model.marksGroupByDate
+                                    || model.canEdit
                         )
                     <|
                         zip model.rows model.cells

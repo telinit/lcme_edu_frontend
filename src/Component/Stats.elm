@@ -84,7 +84,7 @@ view model =
                             [ strong []
                                 [ text <|
                                     String.fromFloat <|
-                                        prec 2
+                                        prec True 2
                                             (toFloat obj.activities / toFloat obj.courses)
                                 ]
                             ]
@@ -95,7 +95,7 @@ view model =
                             [ strong []
                                 [ text <|
                                     String.fromFloat <|
-                                        prec 2
+                                        prec True 2
                                             (toFloat obj.marks / toFloat obj.activities)
                                 ]
                             ]

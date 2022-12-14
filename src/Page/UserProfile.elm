@@ -364,7 +364,7 @@ viewEmailRow model =
 
                 ( SettingStateChangeError err, StateComplete user ) ->
                     [ h3 []
-                        [ i [ style "color" "rgb(219, 40, 40)", class "check icon" ] []
+                        [ i [ style "color" "rgb(219, 40, 40)", class "x icon" ] []
                         , text <| "Ошибка: " ++ err
                         ]
                     ]
@@ -436,7 +436,7 @@ viewPassword model =
 
                 ( SettingStateChangeError err, StateComplete user ) ->
                     [ h3 []
-                        [ i [ style "color" "rgb(219, 40, 40)", class "check icon" ] []
+                        [ i [ style "color" "rgb(219, 40, 40)", class "x icon" ] []
                         , text <| "Ошибка: " ++ err
                         ]
                     ]
