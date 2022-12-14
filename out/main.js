@@ -39424,7 +39424,7 @@ var $author$project$Component$MarkTable$viewMarkDetailsModal = function (model) 
 	}
 };
 var $elm$html$Html$thead = _VirtualDom_node('thead');
-var $author$project$Component$MarkTable$viewColumn = F3(
+var $author$project$Component$MarkTable$viewColumnHeader = F3(
 	function (showNoDate, tz, column) {
 		switch (column.$) {
 			case 'ColumnHeaderActivity':
@@ -39624,7 +39624,7 @@ var $author$project$Component$MarkTable$viewTableHeader = function (model) {
 								_List_fromArray(
 									[
 										A3(
-										$author$project$Component$MarkTable$viewColumn,
+										$author$project$Component$MarkTable$viewColumnHeader,
 										A2($elm$core$Maybe$withDefault, false, model.marksGroupByDate),
 										model.tz,
 										col)
@@ -39966,7 +39966,13 @@ var $author$project$Component$MarkTable$viewTableCell = F6(
 							$elm$html$Html$Attributes$style,
 							'min-width',
 							$elm$core$String$fromInt(
-								$elm$core$List$length(slot_list) * 50) + 'px')
+								$elm$core$List$length(slot_list) * 50) + 'px'),
+							A2(
+							$elm$html$Html$Attributes$style,
+							'max-width',
+							$elm$core$String$fromInt(
+								$elm$core$List$length(slot_list) * 70) + 'px'),
+							A2($elm$html$Html$Attributes$style, 'margin', '0')
 						]),
 					A2(
 						$elm$core$List$indexedMap,

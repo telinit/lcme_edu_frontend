@@ -1111,8 +1111,8 @@ update msg model =
             ( updateTable { model | marksGroupByDate = Just val }, Cmd.none )
 
 
-viewColumn : Bool -> Zone -> ColumnHeader -> Html Msg
-viewColumn showNoDate tz column =
+viewColumnHeader : Bool -> Zone -> ColumnHeader -> Html Msg
+viewColumnHeader showNoDate tz column =
     case column of
         ColumnHeaderActivity activity ->
             case activity.contentType of
@@ -1376,6 +1376,8 @@ viewTableCell alignStart y x rowHeader colHeader slot_list =
                        )
                 )
             , style "min-width" (String.fromInt (List.length slot_list * 50) ++ "px") -- TODO: change with something better
+            , style "max-width" (String.fromInt (List.length slot_list * 70) ++ "px")
+            , style "margin" "0"
             ]
           <|
             L.indexedMap (viewMarkSlot y x) slot_list
@@ -1432,7 +1434,7 @@ viewTableHeader model =
                              ]
                                 ++ td_attrs col
                             )
-                            [ viewColumn (M.withDefault False <| model.marksGroupByDate) model.tz col ]
+                            [ viewColumnHeader (M.withDefault False <| model.marksGroupByDate) model.tz col ]
                     )
                     model.columns
             )
