@@ -1380,6 +1380,7 @@ viewTableCell alignStart y x rowHeader colHeader slot_list =
             --, style "max-width" (String.fromInt (List.length slot_list * 70 + 50) ++ "px")
             , style "margin" "0"
             , style "width" "100%"
+            , style "min-width" "max-content"
             ]
           <|
             L.indexedMap (viewMarkSlot y x) slot_list

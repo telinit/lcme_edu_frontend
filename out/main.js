@@ -39972,7 +39972,8 @@ var $author$project$Component$MarkTable$viewTableCell = F6(
 							$elm$html$Html$Attributes$class(
 							'row ' + (alignStart ? 'start-xs' : 'center-xs')),
 							A2($elm$html$Html$Attributes$style, 'margin', '0'),
-							A2($elm$html$Html$Attributes$style, 'width', '100%')
+							A2($elm$html$Html$Attributes$style, 'width', '100%'),
+							A2($elm$html$Html$Attributes$style, 'min-width', 'max-content')
 						]),
 					A2(
 						$elm$core$List$indexedMap,
