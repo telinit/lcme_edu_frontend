@@ -17071,9 +17071,22 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 					A2($elm$core$Maybe$map, $elm$core$Basics$not, model.marksGroupByDate)) ? A2(
 					$elm$core$List$map,
 					$author$project$Component$MarkTable$ColumnHeaderFinal,
-					$elm$core$Set$toList(
-						$elm$core$Set$fromList(
-							A2($elm$core$List$map, $author$project$Util$finalTypeToStr, finalActs)))) : _List_Nil));
+					A3(
+						$elm$core$List$foldl,
+						F2(
+							function (a, l) {
+								return A2(
+									$elm$core$List$member,
+									$author$project$Util$finalTypeToStr(a),
+									l) ? l : _Utils_ap(
+									l,
+									_List_fromArray(
+										[
+											$author$project$Util$finalTypeToStr(a)
+										]));
+							}),
+						_List_Nil,
+						finalActs)) : _List_Nil));
 		var ix_acts = A2($author$project$Util$index_by, $author$project$Util$get_id_str, activities);
 		var mark_coords = function (mark) {
 			return A2(

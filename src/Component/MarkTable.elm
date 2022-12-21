@@ -831,9 +831,16 @@ updateTable model =
                         ++ [ ColumnHeaderDate Nothing ]
                         ++ (if M.withDefault False <| M.map not model.marksGroupByDate then
                                 L.map ColumnHeaderFinal <|
-                                    Set.toList <|
-                                        Set.fromList <|
-                                            L.map finalTypeToStr finalActs
+                                    L.foldl
+                                        (\a l ->
+                                            if L.member (finalTypeToStr a) l then
+                                                l
+
+                                            else
+                                                l ++ [ finalTypeToStr a ]
+                                        )
+                                        []
+                                        finalActs
 
                             else
                                 []
