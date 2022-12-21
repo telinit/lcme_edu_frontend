@@ -592,7 +592,7 @@ dateFilter filter orderSortedActs =
         DateFilterQ2 ->
             let
                 ( l, r ) =
-                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeQ2)) <|
+                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeH1)) <|
                         List.drop 1 <|
                             listDropWhile (.finalType >> (/=) (Just ActivityFinalTypeQ1)) orderSortedActs
             in
@@ -603,14 +603,14 @@ dateFilter filter orderSortedActs =
                 ( l, r ) =
                     listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeQ3)) <|
                         List.drop 1 <|
-                            listDropWhile (.finalType >> (/=) (Just ActivityFinalTypeQ2)) orderSortedActs
+                            listDropWhile (.finalType >> (/=) (Just ActivityFinalTypeH1)) orderSortedActs
             in
             l ++ maybeToList (List.head r)
 
         DateFilterQ4 ->
             let
                 ( l, r ) =
-                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeQ4)) <|
+                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeY)) <|
                         List.drop 1 <|
                             listDropWhile (.finalType >> (/=) (Just ActivityFinalTypeQ3)) orderSortedActs
             in
@@ -626,7 +626,7 @@ dateFilter filter orderSortedActs =
         DateFilterH2 ->
             let
                 ( l, r ) =
-                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeH2)) <|
+                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeY)) <|
                         List.drop 1 <|
                             listDropWhile (.finalType >> (/=) (Just ActivityFinalTypeH1)) orderSortedActs
             in
@@ -798,6 +798,7 @@ updateTable model =
                 existingActivityIDS =
                     Set.fromList <| List.map (.activity >> Uuid.toString) model.fetchedData.marks
 
+                activities : List Activity
                 activities =
                     List.filter (\a -> Set.member (get_id_str a) existingActivityIDS) <|
                         L.concat <|
@@ -809,6 +810,10 @@ updateTable model =
 
                 ix_acts =
                     index_by get_id_str activities
+
+                finalActs =
+                    L.sortBy .order <|
+                        L.filter (\act -> act.contentType == Just ActivityContentTypeFIN) activities
 
                 columns : List ColumnHeader
                 columns =
@@ -824,8 +829,11 @@ updateTable model =
                         []
                     )
                         ++ [ ColumnHeaderDate Nothing ]
-                        ++ (if model.dateFilter /= DateFilterAll then
-                                []
+                        ++ (if M.withDefault False <| M.map not model.marksGroupByDate then
+                                L.map ColumnHeaderFinal <|
+                                    Set.toList <|
+                                        Set.fromList <|
+                                            L.map finalTypeToStr finalActs
 
                             else
                                 []
@@ -843,6 +851,9 @@ updateTable model =
                                 ( mark
                                 , if M.withDefault False <| model.marksGroupByDate then
                                     String.fromInt <| M.withDefault 0 <| M.map T.posixToMillis act.date
+
+                                  else if act.contentType == Just ActivityContentTypeFIN then
+                                    finalTypeToStr act
 
                                   else
                                     "0"
@@ -878,6 +889,18 @@ updateTable model =
                                                             ( String.fromInt <|
                                                                 M.withDefault 0 <|
                                                                     M.map T.posixToMillis date
+                                                            , get_id_str course
+                                                            )
+                                                            marks_ix
+                                            in
+                                            mark_slots
+
+                                        ( RowHeaderCourse course, ColumnHeaderFinal name ) ->
+                                            let
+                                                mark_slots =
+                                                    M.withDefault [] <|
+                                                        D.get
+                                                            ( name
                                                             , get_id_str course
                                                             )
                                                             marks_ix
@@ -1460,7 +1483,16 @@ viewTableRow columnHeaders alignStart y ( rowHeader, columnContentList ) =
             ++ (Tuple.second <|
                     L.foldl
                         (\( col, colContent ) ( x, res ) ->
-                            ( x + L.length colContent, res ++ [ viewTableCell alignStart y x rowHeader col colContent ] )
+                            let
+                                alignStart2 =
+                                    case col of
+                                        ColumnHeaderFinal _ ->
+                                            False
+
+                                        _ ->
+                                            alignStart
+                            in
+                            ( x + L.length colContent, res ++ [ viewTableCell alignStart2 y x rowHeader col colContent ] )
                         )
                         ( 0, [] )
                         (zip columnHeaders columnContentList)

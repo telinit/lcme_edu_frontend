@@ -16443,6 +16443,9 @@ var $author$project$Component$MarkTable$ColumnHeaderActivity = function (a) {
 var $author$project$Component$MarkTable$ColumnHeaderDate = function (a) {
 	return {$: 'ColumnHeaderDate', a: a};
 };
+var $author$project$Component$MarkTable$ColumnHeaderFinal = function (a) {
+	return {$: 'ColumnHeaderFinal', a: a};
+};
 var $author$project$Component$MarkTable$ColumnHeaderMean = {$: 'ColumnHeaderMean'};
 var $author$project$Component$MarkTable$RowHeaderCourse = function (a) {
 	return {$: 'RowHeaderCourse', a: a};
@@ -16523,7 +16526,7 @@ var $author$project$Component$MarkTable$dateFilter = F2(
 							return $.finalType;
 						},
 						$elm$core$Basics$neq(
-							$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeQ2))),
+							$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeH1))),
 					A2(
 						$elm$core$List$drop,
 						1,
@@ -16564,7 +16567,7 @@ var $author$project$Component$MarkTable$dateFilter = F2(
 									return $.finalType;
 								},
 								$elm$core$Basics$neq(
-									$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeQ2))),
+									$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeH1))),
 							orderSortedActs)));
 				var l = _v3.a;
 				var r = _v3.b;
@@ -16581,7 +16584,7 @@ var $author$project$Component$MarkTable$dateFilter = F2(
 							return $.finalType;
 						},
 						$elm$core$Basics$neq(
-							$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeQ4))),
+							$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeY))),
 					A2(
 						$elm$core$List$drop,
 						1,
@@ -16627,7 +16630,7 @@ var $author$project$Component$MarkTable$dateFilter = F2(
 							return $.finalType;
 						},
 						$elm$core$Basics$neq(
-							$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeH2))),
+							$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeY))),
 					A2(
 						$elm$core$List$drop,
 						1,
@@ -17021,6 +17024,19 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 								},
 								$danyx23$elm_uuid$Uuid$toString),
 							model.fetchedData.activities)))));
+		var finalActs = A2(
+			$elm$core$List$sortBy,
+			function ($) {
+				return $.order;
+			},
+			A2(
+				$elm$core$List$filter,
+				function (act) {
+					return _Utils_eq(
+						act.contentType,
+						$elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeFIN));
+				},
+				activities));
 		var columns = _Utils_ap(
 			A2($elm$core$Maybe$withDefault, false, model.marksGroupByDate) ? A2(
 				$elm$core$List$map,
@@ -17049,7 +17065,15 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 					[
 						$author$project$Component$MarkTable$ColumnHeaderDate($elm$core$Maybe$Nothing)
 					]),
-				(!_Utils_eq(model.dateFilter, $author$project$Component$MarkTable$DateFilterAll)) ? _List_Nil : _List_Nil));
+				A2(
+					$elm$core$Maybe$withDefault,
+					false,
+					A2($elm$core$Maybe$map, $elm$core$Basics$not, model.marksGroupByDate)) ? A2(
+					$elm$core$List$map,
+					$author$project$Component$MarkTable$ColumnHeaderFinal,
+					$elm$core$Set$toList(
+						$elm$core$Set$fromList(
+							A2($elm$core$List$map, $author$project$Util$finalTypeToStr, finalActs)))) : _List_Nil));
 		var ix_acts = A2($author$project$Util$index_by, $author$project$Util$get_id_str, activities);
 		var mark_coords = function (mark) {
 			return A2(
@@ -17061,7 +17085,9 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 							A2(
 								$elm$core$Maybe$withDefault,
 								0,
-								A2($elm$core$Maybe$map, $elm$time$Time$posixToMillis, act.date))) : '0',
+								A2($elm$core$Maybe$map, $elm$time$Time$posixToMillis, act.date))) : (_Utils_eq(
+							act.contentType,
+							$elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeFIN)) ? $author$project$Util$finalTypeToStr(act) : '0'),
 						activity_course_id(act));
 				},
 				A2(
@@ -17115,26 +17141,48 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 					$elm$core$List$map,
 					function (col) {
 						var _v6 = _Utils_Tuple2(row, col);
-						if ((_v6.a.$ === 'RowHeaderCourse') && (_v6.b.$ === 'ColumnHeaderDate')) {
-							var course = _v6.a.a;
-							var date = _v6.b.a;
-							var mark_slots = A2(
-								$elm$core$Maybe$withDefault,
-								_List_Nil,
-								A2(
-									$elm$core$Dict$get,
-									_Utils_Tuple2(
-										$elm$core$String$fromInt(
+						_v6$2:
+						while (true) {
+							if (_v6.a.$ === 'RowHeaderCourse') {
+								switch (_v6.b.$) {
+									case 'ColumnHeaderDate':
+										var course = _v6.a.a;
+										var date = _v6.b.a;
+										var mark_slots = A2(
+											$elm$core$Maybe$withDefault,
+											_List_Nil,
 											A2(
-												$elm$core$Maybe$withDefault,
-												0,
-												A2($elm$core$Maybe$map, $elm$time$Time$posixToMillis, date))),
-										$author$project$Util$get_id_str(course)),
-									marks_ix));
-							return mark_slots;
-						} else {
-							return _List_Nil;
+												$elm$core$Dict$get,
+												_Utils_Tuple2(
+													$elm$core$String$fromInt(
+														A2(
+															$elm$core$Maybe$withDefault,
+															0,
+															A2($elm$core$Maybe$map, $elm$time$Time$posixToMillis, date))),
+													$author$project$Util$get_id_str(course)),
+												marks_ix));
+										return mark_slots;
+									case 'ColumnHeaderFinal':
+										var course = _v6.a.a;
+										var name = _v6.b.a;
+										var mark_slots = A2(
+											$elm$core$Maybe$withDefault,
+											_List_Nil,
+											A2(
+												$elm$core$Dict$get,
+												_Utils_Tuple2(
+													name,
+													$author$project$Util$get_id_str(course)),
+												marks_ix));
+										return mark_slots;
+									default:
+										break _v6$2;
+								}
+							} else {
+								break _v6$2;
+							}
 						}
+						return _List_Nil;
 					},
 					columns);
 			},
@@ -40015,13 +40063,20 @@ var $author$project$Component$MarkTable$viewTableRow = F4(
 							var colContent = _v1.b;
 							var x = _v2.a;
 							var res = _v2.b;
+							var alignStart2 = function () {
+								if (col.$ === 'ColumnHeaderFinal') {
+									return false;
+								} else {
+									return alignStart;
+								}
+							}();
 							return _Utils_Tuple2(
 								x + $elm$core$List$length(colContent),
 								_Utils_ap(
 									res,
 									_List_fromArray(
 										[
-											A6($author$project$Component$MarkTable$viewTableCell, alignStart, y, x, rowHeader, col, colContent)
+											A6($author$project$Component$MarkTable$viewTableCell, alignStart2, y, x, rowHeader, col, colContent)
 										])));
 						}),
 					_Utils_Tuple2(0, _List_Nil),
