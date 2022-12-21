@@ -24,7 +24,7 @@ import Task
 import Theme
 import Time as T exposing (Posix, Zone, millisToPosix, utc)
 import Tuple exposing (first, second)
-import Util exposing (Either, dict2DGet, dictFromTupleListMany, dictGroupBy, eitherGetRight, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, maybeToList, posixToDDMMYYYY, prec, resultIsOK, user_full_name, zip, zip3)
+import Util exposing (Either, dict2DGet, dictFromTupleListMany, dictGroupBy, eitherGetRight, finalTypeOrder, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, maybeToList, posixToDDMMYYYY, prec, resultIsOK, user_full_name, zip, zip3)
 import Uuid exposing (Uuid)
 
 
@@ -812,7 +812,7 @@ updateTable model =
                     index_by get_id_str activities
 
                 finalActs =
-                    L.sortBy .order <|
+                    L.sortBy (.finalType >> Maybe.withDefault ActivityFinalTypeF >> finalTypeOrder) <|
                         L.filter (\act -> act.contentType == Just ActivityContentTypeFIN) activities
 
                 columns : List ColumnHeader
@@ -831,16 +831,7 @@ updateTable model =
                         ++ [ ColumnHeaderDate Nothing ]
                         ++ (if M.withDefault False <| M.map not model.marksGroupByDate then
                                 L.map ColumnHeaderFinal <|
-                                    L.foldl
-                                        (\a l ->
-                                            if L.member (finalTypeToStr a) l then
-                                                l
-
-                                            else
-                                                l ++ [ finalTypeToStr a ]
-                                        )
-                                        []
-                                        finalActs
+                                    L.map finalTypeToStr finalActs
 
                             else
                                 []

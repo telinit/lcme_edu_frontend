@@ -1,6 +1,6 @@
 module Util exposing (..)
 
-import Api.Data exposing (UserDeep, UserShallow)
+import Api.Data exposing (ActivityFinalType(..), UserDeep, UserShallow)
 import Array exposing (Array)
 import Dict exposing (Dict)
 import Html exposing (Attribute, span)
@@ -362,6 +362,35 @@ finalTypeToStr act =
         Nothing ->
             ""
 
+finalTypeOrder : ActivityFinalType -> Int
+finalTypeOrder ft =
+    case ft of
+        ActivityFinalTypeQ1 ->
+            1
+
+        ActivityFinalTypeQ2 ->
+            2
+
+        ActivityFinalTypeQ3 ->
+            4
+
+        ActivityFinalTypeQ4 ->
+            5
+
+        ActivityFinalTypeH1 ->
+            3
+
+        ActivityFinalTypeH2 ->
+            6
+
+        ActivityFinalTypeY ->
+            7
+
+        ActivityFinalTypeE ->
+            8
+
+        ActivityFinalTypeF ->
+            9
 
 maybeFilter : (a -> Bool) -> Maybe a -> Maybe a
 maybeFilter pred maybe =

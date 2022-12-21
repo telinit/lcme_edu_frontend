@@ -16712,6 +16712,28 @@ var $author$project$Util$dictGroupBy = F2(
 			});
 		return A3($elm$core$List$foldl, f, $elm$core$Dict$empty, list);
 	});
+var $author$project$Util$finalTypeOrder = function (ft) {
+	switch (ft.$) {
+		case 'ActivityFinalTypeQ1':
+			return 1;
+		case 'ActivityFinalTypeQ2':
+			return 2;
+		case 'ActivityFinalTypeQ3':
+			return 4;
+		case 'ActivityFinalTypeQ4':
+			return 5;
+		case 'ActivityFinalTypeH1':
+			return 3;
+		case 'ActivityFinalTypeH2':
+			return 6;
+		case 'ActivityFinalTypeY':
+			return 7;
+		case 'ActivityFinalTypeE':
+			return 8;
+		default:
+			return 9;
+	}
+};
 var $author$project$Util$index_by = F2(
 	function (key, list) {
 		return $elm$core$Dict$fromList(
@@ -17026,9 +17048,15 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 							model.fetchedData.activities)))));
 		var finalActs = A2(
 			$elm$core$List$sortBy,
-			function ($) {
-				return $.order;
-			},
+			A2(
+				$elm$core$Basics$composeR,
+				function ($) {
+					return $.finalType;
+				},
+				A2(
+					$elm$core$Basics$composeR,
+					$elm$core$Maybe$withDefault($author$project$Api$Data$ActivityFinalTypeF),
+					$author$project$Util$finalTypeOrder)),
 			A2(
 				$elm$core$List$filter,
 				function (act) {
@@ -17071,22 +17099,7 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 					A2($elm$core$Maybe$map, $elm$core$Basics$not, model.marksGroupByDate)) ? A2(
 					$elm$core$List$map,
 					$author$project$Component$MarkTable$ColumnHeaderFinal,
-					A3(
-						$elm$core$List$foldl,
-						F2(
-							function (a, l) {
-								return A2(
-									$elm$core$List$member,
-									$author$project$Util$finalTypeToStr(a),
-									l) ? l : _Utils_ap(
-									l,
-									_List_fromArray(
-										[
-											$author$project$Util$finalTypeToStr(a)
-										]));
-							}),
-						_List_Nil,
-						finalActs)) : _List_Nil));
+					A2($elm$core$List$map, $author$project$Util$finalTypeToStr, finalActs)) : _List_Nil));
 		var ix_acts = A2($author$project$Util$index_by, $author$project$Util$get_id_str, activities);
 		var mark_coords = function (mark) {
 			return A2(
