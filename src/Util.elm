@@ -563,3 +563,7 @@ eitherGetLeft either =
 dict2DGet : comparable1 -> comparable2 -> Dict comparable1 (Dict comparable2 c) -> Maybe c
 dict2DGet x y =
     Dict.get x >> Maybe.withDefault Dict.empty >> Dict.get y
+
+listUniqueNaive : List a -> List a
+listUniqueNaive list =
+    List.foldl (\x r -> if List.member x r then r else r ++ [x]) [] list

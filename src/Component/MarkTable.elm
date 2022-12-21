@@ -24,7 +24,7 @@ import Task
 import Theme
 import Time as T exposing (Posix, Zone, millisToPosix, utc)
 import Tuple exposing (first, second)
-import Util exposing (Either, dict2DGet, dictFromTupleListMany, dictGroupBy, eitherGetRight, finalTypeOrder, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, maybeToList, posixToDDMMYYYY, prec, resultIsOK, user_full_name, zip, zip3)
+import Util exposing (Either, dict2DGet, dictFromTupleListMany, dictGroupBy, eitherGetRight, finalTypeOrder, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, listUniqueNaive, maybeToList, posixToDDMMYYYY, prec, resultIsOK, user_full_name, zip, zip3)
 import Uuid exposing (Uuid)
 
 
@@ -831,7 +831,8 @@ updateTable model =
                         ++ [ ColumnHeaderDate Nothing ]
                         ++ (if M.withDefault False <| M.map not model.marksGroupByDate then
                                 L.map ColumnHeaderFinal <|
-                                    L.map finalTypeToStr finalActs
+                                    listUniqueNaive <|
+                                        L.map finalTypeToStr finalActs
 
                             else
                                 []

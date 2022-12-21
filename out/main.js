@@ -16746,6 +16746,19 @@ var $author$project$Util$index_by = F2(
 				},
 				list));
 	});
+var $author$project$Util$listUniqueNaive = function (list) {
+	return A3(
+		$elm$core$List$foldl,
+		F2(
+			function (x, r) {
+				return A2($elm$core$List$member, x, r) ? r : _Utils_ap(
+					r,
+					_List_fromArray(
+						[x]));
+			}),
+		_List_Nil,
+		list);
+};
 var $author$project$Component$MarkTable$markToNum = function (m) {
 	var _v0 = m.value;
 	switch (_v0) {
@@ -17099,7 +17112,8 @@ var $author$project$Component$MarkTable$updateTable = function (model) {
 					A2($elm$core$Maybe$map, $elm$core$Basics$not, model.marksGroupByDate)) ? A2(
 					$elm$core$List$map,
 					$author$project$Component$MarkTable$ColumnHeaderFinal,
-					A2($elm$core$List$map, $author$project$Util$finalTypeToStr, finalActs)) : _List_Nil));
+					$author$project$Util$listUniqueNaive(
+						A2($elm$core$List$map, $author$project$Util$finalTypeToStr, finalActs))) : _List_Nil));
 		var ix_acts = A2($author$project$Util$index_by, $author$project$Util$get_id_str, activities);
 		var mark_coords = function (mark) {
 			return A2(
