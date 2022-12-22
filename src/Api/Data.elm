@@ -524,6 +524,7 @@ type alias UserDeep =
     , children : List UserShallow
     , parents : List UserShallow
     , education : List EducationShallow
+    , olympiads : List Olympiad
     , lastLogin : Maybe Posix
     , isSuperuser : Maybe Bool
     , username : String
@@ -1421,6 +1422,7 @@ encodeUserDeepPairs model =
             , encode "children" (Json.Encode.list encodeUserShallow) model.children
             , encode "parents" (Json.Encode.list encodeUserShallow) model.parents
             , encode "education" (Json.Encode.list encodeEducationShallow) model.education
+            , encode "olympiads" (Json.Encode.list encodeOlympiad) model.olympiads
             , maybeEncodeNullable "last_login" Api.Time.encodeDateTime model.lastLogin
             , maybeEncode "is_superuser" Json.Encode.bool model.isSuperuser
             , encode "username" Json.Encode.string model.username
@@ -1960,6 +1962,7 @@ userDeepDecoder =
         |> decode "children" (Json.Decode.list userShallowDecoder)
         |> decode "parents" (Json.Decode.list userShallowDecoder)
         |> decode "education" (Json.Decode.list educationShallowDecoder)
+        |> decode "olympiads" (Json.Decode.list olympiadDecoder)
         |> maybeDecodeNullable "last_login" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "is_superuser" Json.Decode.bool Nothing
         |> decode "username" Json.Decode.string

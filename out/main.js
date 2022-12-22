@@ -9909,21 +9909,23 @@ var $author$project$Api$Data$UserDeep = function (id) {
 				return function (children) {
 					return function (parents) {
 						return function (education) {
-							return function (lastLogin) {
-								return function (isSuperuser) {
-									return function (username) {
-										return function (firstName) {
-											return function (lastName) {
-												return function (email) {
-													return function (isStaff) {
-														return function (isActive) {
-															return function (dateJoined) {
-																return function (createdAt) {
-																	return function (updatedAt) {
-																		return function (middleName) {
-																			return function (birthDate) {
-																				return function (avatar) {
-																					return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, currentSpec: currentSpec, dateJoined: dateJoined, education: education, email: email, firstName: firstName, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, parents: parents, roles: roles, updatedAt: updatedAt, username: username};
+							return function (olympiads) {
+								return function (lastLogin) {
+									return function (isSuperuser) {
+										return function (username) {
+											return function (firstName) {
+												return function (lastName) {
+													return function (email) {
+														return function (isStaff) {
+															return function (isActive) {
+																return function (dateJoined) {
+																	return function (createdAt) {
+																		return function (updatedAt) {
+																			return function (middleName) {
+																				return function (birthDate) {
+																					return function (avatar) {
+																						return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, currentSpec: currentSpec, dateJoined: dateJoined, education: education, email: email, firstName: firstName, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, olympiads: olympiads, parents: parents, roles: roles, updatedAt: updatedAt, username: username};
+																					};
 																				};
 																			};
 																		};
@@ -9991,6 +9993,54 @@ var $author$project$Api$Data$educationShallowDecoder = A3(
 									$danyx23$elm_uuid$Uuid$decoder,
 									$elm$core$Maybe$Nothing,
 									$elm$json$Json$Decode$succeed($author$project$Api$Data$EducationShallow))))))))));
+var $author$project$Api$Data$Olympiad = F9(
+	function (id, createdAt, updatedAt, name, category, website, organization, department, logo) {
+		return {category: category, createdAt: createdAt, department: department, id: id, logo: logo, name: name, organization: organization, updatedAt: updatedAt, website: website};
+	});
+var $author$project$Api$Data$olympiadDecoder = A4(
+	$author$project$Api$Data$maybeDecodeNullable,
+	'logo',
+	$danyx23$elm_uuid$Uuid$decoder,
+	$elm$core$Maybe$Nothing,
+	A4(
+		$author$project$Api$Data$maybeDecodeNullable,
+		'department',
+		$danyx23$elm_uuid$Uuid$decoder,
+		$elm$core$Maybe$Nothing,
+		A4(
+			$author$project$Api$Data$maybeDecodeNullable,
+			'organization',
+			$elm$json$Json$Decode$string,
+			$elm$core$Maybe$Nothing,
+			A4(
+				$author$project$Api$Data$maybeDecodeNullable,
+				'website',
+				$elm$json$Json$Decode$string,
+				$elm$core$Maybe$Nothing,
+				A3(
+					$author$project$Api$Data$decode,
+					'category',
+					$elm$json$Json$Decode$string,
+					A3(
+						$author$project$Api$Data$decode,
+						'name',
+						$elm$json$Json$Decode$string,
+						A4(
+							$author$project$Api$Data$maybeDecode,
+							'updated_at',
+							$author$project$Api$Time$dateTimeDecoder,
+							$elm$core$Maybe$Nothing,
+							A4(
+								$author$project$Api$Data$maybeDecode,
+								'created_at',
+								$author$project$Api$Time$dateTimeDecoder,
+								$elm$core$Maybe$Nothing,
+								A4(
+									$author$project$Api$Data$maybeDecode,
+									'id',
+									$danyx23$elm_uuid$Uuid$decoder,
+									$elm$core$Maybe$Nothing,
+									$elm$json$Json$Decode$succeed($author$project$Api$Data$Olympiad))))))))));
 var $author$project$Api$Data$userDeepDecoder = A4(
 	$author$project$Api$Data$maybeDecodeNullable,
 	'avatar',
@@ -10062,37 +10112,41 @@ var $author$project$Api$Data$userDeepDecoder = A4(
 														$elm$core$Maybe$Nothing,
 														A3(
 															$author$project$Api$Data$decode,
-															'education',
-															$elm$json$Json$Decode$list($author$project$Api$Data$educationShallowDecoder),
+															'olympiads',
+															$elm$json$Json$Decode$list($author$project$Api$Data$olympiadDecoder),
 															A3(
 																$author$project$Api$Data$decode,
-																'parents',
-																$elm$json$Json$Decode$list($author$project$Api$Data$userShallowDecoder),
+																'education',
+																$elm$json$Json$Decode$list($author$project$Api$Data$educationShallowDecoder),
 																A3(
 																	$author$project$Api$Data$decode,
-																	'children',
+																	'parents',
 																	$elm$json$Json$Decode$list($author$project$Api$Data$userShallowDecoder),
-																	A4(
-																		$author$project$Api$Data$maybeDecode,
-																		'current_spec',
-																		$author$project$Api$Data$educationSpecializationDecoder,
-																		$elm$core$Maybe$Nothing,
+																	A3(
+																		$author$project$Api$Data$decode,
+																		'children',
+																		$elm$json$Json$Decode$list($author$project$Api$Data$userShallowDecoder),
 																		A4(
 																			$author$project$Api$Data$maybeDecode,
-																			'current_class',
-																			$elm$json$Json$Decode$string,
+																			'current_spec',
+																			$author$project$Api$Data$educationSpecializationDecoder,
 																			$elm$core$Maybe$Nothing,
 																			A4(
 																				$author$project$Api$Data$maybeDecode,
-																				'roles',
-																				$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+																				'current_class',
+																				$elm$json$Json$Decode$string,
 																				$elm$core$Maybe$Nothing,
 																				A4(
 																					$author$project$Api$Data$maybeDecode,
-																					'id',
-																					$danyx23$elm_uuid$Uuid$decoder,
+																					'roles',
+																					$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
 																					$elm$core$Maybe$Nothing,
-																					$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeep))))))))))))))))))))));
+																					A4(
+																						$author$project$Api$Data$maybeDecode,
+																						'id',
+																						$danyx23$elm_uuid$Uuid$decoder,
+																						$elm$core$Maybe$Nothing,
+																						$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeep)))))))))))))))))))))));
 var $author$project$Api$Request$User$userSelf = A7($author$project$Api$request, 'GET', '/user/self/', _List_Nil, _List_Nil, _List_Nil, $elm$core$Maybe$Nothing, $author$project$Api$Data$userDeepDecoder);
 var $author$project$Page$Login$doCheckSession = function (token) {
 	var task_user = A2(
