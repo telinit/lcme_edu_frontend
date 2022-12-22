@@ -40,6 +40,7 @@ module Api.Data exposing
     , Mark
     , Message
     , MessageType(..)
+    , Olympiad
     , Organization
     , ResetPasswordComplete
     , ResetPasswordRequest
@@ -84,6 +85,7 @@ module Api.Data exposing
     , encodeLogin
     , encodeMark
     , encodeMessage
+    , encodeOlympiad
     , encodeOrganization
     , encodeResetPasswordComplete
     , encodeResetPasswordRequest
@@ -104,6 +106,7 @@ module Api.Data exposing
     , markDecoder
     , messageDecoder
     , messageTypeVariants
+    , olympiadDecoder
     , organizationDecoder
     , resetPasswordCompleteDecoder
     , resetPasswordRequestDecoder
@@ -424,6 +427,19 @@ messageTypeVariants =
     , MessageTypeNEW
     , MessageTypeMAN
     ]
+
+
+type alias Olympiad =
+    { id : Maybe Uuid
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
+    , name : String
+    , category : String
+    , website : Maybe String
+    , organization : Maybe String
+    , department : Maybe Uuid
+    , logo : Maybe Uuid
+    }
 
 
 type alias Organization =
@@ -1166,6 +1182,34 @@ encodeMessageType =
     Json.Encode.string << stringFromMessageType
 
 
+encodeOlympiad : Olympiad -> Json.Encode.Value
+encodeOlympiad =
+    encodeObject << encodeOlympiadPairs
+
+
+encodeOlympiadWithTag : ( String, String ) -> Olympiad -> Json.Encode.Value
+encodeOlympiadWithTag ( tagField, tag ) model =
+    encodeObject (encodeOlympiadPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeOlympiadPairs : Olympiad -> List EncodedField
+encodeOlympiadPairs model =
+    let
+        pairs =
+            [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
+            , encode "name" Json.Encode.string model.name
+            , encode "category" Json.Encode.string model.category
+            , maybeEncodeNullable "website" Json.Encode.string model.website
+            , maybeEncodeNullable "organization" Json.Encode.string model.organization
+            , maybeEncodeNullable "department" Uuid.encode model.department
+            , maybeEncodeNullable "logo" Uuid.encode model.logo
+            ]
+    in
+    pairs
+
+
 encodeOrganization : Organization -> Json.Encode.Value
 encodeOrganization =
     encodeObject << encodeOrganizationPairs
@@ -1796,6 +1840,20 @@ messageTypeDecoder =
                     other ->
                         Json.Decode.fail <| "Unknown type: " ++ other
             )
+
+
+olympiadDecoder : Json.Decode.Decoder Olympiad
+olympiadDecoder =
+    Json.Decode.succeed Olympiad
+        |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
+        |> decode "name" Json.Decode.string
+        |> decode "category" Json.Decode.string
+        |> maybeDecodeNullable "website" Json.Decode.string Nothing
+        |> maybeDecodeNullable "organization" Json.Decode.string Nothing
+        |> maybeDecodeNullable "department" Uuid.decoder Nothing
+        |> maybeDecodeNullable "logo" Uuid.decoder Nothing
 
 
 organizationDecoder : Json.Decode.Decoder Organization
