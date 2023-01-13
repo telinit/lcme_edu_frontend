@@ -19258,23 +19258,6 @@ var $author$project$Page$DefaultLayout$make_header_pc = F2(
 	});
 var $elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
 var $elm$html$Html$map = $elm$virtual_dom$VirtualDom$map;
-var $author$project$Util$user_has_all_roles = F2(
-	function (user, req_roles) {
-		return A2(
-			$elm$core$Maybe$withDefault,
-			false,
-			A2(
-				$elm$core$Maybe$map,
-				function (user_roles) {
-					return A2(
-						$elm$core$List$all,
-						function (role) {
-							return A2($elm$core$List$member, role, user_roles);
-						},
-						req_roles);
-				},
-				user.roles));
-	});
 var $author$project$Page$DefaultLayout$view = F3(
 	function (map_msg, model, html) {
 		var mb = $elm$core$Maybe$withDefault('');
@@ -19302,10 +19285,10 @@ var $author$project$Page$DefaultLayout$view = F3(
 						['student'])) ? $elm$core$Maybe$Just(
 					{href: '/marks', icon: 'chart bar outline', label: 'Мои оценки', target: $elm$core$Maybe$Nothing}) : $elm$core$Maybe$Nothing,
 					A2(
-					$author$project$Util$user_has_all_roles,
+					$author$project$Util$user_has_any_role,
 					model.user,
 					_List_fromArray(
-						['admin'])) ? $elm$core$Maybe$Just(
+						['admin', 'staff'])) ? $elm$core$Maybe$Just(
 					{href: '/admin', icon: 'cog', label: 'Администрирование', target: $elm$core$Maybe$Nothing}) : $elm$core$Maybe$Nothing
 				]));
 		var sidebar = A2(

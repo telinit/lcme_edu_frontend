@@ -126,7 +126,7 @@ view map_msg model html =
                   else
                     Nothing
                 , --, Just { label = "Сообщения", href = "/messages", icon = "envelope outline" }
-                  if user_has_all_roles model.user [ "admin" ] then
+                  if user_has_any_role model.user [ "admin", "staff" ] then
                     Just { label = "Администрирование", href = "/admin", icon = "cog", target = Nothing }
 
                   else
