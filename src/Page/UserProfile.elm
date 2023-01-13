@@ -1,7 +1,8 @@
 module Page.UserProfile exposing (..)
 
 import Api exposing (ext_task)
-import Api.Data exposing (EducationShallow, UserDeep)
+import Api.Data exposing (EducationShallow, Olympiad, OlympiadParticipation, UserDeep)
+import Api.Request.Olympiad exposing (olympiadList, olympiadParticipationList)
 import Api.Request.User exposing (userGetDeep, userImpersonate, userSetEmail, userSetPassword)
 import Browser.Navigation as Url
 import Component.Misc exposing (user_link)
@@ -11,8 +12,8 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Http exposing (Error)
 import Task
-import Time
-import Util exposing (get_id_str, httpErrorToString, link_span, posixToFullDate, user_deep_to_shallow, user_full_name, user_has_any_role)
+import Time exposing (Zone, utc)
+import Util exposing (get_id_str, httpErrorToString, link_span, maybeOrElse, posixToFullDate, taskGetTZ, user_deep_to_shallow, user_full_name, user_has_any_role, zip)
 import Uuid exposing (Uuid)
 
 
@@ -35,15 +36,19 @@ type Msg
     | MsgChangePasswordDone (Result String ())
     | MsgOnClickImpersonate
     | MsgImpersonationFinished (Result Error ())
+    | MsgOnClickAddOlympiad
 
 
 type TaskResult
     = TaskResultUser UserDeep
+    | TaskResultTZ Zone
+    | TaskResultOlympiad (List Olympiad)
+    | TaskResultOlympiadParticipation (List OlympiadParticipation)
 
 
 type State
     = StateLoading (MT.Model Http.Error TaskResult)
-    | StateComplete UserDeep
+    | StateComplete UserDeep (List Olympiad) (List OlympiadParticipation)
 
 
 type alias Model =
@@ -54,6 +59,7 @@ type alias Model =
     , state_email : SettingState
     , state_password : SettingState
     , result_impersonation : Maybe (Result Error ())
+    , tz : Zone
     }
 
 
@@ -75,40 +81,48 @@ doChangePassword token user_id password =
 
 init : String -> UserDeep -> Maybe Uuid -> ( Model, Cmd Msg )
 init token current_user profile_id =
-    case profile_id of
-        Just uid ->
-            let
-                ( m, c ) =
-                    MT.init
-                        [ ( ext_task TaskResultUser token [] <|
-                                userGetDeep <|
-                                    Uuid.toString uid
-                          , "Загрузка профиля"
-                          )
-                        ]
-            in
-            ( { token = token
-              , current_user = current_user
-              , state = StateLoading m
-              , user_id = Just uid
-              , state_email = SettingStateUnset
-              , state_password = SettingStateUnset
-              , result_impersonation = Nothing
-              }
-            , Cmd.map MsgTask c
-            )
+    let
+        mbUID =
+            maybeOrElse profile_id current_user.id
 
-        Nothing ->
-            ( { token = token
-              , current_user = current_user
-              , state = StateComplete current_user
-              , user_id = current_user.id
-              , state_email = Maybe.withDefault SettingStateUnset <| Maybe.map SettingStateShow current_user.email
-              , state_password = SettingStateShow ""
-              , result_impersonation = Nothing
-              }
-            , Cmd.none
-            )
+        sUID =
+            Maybe.withDefault "" <| Maybe.map Uuid.toString <| mbUID
+
+        taskUser =
+            case profile_id of
+                Just _ ->
+                    ext_task TaskResultUser token [] <| userGetDeep sUID
+
+                Nothing ->
+                    Task.succeed (TaskResultUser current_user)
+
+        ( m, c ) =
+            MT.init
+                [ ( taskGetTZ TaskResultTZ
+                  , "Получение таймзоны"
+                  )
+                , ( taskUser
+                  , "Загрузка профиля"
+                  )
+                , ( ext_task TaskResultOlympiad token [ ( "participations__person", sUID ) ] olympiadList
+                  , "Загрузка олимпиад"
+                  )
+                , ( ext_task TaskResultOlympiadParticipation token [ ( "person", sUID ) ] olympiadParticipationList
+                  , "Загрузка олимпиад (участие)"
+                  )
+                ]
+    in
+    ( { token = token
+      , current_user = current_user
+      , state = StateLoading m
+      , user_id = mbUID
+      , state_email = SettingStateUnset
+      , state_password = SettingStateUnset
+      , result_impersonation = Nothing
+      , tz = utc
+      }
+    , Cmd.map MsgTask c
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -120,11 +134,12 @@ update msg model =
                     MT.update msg_ model_
             in
             case msg_ of
-                TaskFinishedAll [ Ok (TaskResultUser user) ] ->
+                TaskFinishedAll [ Ok (TaskResultTZ tz), Ok (TaskResultUser user), Ok (TaskResultOlympiad olymp), Ok (TaskResultOlympiadParticipation part) ] ->
                     ( { model
-                        | state = StateComplete user
+                        | state = StateComplete user olymp part
                         , state_email = SettingStateShow <| Maybe.withDefault "" user.email
                         , state_password = SettingStateShow ""
+                        , tz = tz
                       }
                     , Cmd.map MsgTask c
                     )
@@ -132,7 +147,7 @@ update msg model =
                 _ ->
                     ( { model | state = StateLoading m }, Cmd.map MsgTask c )
 
-        ( MsgChangeEmail, StateComplete user ) ->
+        ( MsgChangeEmail, StateComplete user olymp part ) ->
             case model.state_email of
                 SettingStateShow old ->
                     ( { model | state_email = SettingStateChangePrompt old }, Cmd.none )
@@ -145,7 +160,7 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        ( MsgChangePassword, StateComplete user ) ->
+        ( MsgChangePassword, StateComplete user olymp part ) ->
             case model.state_password of
                 SettingStateShow old ->
                     ( { model | state_password = SettingStateChangePrompt old }, Cmd.none )
@@ -161,7 +176,7 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        ( MsgNewEmailValue val, StateComplete user ) ->
+        ( MsgNewEmailValue val, StateComplete user olymp part ) ->
             case model.state_email of
                 SettingStateChangePrompt _ ->
                     ( { model | state_email = SettingStateChangePrompt val }, Cmd.none )
@@ -169,7 +184,7 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        ( MsgNewPasswordValue val, StateComplete user ) ->
+        ( MsgNewPasswordValue val, StateComplete user olymp part ) ->
             case model.state_password of
                 SettingStateChangePrompt _ ->
                     ( { model | state_password = SettingStateChangePrompt val }, Cmd.none )
@@ -177,7 +192,7 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        ( MsgChangeEmailDone res, StateComplete user ) ->
+        ( MsgChangeEmailDone res, StateComplete user olymp part ) ->
             case res of
                 Ok _ ->
                     ( { model | state_email = SettingStateChangeDone }, Cmd.none )
@@ -185,7 +200,7 @@ update msg model =
                 Err e ->
                     ( { model | state_email = SettingStateChangeError e }, Cmd.none )
 
-        ( MsgChangePasswordDone res, StateComplete user ) ->
+        ( MsgChangePasswordDone res, StateComplete user olymp part ) ->
             case res of
                 Ok _ ->
                     ( { model | state_password = SettingStateChangeDone }, Cmd.none )
@@ -193,7 +208,7 @@ update msg model =
                 Err e ->
                     ( { model | state_password = SettingStateChangeError e }, Cmd.none )
 
-        ( MsgOnClickImpersonate, StateComplete user ) ->
+        ( MsgOnClickImpersonate, StateComplete user olymp part ) ->
             ( model
             , Task.attempt MsgImpersonationFinished <|
                 ext_task identity model.token [] <|
@@ -313,15 +328,53 @@ viewEducation edu =
         ]
 
 
+viewOlympiad : Bool -> ( Zone, Olympiad, OlympiadParticipation ) -> Html Msg
+viewOlympiad canEdit ( tz, olympiad, part ) =
+    let
+        olymp =
+            [ div [ class "row nowrap middle-xs center-xs" ]
+                [ div [ class "col-xs" ]
+                    [ div [ class "row start-xs", style "font-size" "x-large" ] [ text olympiad.name ]
+                    , div [ class "row ml-10" ] [ text <| Maybe.withDefault "" olympiad.organization ]
+                    ]
+                ]
+            ]
+
+        date =
+            [ div [ style "font-size" "8pt", style "color" "#555", class "center-xs start-sm" ] [ text "Дата:" ]
+            , div [ class "ml-10", style "font-size" "14pt" ]
+                [ text <| Maybe.withDefault "(Не указана)" <| Maybe.map (posixToFullDate tz) part.date
+                ]
+            ]
+
+        award =
+            [ div [ style "font-size" "8pt", style "color" "#555", class "center-xs start-sm" ] [ text "Награда:" ]
+            , div [ class "ml-10", style "font-size" "14pt" ]
+                [ text <| Maybe.withDefault "(Не указана)" part.award
+                ]
+            ]
+    in
+    div [ class "row ui segment" ]
+        [ div [ class "row col-xs-12 col-sm-2 middle-xs center-xs start-sm" ]
+            [ img [ src "/img/olympiad.png", width 100, height 100 ] []
+            ]
+        , div [ class "row nowrap col-sm-10 middle-xs center-xs between-lg" ]
+            [ div [ class "col-xs-12 col-md center-xs start-lg mt-10" ] olymp
+            , div [ class "col-xs-12 col-md-3 mt-10 mb-10 ml-100" ] date
+            , div [ class "col-xs-12 col-md-2" ] award
+            ]
+        ]
+
+
 viewEmailRow : Model -> Html Msg
 viewEmailRow model =
     let
         v =
             case ( model.state_email, model.state ) of
-                ( SettingStateUnset, StateComplete user ) ->
+                ( SettingStateUnset, StateComplete user olymp part ) ->
                     []
 
-                ( SettingStateShow s, StateComplete user ) ->
+                ( SettingStateShow s, StateComplete user olymp part ) ->
                     [ text s
                     , div [ class "col-xs-12 p-0" ]
                         [ link_span [ onClick MsgChangeEmail ]
@@ -331,7 +384,7 @@ viewEmailRow model =
                         ]
                     ]
 
-                ( SettingStateChangePrompt s, StateComplete user ) ->
+                ( SettingStateChangePrompt s, StateComplete user olymp part ) ->
                     [ div [ class "ui input mr-10" ]
                         [ input
                             [ placeholder "Новый адрес"
@@ -347,7 +400,7 @@ viewEmailRow model =
                         ]
                     ]
 
-                ( SettingStateChanging s, StateComplete user ) ->
+                ( SettingStateChanging s, StateComplete user olymp part ) ->
                     [ div [ class "ui disabled input mr-10" ]
                         [ input
                             [ placeholder "Новый адрес"
@@ -362,14 +415,14 @@ viewEmailRow model =
                         ]
                     ]
 
-                ( SettingStateChangeError err, StateComplete user ) ->
+                ( SettingStateChangeError err, StateComplete user olymp part ) ->
                     [ h3 []
                         [ i [ style "color" "rgb(219, 40, 40)", class "x icon" ] []
                         , text <| "Ошибка: " ++ err
                         ]
                     ]
 
-                ( SettingStateChangeDone, StateComplete user ) ->
+                ( SettingStateChangeDone, StateComplete user olymp part ) ->
                     [ h3 []
                         [ i [ style "color" "rgb(33, 186, 69)", class "check icon" ] []
                         , text "Email изменен."
@@ -387,10 +440,10 @@ viewPassword model =
     let
         v =
             case ( model.state_password, model.state ) of
-                ( SettingStateUnset, StateComplete user ) ->
+                ( SettingStateUnset, StateComplete user olymp part ) ->
                     []
 
-                ( SettingStateShow s, StateComplete user ) ->
+                ( SettingStateShow s, StateComplete user olymp part ) ->
                     [ text s
                     , div [ class "col-xs-12 p-0" ]
                         [ link_span [ onClick MsgChangePassword ]
@@ -400,7 +453,7 @@ viewPassword model =
                         ]
                     ]
 
-                ( SettingStateChangePrompt s, StateComplete user ) ->
+                ( SettingStateChangePrompt s, StateComplete user olymp part ) ->
                     [ div [ class "ui input mr-10" ]
                         [ input
                             [ placeholder "Новый пароль"
@@ -416,7 +469,7 @@ viewPassword model =
                         ]
                     ]
 
-                ( SettingStateChanging s, StateComplete user ) ->
+                ( SettingStateChanging s, StateComplete user olymp part ) ->
                     [ div [ class "ui disabled input mr-10" ]
                         [ input
                             [ placeholder "Новый пароль"
@@ -434,14 +487,14 @@ viewPassword model =
                         ]
                     ]
 
-                ( SettingStateChangeError err, StateComplete user ) ->
+                ( SettingStateChangeError err, StateComplete user olymp part ) ->
                     [ h3 []
                         [ i [ style "color" "rgb(219, 40, 40)", class "x icon" ] []
                         , text <| "Ошибка: " ++ err
                         ]
                     ]
 
-                ( SettingStateChangeDone, StateComplete user ) ->
+                ( SettingStateChangeDone, StateComplete user olymp part ) ->
                     [ h3 []
                         [ i [ style "color" "rgb(33, 186, 69)", class "check icon" ] []
                         , text "Пароль изменен."
@@ -462,7 +515,7 @@ view model =
                 [ Html.map MsgTask <| MT.view (\_ -> "OK") httpErrorToString model_
                 ]
 
-        StateComplete user ->
+        StateComplete user olymp olympPart ->
             let
                 fio =
                     user_full_name <| user_deep_to_shallow user
@@ -481,9 +534,17 @@ view model =
                     user_has_any_role model.current_user [ "staff", "admin" ] || is_own_page
 
                 is_related =
+                    is_parent || is_child
+
+                is_parent =
                     List.any ((==) model.current_user.id) <|
                         List.map .id <|
-                            (user.children ++ user.parents)
+                            user.parents
+
+                is_child =
+                    List.any ((==) model.current_user.id) <|
+                        List.map .id <|
+                            user.children
 
                 show_email =
                     is_staff_or_own_page
@@ -497,8 +558,19 @@ view model =
                 show_children =
                     is_staff_or_own_page || is_related
 
+                can_manage_olympiads =
+                    is_staff_or_own_page || is_parent
+
                 education =
                     List.map viewEducation <| List.sortBy (.started >> Time.posixToMillis >> (*) -1) user.education
+
+                olympiads =
+                    List.map
+                        (\( o, p ) ->
+                            viewOlympiad can_manage_olympiads ( model.tz, o, p )
+                        )
+                    <|
+                        zip olymp olympPart
 
                 impersonation_icon =
                     case model.result_impersonation of
@@ -512,7 +584,7 @@ view model =
                             i [ class "key icon" ] []
             in
             div [ class "ml-10 mr-10" ]
-                [ div [ class "row center-xs start-md" ]
+                [ div [ class "row center-xs start-lg" ]
                     [ div [ class "col m-10" ]
                         [ img
                             [ class "row center-xs"
@@ -521,7 +593,112 @@ view model =
                             , height 300
                             ]
                             []
-                        , if (is_staff_or_own_page || is_related) && not is_own_page then
+                        ]
+                    , div [ class "col-xs-12 col-md-8 m-10" ]
+                        [ h1 [] [ text fio ]
+                        , div [ class "ml-20 mb-30" ] [ roles ]
+                        , div [class "row center-xs start-sm"]
+                            [ table [ style "font-size" "12pt", style "margin" "0" ]
+                                [ tbody []
+                                    [ Maybe.withDefault (text "") <|
+                                        Maybe.map
+                                            (\cls ->
+                                                tr []
+                                                    [ td
+                                                        [ style "text-align" "right"
+                                                        , style "vertical-align" "top"
+                                                        , style "font-weight" "bold"
+                                                        , class "pb-20"
+                                                        ]
+                                                        [ text "Класс:" ]
+                                                    , td [ style "vertical-align" "top" ]
+                                                        [ span [ class "ml-10" ] [ text cls ]
+                                                        ]
+                                                    ]
+                                            )
+                                            user.currentClass
+                                    , if show_parents then
+                                        tr []
+                                            [ td
+                                                [ style "text-align" "right"
+                                                , style "vertical-align" "top"
+                                                , style "font-weight" "bold"
+                                                , class "pb-20"
+                                                ]
+                                                [ text "Родители:" ]
+                                            , td [ style "vertical-align" "top" ]
+                                                [ div [ class "ml-15" ]
+                                                    (if user.parents == [] then
+                                                        [ span [] [ text "(нет)" ] ]
+
+                                                     else
+                                                        List.map (user_link Nothing >> List.singleton >> div []) user.parents
+                                                    )
+                                                ]
+                                            ]
+
+                                      else
+                                        text ""
+                                    , if show_children then
+                                        tr []
+                                            [ td
+                                                [ style "text-align" "right"
+                                                , style "vertical-align" "top"
+                                                , style "font-weight" "bold"
+                                                , class "pb-20"
+                                                ]
+                                                [ text "Дети:" ]
+                                            , td [ style "vertical-align" "top" ]
+                                                [ div [ class "ml-15" ]
+                                                    (if user.children == [] then
+                                                        [ span [] [ text "(нет)" ] ]
+
+                                                     else
+                                                        List.map (user_link Nothing >> List.singleton >> div []) user.children
+                                                    )
+                                                ]
+                                            ]
+
+                                      else
+                                        text ""
+                                    , if show_email then
+                                        tr [ style "min-height" "45px" ]
+                                            [ td
+                                                [ style "text-align" "right"
+                                                , style "vertical-align" "top"
+                                                , style "font-weight" "bold"
+                                                , class "pb-20"
+                                                ]
+                                                [ text "Email:" ]
+                                            , td [ style "vertical-align" "top" ]
+                                                [ viewEmailRow model ]
+                                            ]
+
+                                      else
+                                        text ""
+                                    , if show_password then
+                                        tr [ style "min-height" "45px" ]
+                                            [ td
+                                                [ style "text-align" "right"
+                                                , style "vertical-align" "top"
+                                                , style "font-weight" "bold"
+                                                , class "pb-20"
+                                                ]
+                                                [ text "Пароль:" ]
+                                            , td [ style "vertical-align" "top" ]
+                                                [ viewPassword model ]
+                                            ]
+
+                                      else
+                                        text ""
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                , div [ class "row center-xs start-lg" ]
+                    [ div [ class "col-xs-12 col-sm-6 col-md-4 col-lg-3" ]
+                        [ if (is_staff_or_own_page || is_related) && not is_own_page then
                             div [ class "row center-xs mb-10" ]
                                 [ a [ class "col-xs-12", href <| "/marks/student/" ++ get_id_str user ]
                                     [ button [ class "ui fluid button" ]
@@ -546,107 +723,8 @@ view model =
                           else
                             text ""
                         ]
-                    , div [ class "col-xs-12 col-md-8 m-10" ]
-                        [ h1 [] [ text fio ]
-                        , div [ class "ml-20 mb-30" ] [ roles ]
-                        , table [ style "font-size" "12pt" ]
-                            [ tbody []
-                                [ Maybe.withDefault (text "") <|
-                                    Maybe.map
-                                        (\cls ->
-                                            tr []
-                                                [ td
-                                                    [ style "text-align" "right"
-                                                    , style "vertical-align" "top"
-                                                    , style "font-weight" "bold"
-                                                    , class "pb-20"
-                                                    ]
-                                                    [ text "Класс:" ]
-                                                , td [ style "vertical-align" "top" ]
-                                                    [ span [ class "ml-10" ] [ text cls ]
-                                                    ]
-                                                ]
-                                        )
-                                        user.currentClass
-                                , if show_parents then
-                                    tr []
-                                        [ td
-                                            [ style "text-align" "right"
-                                            , style "vertical-align" "top"
-                                            , style "font-weight" "bold"
-                                            , class "pb-20"
-                                            ]
-                                            [ text "Родители:" ]
-                                        , td [ style "vertical-align" "top" ]
-                                            [ div [ class "ml-15" ]
-                                                (if user.parents == [] then
-                                                    [ span [] [ text "(нет)" ] ]
-
-                                                 else
-                                                    List.map (user_link Nothing >> List.singleton >> div []) user.parents
-                                                )
-                                            ]
-                                        ]
-
-                                  else
-                                    text ""
-                                , if show_children then
-                                    tr []
-                                        [ td
-                                            [ style "text-align" "right"
-                                            , style "vertical-align" "top"
-                                            , style "font-weight" "bold"
-                                            , class "pb-20"
-                                            ]
-                                            [ text "Дети:" ]
-                                        , td [ style "vertical-align" "top" ]
-                                            [ div [ class "ml-15" ]
-                                                (if user.children == [] then
-                                                    [ span [] [ text "(нет)" ] ]
-
-                                                 else
-                                                    List.map (user_link Nothing >> List.singleton >> div []) user.children
-                                                )
-                                            ]
-                                        ]
-
-                                  else
-                                    text ""
-                                , if show_email then
-                                    tr [ style "min-height" "45px" ]
-                                        [ td
-                                            [ style "text-align" "right"
-                                            , style "vertical-align" "top"
-                                            , style "font-weight" "bold"
-                                            , class "pb-20"
-                                            ]
-                                            [ text "Email:" ]
-                                        , td [ style "vertical-align" "top" ]
-                                            [ viewEmailRow model ]
-                                        ]
-
-                                  else
-                                    text ""
-                                , if show_password then
-                                    tr [ style "min-height" "45px" ]
-                                        [ td
-                                            [ style "text-align" "right"
-                                            , style "vertical-align" "top"
-                                            , style "font-weight" "bold"
-                                            , class "pb-20"
-                                            ]
-                                            [ text "Пароль:" ]
-                                        , td [ style "vertical-align" "top" ]
-                                            [ viewPassword model ]
-                                        ]
-
-                                  else
-                                    text ""
-                                ]
-                            ]
-                        ]
                     ]
-                , div [ class "row center-xs start-md mt-10" ]
+                , div [ class "row center-xs start-sm mt-30" ]
                     [ div [ class "col-xs-12" ]
                         [ h1 [] [ text "Образование" ]
                         , if user.education == [] then
@@ -656,4 +734,27 @@ view model =
                             div [] education
                         ]
                     ]
+                , div [ class "row center-xs start-md mt-30" ]
+                    [ div [ class "col-xs-12" ]
+                        [ h1 [ class "row center-xs between-sm" ]
+                            [ div [ class "col-xs-12 col-sm-1" ] [ text "Олимпиады" ]
+                            , if can_manage_olympiads then
+                                div [ class "col-xs-12 col-sm-3 center-xs end-sm" ]
+                                    [ button [ class "ui green button", onClick MsgOnClickAddOlympiad ]
+                                        [ i [ class "plus icon" ] []
+                                        , text "Добавить"
+                                        ]
+                                    ]
+
+                              else
+                                div [] []
+                            ]
+                        , if olympiads == [] then
+                            span [ class "ml-20" ] [ text "(Нет данных)" ]
+
+                          else
+                            div [] olympiads
+                        ]
+                    ]
+                , div [ class "p-10" ] []
                 ]

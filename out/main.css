@@ -44,3 +44,7 @@
 #__RENDERED_TEXT__ .mm-paragraph {
     padding: 10px;
 }
+
+.row.nowrap {
+    flex-wrap: nowrap;
+}

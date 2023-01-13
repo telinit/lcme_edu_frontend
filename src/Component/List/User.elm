@@ -14,6 +14,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onCheck, onInput)
 import Http
 import Page.CourseListPage exposing (empty_to_nothing)
+import Task
 import Util exposing (get_id_str, httpErrorToString, user_full_name)
 import Uuid
 
@@ -122,6 +123,22 @@ init token =
     , Cmd.map MsgLoading c
     )
 
+initFromUserList : String -> List UserShallow -> ( Model, Cmd Msg )
+initFromUserList token users =
+    let
+            ( m, c ) =
+                MT.init
+                    [ ( Task.succeed (LoadingResultUsers users), "Загружаем пользователей" )
+                    , ( ext_task LoadingResultSpecs token [] educationSpecializationList, "Загружаем направления" )
+                    ]
+        in
+        ( { state = Loading m
+          , token = token
+          , selected = Dict.empty
+          , selectable = True
+          }
+        , Cmd.map MsgLoading c
+        )
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =

@@ -9909,23 +9909,21 @@ var $author$project$Api$Data$UserDeep = function (id) {
 				return function (children) {
 					return function (parents) {
 						return function (education) {
-							return function (olympiads) {
-								return function (lastLogin) {
-									return function (isSuperuser) {
-										return function (username) {
-											return function (firstName) {
-												return function (lastName) {
-													return function (email) {
-														return function (isStaff) {
-															return function (isActive) {
-																return function (dateJoined) {
-																	return function (createdAt) {
-																		return function (updatedAt) {
-																			return function (middleName) {
-																				return function (birthDate) {
-																					return function (avatar) {
-																						return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, currentSpec: currentSpec, dateJoined: dateJoined, education: education, email: email, firstName: firstName, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, olympiads: olympiads, parents: parents, roles: roles, updatedAt: updatedAt, username: username};
-																					};
+							return function (lastLogin) {
+								return function (isSuperuser) {
+									return function (username) {
+										return function (firstName) {
+											return function (lastName) {
+												return function (email) {
+													return function (isStaff) {
+														return function (isActive) {
+															return function (dateJoined) {
+																return function (createdAt) {
+																	return function (updatedAt) {
+																		return function (middleName) {
+																			return function (birthDate) {
+																				return function (avatar) {
+																					return {avatar: avatar, birthDate: birthDate, children: children, createdAt: createdAt, currentClass: currentClass, currentSpec: currentSpec, dateJoined: dateJoined, education: education, email: email, firstName: firstName, id: id, isActive: isActive, isStaff: isStaff, isSuperuser: isSuperuser, lastLogin: lastLogin, lastName: lastName, middleName: middleName, parents: parents, roles: roles, updatedAt: updatedAt, username: username};
 																				};
 																			};
 																		};
@@ -9993,54 +9991,6 @@ var $author$project$Api$Data$educationShallowDecoder = A3(
 									$danyx23$elm_uuid$Uuid$decoder,
 									$elm$core$Maybe$Nothing,
 									$elm$json$Json$Decode$succeed($author$project$Api$Data$EducationShallow))))))))));
-var $author$project$Api$Data$Olympiad = F9(
-	function (id, createdAt, updatedAt, name, category, website, organization, department, logo) {
-		return {category: category, createdAt: createdAt, department: department, id: id, logo: logo, name: name, organization: organization, updatedAt: updatedAt, website: website};
-	});
-var $author$project$Api$Data$olympiadDecoder = A4(
-	$author$project$Api$Data$maybeDecodeNullable,
-	'logo',
-	$danyx23$elm_uuid$Uuid$decoder,
-	$elm$core$Maybe$Nothing,
-	A4(
-		$author$project$Api$Data$maybeDecodeNullable,
-		'department',
-		$danyx23$elm_uuid$Uuid$decoder,
-		$elm$core$Maybe$Nothing,
-		A4(
-			$author$project$Api$Data$maybeDecodeNullable,
-			'organization',
-			$elm$json$Json$Decode$string,
-			$elm$core$Maybe$Nothing,
-			A4(
-				$author$project$Api$Data$maybeDecodeNullable,
-				'website',
-				$elm$json$Json$Decode$string,
-				$elm$core$Maybe$Nothing,
-				A3(
-					$author$project$Api$Data$decode,
-					'category',
-					$elm$json$Json$Decode$string,
-					A3(
-						$author$project$Api$Data$decode,
-						'name',
-						$elm$json$Json$Decode$string,
-						A4(
-							$author$project$Api$Data$maybeDecode,
-							'updated_at',
-							$author$project$Api$Time$dateTimeDecoder,
-							$elm$core$Maybe$Nothing,
-							A4(
-								$author$project$Api$Data$maybeDecode,
-								'created_at',
-								$author$project$Api$Time$dateTimeDecoder,
-								$elm$core$Maybe$Nothing,
-								A4(
-									$author$project$Api$Data$maybeDecode,
-									'id',
-									$danyx23$elm_uuid$Uuid$decoder,
-									$elm$core$Maybe$Nothing,
-									$elm$json$Json$Decode$succeed($author$project$Api$Data$Olympiad))))))))));
 var $author$project$Api$Data$userDeepDecoder = A4(
 	$author$project$Api$Data$maybeDecodeNullable,
 	'avatar',
@@ -10112,41 +10062,37 @@ var $author$project$Api$Data$userDeepDecoder = A4(
 														$elm$core$Maybe$Nothing,
 														A3(
 															$author$project$Api$Data$decode,
-															'olympiads',
-															$elm$json$Json$Decode$list($author$project$Api$Data$olympiadDecoder),
+															'education',
+															$elm$json$Json$Decode$list($author$project$Api$Data$educationShallowDecoder),
 															A3(
 																$author$project$Api$Data$decode,
-																'education',
-																$elm$json$Json$Decode$list($author$project$Api$Data$educationShallowDecoder),
+																'parents',
+																$elm$json$Json$Decode$list($author$project$Api$Data$userShallowDecoder),
 																A3(
 																	$author$project$Api$Data$decode,
-																	'parents',
+																	'children',
 																	$elm$json$Json$Decode$list($author$project$Api$Data$userShallowDecoder),
-																	A3(
-																		$author$project$Api$Data$decode,
-																		'children',
-																		$elm$json$Json$Decode$list($author$project$Api$Data$userShallowDecoder),
+																	A4(
+																		$author$project$Api$Data$maybeDecode,
+																		'current_spec',
+																		$author$project$Api$Data$educationSpecializationDecoder,
+																		$elm$core$Maybe$Nothing,
 																		A4(
 																			$author$project$Api$Data$maybeDecode,
-																			'current_spec',
-																			$author$project$Api$Data$educationSpecializationDecoder,
+																			'current_class',
+																			$elm$json$Json$Decode$string,
 																			$elm$core$Maybe$Nothing,
 																			A4(
 																				$author$project$Api$Data$maybeDecode,
-																				'current_class',
-																				$elm$json$Json$Decode$string,
+																				'roles',
+																				$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
 																				$elm$core$Maybe$Nothing,
 																				A4(
 																					$author$project$Api$Data$maybeDecode,
-																					'roles',
-																					$elm$json$Json$Decode$list($elm$json$Json$Decode$string),
+																					'id',
+																					$danyx23$elm_uuid$Uuid$decoder,
 																					$elm$core$Maybe$Nothing,
-																					A4(
-																						$author$project$Api$Data$maybeDecode,
-																						'id',
-																						$danyx23$elm_uuid$Uuid$decoder,
-																						$elm$core$Maybe$Nothing,
-																						$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeep)))))))))))))))))))))));
+																					$elm$json$Json$Decode$succeed($author$project$Api$Data$UserDeep))))))))))))))))))))));
 var $author$project$Api$Request$User$userSelf = A7($author$project$Api$request, 'GET', '/user/self/', _List_Nil, _List_Nil, _List_Nil, $elm$core$Maybe$Nothing, $author$project$Api$Data$userDeepDecoder);
 var $author$project$Page$Login$doCheckSession = function (token) {
 	var task_user = A2(
@@ -10649,18 +10595,169 @@ var $author$project$Page$MarksStudent$init = F3(
 var $author$project$Page$UserProfile$MsgTask = function (a) {
 	return {$: 'MsgTask', a: a};
 };
-var $author$project$Page$UserProfile$SettingStateShow = function (a) {
-	return {$: 'SettingStateShow', a: a};
-};
 var $author$project$Page$UserProfile$SettingStateUnset = {$: 'SettingStateUnset'};
-var $author$project$Page$UserProfile$StateComplete = function (a) {
-	return {$: 'StateComplete', a: a};
-};
 var $author$project$Page$UserProfile$StateLoading = function (a) {
 	return {$: 'StateLoading', a: a};
 };
+var $author$project$Page$UserProfile$TaskResultOlympiad = function (a) {
+	return {$: 'TaskResultOlympiad', a: a};
+};
+var $author$project$Page$UserProfile$TaskResultOlympiadParticipation = function (a) {
+	return {$: 'TaskResultOlympiadParticipation', a: a};
+};
+var $author$project$Page$UserProfile$TaskResultTZ = function (a) {
+	return {$: 'TaskResultTZ', a: a};
+};
 var $author$project$Page$UserProfile$TaskResultUser = function (a) {
 	return {$: 'TaskResultUser', a: a};
+};
+var $author$project$Util$maybeOrElse = F2(
+	function (mb, fallback) {
+		if (mb.$ === 'Just') {
+			var a = mb.a;
+			return $elm$core$Maybe$Just(a);
+		} else {
+			return fallback;
+		}
+	});
+var $author$project$Api$Data$Olympiad = F9(
+	function (id, createdAt, updatedAt, name, category, website, organization, department, logo) {
+		return {category: category, createdAt: createdAt, department: department, id: id, logo: logo, name: name, organization: organization, updatedAt: updatedAt, website: website};
+	});
+var $author$project$Api$Data$olympiadDecoder = A4(
+	$author$project$Api$Data$maybeDecodeNullable,
+	'logo',
+	$danyx23$elm_uuid$Uuid$decoder,
+	$elm$core$Maybe$Nothing,
+	A4(
+		$author$project$Api$Data$maybeDecodeNullable,
+		'department',
+		$danyx23$elm_uuid$Uuid$decoder,
+		$elm$core$Maybe$Nothing,
+		A4(
+			$author$project$Api$Data$maybeDecodeNullable,
+			'organization',
+			$elm$json$Json$Decode$string,
+			$elm$core$Maybe$Nothing,
+			A4(
+				$author$project$Api$Data$maybeDecodeNullable,
+				'website',
+				$elm$json$Json$Decode$string,
+				$elm$core$Maybe$Nothing,
+				A3(
+					$author$project$Api$Data$decode,
+					'category',
+					$elm$json$Json$Decode$string,
+					A3(
+						$author$project$Api$Data$decode,
+						'name',
+						$elm$json$Json$Decode$string,
+						A4(
+							$author$project$Api$Data$maybeDecode,
+							'updated_at',
+							$author$project$Api$Time$dateTimeDecoder,
+							$elm$core$Maybe$Nothing,
+							A4(
+								$author$project$Api$Data$maybeDecode,
+								'created_at',
+								$author$project$Api$Time$dateTimeDecoder,
+								$elm$core$Maybe$Nothing,
+								A4(
+									$author$project$Api$Data$maybeDecode,
+									'id',
+									$danyx23$elm_uuid$Uuid$decoder,
+									$elm$core$Maybe$Nothing,
+									$elm$json$Json$Decode$succeed($author$project$Api$Data$Olympiad))))))))));
+var $author$project$Api$Request$Olympiad$olympiadList = A7(
+	$author$project$Api$request,
+	'GET',
+	'/olympiad/',
+	_List_Nil,
+	_List_Nil,
+	_List_Nil,
+	$elm$core$Maybe$Nothing,
+	$elm$json$Json$Decode$list($author$project$Api$Data$olympiadDecoder));
+var $author$project$Api$Data$OlympiadParticipation = function (id) {
+	return function (createdAt) {
+		return function (updatedAt) {
+			return function (date) {
+				return function (award) {
+					return function (teamMember) {
+						return function (stage) {
+							return function (location) {
+								return function (olympiad) {
+									return function (person) {
+										return {award: award, createdAt: createdAt, date: date, id: id, location: location, olympiad: olympiad, person: person, stage: stage, teamMember: teamMember, updatedAt: updatedAt};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var $author$project$Api$Data$olympiadParticipationDecoder = A3(
+	$author$project$Api$Data$decode,
+	'person',
+	$danyx23$elm_uuid$Uuid$decoder,
+	A3(
+		$author$project$Api$Data$decode,
+		'olympiad',
+		$danyx23$elm_uuid$Uuid$decoder,
+		A4(
+			$author$project$Api$Data$maybeDecodeNullable,
+			'location',
+			$elm$json$Json$Decode$string,
+			$elm$core$Maybe$Nothing,
+			A4(
+				$author$project$Api$Data$maybeDecodeNullable,
+				'stage',
+				$elm$json$Json$Decode$string,
+				$elm$core$Maybe$Nothing,
+				A4(
+					$author$project$Api$Data$maybeDecode,
+					'team_member',
+					$elm$json$Json$Decode$bool,
+					$elm$core$Maybe$Nothing,
+					A4(
+						$author$project$Api$Data$maybeDecodeNullable,
+						'award',
+						$elm$json$Json$Decode$string,
+						$elm$core$Maybe$Nothing,
+						A4(
+							$author$project$Api$Data$maybeDecodeNullable,
+							'date',
+							$author$project$Api$Time$dateTimeDecoder,
+							$elm$core$Maybe$Nothing,
+							A4(
+								$author$project$Api$Data$maybeDecode,
+								'updated_at',
+								$author$project$Api$Time$dateTimeDecoder,
+								$elm$core$Maybe$Nothing,
+								A4(
+									$author$project$Api$Data$maybeDecode,
+									'created_at',
+									$author$project$Api$Time$dateTimeDecoder,
+									$elm$core$Maybe$Nothing,
+									A4(
+										$author$project$Api$Data$maybeDecode,
+										'id',
+										$danyx23$elm_uuid$Uuid$decoder,
+										$elm$core$Maybe$Nothing,
+										$elm$json$Json$Decode$succeed($author$project$Api$Data$OlympiadParticipation)))))))))));
+var $author$project$Api$Request$Olympiad$olympiadParticipationList = A7(
+	$author$project$Api$request,
+	'GET',
+	'/olympiad/participation/',
+	_List_Nil,
+	_List_Nil,
+	_List_Nil,
+	$elm$core$Maybe$Nothing,
+	$elm$json$Json$Decode$list($author$project$Api$Data$olympiadParticipationDecoder));
+var $author$project$Util$taskGetTZ = function (mapper) {
+	return A2($elm$core$Task$map, mapper, $elm$time$Time$here);
 };
 var $author$project$Api$Request$User$userGetDeep = function (id_path) {
 	return A7(
@@ -10680,50 +10777,68 @@ var $author$project$Api$Request$User$userGetDeep = function (id_path) {
 };
 var $author$project$Page$UserProfile$init = F3(
 	function (token, current_user, profile_id) {
-		if (profile_id.$ === 'Just') {
-			var uid = profile_id.a;
-			var _v1 = $author$project$Component$MultiTask$init(
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						A4(
-							$author$project$Api$ext_task,
-							$author$project$Page$UserProfile$TaskResultUser,
-							token,
-							_List_Nil,
-							$author$project$Api$Request$User$userGetDeep(
-								$danyx23$elm_uuid$Uuid$toString(uid))),
-						'Загрузка профиля')
-					]));
-			var m = _v1.a;
-			var c = _v1.b;
-			return _Utils_Tuple2(
-				{
-					current_user: current_user,
-					result_impersonation: $elm$core$Maybe$Nothing,
-					state: $author$project$Page$UserProfile$StateLoading(m),
-					state_email: $author$project$Page$UserProfile$SettingStateUnset,
-					state_password: $author$project$Page$UserProfile$SettingStateUnset,
-					token: token,
-					user_id: $elm$core$Maybe$Just(uid)
-				},
-				A2($elm$core$Platform$Cmd$map, $author$project$Page$UserProfile$MsgTask, c));
-		} else {
-			return _Utils_Tuple2(
-				{
-					current_user: current_user,
-					result_impersonation: $elm$core$Maybe$Nothing,
-					state: $author$project$Page$UserProfile$StateComplete(current_user),
-					state_email: A2(
-						$elm$core$Maybe$withDefault,
-						$author$project$Page$UserProfile$SettingStateUnset,
-						A2($elm$core$Maybe$map, $author$project$Page$UserProfile$SettingStateShow, current_user.email)),
-					state_password: $author$project$Page$UserProfile$SettingStateShow(''),
-					token: token,
-					user_id: current_user.id
-				},
-				$elm$core$Platform$Cmd$none);
-		}
+		var mbUID = A2($author$project$Util$maybeOrElse, profile_id, current_user.id);
+		var sUID = A2(
+			$elm$core$Maybe$withDefault,
+			'',
+			A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, mbUID));
+		var taskUser = function () {
+			if (profile_id.$ === 'Just') {
+				return A4(
+					$author$project$Api$ext_task,
+					$author$project$Page$UserProfile$TaskResultUser,
+					token,
+					_List_Nil,
+					$author$project$Api$Request$User$userGetDeep(sUID));
+			} else {
+				return $elm$core$Task$succeed(
+					$author$project$Page$UserProfile$TaskResultUser(current_user));
+			}
+		}();
+		var _v0 = $author$project$Component$MultiTask$init(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					$author$project$Util$taskGetTZ($author$project$Page$UserProfile$TaskResultTZ),
+					'Получение таймзоны'),
+					_Utils_Tuple2(taskUser, 'Загрузка профиля'),
+					_Utils_Tuple2(
+					A4(
+						$author$project$Api$ext_task,
+						$author$project$Page$UserProfile$TaskResultOlympiad,
+						token,
+						_List_fromArray(
+							[
+								_Utils_Tuple2('participations__person', sUID)
+							]),
+						$author$project$Api$Request$Olympiad$olympiadList),
+					'Загрузка олимпиад'),
+					_Utils_Tuple2(
+					A4(
+						$author$project$Api$ext_task,
+						$author$project$Page$UserProfile$TaskResultOlympiadParticipation,
+						token,
+						_List_fromArray(
+							[
+								_Utils_Tuple2('person', sUID)
+							]),
+						$author$project$Api$Request$Olympiad$olympiadParticipationList),
+					'Загрузка олимпиад (участие)')
+				]));
+		var m = _v0.a;
+		var c = _v0.b;
+		return _Utils_Tuple2(
+			{
+				current_user: current_user,
+				result_impersonation: $elm$core$Maybe$Nothing,
+				state: $author$project$Page$UserProfile$StateLoading(m),
+				state_email: $author$project$Page$UserProfile$SettingStateUnset,
+				state_password: $author$project$Page$UserProfile$SettingStateUnset,
+				token: token,
+				tz: $elm$time$Time$utc,
+				user_id: mbUID
+			},
+			A2($elm$core$Platform$Cmd$map, $author$project$Page$UserProfile$MsgTask, c));
 	});
 var $author$project$Page$Login$PasswordReset = function (a) {
 	return {$: 'PasswordReset', a: a};
@@ -10744,11 +10859,21 @@ var $author$project$Page$Login$init_password_reset_fin = F2(
 	});
 var $elm$browser$Browser$Navigation$load = _Browser_load;
 var $author$project$Ports$scrollIdIntoView = _Platform_outgoingPort('scrollIdIntoView', $elm$json$Json$Encode$string);
+var $author$project$Page$Admin$AdminPage$MsgSubpageExportMarks = function (a) {
+	return {$: 'MsgSubpageExportMarks', a: a};
+};
 var $author$project$Page$Admin$AdminPage$MsgSubpageImportStudents = function (a) {
 	return {$: 'MsgSubpageImportStudents', a: a};
 };
+var $author$project$Page$Admin$AdminPage$SubpageExportMarks = function (a) {
+	return {$: 'SubpageExportMarks', a: a};
+};
 var $author$project$Page$Admin$AdminPage$SubpageImportStudents = function (a) {
 	return {$: 'SubpageImportStudents', a: a};
+};
+var $author$project$Page$Admin$ExportMarks$Model = {$: 'Model'};
+var $author$project$Page$Admin$ExportMarks$init = function (_v0) {
+	return _Utils_Tuple2($author$project$Page$Admin$ExportMarks$Model, $elm$core$Platform$Cmd$none);
 };
 var $author$project$Page$Admin$ImportStudentsCSV$StateInput = function (a) {
 	return {$: 'StateInput', a: a};
@@ -10761,6 +10886,19 @@ var $author$project$Page$Admin$ImportStudentsCSV$init = function (token) {
 		},
 		$elm$core$Platform$Cmd$none);
 };
+var $elm$file$File$Download$url = function (href) {
+	return A2(
+		$elm$core$Task$perform,
+		$elm$core$Basics$never,
+		_File_downloadUrl(href));
+};
+var $author$project$Page$Admin$ExportMarks$update = F2(
+	function (msg, model) {
+		var url = msg.a;
+		return _Utils_Tuple2(
+			model,
+			$elm$file$File$Download$url(url));
+	});
 var $author$project$Page$Admin$ImportStudentsCSV$StateFinished = function (a) {
 	return {$: 'StateFinished', a: a};
 };
@@ -11053,20 +11191,59 @@ var $author$project$Page$Admin$ImportStudentsCSV$update = F2(
 var $author$project$Page$Admin$AdminPage$update = F2(
 	function (msg, model) {
 		var ignore = _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-		if (msg.$ === 'MsgChangeSubpage') {
-			var subpage = msg.a;
-			if (subpage.$ === 'SubpageIndex') {
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{currentSubpage: subpage}),
-					$elm$core$Platform$Cmd$none);
-			} else {
-				if (subpage.a.$ === 'Nothing') {
-					var _v2 = subpage.a;
-					var _v3 = $author$project$Page$Admin$ImportStudentsCSV$init(model.token);
-					var m = _v3.a;
-					var c = _v3.b;
+		switch (msg.$) {
+			case 'MsgChangeSubpage':
+				var subpage = msg.a;
+				switch (subpage.$) {
+					case 'SubpageIndex':
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{currentSubpage: subpage}),
+							$elm$core$Platform$Cmd$none);
+					case 'SubpageImportStudents':
+						var mbm = subpage.a;
+						if (mbm.$ === 'Nothing') {
+							var _v3 = $author$project$Page$Admin$ImportStudentsCSV$init(model.token);
+							var m = _v3.a;
+							var c = _v3.b;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										currentSubpage: $author$project$Page$Admin$AdminPage$SubpageImportStudents(
+											$elm$core$Maybe$Just(m))
+									}),
+								A2($elm$core$Platform$Cmd$map, $author$project$Page$Admin$AdminPage$MsgSubpageImportStudents, c));
+						} else {
+							return ignore;
+						}
+					default:
+						var mbm = subpage.a;
+						if (mbm.$ === 'Just') {
+							return ignore;
+						} else {
+							var _v5 = $author$project$Page$Admin$ExportMarks$init(_Utils_Tuple0);
+							var m = _v5.a;
+							var c = _v5.b;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										currentSubpage: $author$project$Page$Admin$AdminPage$SubpageExportMarks(
+											$elm$core$Maybe$Just(m))
+									}),
+								A2($elm$core$Platform$Cmd$map, $author$project$Page$Admin$AdminPage$MsgSubpageExportMarks, c));
+						}
+				}
+			case 'MsgSubpageImportStudents':
+				var msg_ = msg.a;
+				var _v6 = model.currentSubpage;
+				if ((_v6.$ === 'SubpageImportStudents') && (_v6.a.$ === 'Just')) {
+					var model_ = _v6.a.a;
+					var _v7 = A2($author$project$Page$Admin$ImportStudentsCSV$update, msg_, model_);
+					var m = _v7.a;
+					var c = _v7.b;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
@@ -11078,26 +11255,25 @@ var $author$project$Page$Admin$AdminPage$update = F2(
 				} else {
 					return ignore;
 				}
-			}
-		} else {
-			var msg_ = msg.a;
-			var _v4 = model.currentSubpage;
-			if ((_v4.$ === 'SubpageImportStudents') && (_v4.a.$ === 'Just')) {
-				var model_ = _v4.a.a;
-				var _v5 = A2($author$project$Page$Admin$ImportStudentsCSV$update, msg_, model_);
-				var m = _v5.a;
-				var c = _v5.b;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							currentSubpage: $author$project$Page$Admin$AdminPage$SubpageImportStudents(
-								$elm$core$Maybe$Just(m))
-						}),
-					A2($elm$core$Platform$Cmd$map, $author$project$Page$Admin$AdminPage$MsgSubpageImportStudents, c));
-			} else {
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-			}
+			default:
+				var msg_ = msg.a;
+				var _v8 = model.currentSubpage;
+				if ((_v8.$ === 'SubpageExportMarks') && (_v8.a.$ === 'Just')) {
+					var model_ = _v8.a.a;
+					var _v9 = A2($author$project$Page$Admin$ExportMarks$update, msg_, model_);
+					var m = _v9.a;
+					var c = _v9.b;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								currentSubpage: $author$project$Page$Admin$AdminPage$SubpageExportMarks(
+									$elm$core$Maybe$Just(m))
+							}),
+						A2($elm$core$Platform$Cmd$map, $author$project$Page$Admin$AdminPage$MsgSubpageExportMarks, c));
+				} else {
+					return ignore;
+				}
 		}
 	});
 var $author$project$Page$Course$CoursePage$ActivityImportStateDataInput = F3(
@@ -16560,10 +16736,10 @@ var $author$project$Component$MarkTable$dateFilter = F2(
 					A2(
 						$elm$core$Basics$composeR,
 						function ($) {
-							return $.finalType;
+							return $.contentType;
 						},
 						$elm$core$Basics$neq(
-							$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeQ1))),
+							$elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeFIN))),
 					orderSortedActs);
 				var l = _v1.a;
 				var r = _v1.b;
@@ -17859,6 +18035,13 @@ var $author$project$Page$UserProfile$SettingStateChangePrompt = function (a) {
 var $author$project$Page$UserProfile$SettingStateChanging = function (a) {
 	return {$: 'SettingStateChanging', a: a};
 };
+var $author$project$Page$UserProfile$SettingStateShow = function (a) {
+	return {$: 'SettingStateShow', a: a};
+};
+var $author$project$Page$UserProfile$StateComplete = F3(
+	function (a, b, c) {
+		return {$: 'StateComplete', a: a, b: b, c: c};
+	});
 var $author$project$Page$UserProfile$MsgChangeEmailDone = function (a) {
 	return {$: 'MsgChangeEmailDone', a: a};
 };
@@ -17982,17 +18165,24 @@ var $author$project$Page$UserProfile$update = F2(
 						var _v1 = A2($author$project$Component$MultiTask$update, msg_, model_);
 						var m = _v1.a;
 						var c = _v1.b;
-						if ((((msg_.$ === 'TaskFinishedAll') && msg_.a.b) && (msg_.a.a.$ === 'Ok')) && (!msg_.a.b.b)) {
+						if ((((((((((((((msg_.$ === 'TaskFinishedAll') && msg_.a.b) && (msg_.a.a.$ === 'Ok')) && (msg_.a.a.a.$ === 'TaskResultTZ')) && msg_.a.b.b) && (msg_.a.b.a.$ === 'Ok')) && (msg_.a.b.a.a.$ === 'TaskResultUser')) && msg_.a.b.b.b) && (msg_.a.b.b.a.$ === 'Ok')) && (msg_.a.b.b.a.a.$ === 'TaskResultOlympiad')) && msg_.a.b.b.b.b) && (msg_.a.b.b.b.a.$ === 'Ok')) && (msg_.a.b.b.b.a.a.$ === 'TaskResultOlympiadParticipation')) && (!msg_.a.b.b.b.b.b)) {
 							var _v3 = msg_.a;
-							var user = _v3.a.a.a;
+							var tz = _v3.a.a.a;
+							var _v4 = _v3.b;
+							var user = _v4.a.a.a;
+							var _v5 = _v4.b;
+							var olymp = _v5.a.a.a;
+							var _v6 = _v5.b;
+							var part = _v6.a.a.a;
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
 									{
-										state: $author$project$Page$UserProfile$StateComplete(user),
+										state: A3($author$project$Page$UserProfile$StateComplete, user, olymp, part),
 										state_email: $author$project$Page$UserProfile$SettingStateShow(
 											A2($elm$core$Maybe$withDefault, '', user.email)),
-										state_password: $author$project$Page$UserProfile$SettingStateShow('')
+										state_password: $author$project$Page$UserProfile$SettingStateShow(''),
+										tz: tz
 									}),
 								A2($elm$core$Platform$Cmd$map, $author$project$Page$UserProfile$MsgTask, c));
 						} else {
@@ -18009,12 +18199,15 @@ var $author$project$Page$UserProfile$update = F2(
 					}
 				case 'MsgChangeEmail':
 					if (_v0.b.$ === 'StateComplete') {
-						var _v4 = _v0.a;
-						var user = _v0.b.a;
-						var _v5 = model.state_email;
-						switch (_v5.$) {
+						var _v7 = _v0.a;
+						var _v8 = _v0.b;
+						var user = _v8.a;
+						var olymp = _v8.b;
+						var part = _v8.c;
+						var _v9 = model.state_email;
+						switch (_v9.$) {
 							case 'SettingStateShow':
-								var old = _v5.a;
+								var old = _v9.a;
 								return _Utils_Tuple2(
 									_Utils_update(
 										model,
@@ -18023,7 +18216,7 @@ var $author$project$Page$UserProfile$update = F2(
 										}),
 									$elm$core$Platform$Cmd$none);
 							case 'SettingStateChangePrompt':
-								var old = _v5.a;
+								var old = _v9.a;
 								return _Utils_Tuple2(
 									_Utils_update(
 										model,
@@ -18046,12 +18239,15 @@ var $author$project$Page$UserProfile$update = F2(
 					}
 				case 'MsgChangePassword':
 					if (_v0.b.$ === 'StateComplete') {
-						var _v6 = _v0.a;
-						var user = _v0.b.a;
-						var _v7 = model.state_password;
-						switch (_v7.$) {
+						var _v10 = _v0.a;
+						var _v11 = _v0.b;
+						var user = _v11.a;
+						var olymp = _v11.b;
+						var part = _v11.c;
+						var _v12 = model.state_password;
+						switch (_v12.$) {
 							case 'SettingStateShow':
-								var old = _v7.a;
+								var old = _v12.a;
 								return _Utils_Tuple2(
 									_Utils_update(
 										model,
@@ -18060,7 +18256,7 @@ var $author$project$Page$UserProfile$update = F2(
 										}),
 									$elm$core$Platform$Cmd$none);
 							case 'SettingStateChangePrompt':
-								var old = _v7.a;
+								var old = _v12.a;
 								return _Utils_Tuple2(
 									_Utils_update(
 										model,
@@ -18084,9 +18280,12 @@ var $author$project$Page$UserProfile$update = F2(
 				case 'MsgNewEmailValue':
 					if (_v0.b.$ === 'StateComplete') {
 						var val = _v0.a.a;
-						var user = _v0.b.a;
-						var _v8 = model.state_email;
-						if (_v8.$ === 'SettingStateChangePrompt') {
+						var _v13 = _v0.b;
+						var user = _v13.a;
+						var olymp = _v13.b;
+						var part = _v13.c;
+						var _v14 = model.state_email;
+						if (_v14.$ === 'SettingStateChangePrompt') {
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
@@ -18103,9 +18302,12 @@ var $author$project$Page$UserProfile$update = F2(
 				case 'MsgNewPasswordValue':
 					if (_v0.b.$ === 'StateComplete') {
 						var val = _v0.a.a;
-						var user = _v0.b.a;
-						var _v9 = model.state_password;
-						if (_v9.$ === 'SettingStateChangePrompt') {
+						var _v15 = _v0.b;
+						var user = _v15.a;
+						var olymp = _v15.b;
+						var part = _v15.c;
+						var _v16 = model.state_password;
+						if (_v16.$ === 'SettingStateChangePrompt') {
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
@@ -18122,7 +18324,10 @@ var $author$project$Page$UserProfile$update = F2(
 				case 'MsgChangeEmailDone':
 					if (_v0.b.$ === 'StateComplete') {
 						var res = _v0.a.a;
-						var user = _v0.b.a;
+						var _v17 = _v0.b;
+						var user = _v17.a;
+						var olymp = _v17.b;
+						var part = _v17.c;
 						if (res.$ === 'Ok') {
 							return _Utils_Tuple2(
 								_Utils_update(
@@ -18145,7 +18350,10 @@ var $author$project$Page$UserProfile$update = F2(
 				case 'MsgChangePasswordDone':
 					if (_v0.b.$ === 'StateComplete') {
 						var res = _v0.a.a;
-						var user = _v0.b.a;
+						var _v19 = _v0.b;
+						var user = _v19.a;
+						var olymp = _v19.b;
+						var part = _v19.c;
 						if (res.$ === 'Ok') {
 							return _Utils_Tuple2(
 								_Utils_update(
@@ -18167,8 +18375,11 @@ var $author$project$Page$UserProfile$update = F2(
 					}
 				case 'MsgOnClickImpersonate':
 					if (_v0.b.$ === 'StateComplete') {
-						var _v12 = _v0.a;
-						var user = _v0.b.a;
+						var _v21 = _v0.a;
+						var _v22 = _v0.b;
+						var user = _v22.a;
+						var olymp = _v22.b;
+						var part = _v22.c;
 						return _Utils_Tuple2(
 							model,
 							A2(
@@ -18187,7 +18398,7 @@ var $author$project$Page$UserProfile$update = F2(
 					} else {
 						break _v0$9;
 					}
-				default:
+				case 'MsgImpersonationFinished':
 					var res = _v0.a.a;
 					var new_model = _Utils_update(
 						model,
@@ -18202,6 +18413,8 @@ var $author$project$Page$UserProfile$update = F2(
 						var error = res.a;
 						return _Utils_Tuple2(new_model, $elm$core$Platform$Cmd$none);
 					}
+				default:
+					break _v0$9;
 			}
 		}
 		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -19274,8 +19487,19 @@ var $author$project$Page$Admin$AdminPage$viewMenu = function (model) {
 		},
 			{
 			icon: 'cog',
+			label: 'Экспорт оценок',
+			type_: $author$project$Page$Admin$AdminPage$MenuItemTypeSubpage(
+				$author$project$Page$Admin$AdminPage$SubpageExportMarks($elm$core$Maybe$Nothing))
+		},
+			{
+			icon: 'cog',
 			label: 'Админка Django',
 			type_: $author$project$Page$Admin$AdminPage$MenuItemTypeExternalLink('/djadmin')
+		},
+			{
+			icon: 'cog',
+			label: 'Swagger API',
+			type_: $author$project$Page$Admin$AdminPage$MenuItemTypeExternalLink('/swagger')
 		}
 		]);
 	return A2(
@@ -19354,6 +19578,89 @@ var $author$project$Component$MessageBox$view = F5(
 							]))
 					])));
 	});
+var $elm$html$Html$p = _VirtualDom_node('p');
+var $author$project$Page$Admin$ExportMarks$view = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h1,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Экспорт оценок')
+					])),
+				A2(
+				$elm$html$Html$p,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Для экспорта оценок из дневника в различных форматах поспользуйтесь ссылками ниже:')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('row start-xs center-sm')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('col-xs-12 start-xs pl-20')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$a,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class(''),
+										$elm$html$Html$Attributes$href('/api/mark/export?type=csv_full'),
+										$elm$html$Html$Attributes$target('_blank'),
+										A2($elm$html$Html$Attributes$style, 'display', 'block')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$i,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('icon file excel'),
+												A2($elm$html$Html$Attributes$style, 'font-size', '16pt')
+											]),
+										_List_Nil),
+										$elm$html$Html$text('Все учащиеся в одной таблице (CSV)')
+									])),
+								A2(
+								$elm$html$Html$a,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class(''),
+										$elm$html$Html$Attributes$href('/api/mark/export?type=csv_archive'),
+										$elm$html$Html$Attributes$target('_blank'),
+										A2($elm$html$Html$Attributes$style, 'display', 'block')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$i,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('icon file archive'),
+												A2($elm$html$Html$Attributes$style, 'font-size', '16pt')
+											]),
+										_List_Nil),
+										$elm$html$Html$text('Все учащиеся в архиве с разделением по учащимся (ZIP)')
+									]))
+							]))
+					]))
+			]));
+};
 var $author$project$Component$MessageBox$Error = {$: 'Error'};
 var $author$project$Page$Admin$ImportStudentsCSV$MsgOnClickDownloadReport = {$: 'MsgOnClickDownloadReport'};
 var $author$project$Page$Admin$ImportStudentsCSV$MsgOnClickStartImport = {$: 'MsgOnClickStartImport'};
@@ -19395,7 +19702,6 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 			$elm$html$Html$Events$alwaysStop,
 			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
 };
-var $elm$html$Html$p = _VirtualDom_node('p');
 var $elm$html$Html$Attributes$rows = function (n) {
 	return A2(
 		_VirtualDom_attribute,
@@ -19714,19 +20020,31 @@ var $author$project$Page$Admin$AdminPage$viewSubpage = function (model) {
 		$elm$html$Html$text(''),
 		$elm$html$Html$text('Инициализация...'));
 	var _v0 = model.currentSubpage;
-	if (_v0.$ === 'SubpageIndex') {
-		return $elm$html$Html$text('Выберите интересующий вас раздел в меню выше.');
-	} else {
-		if (_v0.a.$ === 'Just') {
-			var model_ = _v0.a.a;
-			return A2(
-				$elm$html$Html$map,
-				$author$project$Page$Admin$AdminPage$MsgSubpageImportStudents,
-				$author$project$Page$Admin$ImportStudentsCSV$view(model_));
-		} else {
-			var _v1 = _v0.a;
-			return loading;
-		}
+	switch (_v0.$) {
+		case 'SubpageIndex':
+			return $elm$html$Html$text('Выберите интересующий вас раздел в меню выше.');
+		case 'SubpageImportStudents':
+			var mbm = _v0.a;
+			if (mbm.$ === 'Just') {
+				var model_ = mbm.a;
+				return A2(
+					$elm$html$Html$map,
+					$author$project$Page$Admin$AdminPage$MsgSubpageImportStudents,
+					$author$project$Page$Admin$ImportStudentsCSV$view(model_));
+			} else {
+				return loading;
+			}
+		default:
+			var mbm = _v0.a;
+			if (mbm.$ === 'Just') {
+				var model_ = mbm.a;
+				return A2(
+					$elm$html$Html$map,
+					$author$project$Page$Admin$AdminPage$MsgSubpageExportMarks,
+					$author$project$Page$Admin$ExportMarks$view(model_));
+			} else {
+				return loading;
+			}
 	}
 };
 var $author$project$Page$Admin$AdminPage$view = function (model) {
@@ -40611,6 +40929,7 @@ var $author$project$Page$NotFound$view = A2(
 						]))
 				]))
 		]));
+var $author$project$Page$UserProfile$MsgOnClickAddOlympiad = {$: 'MsgOnClickAddOlympiad'};
 var $author$project$Page$UserProfile$MsgOnClickImpersonate = {$: 'MsgOnClickImpersonate'};
 var $elm$html$Html$Attributes$height = function (n) {
 	return A2(
@@ -40823,11 +41142,17 @@ var $author$project$Page$UserProfile$viewEmailRow = function (model) {
 			switch (_v0.a.$) {
 				case 'SettingStateUnset':
 					var _v1 = _v0.a;
-					var user = _v0.b.a;
+					var _v2 = _v0.b;
+					var user = _v2.a;
+					var olymp = _v2.b;
+					var part = _v2.c;
 					return _List_Nil;
 				case 'SettingStateShow':
 					var s = _v0.a.a;
-					var user = _v0.b.a;
+					var _v3 = _v0.b;
+					var user = _v3.a;
+					var olymp = _v3.b;
+					var part = _v3.c;
 					return _List_fromArray(
 						[
 							$elm$html$Html$text(s),
@@ -40861,7 +41186,10 @@ var $author$project$Page$UserProfile$viewEmailRow = function (model) {
 						]);
 				case 'SettingStateChangePrompt':
 					var s = _v0.a.a;
-					var user = _v0.b.a;
+					var _v4 = _v0.b;
+					var user = _v4.a;
+					var olymp = _v4.b;
+					var part = _v4.c;
 					return _List_fromArray(
 						[
 							A2(
@@ -40905,7 +41233,10 @@ var $author$project$Page$UserProfile$viewEmailRow = function (model) {
 						]);
 				case 'SettingStateChanging':
 					var s = _v0.a.a;
-					var user = _v0.b.a;
+					var _v5 = _v0.b;
+					var user = _v5.a;
+					var olymp = _v5.b;
+					var part = _v5.c;
 					return _List_fromArray(
 						[
 							A2(
@@ -40956,7 +41287,10 @@ var $author$project$Page$UserProfile$viewEmailRow = function (model) {
 						]);
 				case 'SettingStateChangeError':
 					var err = _v0.a.a;
-					var user = _v0.b.a;
+					var _v6 = _v0.b;
+					var user = _v6.a;
+					var olymp = _v6.b;
+					var part = _v6.c;
 					return _List_fromArray(
 						[
 							A2(
@@ -40976,8 +41310,11 @@ var $author$project$Page$UserProfile$viewEmailRow = function (model) {
 								]))
 						]);
 				default:
-					var _v2 = _v0.a;
-					var user = _v0.b.a;
+					var _v7 = _v0.a;
+					var _v8 = _v0.b;
+					var user = _v8.a;
+					var olymp = _v8.b;
+					var part = _v8.c;
 					return _List_fromArray(
 						[
 							A2(
@@ -41010,6 +41347,178 @@ var $author$project$Page$UserProfile$viewEmailRow = function (model) {
 			]),
 		v);
 };
+var $elm$html$Html$Attributes$width = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'width',
+		$elm$core$String$fromInt(n));
+};
+var $author$project$Page$UserProfile$viewOlympiad = F2(
+	function (canEdit, _v0) {
+		var tz = _v0.a;
+		var olympiad = _v0.b;
+		var part = _v0.c;
+		var olymp = _List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('row nowrap middle-xs center-xs')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('col-xs')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('row start-xs'),
+										A2($elm$html$Html$Attributes$style, 'font-size', 'x-large')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text(olympiad.name)
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('row ml-10')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										A2($elm$core$Maybe$withDefault, '', olympiad.organization))
+									]))
+							]))
+					]))
+			]);
+		var date = _List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'font-size', '8pt'),
+						A2($elm$html$Html$Attributes$style, 'color', '#555'),
+						$elm$html$Html$Attributes$class('center-xs start-sm')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Дата:')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('ml-10'),
+						A2($elm$html$Html$Attributes$style, 'font-size', '14pt')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						A2(
+							$elm$core$Maybe$withDefault,
+							'(Не указана)',
+							A2(
+								$elm$core$Maybe$map,
+								$author$project$Util$posixToFullDate(tz),
+								part.date)))
+					]))
+			]);
+		var award = _List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'font-size', '8pt'),
+						A2($elm$html$Html$Attributes$style, 'color', '#555'),
+						$elm$html$Html$Attributes$class('center-xs start-sm')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Награда:')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('ml-10'),
+						A2($elm$html$Html$Attributes$style, 'font-size', '14pt')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						A2($elm$core$Maybe$withDefault, '(Не указана)', part.award))
+					]))
+			]);
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('row ui segment')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('row col-xs-12 col-sm-2 middle-xs center-xs start-sm')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$img,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$src('/img/olympiad.png'),
+									$elm$html$Html$Attributes$width(100),
+									$elm$html$Html$Attributes$height(100)
+								]),
+							_List_Nil)
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('row nowrap col-sm-10 middle-xs center-xs between-lg')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('col-xs-12 col-md center-xs start-lg mt-10')
+								]),
+							olymp),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('col-xs-12 col-md-3 mt-10 mb-10 ml-100')
+								]),
+							date),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('col-xs-12 col-md-2')
+								]),
+							award)
+						]))
+				]));
+	});
 var $author$project$Page$UserProfile$MsgChangePassword = {$: 'MsgChangePassword'};
 var $author$project$Page$UserProfile$MsgNewPasswordValue = function (a) {
 	return {$: 'MsgNewPasswordValue', a: a};
@@ -41021,11 +41530,17 @@ var $author$project$Page$UserProfile$viewPassword = function (model) {
 			switch (_v0.a.$) {
 				case 'SettingStateUnset':
 					var _v1 = _v0.a;
-					var user = _v0.b.a;
+					var _v2 = _v0.b;
+					var user = _v2.a;
+					var olymp = _v2.b;
+					var part = _v2.c;
 					return _List_Nil;
 				case 'SettingStateShow':
 					var s = _v0.a.a;
-					var user = _v0.b.a;
+					var _v3 = _v0.b;
+					var user = _v3.a;
+					var olymp = _v3.b;
+					var part = _v3.c;
 					return _List_fromArray(
 						[
 							$elm$html$Html$text(s),
@@ -41059,7 +41574,10 @@ var $author$project$Page$UserProfile$viewPassword = function (model) {
 						]);
 				case 'SettingStateChangePrompt':
 					var s = _v0.a.a;
-					var user = _v0.b.a;
+					var _v4 = _v0.b;
+					var user = _v4.a;
+					var olymp = _v4.b;
+					var part = _v4.c;
 					return _List_fromArray(
 						[
 							A2(
@@ -41103,7 +41621,10 @@ var $author$project$Page$UserProfile$viewPassword = function (model) {
 						]);
 				case 'SettingStateChanging':
 					var s = _v0.a.a;
-					var user = _v0.b.a;
+					var _v5 = _v0.b;
+					var user = _v5.a;
+					var olymp = _v5.b;
+					var part = _v5.c;
 					return _List_fromArray(
 						[
 							A2(
@@ -41154,7 +41675,10 @@ var $author$project$Page$UserProfile$viewPassword = function (model) {
 						]);
 				case 'SettingStateChangeError':
 					var err = _v0.a.a;
-					var user = _v0.b.a;
+					var _v6 = _v0.b;
+					var user = _v6.a;
+					var olymp = _v6.b;
+					var part = _v6.c;
 					return _List_fromArray(
 						[
 							A2(
@@ -41174,8 +41698,11 @@ var $author$project$Page$UserProfile$viewPassword = function (model) {
 								]))
 						]);
 				default:
-					var _v2 = _v0.a;
-					var user = _v0.b.a;
+					var _v7 = _v0.a;
+					var _v8 = _v0.b;
+					var user = _v8.a;
+					var olymp = _v8.b;
+					var part = _v8.c;
 					return _List_fromArray(
 						[
 							A2(
@@ -41247,12 +41774,6 @@ var $author$project$Page$UserProfile$viewRole = function (role) {
 				$elm$html$Html$text(label)
 			]));
 };
-var $elm$html$Html$Attributes$width = function (n) {
-	return A2(
-		_VirtualDom_attribute,
-		'width',
-		$elm$core$String$fromInt(n));
-};
 var $author$project$Page$UserProfile$view = function (model) {
 	var _v0 = model.state;
 	if (_v0.$ === 'StateLoading') {
@@ -41278,6 +41799,8 @@ var $author$project$Page$UserProfile$view = function (model) {
 				]));
 	} else {
 		var user = _v0.a;
+		var olymp = _v0.b;
+		var olympPart = _v0.c;
 		var roles = A2(
 			$elm$core$Maybe$withDefault,
 			$elm$html$Html$text(''),
@@ -41288,7 +41811,7 @@ var $author$project$Page$UserProfile$view = function (model) {
 					$elm$core$List$map($author$project$Page$UserProfile$viewRole),
 					$elm$html$Html$div(_List_Nil)),
 				user.roles));
-		var is_related = A2(
+		var is_parent = A2(
 			$elm$core$List$any,
 			$elm$core$Basics$eq(model.current_user.id),
 			A2(
@@ -41296,26 +41819,36 @@ var $author$project$Page$UserProfile$view = function (model) {
 				function ($) {
 					return $.id;
 				},
-				_Utils_ap(user.children, user.parents)));
+				user.parents));
 		var is_own_page = _Utils_eq(model.current_user.id, user.id);
 		var is_staff_or_own_page = A2(
 			$author$project$Util$user_has_any_role,
 			model.current_user,
 			_List_fromArray(
 				['staff', 'admin'])) || is_own_page;
-		var show_children = is_staff_or_own_page || is_related;
 		var show_email = is_staff_or_own_page;
-		var show_parents = is_staff_or_own_page || is_related;
 		var show_password = is_staff_or_own_page;
+		var is_child = A2(
+			$elm$core$List$any,
+			$elm$core$Basics$eq(model.current_user.id),
+			A2(
+				$elm$core$List$map,
+				function ($) {
+					return $.id;
+				},
+				user.children));
+		var is_related = is_parent || is_child;
+		var show_children = is_staff_or_own_page || is_related;
+		var show_parents = is_staff_or_own_page || is_related;
 		var is_admin = A2(
 			$author$project$Util$user_has_any_role,
 			model.current_user,
 			_List_fromArray(
 				['admin']));
 		var impersonation_icon = function () {
-			var _v2 = model.result_impersonation;
-			if (_v2.$ === 'Just') {
-				if (_v2.a.$ === 'Ok') {
+			var _v3 = model.result_impersonation;
+			if (_v3.$ === 'Just') {
+				if (_v3.a.$ === 'Ok') {
 					return A2(
 						$elm$html$Html$i,
 						_List_fromArray(
@@ -41359,6 +41892,18 @@ var $author$project$Page$UserProfile$view = function (model) {
 						$elm$time$Time$posixToMillis,
 						$elm$core$Basics$mul(-1))),
 				user.education));
+		var can_manage_olympiads = is_staff_or_own_page || is_parent;
+		var olympiads = A2(
+			$elm$core$List$map,
+			function (_v2) {
+				var o = _v2.a;
+				var p = _v2.b;
+				return A2(
+					$author$project$Page$UserProfile$viewOlympiad,
+					can_manage_olympiads,
+					_Utils_Tuple3(model.tz, o, p));
+			},
+			A2($author$project$Util$zip, olymp, olympPart));
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -41371,7 +41916,7 @@ var $author$project$Page$UserProfile$view = function (model) {
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('row center-xs start-md')
+							$elm$html$Html$Attributes$class('row center-xs start-lg')
 						]),
 					_List_fromArray(
 						[
@@ -41393,7 +41938,290 @@ var $author$project$Page$UserProfile$view = function (model) {
 											$elm$html$Html$Attributes$width(300),
 											$elm$html$Html$Attributes$height(300)
 										]),
-									_List_Nil),
+									_List_Nil)
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('col-xs-12 col-md-8 m-10')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$h1,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(fio)
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('ml-20 mb-30')
+										]),
+									_List_fromArray(
+										[roles])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row center-xs start-sm')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$table,
+											_List_fromArray(
+												[
+													A2($elm$html$Html$Attributes$style, 'font-size', '12pt'),
+													A2($elm$html$Html$Attributes$style, 'margin', '0')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$tbody,
+													_List_Nil,
+													_List_fromArray(
+														[
+															A2(
+															$elm$core$Maybe$withDefault,
+															$elm$html$Html$text(''),
+															A2(
+																$elm$core$Maybe$map,
+																function (cls) {
+																	return A2(
+																		$elm$html$Html$tr,
+																		_List_Nil,
+																		_List_fromArray(
+																			[
+																				A2(
+																				$elm$html$Html$td,
+																				_List_fromArray(
+																					[
+																						A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
+																						A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
+																						A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
+																						$elm$html$Html$Attributes$class('pb-20')
+																					]),
+																				_List_fromArray(
+																					[
+																						$elm$html$Html$text('Класс:')
+																					])),
+																				A2(
+																				$elm$html$Html$td,
+																				_List_fromArray(
+																					[
+																						A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
+																					]),
+																				_List_fromArray(
+																					[
+																						A2(
+																						$elm$html$Html$span,
+																						_List_fromArray(
+																							[
+																								$elm$html$Html$Attributes$class('ml-10')
+																							]),
+																						_List_fromArray(
+																							[
+																								$elm$html$Html$text(cls)
+																							]))
+																					]))
+																			]));
+																},
+																user.currentClass)),
+															show_parents ? A2(
+															$elm$html$Html$tr,
+															_List_Nil,
+															_List_fromArray(
+																[
+																	A2(
+																	$elm$html$Html$td,
+																	_List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
+																			A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
+																			A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
+																			$elm$html$Html$Attributes$class('pb-20')
+																		]),
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$text('Родители:')
+																		])),
+																	A2(
+																	$elm$html$Html$td,
+																	_List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
+																		]),
+																	_List_fromArray(
+																		[
+																			A2(
+																			$elm$html$Html$div,
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$Attributes$class('ml-15')
+																				]),
+																			_Utils_eq(user.parents, _List_Nil) ? _List_fromArray(
+																				[
+																					A2(
+																					$elm$html$Html$span,
+																					_List_Nil,
+																					_List_fromArray(
+																						[
+																							$elm$html$Html$text('(нет)')
+																						]))
+																				]) : A2(
+																				$elm$core$List$map,
+																				A2(
+																					$elm$core$Basics$composeR,
+																					$author$project$Component$Misc$user_link($elm$core$Maybe$Nothing),
+																					A2(
+																						$elm$core$Basics$composeR,
+																						$elm$core$List$singleton,
+																						$elm$html$Html$div(_List_Nil))),
+																				user.parents))
+																		]))
+																])) : $elm$html$Html$text(''),
+															show_children ? A2(
+															$elm$html$Html$tr,
+															_List_Nil,
+															_List_fromArray(
+																[
+																	A2(
+																	$elm$html$Html$td,
+																	_List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
+																			A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
+																			A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
+																			$elm$html$Html$Attributes$class('pb-20')
+																		]),
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$text('Дети:')
+																		])),
+																	A2(
+																	$elm$html$Html$td,
+																	_List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
+																		]),
+																	_List_fromArray(
+																		[
+																			A2(
+																			$elm$html$Html$div,
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$Attributes$class('ml-15')
+																				]),
+																			_Utils_eq(user.children, _List_Nil) ? _List_fromArray(
+																				[
+																					A2(
+																					$elm$html$Html$span,
+																					_List_Nil,
+																					_List_fromArray(
+																						[
+																							$elm$html$Html$text('(нет)')
+																						]))
+																				]) : A2(
+																				$elm$core$List$map,
+																				A2(
+																					$elm$core$Basics$composeR,
+																					$author$project$Component$Misc$user_link($elm$core$Maybe$Nothing),
+																					A2(
+																						$elm$core$Basics$composeR,
+																						$elm$core$List$singleton,
+																						$elm$html$Html$div(_List_Nil))),
+																				user.children))
+																		]))
+																])) : $elm$html$Html$text(''),
+															show_email ? A2(
+															$elm$html$Html$tr,
+															_List_fromArray(
+																[
+																	A2($elm$html$Html$Attributes$style, 'min-height', '45px')
+																]),
+															_List_fromArray(
+																[
+																	A2(
+																	$elm$html$Html$td,
+																	_List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
+																			A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
+																			A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
+																			$elm$html$Html$Attributes$class('pb-20')
+																		]),
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$text('Email:')
+																		])),
+																	A2(
+																	$elm$html$Html$td,
+																	_List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
+																		]),
+																	_List_fromArray(
+																		[
+																			$author$project$Page$UserProfile$viewEmailRow(model)
+																		]))
+																])) : $elm$html$Html$text(''),
+															show_password ? A2(
+															$elm$html$Html$tr,
+															_List_fromArray(
+																[
+																	A2($elm$html$Html$Attributes$style, 'min-height', '45px')
+																]),
+															_List_fromArray(
+																[
+																	A2(
+																	$elm$html$Html$td,
+																	_List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
+																			A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
+																			A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
+																			$elm$html$Html$Attributes$class('pb-20')
+																		]),
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$text('Пароль:')
+																		])),
+																	A2(
+																	$elm$html$Html$td,
+																	_List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
+																		]),
+																	_List_fromArray(
+																		[
+																			$author$project$Page$UserProfile$viewPassword(model)
+																		]))
+																])) : $elm$html$Html$text('')
+														]))
+												]))
+										]))
+								]))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('row center-xs start-lg')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 col-md-4 col-lg-3')
+								]),
+							_List_fromArray(
+								[
 									((is_staff_or_own_page || is_related) && (!is_own_page)) ? A2(
 									$elm$html$Html$div,
 									_List_fromArray(
@@ -41461,268 +42289,13 @@ var $author$project$Page$UserProfile$view = function (model) {
 														]))
 												]))
 										])) : $elm$html$Html$text('')
-								])),
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('col-xs-12 col-md-8 m-10')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$h1,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text(fio)
-										])),
-									A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('ml-20 mb-30')
-										]),
-									_List_fromArray(
-										[roles])),
-									A2(
-									$elm$html$Html$table,
-									_List_fromArray(
-										[
-											A2($elm$html$Html$Attributes$style, 'font-size', '12pt')
-										]),
-									_List_fromArray(
-										[
-											A2(
-											$elm$html$Html$tbody,
-											_List_Nil,
-											_List_fromArray(
-												[
-													A2(
-													$elm$core$Maybe$withDefault,
-													$elm$html$Html$text(''),
-													A2(
-														$elm$core$Maybe$map,
-														function (cls) {
-															return A2(
-																$elm$html$Html$tr,
-																_List_Nil,
-																_List_fromArray(
-																	[
-																		A2(
-																		$elm$html$Html$td,
-																		_List_fromArray(
-																			[
-																				A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
-																				A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
-																				A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
-																				$elm$html$Html$Attributes$class('pb-20')
-																			]),
-																		_List_fromArray(
-																			[
-																				$elm$html$Html$text('Класс:')
-																			])),
-																		A2(
-																		$elm$html$Html$td,
-																		_List_fromArray(
-																			[
-																				A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
-																			]),
-																		_List_fromArray(
-																			[
-																				A2(
-																				$elm$html$Html$span,
-																				_List_fromArray(
-																					[
-																						$elm$html$Html$Attributes$class('ml-10')
-																					]),
-																				_List_fromArray(
-																					[
-																						$elm$html$Html$text(cls)
-																					]))
-																			]))
-																	]));
-														},
-														user.currentClass)),
-													show_parents ? A2(
-													$elm$html$Html$tr,
-													_List_Nil,
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$td,
-															_List_fromArray(
-																[
-																	A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
-																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
-																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
-																	$elm$html$Html$Attributes$class('pb-20')
-																]),
-															_List_fromArray(
-																[
-																	$elm$html$Html$text('Родители:')
-																])),
-															A2(
-															$elm$html$Html$td,
-															_List_fromArray(
-																[
-																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
-																]),
-															_List_fromArray(
-																[
-																	A2(
-																	$elm$html$Html$div,
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$Attributes$class('ml-15')
-																		]),
-																	_Utils_eq(user.parents, _List_Nil) ? _List_fromArray(
-																		[
-																			A2(
-																			$elm$html$Html$span,
-																			_List_Nil,
-																			_List_fromArray(
-																				[
-																					$elm$html$Html$text('(нет)')
-																				]))
-																		]) : A2(
-																		$elm$core$List$map,
-																		A2(
-																			$elm$core$Basics$composeR,
-																			$author$project$Component$Misc$user_link($elm$core$Maybe$Nothing),
-																			A2(
-																				$elm$core$Basics$composeR,
-																				$elm$core$List$singleton,
-																				$elm$html$Html$div(_List_Nil))),
-																		user.parents))
-																]))
-														])) : $elm$html$Html$text(''),
-													show_children ? A2(
-													$elm$html$Html$tr,
-													_List_Nil,
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$td,
-															_List_fromArray(
-																[
-																	A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
-																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
-																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
-																	$elm$html$Html$Attributes$class('pb-20')
-																]),
-															_List_fromArray(
-																[
-																	$elm$html$Html$text('Дети:')
-																])),
-															A2(
-															$elm$html$Html$td,
-															_List_fromArray(
-																[
-																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
-																]),
-															_List_fromArray(
-																[
-																	A2(
-																	$elm$html$Html$div,
-																	_List_fromArray(
-																		[
-																			$elm$html$Html$Attributes$class('ml-15')
-																		]),
-																	_Utils_eq(user.children, _List_Nil) ? _List_fromArray(
-																		[
-																			A2(
-																			$elm$html$Html$span,
-																			_List_Nil,
-																			_List_fromArray(
-																				[
-																					$elm$html$Html$text('(нет)')
-																				]))
-																		]) : A2(
-																		$elm$core$List$map,
-																		A2(
-																			$elm$core$Basics$composeR,
-																			$author$project$Component$Misc$user_link($elm$core$Maybe$Nothing),
-																			A2(
-																				$elm$core$Basics$composeR,
-																				$elm$core$List$singleton,
-																				$elm$html$Html$div(_List_Nil))),
-																		user.children))
-																]))
-														])) : $elm$html$Html$text(''),
-													show_email ? A2(
-													$elm$html$Html$tr,
-													_List_fromArray(
-														[
-															A2($elm$html$Html$Attributes$style, 'min-height', '45px')
-														]),
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$td,
-															_List_fromArray(
-																[
-																	A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
-																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
-																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
-																	$elm$html$Html$Attributes$class('pb-20')
-																]),
-															_List_fromArray(
-																[
-																	$elm$html$Html$text('Email:')
-																])),
-															A2(
-															$elm$html$Html$td,
-															_List_fromArray(
-																[
-																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
-																]),
-															_List_fromArray(
-																[
-																	$author$project$Page$UserProfile$viewEmailRow(model)
-																]))
-														])) : $elm$html$Html$text(''),
-													show_password ? A2(
-													$elm$html$Html$tr,
-													_List_fromArray(
-														[
-															A2($elm$html$Html$Attributes$style, 'min-height', '45px')
-														]),
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$td,
-															_List_fromArray(
-																[
-																	A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
-																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top'),
-																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
-																	$elm$html$Html$Attributes$class('pb-20')
-																]),
-															_List_fromArray(
-																[
-																	$elm$html$Html$text('Пароль:')
-																])),
-															A2(
-															$elm$html$Html$td,
-															_List_fromArray(
-																[
-																	A2($elm$html$Html$Attributes$style, 'vertical-align', 'top')
-																]),
-															_List_fromArray(
-																[
-																	$author$project$Page$UserProfile$viewPassword(model)
-																]))
-														])) : $elm$html$Html$text('')
-												]))
-										]))
 								]))
 						])),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('row center-xs start-md mt-10')
+							$elm$html$Html$Attributes$class('row center-xs start-sm mt-30')
 						]),
 					_List_fromArray(
 						[
@@ -41752,7 +42325,88 @@ var $author$project$Page$UserProfile$view = function (model) {
 											$elm$html$Html$text('(Нет данных)')
 										])) : A2($elm$html$Html$div, _List_Nil, education)
 								]))
-						]))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('row center-xs start-md mt-30')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('col-xs-12')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$h1,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('row center-xs between-sm')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('col-xs-12 col-sm-1')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Олимпиады')
+												])),
+											can_manage_olympiads ? A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('col-xs-12 col-sm-3 center-xs end-sm')
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$button,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('ui green button'),
+															$elm$html$Html$Events$onClick($author$project$Page$UserProfile$MsgOnClickAddOlympiad)
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$i,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$class('plus icon')
+																]),
+															_List_Nil),
+															$elm$html$Html$text('Добавить')
+														]))
+												])) : A2($elm$html$Html$div, _List_Nil, _List_Nil)
+										])),
+									_Utils_eq(olympiads, _List_Nil) ? A2(
+									$elm$html$Html$span,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('ml-20')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('(Нет данных)')
+										])) : A2($elm$html$Html$div, _List_Nil, olympiads)
+								]))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('p-10')
+						]),
+					_List_Nil)
 				]));
 	}
 };

@@ -41,6 +41,7 @@ module Api.Data exposing
     , Message
     , MessageType(..)
     , Olympiad
+    , OlympiadParticipation
     , Organization
     , ResetPasswordComplete
     , ResetPasswordRequest
@@ -86,6 +87,7 @@ module Api.Data exposing
     , encodeMark
     , encodeMessage
     , encodeOlympiad
+    , encodeOlympiadParticipation
     , encodeOrganization
     , encodeResetPasswordComplete
     , encodeResetPasswordRequest
@@ -107,6 +109,7 @@ module Api.Data exposing
     , messageDecoder
     , messageTypeVariants
     , olympiadDecoder
+    , olympiadParticipationDecoder
     , organizationDecoder
     , resetPasswordCompleteDecoder
     , resetPasswordRequestDecoder
@@ -442,6 +445,20 @@ type alias Olympiad =
     }
 
 
+type alias OlympiadParticipation =
+    { id : Maybe Uuid
+    , createdAt : Maybe Posix
+    , updatedAt : Maybe Posix
+    , date : Maybe Posix
+    , award : Maybe String
+    , teamMember : Maybe Bool
+    , stage : Maybe String
+    , location : Maybe String
+    , olympiad : Uuid
+    , person : Uuid
+    }
+
+
 type alias Organization =
     { id : Maybe Uuid
     , createdAt : Maybe Posix
@@ -524,7 +541,6 @@ type alias UserDeep =
     , children : List UserShallow
     , parents : List UserShallow
     , education : List EducationShallow
-    , olympiads : List Olympiad
     , lastLogin : Maybe Posix
     , isSuperuser : Maybe Bool
     , username : String
@@ -1211,6 +1227,35 @@ encodeOlympiadPairs model =
     pairs
 
 
+encodeOlympiadParticipation : OlympiadParticipation -> Json.Encode.Value
+encodeOlympiadParticipation =
+    encodeObject << encodeOlympiadParticipationPairs
+
+
+encodeOlympiadParticipationWithTag : ( String, String ) -> OlympiadParticipation -> Json.Encode.Value
+encodeOlympiadParticipationWithTag ( tagField, tag ) model =
+    encodeObject (encodeOlympiadParticipationPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeOlympiadParticipationPairs : OlympiadParticipation -> List EncodedField
+encodeOlympiadParticipationPairs model =
+    let
+        pairs =
+            [ maybeEncode "id" Uuid.encode model.id
+            , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
+            , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
+            , maybeEncodeNullable "date" Api.Time.encodeDateTime model.date
+            , maybeEncodeNullable "award" Json.Encode.string model.award
+            , maybeEncode "team_member" Json.Encode.bool model.teamMember
+            , maybeEncodeNullable "stage" Json.Encode.string model.stage
+            , maybeEncodeNullable "location" Json.Encode.string model.location
+            , encode "olympiad" Uuid.encode model.olympiad
+            , encode "person" Uuid.encode model.person
+            ]
+    in
+    pairs
+
+
 encodeOrganization : Organization -> Json.Encode.Value
 encodeOrganization =
     encodeObject << encodeOrganizationPairs
@@ -1422,7 +1467,6 @@ encodeUserDeepPairs model =
             , encode "children" (Json.Encode.list encodeUserShallow) model.children
             , encode "parents" (Json.Encode.list encodeUserShallow) model.parents
             , encode "education" (Json.Encode.list encodeEducationShallow) model.education
-            , encode "olympiads" (Json.Encode.list encodeOlympiad) model.olympiads
             , maybeEncodeNullable "last_login" Api.Time.encodeDateTime model.lastLogin
             , maybeEncode "is_superuser" Json.Encode.bool model.isSuperuser
             , encode "username" Json.Encode.string model.username
@@ -1858,6 +1902,21 @@ olympiadDecoder =
         |> maybeDecodeNullable "logo" Uuid.decoder Nothing
 
 
+olympiadParticipationDecoder : Json.Decode.Decoder OlympiadParticipation
+olympiadParticipationDecoder =
+    Json.Decode.succeed OlympiadParticipation
+        |> maybeDecode "id" Uuid.decoder Nothing
+        |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecodeNullable "date" Api.Time.dateTimeDecoder Nothing
+        |> maybeDecodeNullable "award" Json.Decode.string Nothing
+        |> maybeDecode "team_member" Json.Decode.bool Nothing
+        |> maybeDecodeNullable "stage" Json.Decode.string Nothing
+        |> maybeDecodeNullable "location" Json.Decode.string Nothing
+        |> decode "olympiad" Uuid.decoder
+        |> decode "person" Uuid.decoder
+
+
 organizationDecoder : Json.Decode.Decoder Organization
 organizationDecoder =
     Json.Decode.succeed Organization
@@ -1962,7 +2021,6 @@ userDeepDecoder =
         |> decode "children" (Json.Decode.list userShallowDecoder)
         |> decode "parents" (Json.Decode.list userShallowDecoder)
         |> decode "education" (Json.Decode.list educationShallowDecoder)
-        |> decode "olympiads" (Json.Decode.list olympiadDecoder)
         |> maybeDecodeNullable "last_login" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "is_superuser" Json.Decode.bool Nothing
         |> decode "username" Json.Decode.string

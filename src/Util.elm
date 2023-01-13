@@ -9,8 +9,8 @@ import Html.Events exposing (custom, preventDefaultOn, stopPropagationOn)
 import Http
 import Iso8601 exposing (fromTime, toTime)
 import Json.Decode as JD
-import Task
-import Time exposing (Month(..))
+import Task exposing (Task)
+import Time exposing (Month(..), Zone)
 import Tuple exposing (first, second)
 import Uuid exposing (Uuid)
 
@@ -149,8 +149,11 @@ zip : List a -> List b -> List ( a, b )
 zip =
     List.map2 Tuple.pair
 
-zip3 : List a -> List b -> List c -> List (a, b, c)
-zip3 = List.map3 (\x y z -> (x,y,z))
+
+zip3 : List a -> List b -> List c -> List ( a, b, c )
+zip3 =
+    List.map3 (\x y z -> ( x, y, z ))
+
 
 monthToInt : Month -> Int
 monthToInt month =
@@ -362,6 +365,7 @@ finalTypeToStr act =
         Nothing ->
             ""
 
+
 finalTypeOrder : ActivityFinalType -> Int
 finalTypeOrder ft =
     case ft of
@@ -391,6 +395,7 @@ finalTypeOrder ft =
 
         ActivityFinalTypeF ->
             9
+
 
 maybeFilter : (a -> Bool) -> Maybe a -> Maybe a
 maybeFilter pred maybe =
@@ -564,6 +569,31 @@ dict2DGet : comparable1 -> comparable2 -> Dict comparable1 (Dict comparable2 c) 
 dict2DGet x y =
     Dict.get x >> Maybe.withDefault Dict.empty >> Dict.get y
 
+
 listUniqueNaive : List a -> List a
 listUniqueNaive list =
-    List.foldl (\x r -> if List.member x r then r else r ++ [x]) [] list
+    List.foldl
+        (\x r ->
+            if List.member x r then
+                r
+
+            else
+                r ++ [ x ]
+        )
+        []
+        list
+
+
+taskGetTZ : (Zone -> msg) -> Task e msg
+taskGetTZ mapper =
+    Task.map mapper Time.here
+
+
+maybeOrElse : Maybe a -> Maybe a -> Maybe a
+maybeOrElse mb fallback =
+    case mb of
+        Just a ->
+            Just a
+
+        Nothing ->
+            fallback

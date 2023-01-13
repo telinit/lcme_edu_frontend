@@ -585,7 +585,7 @@ dateFilter filter orderSortedActs =
         DateFilterQ1 ->
             let
                 ( l, r ) =
-                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeQ1)) orderSortedActs
+                    listSplitWhile (.contentType >> (/=) (Just ActivityContentTypeFIN)) orderSortedActs
             in
             l ++ maybeToList (List.head r)
 
