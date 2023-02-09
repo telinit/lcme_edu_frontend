@@ -24,7 +24,7 @@ import Task
 import Theme
 import Time as T exposing (Posix, Zone, millisToPosix, utc)
 import Tuple exposing (first, second)
-import Util exposing (Either, dict2DGet, dictFromTupleListMany, dictGroupBy, eitherGetRight, finalTypeOrder, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, listUniqueNaive, maybeToList, posixToDDMMYYYY, prec, resultIsOK, user_full_name, zip, zip3)
+import Util exposing (Either, actCT2string, dict2DGet, dictFromTupleListMany, dictGroupBy, eitherGetRight, finalTypeOrder, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, listUniqueNaive, maybeFlatten, maybeToList, posixToDDMMYYYY, prec, resultIsOK, user_full_name, zip, zip3)
 import Uuid exposing (Uuid)
 
 
@@ -1504,6 +1504,7 @@ viewMarkDetailsModal model =
     case model.showMarkDetails of
         Just mark ->
             let
+                activity : Maybe Activity
                 activity =
                     case model.state of
                         StateComplete ->
@@ -1519,6 +1520,15 @@ viewMarkDetailsModal model =
                             [ div [ class "row" ]
                                 [ div [ class "col-xs-12 col-sm-6 end-xs" ] [ strong [] [ text "Оценка:" ] ]
                                 , div [ class "col-xs-12 col-sm-6 start-xs" ] [ text mark.value ]
+                                ]
+                            , div [ class "row" ]
+                                [ div [ class "col-xs-12 col-sm-6 end-xs" ] [ strong [] [ text "Тип:" ] ]
+                                , div [ class "col-xs-12 col-sm-6 start-xs" ]
+                                    [ text <|
+                                        Maybe.withDefault "(нет)" <|
+                                            maybeFlatten <|
+                                                Maybe.map (.contentType >> Maybe.map actCT2string) activity
+                                    ]
                                 ]
                             , div [ class "row" ]
                                 [ div [ class "col-xs-12 col-sm-6 end-xs" ] [ strong [] [ text "Тема:" ] ]

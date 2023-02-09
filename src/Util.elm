@@ -1,6 +1,6 @@
 module Util exposing (..)
 
-import Api.Data exposing (ActivityFinalType(..), UserDeep, UserShallow)
+import Api.Data exposing (ActivityContentType(..), ActivityFinalType(..), UserDeep, UserShallow)
 import Array exposing (Array)
 import Dict exposing (Dict)
 import Html exposing (Attribute, span)
@@ -597,3 +597,30 @@ maybeOrElse mb fallback =
 
         Nothing ->
             fallback
+
+actCT2string : ActivityContentType -> String
+actCT2string activityContentType =
+    case activityContentType of
+        ActivityContentTypeGEN ->
+            "Тема"
+
+        ActivityContentTypeTXT ->
+            "Материал"
+
+        ActivityContentTypeTSK ->
+            "Задание"
+
+        ActivityContentTypeLNK ->
+            "Ссылка"
+
+        ActivityContentTypeMED ->
+            "Медиа-контент"
+
+        ActivityContentTypeFIN ->
+            "Итог"
+
+maybeFlatten : Maybe (Maybe a) -> Maybe a
+maybeFlatten mb =
+    case mb of
+        Just x -> x
+        _ -> Nothing

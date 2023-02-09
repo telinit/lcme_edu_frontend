@@ -19,6 +19,7 @@ module Api.Data exposing
     , ActivityContentType(..)
     , ActivityFinalType(..)
     , BulkSetActivities
+    , Challenge
     , Counters
     , Course
     , CourseEnrollmentRead
@@ -57,6 +58,7 @@ module Api.Data exposing
     , activityFinalTypeDecoder
     , activityFinalTypeVariants
     , bulkSetActivitiesDecoder
+    , challengeDecoder
     , countersDecoder
     , courseDecoder
     , courseEnrollmentReadDecoder
@@ -69,6 +71,7 @@ module Api.Data exposing
     , educationSpecializationDecoder
     , encodeActivity
     , encodeBulkSetActivities
+    , encodeChallenge
     , encodeCounters
     , encodeCourse
     , encodeCourseEnrollmentRead
@@ -213,6 +216,11 @@ activityFinalTypeVariants =
 type alias BulkSetActivities =
     { create : List Activity
     , update : Dict.Dict String Activity
+    }
+
+
+type alias Challenge =
+    { challenge : String
     }
 
 
@@ -708,6 +716,26 @@ encodeBulkSetActivitiesPairs model =
         pairs =
             [ encode "create" (Json.Encode.list encodeActivity) model.create
             , encode "update" (Json.Encode.dict identity encodeActivity) model.update
+            ]
+    in
+    pairs
+
+
+encodeChallenge : Challenge -> Json.Encode.Value
+encodeChallenge =
+    encodeObject << encodeChallengePairs
+
+
+encodeChallengeWithTag : ( String, String ) -> Challenge -> Json.Encode.Value
+encodeChallengeWithTag ( tagField, tag ) model =
+    encodeObject (encodeChallengePairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeChallengePairs : Challenge -> List EncodedField
+encodeChallengePairs model =
+    let
+        pairs =
+            [ encode "challenge" Json.Encode.string model.challenge
             ]
     in
     pairs
@@ -1630,6 +1658,12 @@ bulkSetActivitiesDecoder =
     Json.Decode.succeed BulkSetActivities
         |> decode "create" (Json.Decode.list activityDecoder)
         |> decode "update" (Json.Decode.dict activityDecoder)
+
+
+challengeDecoder : Json.Decode.Decoder Challenge
+challengeDecoder =
+    Json.Decode.succeed Challenge
+        |> decode "challenge" Json.Decode.string
 
 
 countersDecoder : Json.Decode.Decoder Counters

@@ -17,6 +17,7 @@
 module Api.Request.Mark exposing
     ( markCreate
     , markDelete
+    , markExport
     , markList
     , markPartialUpdate
     , markRead
@@ -53,6 +54,18 @@ markDelete id_path =
         []
         Nothing
         (Json.Decode.succeed ())
+
+
+markExport : Api.Request (List Api.Data.Mark)
+markExport =
+    Api.request
+        "GET"
+        "/mark/export/"
+        []
+        []
+        []
+        Nothing
+        (Json.Decode.list Api.Data.markDecoder)
 
 
 markList : Api.Request (List Api.Data.Mark)

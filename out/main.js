@@ -39598,6 +39598,30 @@ var $author$project$Component$MarkTable$viewDateFilter = function (model) {
 				])));
 };
 var $author$project$Component$MarkTable$MsgOnClickCloseMarkDetails = {$: 'MsgOnClickCloseMarkDetails'};
+var $author$project$Util$actCT2string = function (activityContentType) {
+	switch (activityContentType.$) {
+		case 'ActivityContentTypeGEN':
+			return 'Тема';
+		case 'ActivityContentTypeTXT':
+			return 'Материал';
+		case 'ActivityContentTypeTSK':
+			return 'Задание';
+		case 'ActivityContentTypeLNK':
+			return 'Ссылка';
+		case 'ActivityContentTypeMED':
+			return 'Медиа-контент';
+		default:
+			return 'Итог';
+	}
+};
+var $author$project$Util$maybeFlatten = function (mb) {
+	if (mb.$ === 'Just') {
+		var x = mb.a;
+		return x;
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
 var $author$project$Component$MarkTable$viewMarkDetailsModal = function (model) {
 	var _v0 = model.showMarkDetails;
 	if (_v0.$ === 'Just') {
@@ -39667,6 +39691,54 @@ var $author$project$Component$MarkTable$viewMarkDetailsModal = function (model) 
 									_List_fromArray(
 										[
 											$elm$html$Html$text(mark.value)
+										]))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('row')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 end-xs')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$strong,
+											_List_Nil,
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Тип:')
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('col-xs-12 col-sm-6 start-xs')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text(
+											A2(
+												$elm$core$Maybe$withDefault,
+												'(нет)',
+												$author$project$Util$maybeFlatten(
+													A2(
+														$elm$core$Maybe$map,
+														A2(
+															$elm$core$Basics$composeR,
+															function ($) {
+																return $.contentType;
+															},
+															$elm$core$Maybe$map($author$project$Util$actCT2string)),
+														activity))))
 										]))
 								])),
 							A2(

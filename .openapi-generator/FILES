@@ -1,5 +1,6 @@
 src/Api/Data.elm
 src/Api/Request/Activity.elm
+src/Api/Request/Captcha.elm
 src/Api/Request/Common.elm
 src/Api/Request/Course.elm
 src/Api/Request/Education.elm
