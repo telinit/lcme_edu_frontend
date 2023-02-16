@@ -24,7 +24,7 @@ import Task
 import Theme
 import Time as T exposing (Posix, Zone, millisToPosix, utc)
 import Tuple exposing (first, second)
-import Util exposing (Either, actCT2string, dict2DGet, dictFromTupleListMany, dictGroupBy, eitherGetRight, finalTypeOrder, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, listUniqueNaive, maybeFlatten, maybeToList, posixToDDMMYYYY, prec, resultIsOK, takeLongestPrefixBy, user_full_name, zip, zip3)
+import Util exposing (Either, actCT2string, dict2DGet, dictFromTupleListMany, dictGroupBy, eitherGetRight, finalTypeOrder, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, listUniqueNaive, maybeFlatten, maybeToList, monthToInt, posixToDDMMYYYY, prec, resultIsOK, takeLongestPrefixBy, taskGetTimeAndZone, user_full_name, zip, zip3)
 import Uuid exposing (Uuid)
 
 
@@ -104,6 +104,7 @@ type FetchedDataEvent
     | FetchedCourse Course
     | FetchedActivities (List Activity)
     | FetchedEnrollments (List CourseEnrollmentRead)
+    | FetchedDate ( Zone, Posix )
 
 
 type Msg
@@ -137,6 +138,8 @@ type alias FetchedData =
     , activities : List Activity
     , marks : List Mark
     , enrollments : List CourseEnrollmentRead
+
+    --, tzTime : ( Zone, Posix )
     }
 
 
@@ -281,6 +284,9 @@ showFetchedData fetchedData =
         FetchedEnrollments enr ->
             "Записи: " ++ (String.fromInt <| List.length enr)
 
+        FetchedDate _ ->
+            "OK"
+
 
 doCreateMark : String -> Uuid -> Uuid -> Uuid -> ( Int, Int ) -> String -> Cmd Msg
 doCreateMark token activity_id student_id author_id coords new_mark =
@@ -419,6 +425,9 @@ initForCourse token course_id teacher_id =
                   )
                 , ( ext_task FetchedMarks token [ ( "activity__course", Uuid.toString course_id ) ] markList
                   , "Получение оценок"
+                  )
+                , ( Task.map FetchedDate taskGetTimeAndZone
+                  , "Получение текущей даты"
                   )
                 ]
 
@@ -989,12 +998,53 @@ update msg model =
 
                                 FetchedEnrollments enrollments ->
                                     { oldFetchedData | enrollments = enrollments }
+
+                                FetchedDate ( zone, posix ) ->
+                                    oldFetchedData
                     in
                     ( { model | fetchedData = newFetchedData, state = StateLoading m }, Cmd.map MsgFetch c )
 
                 ( TaskFinishedAll results, _ ) ->
                     if List.all resultIsOK results then
-                        ( updateTable { model | state = StateComplete }, Cmd.none )
+                        let
+                            filterTZTime : Result error FetchedDataEvent -> Maybe ( Zone, Posix )
+                            filterTZTime res =
+                                case res of
+                                    Ok (FetchedDate x) ->
+                                        Just x
+
+                                    _ ->
+                                        Nothing
+
+                            tzTime : Maybe ( Zone, Posix )
+                            tzTime =
+                                List.head <| List.filterMap filterTZTime results
+
+                            tz2quarter : ( Zone, Posix ) -> DateFilter
+                            tz2quarter ( zone, posix ) =
+                                let
+                                    month =
+                                        monthToInt <| T.toMonth zone posix
+                                in
+                                if month > 10 then
+                                    DateFilterQ2
+
+                                else if month > 8 then
+                                    DateFilterQ1
+
+                                else if month > 3 then
+                                    DateFilterQ4
+
+                                else
+                                    DateFilterQ3
+                        in
+                        ( updateTable
+                            { model
+                                | state = StateComplete
+                                , dateFilter = Maybe.withDefault DateFilterAll <| Maybe.map tz2quarter tzTime
+                            }
+                        , Cmd.none
+                        )
 
                     else
                         ( { model | state = StateLoading m }, Cmd.map MsgFetch c )

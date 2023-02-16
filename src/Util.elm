@@ -1,6 +1,7 @@
 module Util exposing (..)
 
 import Api.Data exposing (ActivityContentType(..), ActivityFinalType(..), UserDeep, UserShallow)
+import Api.Time exposing (Posix)
 import Array exposing (Array)
 import Dict exposing (Dict)
 import Html exposing (Attribute, span)
@@ -647,3 +648,8 @@ takeLongestPrefixBy function list =
                         takeLongestPrefixBy1 result (hd :: acc) tl
     in
     takeLongestPrefixBy1 [] [] list
+
+
+taskGetTimeAndZone : Task a ( Zone, Posix )
+taskGetTimeAndZone =
+    Task.map2 (\a b -> ( a, b )) Time.here Time.now

@@ -10148,6 +10148,9 @@ var $author$project$Component$MarkTable$FetchedActivities = function (a) {
 var $author$project$Component$MarkTable$FetchedCourse = function (a) {
 	return {$: 'FetchedCourse', a: a};
 };
+var $author$project$Component$MarkTable$FetchedDate = function (a) {
+	return {$: 'FetchedDate', a: a};
+};
 var $author$project$Component$MarkTable$FetchedEnrollments = function (a) {
 	return {$: 'FetchedEnrollments', a: a};
 };
@@ -10214,6 +10217,14 @@ var $author$project$Api$Request$Mark$markList = A7(
 	_List_Nil,
 	$elm$core$Maybe$Nothing,
 	$elm$json$Json$Decode$list($author$project$Api$Data$markDecoder));
+var $author$project$Util$taskGetTimeAndZone = A3(
+	$elm$core$Task$map2,
+	F2(
+		function (a, b) {
+			return _Utils_Tuple2(a, b);
+		}),
+	$elm$time$Time$here,
+	$elm$time$Time$now);
 var $danyx23$elm_uuid$Uuid$toString = function (_v0) {
 	var internalString = _v0.a;
 	return internalString;
@@ -10284,7 +10295,10 @@ var $author$project$Component$MarkTable$initForCourse = F3(
 								$danyx23$elm_uuid$Uuid$toString(course_id))
 							]),
 						$author$project$Api$Request$Mark$markList),
-					'Получение оценок')
+					'Получение оценок'),
+					_Utils_Tuple2(
+					A2($elm$core$Task$map, $author$project$Component$MarkTable$FetchedDate, $author$project$Util$taskGetTimeAndZone),
+					'Получение текущей даты')
 				]));
 		var m = _v1.a;
 		var c = _v1.b;
@@ -16446,6 +16460,10 @@ var $author$project$Page$Login$update = F2(
 		}
 		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 	});
+var $author$project$Component$MarkTable$DateFilterQ1 = {$: 'DateFilterQ1'};
+var $author$project$Component$MarkTable$DateFilterQ2 = {$: 'DateFilterQ2'};
+var $author$project$Component$MarkTable$DateFilterQ3 = {$: 'DateFilterQ3'};
+var $author$project$Component$MarkTable$DateFilterQ4 = {$: 'DateFilterQ4'};
 var $author$project$Component$MarkTable$MsgNop = {$: 'MsgNop'};
 var $author$project$Component$MarkTable$StateComplete = {$: 'StateComplete'};
 var $author$project$Component$MarkTable$MsgMarkCreated = F2(
@@ -16616,6 +16634,34 @@ var $author$project$Component$MarkTable$focusCell = F2(
 			$elm$browser$Browser$Dom$focus(
 				'slot-' + ($elm$core$String$fromInt(x) + ('-' + $elm$core$String$fromInt(y)))));
 	});
+var $author$project$Util$monthToInt = function (month) {
+	switch (month.$) {
+		case 'Jan':
+			return 1;
+		case 'Feb':
+			return 2;
+		case 'Mar':
+			return 3;
+		case 'Apr':
+			return 4;
+		case 'May':
+			return 5;
+		case 'Jun':
+			return 6;
+		case 'Jul':
+			return 7;
+		case 'Aug':
+			return 8;
+		case 'Sep':
+			return 9;
+		case 'Oct':
+			return 10;
+		case 'Nov':
+			return 11;
+		default:
+			return 12;
+	}
+};
 var $author$project$Util$resultIsOK = function (result) {
 	if (result.$ === 'Ok') {
 		return true;
@@ -17574,11 +17620,16 @@ var $author$project$Component$MarkTable$update = F2(
 													},
 													activities)
 											});
-									default:
+									case 'FetchedEnrollments':
 										var enrollments = r.a;
 										return _Utils_update(
 											oldFetchedData,
 											{enrollments: enrollments});
+									default:
+										var _v5 = r.a;
+										var zone = _v5.a;
+										var posix = _v5.b;
+										return oldFetchedData;
 								}
 							}();
 							return _Utils_Tuple2(
@@ -17591,18 +17642,45 @@ var $author$project$Component$MarkTable$update = F2(
 								A2($elm$core$Platform$Cmd$map, $author$project$Component$MarkTable$MsgFetch, c));
 						case 'TaskFinishedAll':
 							var results = _v2.a.a;
-							return A2($elm$core$List$all, $author$project$Util$resultIsOK, results) ? _Utils_Tuple2(
-								$author$project$Component$MarkTable$updateTable(
+							if (A2($elm$core$List$all, $author$project$Util$resultIsOK, results)) {
+								var tz2quarter = function (_v7) {
+									var zone = _v7.a;
+									var posix = _v7.b;
+									var month = $author$project$Util$monthToInt(
+										A2($elm$time$Time$toMonth, zone, posix));
+									return (month > 10) ? $author$project$Component$MarkTable$DateFilterQ2 : ((month > 8) ? $author$project$Component$MarkTable$DateFilterQ1 : ((month > 3) ? $author$project$Component$MarkTable$DateFilterQ4 : $author$project$Component$MarkTable$DateFilterQ3));
+								};
+								var filterTZTime = function (res) {
+									if ((res.$ === 'Ok') && (res.a.$ === 'FetchedDate')) {
+										var x = res.a.a;
+										return $elm$core$Maybe$Just(x);
+									} else {
+										return $elm$core$Maybe$Nothing;
+									}
+								};
+								var tzTime = $elm$core$List$head(
+									A2($elm$core$List$filterMap, filterTZTime, results));
+								return _Utils_Tuple2(
+									$author$project$Component$MarkTable$updateTable(
+										_Utils_update(
+											model,
+											{
+												dateFilter: A2(
+													$elm$core$Maybe$withDefault,
+													$author$project$Component$MarkTable$DateFilterAll,
+													A2($elm$core$Maybe$map, tz2quarter, tzTime)),
+												state: $author$project$Component$MarkTable$StateComplete
+											})),
+									$elm$core$Platform$Cmd$none);
+							} else {
+								return _Utils_Tuple2(
 									_Utils_update(
 										model,
-										{state: $author$project$Component$MarkTable$StateComplete})),
-								$elm$core$Platform$Cmd$none) : _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{
-										state: $author$project$Component$MarkTable$StateLoading(m)
-									}),
-								A2($elm$core$Platform$Cmd$map, $author$project$Component$MarkTable$MsgFetch, c));
+										{
+											state: $author$project$Component$MarkTable$StateLoading(m)
+										}),
+									A2($elm$core$Platform$Cmd$map, $author$project$Component$MarkTable$MsgFetch, c));
+							}
 						default:
 							return _Utils_Tuple2(
 								_Utils_update(
@@ -17617,25 +17695,25 @@ var $author$project$Component$MarkTable$update = F2(
 					return ignore;
 				}
 			case 'MsgMarkKeyPress':
-				var _v5 = _v0.a;
-				var mark_slot = _v5.a;
-				var x = _v5.b;
-				var y = _v5.c;
-				var cmd = _v5.d;
+				var _v8 = _v0.a;
+				var mark_slot = _v8.a;
+				var x = _v8.b;
+				var y = _v8.c;
+				var cmd = _v8.d;
 				var vec = function () {
 					if (cmd.$ === 'CmdMove') {
 						switch (cmd.a.$) {
 							case 'Left':
-								var _v16 = cmd.a;
+								var _v19 = cmd.a;
 								return _Utils_Tuple2(-1, 0);
 							case 'Top':
-								var _v17 = cmd.a;
+								var _v20 = cmd.a;
 								return _Utils_Tuple2(0, -1);
 							case 'Right':
-								var _v18 = cmd.a;
+								var _v21 = cmd.a;
 								return _Utils_Tuple2(1, 0);
 							default:
-								var _v19 = cmd.a;
+								var _v22 = cmd.a;
 								return _Utils_Tuple2(0, 1);
 						}
 					} else {
@@ -17643,11 +17721,11 @@ var $author$project$Component$MarkTable$update = F2(
 					}
 				}();
 				var v2add = F2(
-					function (_v13, _v14) {
-						var a = _v13.a;
-						var b = _v13.b;
-						var c = _v14.a;
-						var d = _v14.b;
+					function (_v16, _v17) {
+						var a = _v16.a;
+						var b = _v16.b;
+						var c = _v17.a;
+						var d = _v17.b;
 						return _Utils_Tuple2(a + c, b + d);
 					});
 				var onResult = function (res) {
@@ -17660,19 +17738,19 @@ var $author$project$Component$MarkTable$update = F2(
 					}
 				};
 				var check_coords = F2(
-					function (_v10, _v11) {
-						var x_ = _v10.a;
-						var y_ = _v10.b;
-						var w = _v11.a;
-						var h = _v11.b;
+					function (_v13, _v14) {
+						var x_ = _v13.a;
+						var y_ = _v13.b;
+						var w = _v14.a;
+						var h = _v14.b;
 						return (x_ >= 0) && ((y_ >= 0) && ((_Utils_cmp(x_, w) < 0) && (_Utils_cmp(y_, h) < 0)));
 					});
-				var _v6 = A2(
+				var _v9 = A2(
 					v2add,
 					_Utils_Tuple2(x, y),
 					vec);
-				var nx = _v6.a;
-				var ny = _v6.b;
+				var nx = _v9.a;
+				var ny = _v9.b;
 				if (!model.canEdit) {
 					return ignore;
 				} else {
@@ -17755,11 +17833,11 @@ var $author$project$Component$MarkTable$update = F2(
 					}
 				}
 			case 'MsgMarkCreated':
-				var _v20 = _v0.a;
-				var _v21 = _v20.a;
-				var x = _v21.a;
-				var y = _v21.b;
-				var mark = _v20.b;
+				var _v23 = _v0.a;
+				var _v24 = _v23.a;
+				var x = _v24.a;
+				var y = _v24.b;
+				var mark = _v23.b;
 				return _Utils_Tuple2(
 					A3(
 						$author$project$Component$MarkTable$updateMark,
@@ -17768,11 +17846,11 @@ var $author$project$Component$MarkTable$update = F2(
 						$author$project$Util$Right(mark)),
 					$author$project$Component$MarkTable$switchMarkCmd(model));
 			case 'MsgMarkUpdated':
-				var _v22 = _v0.a;
-				var _v23 = _v22.a;
-				var x = _v23.a;
-				var y = _v23.b;
-				var mark = _v22.b;
+				var _v25 = _v0.a;
+				var _v26 = _v25.a;
+				var x = _v26.a;
+				var y = _v26.b;
+				var mark = _v25.b;
 				return _Utils_Tuple2(
 					A3(
 						$author$project$Component$MarkTable$updateMark,
@@ -17781,11 +17859,11 @@ var $author$project$Component$MarkTable$update = F2(
 						$author$project$Util$Right(mark)),
 					$author$project$Component$MarkTable$switchMarkCmd(model));
 			case 'MsgMarkDeleted':
-				var _v24 = _v0.a;
-				var _v25 = _v24.a;
-				var x = _v25.a;
-				var y = _v25.b;
-				var mid = _v24.b;
+				var _v27 = _v0.a;
+				var _v28 = _v27.a;
+				var x = _v28.a;
+				var y = _v28.b;
+				var mid = _v27.b;
 				return _Utils_Tuple2(
 					A3(
 						$author$project$Component$MarkTable$updateMark,
@@ -17794,16 +17872,16 @@ var $author$project$Component$MarkTable$update = F2(
 						$author$project$Util$Left(mid)),
 					$author$project$Component$MarkTable$switchMarkCmd(model));
 			case 'MsgNop':
-				var _v26 = _v0.a;
+				var _v29 = _v0.a;
 				return ignore;
 			case 'MsgSelectSwitchCell':
 				var msg_ = _v0.a.a;
-				var _v27 = model.switchCell;
-				if (_v27.$ === 'Just') {
-					var model_ = _v27.a;
-					var _v28 = A2($author$project$Component$Select$update, msg_, model_);
-					var m = _v28.a;
-					var c = _v28.b;
+				var _v30 = model.switchCell;
+				if (_v30.$ === 'Just') {
+					var model_ = _v30.a;
+					var _v31 = A2($author$project$Component$Select$update, msg_, model_);
+					var m = _v31.a;
+					var c = _v31.b;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
@@ -17815,9 +17893,9 @@ var $author$project$Component$MarkTable$update = F2(
 					return ignore;
 				}
 			case 'MsgMarkSelected':
-				var _v29 = _v0.a.a;
-				var x = _v29.a;
-				var y = _v29.b;
+				var _v32 = _v0.a.a;
+				var x = _v32.a;
+				var y = _v32.b;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -17826,11 +17904,11 @@ var $author$project$Component$MarkTable$update = F2(
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 'MsgMarkClicked':
-				var _v30 = _v0.a;
-				var mark = _v30.a;
-				var _v31 = _v30.b;
-				var x = _v31.a;
-				var y = _v31.b;
+				var _v33 = _v0.a;
+				var mark = _v33.a;
+				var _v34 = _v33.b;
+				var x = _v34.a;
+				var y = _v34.b;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -17840,7 +17918,7 @@ var $author$project$Component$MarkTable$update = F2(
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 'MsgOnClickCloseMarkDetails':
-				var _v32 = _v0.a;
+				var _v35 = _v0.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -17849,7 +17927,7 @@ var $author$project$Component$MarkTable$update = F2(
 			case 'MsgSetDateFilter':
 				if (_v0.b.$ === 'StateComplete') {
 					var f = _v0.a.a;
-					var _v33 = _v0.b;
+					var _v36 = _v0.b;
 					return _Utils_Tuple2(
 						$author$project$Component$MarkTable$updateTable(
 							_Utils_update(
@@ -20154,34 +20232,6 @@ var $author$project$Theme$default = {
 		ui: {primary: 'rgb(65, 131, 196)'}
 	},
 	fonts: {}
-};
-var $author$project$Util$monthToInt = function (month) {
-	switch (month.$) {
-		case 'Jan':
-			return 1;
-		case 'Feb':
-			return 2;
-		case 'Mar':
-			return 3;
-		case 'Apr':
-			return 4;
-		case 'May':
-			return 5;
-		case 'Jun':
-			return 6;
-		case 'Jul':
-			return 7;
-		case 'Aug':
-			return 8;
-		case 'Sep':
-			return 9;
-		case 'Oct':
-			return 10;
-		case 'Nov':
-			return 11;
-		default:
-			return 12;
-	}
 };
 var $author$project$Util$posixToDDMMYYYY = F2(
 	function (zone, posix) {
@@ -39399,10 +39449,12 @@ var $author$project$Component$MarkTable$showFetchedData = function (fetchedData)
 			var activities = fetchedData.a;
 			return 'Активности: ' + $elm$core$String$fromInt(
 				$elm$core$List$length(activities));
-		default:
+		case 'FetchedEnrollments':
 			var enr = fetchedData.a;
 			return 'Записи: ' + $elm$core$String$fromInt(
 				$elm$core$List$length(enr));
+		default:
+			return 'OK';
 	}
 };
 var $author$project$Component$MarkTable$MsgOnCheckGroupByDate = function (a) {
@@ -39439,10 +39491,6 @@ var $author$project$Component$Misc$checkbox = F3(
 	});
 var $author$project$Component$MarkTable$DateFilterH1 = {$: 'DateFilterH1'};
 var $author$project$Component$MarkTable$DateFilterH2 = {$: 'DateFilterH2'};
-var $author$project$Component$MarkTable$DateFilterQ1 = {$: 'DateFilterQ1'};
-var $author$project$Component$MarkTable$DateFilterQ2 = {$: 'DateFilterQ2'};
-var $author$project$Component$MarkTable$DateFilterQ3 = {$: 'DateFilterQ3'};
-var $author$project$Component$MarkTable$DateFilterQ4 = {$: 'DateFilterQ4'};
 var $author$project$Component$MarkTable$MsgSetDateFilter = function (a) {
 	return {$: 'MsgSetDateFilter', a: a};
 };
