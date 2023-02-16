@@ -24,7 +24,7 @@ import Task
 import Theme
 import Time as T exposing (Posix, Zone, millisToPosix, utc)
 import Tuple exposing (first, second)
-import Util exposing (Either, actCT2string, dict2DGet, dictFromTupleListMany, dictGroupBy, eitherGetRight, finalTypeOrder, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, listUniqueNaive, maybeFlatten, maybeToList, posixToDDMMYYYY, prec, resultIsOK, user_full_name, zip, zip3)
+import Util exposing (Either, actCT2string, dict2DGet, dictFromTupleListMany, dictGroupBy, eitherGetRight, finalTypeOrder, finalTypeToStr, get_id_str, httpErrorToString, index_by, listDropWhile, listSplitWhile, listTailWithEmpty, listTakeWhile, listUniqueNaive, maybeFlatten, maybeToList, posixToDDMMYYYY, prec, resultIsOK, takeLongestPrefixBy, user_full_name, zip, zip3)
 import Uuid exposing (Uuid)
 
 
@@ -581,56 +581,85 @@ switchMarkCmd model =
 
 dateFilter : DateFilter -> List Activity -> List Activity
 dateFilter filter orderSortedActs =
+    let
+        q1marker act =
+            act.finalType == Just ActivityFinalTypeQ1
+
+        q2marker act =
+            act.finalType == Just ActivityFinalTypeQ2 || act.finalType == Just ActivityFinalTypeH1
+
+        q3marker act =
+            act.finalType == Just ActivityFinalTypeQ3
+
+        q4marker act =
+            False
+                || (act.finalType
+                        == Just ActivityFinalTypeQ4
+                   )
+                || (act.finalType
+                        == Just ActivityFinalTypeH2
+                   )
+                || (act.finalType
+                        == Just ActivityFinalTypeY
+                   )
+
+        h1marker =
+            q2marker
+
+        h2marker =
+            q4marker
+    in
     case filter of
         DateFilterQ1 ->
             let
                 ( l, r ) =
-                    listSplitWhile (.contentType >> (/=) (Just ActivityContentTypeFIN)) orderSortedActs
+                    takeLongestPrefixBy q1marker orderSortedActs
             in
-            l ++ maybeToList (List.head r)
+            l
 
         DateFilterQ2 ->
             let
-                ( l, r ) =
-                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeH1)) <|
-                        List.drop 1 <|
-                            listDropWhile (.finalType >> (/=) (Just ActivityFinalTypeQ1)) orderSortedActs
+                ( q1, q1tail ) =
+                    takeLongestPrefixBy q1marker orderSortedActs
+
+                ( q2, q2tail ) =
+                    takeLongestPrefixBy q2marker q1tail
             in
-            l ++ maybeToList (List.head r)
+            q2
 
         DateFilterQ3 ->
             let
-                ( l, r ) =
-                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeQ3)) <|
-                        List.drop 1 <|
-                            listDropWhile (.finalType >> (/=) (Just ActivityFinalTypeH1)) orderSortedActs
+                ( q2, q2tail ) =
+                    takeLongestPrefixBy q2marker orderSortedActs
+
+                ( q3, q3tail ) =
+                    takeLongestPrefixBy q3marker q2tail
             in
-            l ++ maybeToList (List.head r)
+            q3
 
         DateFilterQ4 ->
             let
-                ( l, r ) =
-                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeY)) <|
-                        List.drop 1 <|
-                            listDropWhile (.finalType >> (/=) (Just ActivityFinalTypeQ3)) orderSortedActs
+                ( q3, q3tail ) =
+                    takeLongestPrefixBy q3marker orderSortedActs
+
+                ( q4, q4tail ) =
+                    takeLongestPrefixBy q4marker q3tail
             in
-            l ++ maybeToList (List.head r)
+            q4
 
         DateFilterH1 ->
             let
-                ( l, r ) =
-                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeH1)) orderSortedActs
+                ( h1, h1tail ) =
+                    takeLongestPrefixBy h1marker orderSortedActs
             in
-            l ++ maybeToList (List.head r)
+            h1
 
         DateFilterH2 ->
             let
-                ( l, r ) =
-                    listSplitWhile (.finalType >> (/=) (Just ActivityFinalTypeY)) <|
-                        List.drop 1 <|
-                            listDropWhile (.finalType >> (/=) (Just ActivityFinalTypeH1)) orderSortedActs
+                ( h1, h1tail ) =
+                    takeLongestPrefixBy h1marker orderSortedActs
             in
-            l ++ maybeToList (List.head r)
+            h1tail
 
         DateFilterAll ->
             orderSortedActs

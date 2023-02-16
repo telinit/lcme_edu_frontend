@@ -16686,200 +16686,118 @@ var $author$project$Component$MarkTable$RowHeaderUser = function (a) {
 var $author$project$Component$MarkTable$SlotMean = function (a) {
 	return {$: 'SlotMean', a: a};
 };
-var $author$project$Util$listSplitWhile = function (pred) {
-	var listSplitAt1 = F2(
-		function (left, right) {
-			listSplitAt1:
-			while (true) {
-				if (!right.b) {
-					return _Utils_Tuple2(
-						$elm$core$List$reverse(left),
-						_List_Nil);
-				} else {
-					var hd = right.a;
-					var tl = right.b;
-					if (pred(hd)) {
-						var $temp$left = A2($elm$core$List$cons, hd, left),
-							$temp$right = tl;
-						left = $temp$left;
-						right = $temp$right;
-						continue listSplitAt1;
-					} else {
+var $author$project$Util$takeLongestPrefixBy = F2(
+	function (_function, list) {
+		var takeLongestPrefixBy1 = F3(
+			function (result, acc, rest) {
+				takeLongestPrefixBy1:
+				while (true) {
+					if (!rest.b) {
 						return _Utils_Tuple2(
-							$elm$core$List$reverse(left),
-							right);
+							result,
+							_Utils_ap(
+								$elm$core$List$reverse(acc),
+								rest));
+					} else {
+						var hd = rest.a;
+						var tl = rest.b;
+						if (_function(hd)) {
+							var $temp$result = _Utils_ap(
+								result,
+								_Utils_ap(
+									$elm$core$List$reverse(acc),
+									_List_fromArray(
+										[hd]))),
+								$temp$acc = _List_Nil,
+								$temp$rest = tl;
+							result = $temp$result;
+							acc = $temp$acc;
+							rest = $temp$rest;
+							continue takeLongestPrefixBy1;
+						} else {
+							var $temp$result = result,
+								$temp$acc = A2($elm$core$List$cons, hd, acc),
+								$temp$rest = tl;
+							result = $temp$result;
+							acc = $temp$acc;
+							rest = $temp$rest;
+							continue takeLongestPrefixBy1;
+						}
 					}
 				}
-			}
-		});
-	return listSplitAt1(_List_Nil);
-};
-var $author$project$Util$listDropWhile = function (pred) {
-	return A2(
-		$elm$core$Basics$composeR,
-		$author$project$Util$listSplitWhile(pred),
-		$elm$core$Tuple$second);
-};
-var $author$project$Util$maybeToList = function (mb) {
-	return A2(
-		$elm$core$List$filterMap,
-		$elm$core$Basics$identity,
-		_List_fromArray(
-			[mb]));
-};
+			});
+		return A3(takeLongestPrefixBy1, _List_Nil, _List_Nil, list);
+	});
 var $author$project$Component$MarkTable$dateFilter = F2(
 	function (filter, orderSortedActs) {
+		var q4marker = function (act) {
+			return false || (_Utils_eq(
+				act.finalType,
+				$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeQ4)) || (_Utils_eq(
+				act.finalType,
+				$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeH2)) || _Utils_eq(
+				act.finalType,
+				$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeY))));
+		};
+		var q3marker = function (act) {
+			return _Utils_eq(
+				act.finalType,
+				$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeQ3));
+		};
+		var q2marker = function (act) {
+			return _Utils_eq(
+				act.finalType,
+				$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeQ2)) || _Utils_eq(
+				act.finalType,
+				$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeH1));
+		};
+		var q1marker = function (act) {
+			return _Utils_eq(
+				act.finalType,
+				$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeQ1));
+		};
+		var h2marker = q4marker;
+		var h1marker = q2marker;
 		switch (filter.$) {
 			case 'DateFilterQ1':
-				var _v1 = A2(
-					$author$project$Util$listSplitWhile,
-					A2(
-						$elm$core$Basics$composeR,
-						function ($) {
-							return $.contentType;
-						},
-						$elm$core$Basics$neq(
-							$elm$core$Maybe$Just($author$project$Api$Data$ActivityContentTypeFIN))),
-					orderSortedActs);
+				var _v1 = A2($author$project$Util$takeLongestPrefixBy, q1marker, orderSortedActs);
 				var l = _v1.a;
 				var r = _v1.b;
-				return _Utils_ap(
-					l,
-					$author$project$Util$maybeToList(
-						$elm$core$List$head(r)));
+				return l;
 			case 'DateFilterQ2':
-				var _v2 = A2(
-					$author$project$Util$listSplitWhile,
-					A2(
-						$elm$core$Basics$composeR,
-						function ($) {
-							return $.finalType;
-						},
-						$elm$core$Basics$neq(
-							$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeH1))),
-					A2(
-						$elm$core$List$drop,
-						1,
-						A2(
-							$author$project$Util$listDropWhile,
-							A2(
-								$elm$core$Basics$composeR,
-								function ($) {
-									return $.finalType;
-								},
-								$elm$core$Basics$neq(
-									$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeQ1))),
-							orderSortedActs)));
-				var l = _v2.a;
-				var r = _v2.b;
-				return _Utils_ap(
-					l,
-					$author$project$Util$maybeToList(
-						$elm$core$List$head(r)));
+				var _v2 = A2($author$project$Util$takeLongestPrefixBy, q1marker, orderSortedActs);
+				var q1 = _v2.a;
+				var q1tail = _v2.b;
+				var _v3 = A2($author$project$Util$takeLongestPrefixBy, q2marker, q1tail);
+				var q2 = _v3.a;
+				var q2tail = _v3.b;
+				return q2;
 			case 'DateFilterQ3':
-				var _v3 = A2(
-					$author$project$Util$listSplitWhile,
-					A2(
-						$elm$core$Basics$composeR,
-						function ($) {
-							return $.finalType;
-						},
-						$elm$core$Basics$neq(
-							$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeQ3))),
-					A2(
-						$elm$core$List$drop,
-						1,
-						A2(
-							$author$project$Util$listDropWhile,
-							A2(
-								$elm$core$Basics$composeR,
-								function ($) {
-									return $.finalType;
-								},
-								$elm$core$Basics$neq(
-									$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeH1))),
-							orderSortedActs)));
-				var l = _v3.a;
-				var r = _v3.b;
-				return _Utils_ap(
-					l,
-					$author$project$Util$maybeToList(
-						$elm$core$List$head(r)));
+				var _v4 = A2($author$project$Util$takeLongestPrefixBy, q2marker, orderSortedActs);
+				var q2 = _v4.a;
+				var q2tail = _v4.b;
+				var _v5 = A2($author$project$Util$takeLongestPrefixBy, q3marker, q2tail);
+				var q3 = _v5.a;
+				var q3tail = _v5.b;
+				return q3;
 			case 'DateFilterQ4':
-				var _v4 = A2(
-					$author$project$Util$listSplitWhile,
-					A2(
-						$elm$core$Basics$composeR,
-						function ($) {
-							return $.finalType;
-						},
-						$elm$core$Basics$neq(
-							$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeY))),
-					A2(
-						$elm$core$List$drop,
-						1,
-						A2(
-							$author$project$Util$listDropWhile,
-							A2(
-								$elm$core$Basics$composeR,
-								function ($) {
-									return $.finalType;
-								},
-								$elm$core$Basics$neq(
-									$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeQ3))),
-							orderSortedActs)));
-				var l = _v4.a;
-				var r = _v4.b;
-				return _Utils_ap(
-					l,
-					$author$project$Util$maybeToList(
-						$elm$core$List$head(r)));
+				var _v6 = A2($author$project$Util$takeLongestPrefixBy, q3marker, orderSortedActs);
+				var q3 = _v6.a;
+				var q3tail = _v6.b;
+				var _v7 = A2($author$project$Util$takeLongestPrefixBy, q4marker, q3tail);
+				var q4 = _v7.a;
+				var q4tail = _v7.b;
+				return q4;
 			case 'DateFilterH1':
-				var _v5 = A2(
-					$author$project$Util$listSplitWhile,
-					A2(
-						$elm$core$Basics$composeR,
-						function ($) {
-							return $.finalType;
-						},
-						$elm$core$Basics$neq(
-							$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeH1))),
-					orderSortedActs);
-				var l = _v5.a;
-				var r = _v5.b;
-				return _Utils_ap(
-					l,
-					$author$project$Util$maybeToList(
-						$elm$core$List$head(r)));
+				var _v8 = A2($author$project$Util$takeLongestPrefixBy, h1marker, orderSortedActs);
+				var h1 = _v8.a;
+				var h1tail = _v8.b;
+				return h1;
 			case 'DateFilterH2':
-				var _v6 = A2(
-					$author$project$Util$listSplitWhile,
-					A2(
-						$elm$core$Basics$composeR,
-						function ($) {
-							return $.finalType;
-						},
-						$elm$core$Basics$neq(
-							$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeY))),
-					A2(
-						$elm$core$List$drop,
-						1,
-						A2(
-							$author$project$Util$listDropWhile,
-							A2(
-								$elm$core$Basics$composeR,
-								function ($) {
-									return $.finalType;
-								},
-								$elm$core$Basics$neq(
-									$elm$core$Maybe$Just($author$project$Api$Data$ActivityFinalTypeH1))),
-							orderSortedActs)));
-				var l = _v6.a;
-				var r = _v6.b;
-				return _Utils_ap(
-					l,
-					$author$project$Util$maybeToList(
-						$elm$core$List$head(r)));
+				var _v9 = A2($author$project$Util$takeLongestPrefixBy, h1marker, orderSortedActs);
+				var h1 = _v9.a;
+				var h1tail = _v9.b;
+				return h1tail;
 			default:
 				return orderSortedActs;
 		}

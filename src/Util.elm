@@ -598,6 +598,7 @@ maybeOrElse mb fallback =
         Nothing ->
             fallback
 
+
 actCT2string : ActivityContentType -> String
 actCT2string activityContentType =
     case activityContentType of
@@ -619,8 +620,30 @@ actCT2string activityContentType =
         ActivityContentTypeFIN ->
             "Итог"
 
+
 maybeFlatten : Maybe (Maybe a) -> Maybe a
 maybeFlatten mb =
     case mb of
-        Just x -> x
-        _ -> Nothing
+        Just x ->
+            x
+
+        _ ->
+            Nothing
+
+
+takeLongestPrefixBy : (a -> Bool) -> List a -> ( List a, List a )
+takeLongestPrefixBy function list =
+    let
+        takeLongestPrefixBy1 result acc rest =
+            case rest of
+                [] ->
+                    ( result, List.reverse acc ++ rest )
+
+                hd :: tl ->
+                    if function hd then
+                        takeLongestPrefixBy1 (result ++ List.reverse acc ++ [ hd ]) [] tl
+
+                    else
+                        takeLongestPrefixBy1 result (hd :: acc) tl
+    in
+    takeLongestPrefixBy1 [] [] list
