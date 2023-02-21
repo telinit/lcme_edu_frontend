@@ -150,7 +150,7 @@ init token course_id user =
                 , ( ext_task FetchedSpec token [ ( "courses", course_id ) ] educationSpecializationList
                   , "Получение направления обучения"
                   )
-                , ( ext_task FetchedEnrollments token [ ( "course", course_id ) ] <| courseEnrollmentList
+                , ( ext_task FetchedEnrollments token [ ( "course", course_id ), ("finished_on__isnull", "True") ] <| courseEnrollmentList
                   , "Получение данных об участниках"
                   )
                 , ( ext_task FetchedActivities token [ ( "course", course_id ) ] activityList

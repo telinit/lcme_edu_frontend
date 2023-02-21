@@ -10,6 +10,7 @@ import Html.Events exposing (custom, preventDefaultOn, stopPropagationOn)
 import Http
 import Iso8601 exposing (fromTime, toTime)
 import Json.Decode as JD
+import Random exposing (Generator)
 import Task exposing (Task)
 import Time exposing (Month(..), Zone)
 import Tuple exposing (first, second)
@@ -653,3 +654,16 @@ takeLongestPrefixBy function list =
 taskGetTimeAndZone : Task a ( Zone, Posix )
 taskGetTimeAndZone =
     Task.map2 (\a b -> ( a, b )) Time.here Time.now
+
+
+randomGenerateTask : Generator a -> Task e a
+randomGenerateTask gen =
+    Time.now
+        |> Task.andThen
+            (\posix ->
+                let
+                    seed =
+                        Random.initialSeed <| Time.toMillis Time.utc posix
+                in
+                Task.succeed <| first <| Random.step gen seed
+            )

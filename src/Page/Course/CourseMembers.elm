@@ -2,7 +2,7 @@ module Page.Course.CourseMembers exposing (..)
 
 import Api exposing (ext_task)
 import Api.Data exposing (CourseEnrollmentRead, CourseEnrollmentReadRole(..), CourseEnrollmentWrite, CourseEnrollmentWriteRole(..), UserShallow)
-import Api.Request.Course exposing (courseEnrollmentCreate, courseEnrollmentDelete)
+import Api.Request.Course exposing (courseEnrollmentCreate, courseEnrollmentDelete, courseEnrollmentPartialUpdate, courseEnrollmentUpdate)
 import Component.List.User as LU
 import Component.Misc exposing (user_link)
 import Component.MultiTask as MT
@@ -11,9 +11,11 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http
+import Random
 import Svg.Styled.Attributes exposing (result)
 import Task
-import Util exposing (get_id_str, httpErrorToString, user_full_name)
+import Time
+import Util exposing (get_id_str, httpErrorToString, randomGenerateTask, user_full_name)
 import Uuid exposing (Uuid)
 
 
@@ -56,16 +58,40 @@ findEnrollments role uid enrollments =
 doRemove : Model -> List CourseEnrollmentRead -> Cmd Msg
 doRemove model enrs =
     let
+        roleR2W r =
+            case r of
+                CourseEnrollmentReadRoleT ->
+                    CourseEnrollmentWriteRoleT
+
+                CourseEnrollmentReadRoleS ->
+                    CourseEnrollmentWriteRoleS
+
         cmdDelEnr : CourseEnrollmentRead -> Cmd Msg
         cmdDelEnr enr =
             Task.attempt (MsgRemoveFinished enr) <|
                 Task.mapError httpErrorToString <|
-                    ext_task identity model.token [] <|
-                        courseEnrollmentDelete <|
-                            get_id_str enr
+                    Task.andThen
+                        (\now ->
+                            Task.andThen
+                                (\fake_uuid ->
+                                    ext_task (\_ -> ()) model.token [] <|
+                                        courseEnrollmentUpdate (get_id_str enr)
+                                            { id = Nothing
+                                            , createdAt = Nothing
+                                            , updatedAt = Nothing
+                                            , role = roleR2W enr.role
+                                            , person = Maybe.withDefault fake_uuid enr.person.id -- FIXME: A Person record always has an ID but the API generator makes it a Maybe thing. Hence this workaround
+                                            , course = enr.course
+                                            , finishedOn = Just now
+                                            }
+                                )
+                                (randomGenerateTask Uuid.uuidGenerator)
+                        )
+                        Time.now
     in
     Cmd.batch <|
         List.map cmdDelEnr enrs
+
 
 enrollmentRoleR2W : CourseEnrollmentWriteRole -> CourseEnrollmentReadRole
 enrollmentRoleR2W r =
@@ -75,6 +101,8 @@ enrollmentRoleR2W r =
 
         CourseEnrollmentWriteRoleS ->
             CourseEnrollmentReadRoleS
+
+
 
 --enrollmentR2W : CourseEnrollmentRead -> CourseEnrollmentWrite
 --enrollmentR2W enr =

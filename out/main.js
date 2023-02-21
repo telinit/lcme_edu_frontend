@@ -9654,7 +9654,8 @@ var $author$project$Page$Course$CoursePage$init = F3(
 						token,
 						_List_fromArray(
 							[
-								_Utils_Tuple2('course', course_id)
+								_Utils_Tuple2('course', course_id),
+								_Utils_Tuple2('finished_on__isnull', 'True')
 							]),
 						$author$project$Api$Request$Course$courseEnrollmentList),
 					'Получение данных об участниках'),
@@ -13212,30 +13213,50 @@ var $author$project$Page$Course$CourseMembers$MsgRemoveFinished = F2(
 	function (a, b) {
 		return {$: 'MsgRemoveFinished', a: a, b: b};
 	});
-var $author$project$Api$Request$Course$courseEnrollmentDelete = function (id_path) {
-	return A7(
-		$author$project$Api$request,
-		'DELETE',
-		'/course/enrollment/{id}/',
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'id',
-				$elm$core$Basics$identity(id_path))
-			]),
-		_List_Nil,
-		_List_Nil,
-		$elm$core$Maybe$Nothing,
-		$elm$json$Json$Decode$succeed(_Utils_Tuple0));
-};
+var $author$project$Api$Request$Course$courseEnrollmentUpdate = F2(
+	function (id_path, data_body) {
+		return A7(
+			$author$project$Api$request,
+			'PUT',
+			'/course/enrollment/{id}/',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'id',
+					$elm$core$Basics$identity(id_path))
+				]),
+			_List_Nil,
+			_List_Nil,
+			$elm$core$Maybe$Just(
+				$author$project$Api$Data$encodeCourseEnrollmentWrite(data_body)),
+			$author$project$Api$Data$courseEnrollmentWriteDecoder);
+	});
 var $author$project$Util$get_id_str = function (record) {
 	return A2(
 		$elm$core$Maybe$withDefault,
 		'',
 		A2($elm$core$Maybe$map, $danyx23$elm_uuid$Uuid$toString, record.id));
 };
+var $author$project$Util$randomGenerateTask = function (gen) {
+	return A2(
+		$elm$core$Task$andThen,
+		function (posix) {
+			var seed = $elm$random$Random$initialSeed(
+				A2($elm$time$Time$toMillis, $elm$time$Time$utc, posix));
+			return $elm$core$Task$succeed(
+				A2($elm$random$Random$step, gen, seed).a);
+		},
+		$elm$time$Time$now);
+};
 var $author$project$Page$Course$CourseMembers$doRemove = F2(
 	function (model, enrs) {
+		var roleR2W = function (r) {
+			if (r.$ === 'CourseEnrollmentReadRoleT') {
+				return $author$project$Api$Data$CourseEnrollmentWriteRoleT;
+			} else {
+				return $author$project$Api$Data$CourseEnrollmentWriteRoleS;
+			}
+		};
 		var cmdDelEnr = function (enr) {
 			return A2(
 				$elm$core$Task$attempt,
@@ -13243,13 +13264,35 @@ var $author$project$Page$Course$CourseMembers$doRemove = F2(
 				A2(
 					$elm$core$Task$mapError,
 					$author$project$Util$httpErrorToString,
-					A4(
-						$author$project$Api$ext_task,
-						$elm$core$Basics$identity,
-						model.token,
-						_List_Nil,
-						$author$project$Api$Request$Course$courseEnrollmentDelete(
-							$author$project$Util$get_id_str(enr)))));
+					A2(
+						$elm$core$Task$andThen,
+						function (now) {
+							return A2(
+								$elm$core$Task$andThen,
+								function (fake_uuid) {
+									return A4(
+										$author$project$Api$ext_task,
+										function (_v0) {
+											return _Utils_Tuple0;
+										},
+										model.token,
+										_List_Nil,
+										A2(
+											$author$project$Api$Request$Course$courseEnrollmentUpdate,
+											$author$project$Util$get_id_str(enr),
+											{
+												course: enr.course,
+												createdAt: $elm$core$Maybe$Nothing,
+												finishedOn: $elm$core$Maybe$Just(now),
+												id: $elm$core$Maybe$Nothing,
+												person: A2($elm$core$Maybe$withDefault, fake_uuid, enr.person.id),
+												role: roleR2W(enr.role),
+												updatedAt: $elm$core$Maybe$Nothing
+											}));
+								},
+								$author$project$Util$randomGenerateTask($danyx23$elm_uuid$Uuid$uuidGenerator));
+						},
+						$elm$time$Time$now)));
 		};
 		return $elm$core$Platform$Cmd$batch(
 			A2($elm$core$List$map, cmdDelEnr, enrs));
