@@ -40259,6 +40259,8 @@ var $author$project$Component$MarkTable$keyCodeToMarkCmd = function (code) {
 			return $author$project$Component$MarkTable$CmdSetMark('+');
 		case 'Delete':
 			return $author$project$Component$MarkTable$CmdDeleteMark;
+		case 'Backspace':
+			return $author$project$Component$MarkTable$CmdDeleteMark;
 		default:
 			return $author$project$Component$MarkTable$CmdUnknown(code);
 	}

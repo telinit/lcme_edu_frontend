@@ -228,6 +228,9 @@ keyCodeToMarkCmd code =
         "Delete" ->
             CmdDeleteMark
 
+        "Backspace" ->
+            CmdDeleteMark
+
         _ ->
             CmdUnknown code
 
