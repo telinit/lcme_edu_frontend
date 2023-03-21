@@ -420,7 +420,7 @@ initForCourse token course_id teacher_id =
                 [ ( ext_task FetchedCourse token [] <| courseRead <| Uuid.toString course_id
                   , "Получение данных о курсе"
                   )
-                , ( ext_task FetchedEnrollments token [ ( "course", Uuid.toString course_id ) ] <| courseEnrollmentList
+                , ( ext_task FetchedEnrollments token [ ( "course", Uuid.toString course_id ), ( "finished_on", "isnull" ) ] <| courseEnrollmentList
                   , "Получение данных об участниках"
                   )
                 , ( ext_task FetchedActivities token [ ( "course", Uuid.toString course_id ) ] activityList

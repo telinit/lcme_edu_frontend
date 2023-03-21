@@ -10267,7 +10267,8 @@ var $author$project$Component$MarkTable$initForCourse = F3(
 							[
 								_Utils_Tuple2(
 								'course',
-								$danyx23$elm_uuid$Uuid$toString(course_id))
+								$danyx23$elm_uuid$Uuid$toString(course_id)),
+								_Utils_Tuple2('finished_on', 'isnull')
 							]),
 						$author$project$Api$Request$Course$courseEnrollmentList),
 					'Получение данных об участниках'),
