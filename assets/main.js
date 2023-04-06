@@ -8833,7 +8833,7 @@ var $author$project$Api$request = F7(
 	function (method, path, pathParams, queryParams, headerParams, body, decoder) {
 		return $author$project$Api$Request(
 			{
-				basePath: 'http://edu.lcme/api',
+				basePath: 'https://edu.lnmo.ru/api',
 				body: A2(
 					$elm$core$Maybe$withDefault,
 					$elm$http$Http$emptyBody,

@@ -1,4 +1,5 @@
 /elm-stuff
+/out/
 .idea
 src/Api.elm
 
