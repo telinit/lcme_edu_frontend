@@ -279,12 +279,18 @@ type alias CourseEnrollmentRead =
 type CourseEnrollmentReadRole
     = CourseEnrollmentReadRoleT
     | CourseEnrollmentReadRoleS
+    | CourseEnrollmentReadRoleM
+    | CourseEnrollmentReadRoleO
+    | CourseEnrollmentReadRoleL
 
 
 courseEnrollmentReadRoleVariants : List CourseEnrollmentReadRole
 courseEnrollmentReadRoleVariants =
     [ CourseEnrollmentReadRoleT
     , CourseEnrollmentReadRoleS
+    , CourseEnrollmentReadRoleM
+    , CourseEnrollmentReadRoleO
+    , CourseEnrollmentReadRoleL
     ]
 
 
@@ -302,12 +308,18 @@ type alias CourseEnrollmentWrite =
 type CourseEnrollmentWriteRole
     = CourseEnrollmentWriteRoleT
     | CourseEnrollmentWriteRoleS
+    | CourseEnrollmentWriteRoleM
+    | CourseEnrollmentWriteRoleO
+    | CourseEnrollmentWriteRoleL
 
 
 courseEnrollmentWriteRoleVariants : List CourseEnrollmentWriteRole
 courseEnrollmentWriteRoleVariants =
     [ CourseEnrollmentWriteRoleT
     , CourseEnrollmentWriteRoleS
+    , CourseEnrollmentWriteRoleM
+    , CourseEnrollmentWriteRoleO
+    , CourseEnrollmentWriteRoleL
     ]
 
 
@@ -853,6 +865,15 @@ stringFromCourseEnrollmentReadRole model =
         CourseEnrollmentReadRoleS ->
             "s"
 
+        CourseEnrollmentReadRoleM ->
+            "m"
+
+        CourseEnrollmentReadRoleO ->
+            "o"
+
+        CourseEnrollmentReadRoleL ->
+            "l"
+
 
 encodeCourseEnrollmentReadRole : CourseEnrollmentReadRole -> Json.Encode.Value
 encodeCourseEnrollmentReadRole =
@@ -893,6 +914,15 @@ stringFromCourseEnrollmentWriteRole model =
 
         CourseEnrollmentWriteRoleS ->
             "s"
+
+        CourseEnrollmentWriteRoleM ->
+            "m"
+
+        CourseEnrollmentWriteRoleO ->
+            "o"
+
+        CourseEnrollmentWriteRoleL ->
+            "l"
 
 
 encodeCourseEnrollmentWriteRole : CourseEnrollmentWriteRole -> Json.Encode.Value
@@ -1741,6 +1771,15 @@ courseEnrollmentReadRoleDecoder =
                     "s" ->
                         Json.Decode.succeed CourseEnrollmentReadRoleS
 
+                    "m" ->
+                        Json.Decode.succeed CourseEnrollmentReadRoleM
+
+                    "o" ->
+                        Json.Decode.succeed CourseEnrollmentReadRoleO
+
+                    "l" ->
+                        Json.Decode.succeed CourseEnrollmentReadRoleL
+
                     other ->
                         Json.Decode.fail <| "Unknown type: " ++ other
             )
@@ -1769,6 +1808,15 @@ courseEnrollmentWriteRoleDecoder =
 
                     "s" ->
                         Json.Decode.succeed CourseEnrollmentWriteRoleS
+
+                    "m" ->
+                        Json.Decode.succeed CourseEnrollmentWriteRoleM
+
+                    "o" ->
+                        Json.Decode.succeed CourseEnrollmentWriteRoleO
+
+                    "l" ->
+                        Json.Decode.succeed CourseEnrollmentWriteRoleL
 
                     other ->
                         Json.Decode.fail <| "Unknown type: " ++ other
