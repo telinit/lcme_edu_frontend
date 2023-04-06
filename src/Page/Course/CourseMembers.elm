@@ -20,8 +20,7 @@ import Uuid exposing (Uuid)
 
 
 type Msg
-    = MsgOnClickAddTeacher
-    | MsgOnClickAddStudent
+    = MsgOnClickAddMember CourseEnrollmentReadRole
     | MsgOnClickRemoveEnrollment CourseEnrollmentRead
     | MsgUserList LU.Msg
     | MsgRemoveFinished CourseEnrollmentRead (Result String ())
@@ -58,14 +57,6 @@ findEnrollments role uid enrollments =
 doRemove : Model -> List CourseEnrollmentRead -> Cmd Msg
 doRemove model enrs =
     let
-        roleR2W r =
-            case r of
-                CourseEnrollmentReadRoleT ->
-                    CourseEnrollmentWriteRoleT
-
-                CourseEnrollmentReadRoleS ->
-                    CourseEnrollmentWriteRoleS
-
         cmdDelEnr : CourseEnrollmentRead -> Cmd Msg
         cmdDelEnr enr =
             Task.attempt (MsgRemoveFinished enr) <|
@@ -79,7 +70,7 @@ doRemove model enrs =
                                             { id = Nothing
                                             , createdAt = Nothing
                                             , updatedAt = Nothing
-                                            , role = roleR2W enr.role
+                                            , role = enrollmentRoleR2W enr.role
                                             , person = Maybe.withDefault fake_uuid enr.person.id -- FIXME: A Person record always has an ID but the API generator makes it a Maybe thing. Hence this workaround
                                             , course = enr.course
                                             , finishedOn = Just now
@@ -93,8 +84,8 @@ doRemove model enrs =
         List.map cmdDelEnr enrs
 
 
-enrollmentRoleR2W : CourseEnrollmentWriteRole -> CourseEnrollmentReadRole
-enrollmentRoleR2W r =
+enrollmentRoleW2R : CourseEnrollmentWriteRole -> CourseEnrollmentReadRole
+enrollmentRoleW2R r =
     case r of
         CourseEnrollmentWriteRoleT ->
             CourseEnrollmentReadRoleT
@@ -102,28 +93,48 @@ enrollmentRoleR2W r =
         CourseEnrollmentWriteRoleS ->
             CourseEnrollmentReadRoleS
 
+        CourseEnrollmentWriteRoleM ->
+            CourseEnrollmentReadRoleM
+
+        CourseEnrollmentWriteRoleO ->
+            CourseEnrollmentReadRoleO
+
+        CourseEnrollmentWriteRoleL ->
+            CourseEnrollmentReadRoleL
 
 
---enrollmentR2W : CourseEnrollmentRead -> CourseEnrollmentWrite
---enrollmentR2W enr =
---    { id = enr.id
---    , person  = enr.person.id
---    , createdAt  = enr.createdAt
---    , updatedAt = enr.updatedAt
---    , role = enrollmentRoleR2W enr.role
---    , finishedOn = enr.finishedOn
---    , course = enr.course
---    }
+enrollmentRoleR2W : CourseEnrollmentReadRole -> CourseEnrollmentWriteRole
+enrollmentRoleR2W r =
+    case r of
+        CourseEnrollmentReadRoleT ->
+            CourseEnrollmentWriteRoleT
+
+        CourseEnrollmentReadRoleS ->
+            CourseEnrollmentWriteRoleS
+
+        CourseEnrollmentReadRoleM ->
+            CourseEnrollmentWriteRoleM
+
+        CourseEnrollmentReadRoleO ->
+            CourseEnrollmentWriteRoleO
+
+        CourseEnrollmentReadRoleL ->
+            CourseEnrollmentWriteRoleL
+
+
+getEnrollmentsByRole : Model -> CourseEnrollmentReadRole -> List CourseEnrollmentRead
+getEnrollmentsByRole model role =
+    List.filter (.role >> (==) role) model.enrollments
 
 
 getTeachers : Model -> List CourseEnrollmentRead
 getTeachers model =
-    List.filter (.role >> (==) CourseEnrollmentReadRoleT) model.enrollments
+    getEnrollmentsByRole model CourseEnrollmentReadRoleT
 
 
 getStudents : Model -> List CourseEnrollmentRead
 getStudents model =
-    List.filter (.role >> (==) CourseEnrollmentReadRoleS) model.enrollments
+    getEnrollmentsByRole model CourseEnrollmentReadRoleS
 
 
 init : String -> Maybe Uuid -> List CourseEnrollmentRead -> Bool -> Bool -> ( Model, Cmd Msg )
@@ -141,20 +152,17 @@ init token courseID enr isTeacher isStaff =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
+    let
+        ignore =
+            ( model, Cmd.none )
+    in
     case msg of
-        MsgOnClickAddTeacher ->
+        MsgOnClickAddMember role ->
             let
                 ( m, c ) =
                     LU.init model.token
             in
-            ( { model | state = StateAddMemberSelection CourseEnrollmentReadRoleT m }, Cmd.map MsgUserList c )
-
-        MsgOnClickAddStudent ->
-            let
-                ( m, c ) =
-                    LU.init model.token
-            in
-            ( { model | state = StateAddMemberSelection CourseEnrollmentReadRoleS m }, Cmd.map MsgUserList c )
+            ( { model | state = StateAddMemberSelection role m }, Cmd.map MsgUserList c )
 
         MsgOnClickRemoveEnrollment enr ->
             case model.state of
@@ -168,10 +176,10 @@ update msg model =
                     )
 
                 StateAddMemberSelection _ _ ->
-                    ( model, Cmd.none )
+                    ignore
 
                 StateEnrolling _ ->
-                    ( model, Cmd.none )
+                    ignore
 
         MsgUserList msg_ ->
             case model.state of
@@ -183,10 +191,10 @@ update msg model =
                     ( { model | state = StateAddMemberSelection r m }, Cmd.map MsgUserList c )
 
                 StateList _ ->
-                    ( model, Cmd.none )
+                    ignore
 
                 StateEnrolling _ ->
-                    ( model, Cmd.none )
+                    ignore
 
         MsgRemoveFinished enr result ->
             case result of
@@ -200,50 +208,48 @@ update msg model =
                             ( { model_ | state = StateList <| Dict.remove (get_id_str enr) removing }, Cmd.none )
 
                         StateAddMemberSelection _ _ ->
-                            ( model_, Cmd.none )
+                            ignore
 
                         StateEnrolling _ ->
-                            ( model, Cmd.none )
+                            ignore
 
                 Err error ->
                     case model.state of
                         StateList removing ->
-                            ( { model | state = StateList <| Dict.update (get_id_str enr) (\_ -> Just (Just error)) removing }, Cmd.none )
+                            ( { model
+                                | state =
+                                    StateList <|
+                                        Dict.update (get_id_str enr) (\_ -> Just (Just error)) removing
+                              }
+                            , Cmd.none
+                            )
 
                         StateAddMemberSelection _ _ ->
-                            ( model, Cmd.none )
+                            ignore
 
                         StateEnrolling _ ->
-                            ( model, Cmd.none )
+                            ignore
 
         MsgOnClickBackToList ->
             case model.state of
                 StateList _ ->
-                    ( model, Cmd.none )
+                    ignore
 
                 StateAddMemberSelection _ _ ->
                     ( { model | state = StateList Dict.empty }, Cmd.none )
 
                 StateEnrolling _ ->
-                    ( model, Cmd.none )
+                    ( { model | state = StateList Dict.empty }, Cmd.none )
 
         MsgOnClickAddMembers ->
             case model.state of
                 StateList _ ->
-                    ( model, Cmd.none )
+                    ignore
 
                 StateAddMemberSelection role userList ->
                     let
                         users =
                             Dict.values userList.selected
-
-                        role2 =
-                            case role of
-                                CourseEnrollmentReadRoleT ->
-                                    CourseEnrollmentWriteRoleT
-
-                                CourseEnrollmentReadRoleS ->
-                                    CourseEnrollmentWriteRoleS
 
                         taskAddEnr user =
                             case ( model.courseID, user.id ) of
@@ -254,7 +260,7 @@ update msg model =
                                                 { id = Nothing
                                                 , createdAt = Nothing
                                                 , updatedAt = Nothing
-                                                , role = role2
+                                                , role = enrollmentRoleR2W role
                                                 , finishedOn = Nothing
                                                 , person = uid
                                                 , course = cid
@@ -274,7 +280,7 @@ update msg model =
                     ( { model | state = StateEnrolling m }, Cmd.map MsgEnrolling c )
 
                 StateEnrolling _ ->
-                    ( model, Cmd.none )
+                    ignore
 
         MsgEnrolling msg_ ->
             case model.state of
@@ -288,10 +294,10 @@ update msg model =
                             ( { model | state = StateEnrolling m }, Cmd.map MsgEnrolling c )
 
                 StateList _ ->
-                    ( model, Cmd.none )
+                    ignore
 
                 StateAddMemberSelection _ _ ->
-                    ( model, Cmd.none )
+                    ignore
 
 
 view : Model -> Html Msg
@@ -337,47 +343,61 @@ view model =
                     )
     in
     case model.state of
-        StateList removing ->
+        StateList removing_state ->
+            let
+                list_segment : String -> Maybe Msg -> Maybe (CourseEnrollmentRead -> Msg) -> List CourseEnrollmentRead -> List (Html Msg)
+                list_segment label mbMsgAdd mbMsgDel enrollments =
+                    [ h3 [ class "row between-xs middle-xs" ]
+                        [ text label
+                        , Maybe.withDefault (text "") <|
+                            Maybe.map
+                                (\msg ->
+                                    button [ class "ui button green", onClick msg ] [ i [ class "plus icon" ] [], text "Добавить" ]
+                                )
+                                mbMsgAdd
+                        ]
+                    , div [ style "padding-left" "1em" ] <|
+                        if enrollments == [] then
+                            [ span [ style "font-size" "16pt" ] [ text "(нет)" ] ]
+
+                        else
+                            user_list
+                                mbMsgDel
+                                removing_state
+                                enrollments
+                    ]
+
+                list_segment2 label role canManage =
+                    let
+                        enr =
+                            getEnrollmentsByRole model role
+                    in
+                    if enr == [] && not canManage then
+                        []
+
+                    else
+                        list_segment label
+                            (if canManage then
+                                Just (MsgOnClickAddMember role)
+
+                             else
+                                Nothing
+                            )
+                            (if canManage then
+                                Just MsgOnClickRemoveEnrollment
+
+                             else
+                                Nothing
+                            )
+                            enr
+            in
             div []
-                [ h3 [ class "row between-xs middle-xs" ]
-                    [ text "Преподаватели"
-                    , if model.canManageTeachers then
-                        button [ class "ui button green", onClick MsgOnClickAddTeacher ] [ i [ class "plus icon" ] [], text "Добавить" ]
-
-                      else
-                        text ""
-                    ]
-                , div [ style "padding-left" "1em" ] <|
-                    user_list
-                        (if model.canManageTeachers then
-                            Just MsgOnClickRemoveEnrollment
-
-                         else
-                            Nothing
-                        )
-                        removing
-                    <|
-                        getTeachers model
-                , h3 [ class "row between-xs middle-xs" ]
-                    [ text "Учащиеся"
-                    , if model.canManageStudents then
-                        button [ class "ui button green", onClick MsgOnClickAddStudent ] [ i [ class "plus icon" ] [], text "Добавить" ]
-
-                      else
-                        text ""
-                    ]
-                , div [ style "padding-left" "1em" ] <|
-                    user_list
-                        (if model.canManageStudents then
-                            Just MsgOnClickRemoveEnrollment
-
-                         else
-                            Nothing
-                        )
-                        removing
-                    <|
-                        getStudents model
-                ]
+                (list_segment2 "Менеджеры" CourseEnrollmentReadRoleM model.canManageTeachers
+                    ++ list_segment2 "Наблюдатели" CourseEnrollmentReadRoleO model.canManageTeachers
+                    ++ list_segment2 "Преподаватели" CourseEnrollmentReadRoleT model.canManageTeachers
+                    ++ list_segment2 "Учащиеся" CourseEnrollmentReadRoleS model.canManageStudents
+                    ++ list_segment2 "Вольные слушатели" CourseEnrollmentReadRoleL model.canManageStudents
+                )
 
         StateAddMemberSelection r model_ ->
             let
@@ -388,6 +408,15 @@ view model =
 
                         CourseEnrollmentReadRoleS ->
                             "учащихся"
+
+                        CourseEnrollmentReadRoleM ->
+                            "менеджеров"
+
+                        CourseEnrollmentReadRoleO ->
+                            "наблюдателей"
+
+                        CourseEnrollmentReadRoleL ->
+                            "вольных слушателей"
 
                 controls =
                     div []
@@ -414,7 +443,19 @@ view model =
                 ]
 
         StateEnrolling model_ ->
-            div []
+            div [] <|
                 [ h3 [ class "row between-xs middle-xs" ] [ text "Выполняем запись на курс" ]
                 , Html.map MsgEnrolling <| MT.view (\_ -> "OK") httpErrorToString model_
                 ]
+                    ++ (if MT.hasError model_ then
+                            [ div [ class "row center-xs" ]
+                                [ button [ class "ui button", onClick MsgOnClickBackToList ]
+                                    [ i [ class "arrow left icon" ] []
+                                    , text "Назад"
+                                    ]
+                                ]
+                            ]
+
+                        else
+                            []
+                       )

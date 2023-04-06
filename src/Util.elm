@@ -667,3 +667,21 @@ randomGenerateTask gen =
                 in
                 Task.succeed <| first <| Random.step gen seed
             )
+
+
+arrayFind : (a -> Bool) -> Array a -> Maybe a
+arrayFind f a =
+    let
+        arrayFind2 i =
+            case Array.get i a of
+                Just x ->
+                    if f x then
+                        Just x
+
+                    else
+                        arrayFind2 (i + 1)
+
+                Nothing ->
+                    Nothing
+    in
+    arrayFind2 0

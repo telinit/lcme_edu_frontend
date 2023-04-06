@@ -8860,6 +8860,9 @@ var $author$project$Api$Data$CourseEnrollmentRead = F7(
 	function (id, person, createdAt, updatedAt, role, finishedOn, course) {
 		return {course: course, createdAt: createdAt, finishedOn: finishedOn, id: id, person: person, role: role, updatedAt: updatedAt};
 	});
+var $author$project$Api$Data$CourseEnrollmentReadRoleL = {$: 'CourseEnrollmentReadRoleL'};
+var $author$project$Api$Data$CourseEnrollmentReadRoleM = {$: 'CourseEnrollmentReadRoleM'};
+var $author$project$Api$Data$CourseEnrollmentReadRoleO = {$: 'CourseEnrollmentReadRoleO'};
 var $author$project$Api$Data$CourseEnrollmentReadRoleS = {$: 'CourseEnrollmentReadRoleS'};
 var $author$project$Api$Data$CourseEnrollmentReadRoleT = {$: 'CourseEnrollmentReadRoleT'};
 var $author$project$Api$Data$courseEnrollmentReadRoleDecoder = A2(
@@ -8870,6 +8873,12 @@ var $author$project$Api$Data$courseEnrollmentReadRoleDecoder = A2(
 				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentReadRoleT);
 			case 's':
 				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentReadRoleS);
+			case 'm':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentReadRoleM);
+			case 'o':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentReadRoleO);
+			case 'l':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentReadRoleL);
 			default:
 				var other = value;
 				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
@@ -9687,6 +9696,8 @@ var $author$project$Page$Course$CoursePage$init = F3(
 						$elm$core$Set$fromList(
 							_List_fromArray(
 								['admin', 'staff'])))),
+				managing_here: false,
+				observing_here: false,
 				save_error: $elm$core$Maybe$Nothing,
 				show_members: false,
 				state: $author$project$Page$Course$CoursePage$Fetching(m),
@@ -11498,6 +11509,13 @@ var $author$project$Page$Course$CoursePage$activityMoveUp = F2(
 			return acts;
 		}
 	});
+var $elm$core$List$all = F2(
+	function (isOkay, list) {
+		return !A2(
+			$elm$core$List$any,
+			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
+			list);
+	});
 var $author$project$Util$assoc_update = F3(
 	function (k, v, list) {
 		if (list.b) {
@@ -12623,6 +12641,14 @@ var $author$project$Page$Course$CoursePage$setModified = F2(
 				});
 		}
 	});
+var $elm$core$Result$toMaybe = function (result) {
+	if (result.$ === 'Ok') {
+		var v = result.a;
+		return $elm$core$Maybe$Just(v);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
 var $elm$file$File$toString = _File_toString;
 var $elm$core$String$trim = _String_trim;
 var $elm$core$List$unzip = function (pairs) {
@@ -13103,15 +13129,14 @@ var $author$project$Component$MultiTask$update = F2(
 										$author$project$Component$MultiTask$Error(err),
 										t);
 								},
-								model.task_states)
+								model.task_states),
+							tasks_left: model.tasks_left - 1
 						}),
 					$elm$core$Platform$Cmd$none);
 			default:
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
-var $author$project$Api$Data$CourseEnrollmentWriteRoleS = {$: 'CourseEnrollmentWriteRoleS'};
-var $author$project$Api$Data$CourseEnrollmentWriteRoleT = {$: 'CourseEnrollmentWriteRoleT'};
 var $author$project$Page$Course$CourseMembers$MsgEnrolling = function (a) {
 	return {$: 'MsgEnrolling', a: a};
 };
@@ -13129,6 +13154,11 @@ var $author$project$Api$Data$CourseEnrollmentWrite = F7(
 	function (id, createdAt, updatedAt, role, finishedOn, person, course) {
 		return {course: course, createdAt: createdAt, finishedOn: finishedOn, id: id, person: person, role: role, updatedAt: updatedAt};
 	});
+var $author$project$Api$Data$CourseEnrollmentWriteRoleL = {$: 'CourseEnrollmentWriteRoleL'};
+var $author$project$Api$Data$CourseEnrollmentWriteRoleM = {$: 'CourseEnrollmentWriteRoleM'};
+var $author$project$Api$Data$CourseEnrollmentWriteRoleO = {$: 'CourseEnrollmentWriteRoleO'};
+var $author$project$Api$Data$CourseEnrollmentWriteRoleS = {$: 'CourseEnrollmentWriteRoleS'};
+var $author$project$Api$Data$CourseEnrollmentWriteRoleT = {$: 'CourseEnrollmentWriteRoleT'};
 var $author$project$Api$Data$courseEnrollmentWriteRoleDecoder = A2(
 	$elm$json$Json$Decode$andThen,
 	function (value) {
@@ -13137,6 +13167,12 @@ var $author$project$Api$Data$courseEnrollmentWriteRoleDecoder = A2(
 				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentWriteRoleT);
 			case 's':
 				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentWriteRoleS);
+			case 'm':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentWriteRoleM);
+			case 'o':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentWriteRoleO);
+			case 'l':
+				return $elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentWriteRoleL);
 			default:
 				var other = value;
 				return $elm$json$Json$Decode$fail('Unknown type: ' + other);
@@ -13177,10 +13213,17 @@ var $author$project$Api$Data$courseEnrollmentWriteDecoder = A3(
 							$elm$core$Maybe$Nothing,
 							$elm$json$Json$Decode$succeed($author$project$Api$Data$CourseEnrollmentWrite))))))));
 var $author$project$Api$Data$stringFromCourseEnrollmentWriteRole = function (model) {
-	if (model.$ === 'CourseEnrollmentWriteRoleT') {
-		return 't';
-	} else {
-		return 's';
+	switch (model.$) {
+		case 'CourseEnrollmentWriteRoleT':
+			return 't';
+		case 'CourseEnrollmentWriteRoleS':
+			return 's';
+		case 'CourseEnrollmentWriteRoleM':
+			return 'm';
+		case 'CourseEnrollmentWriteRoleO':
+			return 'o';
+		default:
+			return 'l';
 	}
 };
 var $author$project$Api$Data$encodeCourseEnrollmentWriteRole = A2($elm$core$Basics$composeL, $elm$json$Json$Encode$string, $author$project$Api$Data$stringFromCourseEnrollmentWriteRole);
@@ -13232,6 +13275,20 @@ var $author$project$Api$Request$Course$courseEnrollmentUpdate = F2(
 				$author$project$Api$Data$encodeCourseEnrollmentWrite(data_body)),
 			$author$project$Api$Data$courseEnrollmentWriteDecoder);
 	});
+var $author$project$Page$Course$CourseMembers$enrollmentRoleR2W = function (r) {
+	switch (r.$) {
+		case 'CourseEnrollmentReadRoleT':
+			return $author$project$Api$Data$CourseEnrollmentWriteRoleT;
+		case 'CourseEnrollmentReadRoleS':
+			return $author$project$Api$Data$CourseEnrollmentWriteRoleS;
+		case 'CourseEnrollmentReadRoleM':
+			return $author$project$Api$Data$CourseEnrollmentWriteRoleM;
+		case 'CourseEnrollmentReadRoleO':
+			return $author$project$Api$Data$CourseEnrollmentWriteRoleO;
+		default:
+			return $author$project$Api$Data$CourseEnrollmentWriteRoleL;
+	}
+};
 var $author$project$Util$get_id_str = function (record) {
 	return A2(
 		$elm$core$Maybe$withDefault,
@@ -13251,13 +13308,6 @@ var $author$project$Util$randomGenerateTask = function (gen) {
 };
 var $author$project$Page$Course$CourseMembers$doRemove = F2(
 	function (model, enrs) {
-		var roleR2W = function (r) {
-			if (r.$ === 'CourseEnrollmentReadRoleT') {
-				return $author$project$Api$Data$CourseEnrollmentWriteRoleT;
-			} else {
-				return $author$project$Api$Data$CourseEnrollmentWriteRoleS;
-			}
-		};
 		var cmdDelEnr = function (enr) {
 			return A2(
 				$elm$core$Task$attempt,
@@ -13287,7 +13337,7 @@ var $author$project$Page$Course$CourseMembers$doRemove = F2(
 												finishedOn: $elm$core$Maybe$Just(now),
 												id: $elm$core$Maybe$Nothing,
 												person: A2($elm$core$Maybe$withDefault, fake_uuid, enr.person.id),
-												role: roleR2W(enr.role),
+												role: $author$project$Page$Course$CourseMembers$enrollmentRoleR2W(enr.role),
 												updatedAt: $elm$core$Maybe$Nothing
 											}));
 								},
@@ -13529,8 +13579,10 @@ var $elm$core$Dict$values = function (dict) {
 };
 var $author$project$Page$Course$CourseMembers$update = F2(
 	function (msg, model) {
+		var ignore = _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		switch (msg.$) {
-			case 'MsgOnClickAddTeacher':
+			case 'MsgOnClickAddMember':
+				var role = msg.a;
 				var _v1 = $author$project$Component$List$User$init(model.token);
 				var m = _v1.a;
 				var c = _v1.b;
@@ -13538,26 +13590,15 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 					_Utils_update(
 						model,
 						{
-							state: A2($author$project$Page$Course$CourseMembers$StateAddMemberSelection, $author$project$Api$Data$CourseEnrollmentReadRoleT, m)
-						}),
-					A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CourseMembers$MsgUserList, c));
-			case 'MsgOnClickAddStudent':
-				var _v2 = $author$project$Component$List$User$init(model.token);
-				var m = _v2.a;
-				var c = _v2.b;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							state: A2($author$project$Page$Course$CourseMembers$StateAddMemberSelection, $author$project$Api$Data$CourseEnrollmentReadRoleS, m)
+							state: A2($author$project$Page$Course$CourseMembers$StateAddMemberSelection, role, m)
 						}),
 					A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CourseMembers$MsgUserList, c));
 			case 'MsgOnClickRemoveEnrollment':
 				var enr = msg.a;
-				var _v3 = model.state;
-				switch (_v3.$) {
+				var _v2 = model.state;
+				switch (_v2.$) {
 					case 'StateList':
-						var removingState = _v3.a;
+						var removingState = _v2.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -13566,7 +13607,7 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 										A3(
 											$elm$core$Dict$update,
 											$author$project$Util$get_id_str(enr),
-											function (_v4) {
+											function (_v3) {
 												return $elm$core$Maybe$Just($elm$core$Maybe$Nothing);
 											},
 											removingState))
@@ -13577,20 +13618,20 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 								_List_fromArray(
 									[enr])));
 					case 'StateAddMemberSelection':
-						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						return ignore;
 					default:
-						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						return ignore;
 				}
 			case 'MsgUserList':
 				var msg_ = msg.a;
-				var _v5 = model.state;
-				switch (_v5.$) {
+				var _v4 = model.state;
+				switch (_v4.$) {
 					case 'StateAddMemberSelection':
-						var r = _v5.a;
-						var model_ = _v5.b;
-						var _v6 = A2($author$project$Component$List$User$update, msg_, model_);
-						var m = _v6.a;
-						var c = _v6.b;
+						var r = _v4.a;
+						var model_ = _v4.b;
+						var _v5 = A2($author$project$Component$List$User$update, msg_, model_);
+						var m = _v5.a;
+						var c = _v5.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -13599,9 +13640,9 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CourseMembers$MsgUserList, c));
 					case 'StateList':
-						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						return ignore;
 					default:
-						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						return ignore;
 				}
 			case 'MsgRemoveFinished':
 				var enr = msg.a;
@@ -13615,10 +13656,10 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 								$elm$core$Basics$neq(enr),
 								model.enrollments)
 						});
-					var _v8 = model_.state;
-					switch (_v8.$) {
+					var _v7 = model_.state;
+					switch (_v7.$) {
 						case 'StateList':
-							var removing = _v8.a;
+							var removing = _v7.a;
 							return _Utils_Tuple2(
 								_Utils_update(
 									model_,
@@ -13631,16 +13672,16 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 									}),
 								$elm$core$Platform$Cmd$none);
 						case 'StateAddMemberSelection':
-							return _Utils_Tuple2(model_, $elm$core$Platform$Cmd$none);
+							return ignore;
 						default:
-							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+							return ignore;
 					}
 				} else {
 					var error = result.a;
-					var _v9 = model.state;
-					switch (_v9.$) {
+					var _v8 = model.state;
+					switch (_v8.$) {
 						case 'StateList':
-							var removing = _v9.a;
+							var removing = _v8.a;
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
@@ -13649,7 +13690,7 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 											A3(
 												$elm$core$Dict$update,
 												$author$project$Util$get_id_str(enr),
-												function (_v10) {
+												function (_v9) {
 													return $elm$core$Maybe$Just(
 														$elm$core$Maybe$Just(error));
 												},
@@ -13657,16 +13698,16 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 									}),
 								$elm$core$Platform$Cmd$none);
 						case 'StateAddMemberSelection':
-							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+							return ignore;
 						default:
-							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+							return ignore;
 					}
 				}
 			case 'MsgOnClickBackToList':
-				var _v11 = model.state;
-				switch (_v11.$) {
+				var _v10 = model.state;
+				switch (_v10.$) {
 					case 'StateList':
-						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						return ignore;
 					case 'StateAddMemberSelection':
 						return _Utils_Tuple2(
 							_Utils_update(
@@ -13676,29 +13717,28 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 								}),
 							$elm$core$Platform$Cmd$none);
 					default:
-						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									state: $author$project$Page$Course$CourseMembers$StateList($elm$core$Dict$empty)
+								}),
+							$elm$core$Platform$Cmd$none);
 				}
 			case 'MsgOnClickAddMembers':
-				var _v12 = model.state;
-				switch (_v12.$) {
+				var _v11 = model.state;
+				switch (_v11.$) {
 					case 'StateList':
-						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						return ignore;
 					case 'StateAddMemberSelection':
-						var role = _v12.a;
-						var userList = _v12.b;
+						var role = _v11.a;
+						var userList = _v11.b;
 						var users = $elm$core$Dict$values(userList.selected);
-						var role2 = function () {
-							if (role.$ === 'CourseEnrollmentReadRoleT') {
-								return $author$project$Api$Data$CourseEnrollmentWriteRoleT;
-							} else {
-								return $author$project$Api$Data$CourseEnrollmentWriteRoleS;
-							}
-						}();
 						var taskAddEnr = function (user) {
-							var _v14 = _Utils_Tuple2(model.courseID, user.id);
-							if ((_v14.a.$ === 'Just') && (_v14.b.$ === 'Just')) {
-								var cid = _v14.a.a;
-								var uid = _v14.b.a;
+							var _v13 = _Utils_Tuple2(model.courseID, user.id);
+							if ((_v13.a.$ === 'Just') && (_v13.b.$ === 'Just')) {
+								var cid = _v13.a.a;
+								var uid = _v13.b.a;
 								return $elm$core$Maybe$Just(
 									A4(
 										$author$project$Api$ext_task,
@@ -13706,12 +13746,20 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 										model.token,
 										_List_Nil,
 										$author$project$Api$Request$Course$courseEnrollmentCreate(
-											{course: cid, createdAt: $elm$core$Maybe$Nothing, finishedOn: $elm$core$Maybe$Nothing, id: $elm$core$Maybe$Nothing, person: uid, role: role2, updatedAt: $elm$core$Maybe$Nothing})));
+											{
+												course: cid,
+												createdAt: $elm$core$Maybe$Nothing,
+												finishedOn: $elm$core$Maybe$Nothing,
+												id: $elm$core$Maybe$Nothing,
+												person: uid,
+												role: $author$project$Page$Course$CourseMembers$enrollmentRoleR2W(role),
+												updatedAt: $elm$core$Maybe$Nothing
+											})));
 							} else {
 								return $elm$core$Maybe$Nothing;
 							}
 						};
-						var _v13 = $author$project$Component$MultiTask$init(
+						var _v12 = $author$project$Component$MultiTask$init(
 							A2(
 								$elm$core$List$filterMap,
 								function (u) {
@@ -13725,8 +13773,8 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 										taskAddEnr(u));
 								},
 								users));
-						var m = _v13.a;
-						var c = _v13.b;
+						var m = _v12.a;
+						var c = _v12.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -13735,17 +13783,17 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CourseMembers$MsgEnrolling, c));
 					default:
-						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						return ignore;
 				}
 			default:
 				var msg_ = msg.a;
-				var _v16 = model.state;
-				switch (_v16.$) {
+				var _v14 = model.state;
+				switch (_v14.$) {
 					case 'StateEnrolling':
-						var model_ = _v16.a;
-						var _v17 = A2($author$project$Component$MultiTask$update, msg_, model_);
-						var m = _v17.a;
-						var c = _v17.b;
+						var model_ = _v14.a;
+						var _v15 = A2($author$project$Component$MultiTask$update, msg_, model_);
+						var m = _v15.a;
+						var c = _v15.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -13754,22 +13802,15 @@ var $author$project$Page$Course$CourseMembers$update = F2(
 								}),
 							A2($elm$core$Platform$Cmd$map, $author$project$Page$Course$CourseMembers$MsgEnrolling, c));
 					case 'StateList':
-						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						return ignore;
 					default:
-						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						return ignore;
 				}
 		}
 	});
 var $author$project$Page$Course$CoursePage$IssueKindError = {$: 'IssueKindError'};
 var $author$project$Page$Course$CoursePage$IssueKindNotice = {$: 'IssueKindNotice'};
 var $author$project$Page$Course$CoursePage$IssueKindWarning = {$: 'IssueKindWarning'};
-var $elm$core$List$all = F2(
-	function (isOkay, list) {
-		return !A2(
-			$elm$core$List$any,
-			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
-			list);
-	});
 var $elm$core$Dict$diff = F2(
 	function (t1, t2) {
 		return A3(
@@ -14670,6 +14711,18 @@ var $author$project$Page$Course$CoursePage$update = F2(
 					return _Utils_eq(enr.role, $author$project$Api$Data$CourseEnrollmentReadRoleT) && _Utils_eq(enr.person.id, model.user.id);
 				},
 				enrollments);
+			var observing_here = A2(
+				$elm$core$List$any,
+				function (enr) {
+					return _Utils_eq(enr.role, $author$project$Api$Data$CourseEnrollmentReadRoleO) && _Utils_eq(enr.person.id, model.user.id);
+				},
+				enrollments);
+			var managing_here = A2(
+				$elm$core$List$any,
+				function (enr) {
+					return _Utils_eq(enr.role, $author$project$Api$Data$CourseEnrollmentReadRoleM) && _Utils_eq(enr.person.id, model.user.id);
+				},
+				enrollments);
 			var activities_ = A2(
 				$elm$core$List$sortBy,
 				function ($) {
@@ -14698,7 +14751,7 @@ var $author$project$Page$Course$CoursePage$update = F2(
 				},
 				pairs_id_cmd);
 			var pairs_id_comp = A2($author$project$Util$zip, id_range, ms);
-			var _v78 = A5($author$project$Page$Course$CourseMembers$init, model.token, course.id, enrollments, teaching_here, model.is_staff);
+			var _v78 = A5($author$project$Page$Course$CourseMembers$init, model.token, course.id, enrollments, teaching_here, model.is_staff || managing_here);
 			var mMembers = _v78.a;
 			var cMembers = _v78.b;
 			return _Utils_Tuple2(
@@ -14706,6 +14759,8 @@ var $author$project$Page$Course$CoursePage$update = F2(
 					model,
 					{
 						activity_component_pk: model.activity_component_pk + len,
+						managing_here: managing_here,
+						observing_here: observing_here,
 						state: A3($author$project$Page$Course$CoursePage$FetchDone, data, pairs_id_comp, mMembers),
 						teaching_here: teaching_here
 					}),
@@ -15654,19 +15709,26 @@ var $author$project$Page$Course$CoursePage$update = F2(
 						var _v73 = _v0.b;
 						var course = _v73.a;
 						var la = _v73.b;
-						var model_ = _v73.c;
-						var _v74 = A2($author$project$Page$Course$CourseMembers$update, msg_, model_);
+						var model_members = _v73.c;
+						var _v74 = A2($author$project$Page$Course$CourseMembers$update, msg_, model_members);
 						var m = _v74.a;
 						var c = _v74.b;
 						if ((msg_.$ === 'MsgEnrolling') && (msg_.a.$ === 'TaskFinishedAll')) {
+							var results = msg_.a.a;
 							return _Utils_Tuple2(
 								model,
 								A2(
+									$elm$core$List$all,
+									A2(
+										$elm$core$Basics$composeR,
+										$elm$core$Result$toMaybe,
+										$elm$core$Basics$neq($elm$core$Maybe$Nothing)),
+									results) ? A2(
 									$elm$core$Task$perform,
 									function (_v76) {
 										return $author$project$Page$Course$CoursePage$MsgCourseSaved;
 									},
-									$elm$core$Task$succeed(_Utils_Tuple0)));
+									$elm$core$Task$succeed(_Utils_Tuple0)) : $elm$core$Platform$Cmd$none);
 						} else {
 							return _Utils_Tuple2(
 								_Utils_update(
@@ -31307,14 +31369,6 @@ var $jxxcarlson$elm_markdown$BlockType$numberOfLeadingBlanks = A2(
 						c,
 						_Utils_chr(' '));
 				}))));
-var $elm$core$Result$toMaybe = function (result) {
-	if (result.$ === 'Ok') {
-		var v = result.a;
-		return $elm$core$Maybe$Just(v);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $jxxcarlson$elm_markdown$BlockType$getNumberOfLeadingBlanks = function (str) {
 	return A2(
 		$elm$core$Maybe$withDefault,
@@ -35291,34 +35345,63 @@ var $author$project$Component$Modal$view = F6(
 						]))
 				])) : $elm$html$Html$text('');
 	});
+var $author$project$Page$Course$CourseMembers$MsgOnClickAddMember = function (a) {
+	return {$: 'MsgOnClickAddMember', a: a};
+};
 var $author$project$Page$Course$CourseMembers$MsgOnClickAddMembers = {$: 'MsgOnClickAddMembers'};
-var $author$project$Page$Course$CourseMembers$MsgOnClickAddStudent = {$: 'MsgOnClickAddStudent'};
-var $author$project$Page$Course$CourseMembers$MsgOnClickAddTeacher = {$: 'MsgOnClickAddTeacher'};
 var $author$project$Page$Course$CourseMembers$MsgOnClickBackToList = {$: 'MsgOnClickBackToList'};
 var $author$project$Page$Course$CourseMembers$MsgOnClickRemoveEnrollment = function (a) {
 	return {$: 'MsgOnClickRemoveEnrollment', a: a};
 };
-var $author$project$Page$Course$CourseMembers$getStudents = function (model) {
-	return A2(
-		$elm$core$List$filter,
-		A2(
-			$elm$core$Basics$composeR,
-			function ($) {
-				return $.role;
-			},
-			$elm$core$Basics$eq($author$project$Api$Data$CourseEnrollmentReadRoleS)),
-		model.enrollments);
+var $author$project$Page$Course$CourseMembers$getEnrollmentsByRole = F2(
+	function (model, role) {
+		return A2(
+			$elm$core$List$filter,
+			A2(
+				$elm$core$Basics$composeR,
+				function ($) {
+					return $.role;
+				},
+				$elm$core$Basics$eq(role)),
+			model.enrollments);
+	});
+var $author$project$Util$arrayFind = F2(
+	function (f, a) {
+		var arrayFind2 = function (i) {
+			arrayFind2:
+			while (true) {
+				var _v0 = A2($elm$core$Array$get, i, a);
+				if (_v0.$ === 'Just') {
+					var x = _v0.a;
+					if (f(x)) {
+						return $elm$core$Maybe$Just(x);
+					} else {
+						var $temp$i = i + 1;
+						i = $temp$i;
+						continue arrayFind2;
+					}
+				} else {
+					return $elm$core$Maybe$Nothing;
+				}
+			}
+		};
+		return arrayFind2(0);
+	});
+var $author$project$Component$MultiTask$firstErroredTask = function (model) {
+	var task_err = function (_v1) {
+		var s = _v1.b;
+		if (s.$ === 'Error') {
+			return true;
+		} else {
+			return false;
+		}
+	};
+	return A2($author$project$Util$arrayFind, task_err, model.task_states);
 };
-var $author$project$Page$Course$CourseMembers$getTeachers = function (model) {
-	return A2(
-		$elm$core$List$filter,
-		A2(
-			$elm$core$Basics$composeR,
-			function ($) {
-				return $.role;
-			},
-			$elm$core$Basics$eq($author$project$Api$Data$CourseEnrollmentReadRoleT)),
-		model.enrollments);
+var $author$project$Component$MultiTask$hasError = function (model) {
+	return !_Utils_eq(
+		$author$project$Component$MultiTask$firstErroredTask(model),
+		$elm$core$Maybe$Nothing);
 };
 var $author$project$Component$Misc$user_link = F2(
 	function (custom_link, user) {
@@ -35769,99 +35852,106 @@ var $author$project$Page$Course$CourseMembers$view = function (model) {
 	var _v0 = model.state;
 	switch (_v0.$) {
 		case 'StateList':
-			var removing = _v0.a;
+			var removing_state = _v0.a;
+			var list_segment = F4(
+				function (label, mbMsgAdd, mbMsgDel, enrollments) {
+					return _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$h3,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('row between-xs middle-xs')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(label),
+									A2(
+									$elm$core$Maybe$withDefault,
+									$elm$html$Html$text(''),
+									A2(
+										$elm$core$Maybe$map,
+										function (msg) {
+											return A2(
+												$elm$html$Html$button,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('ui button green'),
+														$elm$html$Html$Events$onClick(msg)
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$i,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('plus icon')
+															]),
+														_List_Nil),
+														$elm$html$Html$text('Добавить')
+													]));
+										},
+										mbMsgAdd))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'padding-left', '1em')
+								]),
+							_Utils_eq(enrollments, _List_Nil) ? _List_fromArray(
+								[
+									A2(
+									$elm$html$Html$span,
+									_List_fromArray(
+										[
+											A2($elm$html$Html$Attributes$style, 'font-size', '16pt')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('(нет)')
+										]))
+								]) : A3(user_list, mbMsgDel, removing_state, enrollments))
+						]);
+				});
+			var list_segment2 = F3(
+				function (label, role, canManage) {
+					var enr = A2($author$project$Page$Course$CourseMembers$getEnrollmentsByRole, model, role);
+					return (_Utils_eq(enr, _List_Nil) && (!canManage)) ? _List_Nil : A4(
+						list_segment,
+						label,
+						canManage ? $elm$core$Maybe$Just(
+							$author$project$Page$Course$CourseMembers$MsgOnClickAddMember(role)) : $elm$core$Maybe$Nothing,
+						canManage ? $elm$core$Maybe$Just($author$project$Page$Course$CourseMembers$MsgOnClickRemoveEnrollment) : $elm$core$Maybe$Nothing,
+						enr);
+				});
 			return A2(
 				$elm$html$Html$div,
 				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$h3,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('row between-xs middle-xs')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Преподаватели'),
-								model.canManageTeachers ? A2(
-								$elm$html$Html$button,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('ui button green'),
-										$elm$html$Html$Events$onClick($author$project$Page$Course$CourseMembers$MsgOnClickAddTeacher)
-									]),
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$i,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('plus icon')
-											]),
-										_List_Nil),
-										$elm$html$Html$text('Добавить')
-									])) : $elm$html$Html$text('')
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'padding-left', '1em')
-							]),
-						A3(
-							user_list,
-							model.canManageTeachers ? $elm$core$Maybe$Just($author$project$Page$Course$CourseMembers$MsgOnClickRemoveEnrollment) : $elm$core$Maybe$Nothing,
-							removing,
-							$author$project$Page$Course$CourseMembers$getTeachers(model))),
-						A2(
-						$elm$html$Html$h3,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('row between-xs middle-xs')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Учащиеся'),
-								model.canManageStudents ? A2(
-								$elm$html$Html$button,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('ui button green'),
-										$elm$html$Html$Events$onClick($author$project$Page$Course$CourseMembers$MsgOnClickAddStudent)
-									]),
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$i,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('plus icon')
-											]),
-										_List_Nil),
-										$elm$html$Html$text('Добавить')
-									])) : $elm$html$Html$text('')
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'padding-left', '1em')
-							]),
-						A3(
-							user_list,
-							model.canManageStudents ? $elm$core$Maybe$Just($author$project$Page$Course$CourseMembers$MsgOnClickRemoveEnrollment) : $elm$core$Maybe$Nothing,
-							removing,
-							$author$project$Page$Course$CourseMembers$getStudents(model)))
-					]));
+				_Utils_ap(
+					A3(list_segment2, 'Менеджеры', $author$project$Api$Data$CourseEnrollmentReadRoleM, model.canManageTeachers),
+					_Utils_ap(
+						A3(list_segment2, 'Наблюдатели', $author$project$Api$Data$CourseEnrollmentReadRoleO, model.canManageTeachers),
+						_Utils_ap(
+							A3(list_segment2, 'Преподаватели', $author$project$Api$Data$CourseEnrollmentReadRoleT, model.canManageTeachers),
+							_Utils_ap(
+								A3(list_segment2, 'Учащиеся', $author$project$Api$Data$CourseEnrollmentReadRoleS, model.canManageStudents),
+								A3(list_segment2, 'Вольные слушатели', $author$project$Api$Data$CourseEnrollmentReadRoleL, model.canManageStudents))))));
 		case 'StateAddMemberSelection':
 			var r = _v0.a;
 			var model_ = _v0.b;
 			var sRole = function () {
-				if (r.$ === 'CourseEnrollmentReadRoleT') {
-					return 'преподавателей';
-				} else {
-					return 'учащихся';
+				switch (r.$) {
+					case 'CourseEnrollmentReadRoleT':
+						return 'преподавателей';
+					case 'CourseEnrollmentReadRoleS':
+						return 'учащихся';
+					case 'CourseEnrollmentReadRoleM':
+						return 'менеджеров';
+					case 'CourseEnrollmentReadRoleO':
+						return 'наблюдателей';
+					default:
+						return 'вольных слушателей';
 				}
 			}();
 			var controls = A2(
@@ -35939,29 +36029,60 @@ var $author$project$Page$Course$CourseMembers$view = function (model) {
 			return A2(
 				$elm$html$Html$div,
 				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$h3,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('row between-xs middle-xs')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Выполняем запись на курс')
-							])),
-						A2(
-						$elm$html$Html$map,
-						$author$project$Page$Course$CourseMembers$MsgEnrolling,
-						A3(
-							$author$project$Component$MultiTask$view,
-							function (_v2) {
-								return 'OK';
-							},
-							$author$project$Util$httpErrorToString,
-							model_))
-					]));
+				_Utils_ap(
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$h3,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('row between-xs middle-xs')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('Выполняем запись на курс')
+								])),
+							A2(
+							$elm$html$Html$map,
+							$author$project$Page$Course$CourseMembers$MsgEnrolling,
+							A3(
+								$author$project$Component$MultiTask$view,
+								function (_v2) {
+									return 'OK';
+								},
+								$author$project$Util$httpErrorToString,
+								model_))
+						]),
+					$author$project$Component$MultiTask$hasError(model_) ? _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('row center-xs')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$button,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('ui button'),
+											$elm$html$Html$Events$onClick($author$project$Page$Course$CourseMembers$MsgOnClickBackToList)
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$i,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('arrow left icon')
+												]),
+											_List_Nil),
+											$elm$html$Html$text('Назад')
+										]))
+								]))
+						]) : _List_Nil));
 	}
 };
 var $author$project$Page$Course$CoursePage$MsgOnClickActivitiesImport = {$: 'MsgOnClickActivitiesImport'};
@@ -37403,7 +37524,7 @@ var $author$project$Page$Course$CoursePage$viewCourse = F4(
 					},
 					data.course.cover));
 			var buttons = function () {
-				var _v4 = _Utils_Tuple2(model.is_staff || model.teaching_here, model.edit_mode);
+				var _v4 = _Utils_Tuple2(model.is_staff || (model.teaching_here || model.managing_here), model.edit_mode);
 				_v4$0:
 				while (true) {
 					if (_v4.b.$ === 'EditOff') {
@@ -37900,7 +38021,7 @@ var $author$project$Page$Course$CoursePage$viewCourse = F4(
 					_List_Nil,
 					_List_fromArray(
 						[
-							(model.is_staff || model.teaching_here) ? A2(
+							(model.is_staff || (model.teaching_here || (model.managing_here || model.observing_here))) ? A2(
 							$elm$html$Html$a,
 							_List_fromArray(
 								[

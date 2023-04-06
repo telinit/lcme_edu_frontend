@@ -5,7 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http exposing (Error(..))
 import Task exposing (Task)
-import Util exposing (arrayUpdate, task_to_cmd)
+import Util exposing (arrayFind, arrayUpdate, task_to_cmd)
 
 
 type Msg e a
@@ -70,6 +70,39 @@ collectResults model =
                 model.task_states
 
 
+allOK : Model e a -> Bool
+allOK model =
+    let
+        task_ok ( _, s, _ ) =
+            case s of
+                Complete _ ->
+                    True
+
+                _ ->
+                    False
+    in
+    Array.foldl ((&&) << task_ok) True model.task_states
+
+
+firstErroredTask : Model e a -> Maybe (TaskState e a)
+firstErroredTask model =
+    let
+        task_err ( _, s, _ ) =
+            case s of
+                Error _ ->
+                    True
+
+                _ ->
+                    False
+    in
+    arrayFind task_err model.task_states
+
+
+hasError : Model e a -> Bool
+hasError model =
+    firstErroredTask model /= Nothing
+
+
 update : Msg e a -> Model e a -> ( Model e a, Cmd (Msg e a) )
 update msg model =
     case msg of
@@ -92,6 +125,7 @@ update msg model =
         TaskFailed i err ->
             ( { model
                 | task_states = arrayUpdate i (\( l, _, t ) -> ( l, Error err, t )) model.task_states
+                , tasks_left = model.tasks_left - 1
               }
             , case err of
                 --BadStatus 401 -> Task.perform (\_ -> MsgUnauthorized) <| Task.succeed ()

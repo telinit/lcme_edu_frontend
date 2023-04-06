@@ -128,6 +128,8 @@ type alias Model =
     , save_error : Maybe String
     , is_staff : Bool
     , teaching_here : Bool
+    , managing_here : Bool
+    , observing_here : Bool
     , activity_component_pk : Int
     , activity_import_state : ActivityImportState
     , activity_primitive_import : Maybe String
@@ -150,7 +152,7 @@ init token course_id user =
                 , ( ext_task FetchedSpec token [ ( "courses", course_id ) ] educationSpecializationList
                   , "Получение направления обучения"
                   )
-                , ( ext_task FetchedEnrollments token [ ( "course", course_id ), ("finished_on__isnull", "True") ] <| courseEnrollmentList
+                , ( ext_task FetchedEnrollments token [ ( "course", course_id ), ( "finished_on__isnull", "True" ) ] <| courseEnrollmentList
                   , "Получение данных об участниках"
                   )
                 , ( ext_task FetchedActivities token [ ( "course", course_id ) ] activityList
@@ -169,6 +171,8 @@ init token course_id user =
                 Set.isEmpty <|
                     Set.intersect (Set.fromList <| Maybe.withDefault [] user.roles) (Set.fromList [ "admin", "staff" ])
       , teaching_here = False
+      , managing_here = False
+      , observing_here = False
       , activity_component_pk = 0
       , activity_import_state = ActivityImportStateNone
       , activity_primitive_import = Nothing
@@ -691,14 +695,30 @@ update msg model =
                         )
                         enrollments
 
+                managing_here =
+                    List.any
+                        (\enr ->
+                            enr.role == CourseEnrollmentReadRoleM && enr.person.id == model.user.id
+                        )
+                        enrollments
+
+                observing_here =
+                    List.any
+                        (\enr ->
+                            enr.role == CourseEnrollmentReadRoleO && enr.person.id == model.user.id
+                        )
+                        enrollments
+
                 ( mMembers, cMembers ) =
-                    CourseMembers.init model.token course.id enrollments teaching_here model.is_staff
+                    CourseMembers.init model.token course.id enrollments teaching_here (model.is_staff || managing_here)
             in
             ( { model
                 | state =
                     FetchDone data pairs_id_comp mMembers
                 , activity_component_pk = model.activity_component_pk + len
                 , teaching_here = teaching_here
+                , managing_here = managing_here
+                , observing_here = observing_here
               }
             , Cmd.batch (cmdsAct ++ [ Cmd.map MsgCourseMembers cMembers ])
             )
@@ -1258,14 +1278,20 @@ update msg model =
         ( MsgCloseActivitiesImportPrimitive, _ ) ->
             ( { model | activity_primitive_import = Nothing }, Cmd.none )
 
-        ( MsgCourseMembers msg_, FetchDone course la model_ ) ->
+        ( MsgCourseMembers msg_, FetchDone course la model_members ) ->
             let
                 ( m, c ) =
-                    CourseMembers.update msg_ model_
+                    CourseMembers.update msg_ model_members
             in
             case msg_ of
-                CourseMembers.MsgEnrolling (TaskFinishedAll _) ->
-                    ( model, Task.perform (\_ -> MsgCourseSaved) <| Task.succeed () )
+                CourseMembers.MsgEnrolling (TaskFinishedAll results) ->
+                    ( model
+                    , if List.all (Result.toMaybe >> (/=) Nothing) results then
+                        Task.perform (\_ -> MsgCourseSaved) <| Task.succeed ()
+
+                      else
+                        Cmd.none
+                    )
 
                 _ ->
                     ( { model | state = FetchDone course la m }, Cmd.map MsgCourseMembers c )
@@ -1696,7 +1722,7 @@ viewCourse data components_activity members model =
                             text ""
 
                 buttons =
-                    case ( model.is_staff || model.teaching_here, model.edit_mode ) of
+                    case ( model.is_staff || model.teaching_here || model.managing_here, model.edit_mode ) of
                         ( False, _ ) ->
                             []
 
@@ -1942,7 +1968,7 @@ viewCourse data components_activity members model =
             h1 [ class "row between-xs ml-10 mr-10" ]
                 [ text "Содержание"
                 , div []
-                    [ if model.is_staff || model.teaching_here then
+                    [ if model.is_staff || model.teaching_here || model.managing_here || model.observing_here then
                         a [ href <| "/marks/course/" ++ get_id_str data.course ]
                             [ button [ class "ui button" ]
                                 [ i [ class "chart bar outline icon" ] []
