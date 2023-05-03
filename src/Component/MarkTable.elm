@@ -84,6 +84,7 @@ type DateFilter
     | DateFilterH1
     | DateFilterH2
     | DateFilterAll
+    | DateFilterFinal
 
 
 type alias SlotList =
@@ -423,7 +424,7 @@ initForCourse token course_id teacher_id =
                 , ( ext_task FetchedEnrollments
                         token
                         [ ( "course", Uuid.toString course_id )
-                        , ("finished_on__isnull", "True")
+                        , ( "finished_on__isnull", "True" )
                         ]
                     <|
                         courseEnrollmentList
@@ -681,6 +682,9 @@ dateFilter filter orderSortedActs =
 
         DateFilterAll ->
             orderSortedActs
+
+        DateFilterFinal ->
+            List.filter (.contentType >> (==) (Just ActivityContentTypeFIN)) orderSortedActs
 
 
 updateTable : Model -> Model
@@ -1715,6 +1719,7 @@ viewDateFilter model =
             , ( "4 четверть", DateFilterQ4 )
             , ( "1 полугодие", DateFilterH1 )
             , ( "2 полугодие", DateFilterH2 )
+            , ( "Итоговые", DateFilterFinal )
             , ( "Все", DateFilterAll )
             ]
 
