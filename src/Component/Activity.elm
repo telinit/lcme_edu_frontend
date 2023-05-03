@@ -5,7 +5,7 @@ import Api.Data exposing (Activity, ActivityContentType(..), activityFinalTypeDe
 import Api.Request.Activity exposing (activityRead)
 import Component.Select as SEL
 import Css exposing (active)
-import Dict
+import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onCheck, onClick, onInput)
@@ -58,9 +58,17 @@ type Msg
     | MsgGotTZ Time.Zone
 
 
+type alias FieldName =
+    String
+
+
+type alias FieldError =
+    String
+
+
 type State
     = StateLoading
-    | StateActivity Activity
+    | StateActivity Activity (Dict FieldName FieldError)
     | StateCreatingNew
     | StateError String
 
@@ -141,7 +149,7 @@ init_from_activity token act =
                             ]
             in
             ( { state =
-                    StateActivity act
+                    StateActivity act Dict.empty
               , token = token
               , editable = False
               , up_down = ControlsUpDown False False
@@ -159,7 +167,7 @@ init_from_activity token act =
             )
 
         _ ->
-            ( { state = StateActivity act
+            ( { state = StateActivity act Dict.empty
               , token = token
               , editable = False
               , up_down = ControlsUpDown False False
@@ -169,6 +177,138 @@ init_from_activity token act =
               }
             , Cmd.batch [ doGenID, doGetTZ ]
             )
+
+
+activityGetField : Field -> Activity -> String
+activityGetField field activity =
+    case field of
+        FieldTitle ->
+            activity.title
+
+        FieldKeywords ->
+            Maybe.withDefault "" activity.keywords
+
+        FieldSci ->
+            Maybe.withDefault "" activity.scientificTopic
+
+        FieldGroup ->
+            Maybe.withDefault "" activity.group
+
+        FieldHours ->
+            Maybe.withDefault "" <| Maybe.map String.fromInt activity.hours
+
+        FieldLimit ->
+            Maybe.withDefault "" <| Maybe.map String.fromInt activity.marksLimit
+
+        FieldFGOS ->
+            Maybe.withDefault "" <|
+                Maybe.map
+                    (\v ->
+                        if v then
+                            "true"
+
+                        else
+                            "false"
+                    )
+                    activity.fgosComplient
+
+        FieldHidden ->
+            Maybe.withDefault "" <|
+                Maybe.map
+                    (\v ->
+                        if v then
+                            "true"
+
+                        else
+                            "false"
+                    )
+                    activity.isHidden
+
+        FieldDate ->
+            Maybe.withDefault "" <| Maybe.map (posixToDDMMYYYY Time.utc) activity.date
+
+        FieldLessonType ->
+            Maybe.withDefault "" activity.lessonType
+
+        FieldBody ->
+            Maybe.withDefault "" activity.body
+
+        FieldDue ->
+            Maybe.withDefault "" <| Maybe.map (posixToDDMMYYYY Time.utc) activity.dueDate
+
+
+validateNewValue : Field -> String -> Dict FieldName FieldError -> Dict FieldName FieldError
+validateNewValue field val validations =
+    case field of
+        FieldTitle ->
+            if String.trim val == "" then
+                Dict.insert "FieldTitle" "Название темы не может быть пустым" validations
+
+            else
+                Dict.remove "FieldTitle" validations
+
+        FieldKeywords ->
+            validations
+
+        FieldSci ->
+            validations
+
+        FieldGroup ->
+            validations
+
+        FieldHours ->
+            validations
+
+        FieldLimit ->
+            validations
+
+        FieldFGOS ->
+            validations
+
+        FieldHidden ->
+            validations
+
+        FieldDate ->
+            validations
+
+        FieldLessonType ->
+            validations
+
+        FieldBody ->
+            validations
+
+        FieldDue ->
+            validations
+
+
+revalidate : Model -> Model
+revalidate model =
+    case model.state of
+        StateActivity activity validations ->
+            let
+                fields2validate =
+                    [ FieldTitle ]
+
+                newValidations =
+                    List.foldl
+                        (\fld vals -> validateNewValue fld (activityGetField fld activity) vals)
+                        validations
+                        fields2validate
+            in
+            { model | state = StateActivity activity newValidations }
+
+        _ ->
+            model
+
+
+getValidationErrors : Model -> Dict FieldName FieldError
+getValidationErrors model =
+    case model.state of
+        StateActivity _ err ->
+            err
+
+        _ ->
+            Dict.empty
 
 
 setError : String -> Model -> Model
@@ -187,7 +327,7 @@ getOrder model =
         StateLoading ->
             -1
 
-        StateActivity activity ->
+        StateActivity activity _ ->
             activity.order
 
         StateCreatingNew ->
@@ -202,8 +342,8 @@ setOrder ord model =
     let
         new_state =
             case model.state of
-                StateActivity activity ->
-                    StateActivity { activity | order = ord }
+                StateActivity activity v ->
+                    StateActivity { activity | order = ord } v
 
                 _ ->
                     model.state
@@ -214,7 +354,7 @@ setOrder ord model =
 getID : Model -> Maybe Uuid
 getID model =
     case model.state of
-        StateActivity activity ->
+        StateActivity activity _ ->
             activity.id
 
         _ ->
@@ -224,7 +364,7 @@ getID model =
 getActivity : Model -> Maybe Activity
 getActivity model =
     case model.state of
-        StateActivity activity ->
+        StateActivity activity _ ->
             Just activity
 
         _ ->
@@ -271,7 +411,7 @@ update msg model =
             --( model, initDropdown ".ui.dropdown" )
             ( model, Cmd.none )
 
-        ( MsgFinTypeSelect msg_, StateActivity act ) ->
+        ( MsgFinTypeSelect msg_, StateActivity act validations ) ->
             Maybe.withDefault ( model, Cmd.none ) <|
                 Maybe.map
                     (\model_ft ->
@@ -294,6 +434,7 @@ update msg model =
                                                         | finalType = Just t
                                                         , title = finalTypeToStr { finalType = Just t }
                                                     }
+                                                    validations
                                             , component_fin_type = Just m
                                           }
                                         , Cmd.map MsgFinTypeSelect c
@@ -301,7 +442,7 @@ update msg model =
 
                                     _ ->
                                         ( { model
-                                            | state = StateActivity act
+                                            | state = StateActivity act validations
                                             , component_fin_type = Just m
                                           }
                                         , Cmd.map MsgFinTypeSelect c
@@ -309,7 +450,7 @@ update msg model =
 
                             _ ->
                                 ( { model
-                                    | state = StateActivity act
+                                    | state = StateActivity act validations
                                     , component_fin_type = Just m
                                   }
                                 , Cmd.map MsgFinTypeSelect c
@@ -358,8 +499,8 @@ update msg model =
                             { act | dueDate = isoDateToPosix v }
             in
             case state of
-                StateActivity act ->
-                    ( { model | state = StateActivity (new_act act) }
+                StateActivity act validations ->
+                    ( { model | state = StateActivity (new_act act) (validateNewValue f v validations) }
                     , Cmd.none
                     )
 
@@ -412,7 +553,7 @@ viewRead model =
                 , text "Загружаем активность"
                 ]
 
-        StateActivity activity ->
+        StateActivity activity validations ->
             case activity.contentType of
                 Just ActivityContentTypeGEN ->
                     view_with_label "Тема"
@@ -700,14 +841,27 @@ viewWrite model =
                 , text "Загружаем активность"
                 ]
 
-        StateActivity activity ->
+        StateActivity activity validations ->
+            let
+                errorTitle =
+                    Dict.get "FieldTitle" validations
+            in
             case activity.contentType of
                 Just ActivityContentTypeGEN ->
                     view_with_label "Тема"
                         (first Theme.default.colors.activities.general)
                         (second Theme.default.colors.activities.general)
                         [ div [ class "row mt-10" ]
-                            [ div [ class "field start-xs col-xs-12" ]
+                            [ div
+                                [ class <|
+                                    "field start-xs col-xs-12"
+                                        ++ (if errorTitle /= Nothing then
+                                                " error"
+
+                                            else
+                                                ""
+                                           )
+                                ]
                                 [ label [] [ text "Название" ]
                                 , input
                                     [ placeholder "Основное название темы"
@@ -716,6 +870,7 @@ viewWrite model =
                                     , onInput (MsgSetField FieldTitle)
                                     ]
                                     []
+                                , label [] [ text <| Maybe.withDefault "" errorTitle ]
                                 ]
                             ]
                         , div [ class "row mt-10" ]

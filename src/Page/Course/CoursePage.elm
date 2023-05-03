@@ -5,7 +5,7 @@ import Api.Data exposing (Activity, ActivityContentType(..), Course, CourseEnrol
 import Api.Request.Activity exposing (activityImportForCourse, activityList)
 import Api.Request.Course exposing (courseBulkSetActivities, courseEnrollmentList, courseRead)
 import Api.Request.Education exposing (educationSpecializationList, educationSpecializationRead)
-import Component.Activity as CA exposing (Msg(..), getOrder, setOrder)
+import Component.Activity as CA
 import Component.FileInput as FI
 import Component.MessageBox as MessageBox exposing (Type(..))
 import Component.Modal as Modal
@@ -230,7 +230,7 @@ activityMoveUp id acts =
     case acts of
         (( k1, v1 ) as x) :: (( k2, v2 ) as y) :: tl ->
             if k2 == id then
-                ( k2, setOrder (getOrder v2 - 1) v2 ) :: ( k1, setOrder (getOrder v1 + 1) v1 ) :: tl
+                ( k2, CA.setOrder (CA.getOrder v2 - 1) v2 ) :: ( k1, CA.setOrder (CA.getOrder v1 + 1) v1 ) :: tl
 
             else
                 x :: activityMoveUp id (y :: tl)
@@ -243,7 +243,7 @@ activityMoveDown id acts =
     case acts of
         (( k1, v1 ) as x) :: (( k2, v2 ) as y) :: tl ->
             if k1 == id then
-                ( k2, setOrder (getOrder v2 - 1) v2 ) :: ( k1, setOrder (getOrder v1 + 1) v1 ) :: tl
+                ( k2, CA.setOrder (CA.getOrder v2 - 1) v2 ) :: ( k1, CA.setOrder (CA.getOrder v1 + 1) v1 ) :: tl
 
             else
                 x :: activityMoveDown id (y :: tl)
@@ -1018,7 +1018,7 @@ update msg model =
                                     FetchDone data
                                         (list_insert_at
                                             i
-                                            ( model.activity_component_pk, CA.setEditable True m )
+                                            ( model.activity_component_pk, CA.setEditable True <| CA.revalidate m )
                                             act_components
                                         )
                                         members
@@ -1033,7 +1033,7 @@ update msg model =
             in
             ( setEditMode False m, c )
 
-        ( MsgOnClickSave, FetchDone ({ course, spec, enrollments, activities } as data) act_components _ ) ->
+        ( MsgOnClickSave, FetchDone ({ course, spec, enrollments, activities } as data) act_components members ) ->
             let
                 ac_to_tuple : CA.Model -> Maybe ( String, Activity )
                 ac_to_tuple c =
@@ -1061,19 +1061,38 @@ update msg model =
                 update_ : Dict String Activity
                 update_ =
                     Dict.fromList <| List.filterMap (Tuple.second >> ac_to_tuple) act_components
+
+                validationErrors : List ( CA.FieldName, CA.FieldError )
+                validationErrors =
+                    List.concat <|
+                        List.map
+                            (\( _, a ) -> Dict.toList <| CA.getValidationErrors <| CA.revalidate a)
+                            act_components
             in
-            ( model
-            , task_to_cmd (httpErrorToString >> MsgCourseSaveError) (\_ -> MsgCourseSaved) <|
-                ext_task identity
-                    model.token
-                    []
-                    (courseBulkSetActivities
-                        (Maybe.withDefault "" <| Maybe.map Uuid.toString course.id)
-                        { create = create
-                        , update = update_
-                        }
+            case validationErrors of
+                [] ->
+                    ( model
+                    , task_to_cmd (httpErrorToString >> MsgCourseSaveError) (\_ -> MsgCourseSaved) <|
+                        ext_task identity
+                            model.token
+                            []
+                            (courseBulkSetActivities
+                                (Maybe.withDefault "" <| Maybe.map Uuid.toString course.id)
+                                { create = create
+                                , update = update_
+                                }
+                            )
                     )
-            )
+
+                _ ->
+                    ( { model | state = FetchDone data act_components members }
+                    , task_to_cmd identity identity <|
+                        Task.succeed <|
+                            MsgCourseSaveError <|
+                                "Невозможно сохранить изменения: есть ошибки во введенных значениях ("
+                                    ++ String.fromInt (List.length validationErrors)
+                                    ++ ")"
+                    )
 
         ( MsgCourseSaveError e, FetchDone course act_components _ ) ->
             ( { model | save_error = Just e }, Cmd.none )
@@ -1796,7 +1815,7 @@ viewCourse data components_activity members model =
                                 ]
                                 [ text data.course.title ]
                             , div
-                                [ class "col ml-10"
+                                [ class "col ml-10", style "height" "0"
                                 ]
                                 buttons
                             ]
