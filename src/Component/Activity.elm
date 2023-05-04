@@ -1125,7 +1125,16 @@ viewWrite model =
                         (first Theme.default.colors.activities.general)
                         (second Theme.default.colors.activities.general)
                         [ div [ class "row mt-10" ]
-                            [ div [ class "field start-xs col-xs-12" ]
+                            [ div
+                                [ class <|
+                                    "field start-xs col-xs-12"
+                                        ++ (if errorTitle /= Nothing then
+                                                " error"
+
+                                            else
+                                                ""
+                                           )
+                                ]
                                 [ label [] [ text "Название" ]
                                 , input
                                     [ placeholder "Основное название темы"
@@ -1134,6 +1143,7 @@ viewWrite model =
                                     , onInput (MsgSetField FieldTitle)
                                     ]
                                     []
+                                , label [] [ text <| Maybe.withDefault "" errorTitle ]
                                 ]
                             ]
                         , div [ class "row mt-10" ]
@@ -1270,7 +1280,16 @@ viewWrite model =
                         (first Theme.default.colors.activities.task)
                         (second Theme.default.colors.activities.task)
                         [ div [ class "row mt-10" ]
-                            [ div [ class "field start-xs col-xs-12" ]
+                            [ div
+                                [ class <|
+                                    "field start-xs col-xs-12"
+                                        ++ (if errorTitle /= Nothing then
+                                                " error"
+
+                                            else
+                                                ""
+                                           )
+                                ]
                                 [ label [] [ text "Название" ]
                                 , input
                                     [ placeholder "Основное название темы"
@@ -1279,6 +1298,7 @@ viewWrite model =
                                     , onInput (MsgSetField FieldTitle)
                                     ]
                                     []
+                                , label [] [ text <| Maybe.withDefault "" errorTitle ]
                                 ]
                             ]
                         , div [ class "row mt-10" ]
