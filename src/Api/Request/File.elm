@@ -24,7 +24,7 @@ module Api.Request.File exposing
     )
 
 import Api
-import Api.Data
+import Api.Data exposing (..)
 import Dict
 import Http
 import Json.Decode
@@ -39,7 +39,7 @@ fileCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeFile data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeFile data_body)))
         Api.Data.fileDecoder
 
 
@@ -75,7 +75,7 @@ filePartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeFile data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeFile data_body)))
         Api.Data.fileDecoder
 
 
@@ -99,5 +99,5 @@ fileUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeFile data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeFile data_body)))
         Api.Data.fileDecoder

@@ -31,7 +31,7 @@ module Api.Request.Course exposing
     )
 
 import Api
-import Api.Data
+import Api.Data exposing (..)
 import Dict
 import Http
 import Json.Decode
@@ -46,7 +46,7 @@ courseBulkSetActivities id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeBulkSetActivities data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeBulkSetActivities data_body)))
         (Json.Decode.succeed ())
 
 
@@ -58,7 +58,7 @@ courseCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeCourse data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeCourse data_body)))
         Api.Data.courseDecoder
 
 
@@ -82,7 +82,7 @@ courseEnrollmentCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeCourseEnrollmentWrite data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeCourseEnrollmentWrite data_body)))
         Api.Data.courseEnrollmentWriteDecoder
 
 
@@ -118,7 +118,7 @@ courseEnrollmentPartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeCourseEnrollmentRead data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeCourseEnrollmentRead data_body)))
         Api.Data.courseEnrollmentReadDecoder
 
 
@@ -142,7 +142,7 @@ courseEnrollmentUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeCourseEnrollmentWrite data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeCourseEnrollmentWrite data_body)))
         Api.Data.courseEnrollmentWriteDecoder
 
 
@@ -166,7 +166,7 @@ coursePartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeCourse data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeCourse data_body)))
         Api.Data.courseDecoder
 
 
@@ -190,5 +190,5 @@ courseUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeCourse data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeCourse data_body)))
         Api.Data.courseDecoder

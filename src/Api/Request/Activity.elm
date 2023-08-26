@@ -25,7 +25,7 @@ module Api.Request.Activity exposing
     )
 
 import Api
-import Api.Data
+import Api.Data exposing (..)
 import Dict
 import Http
 import Json.Decode
@@ -40,7 +40,7 @@ activityCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeActivity data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeActivity data_body)))
         Api.Data.activityDecoder
 
 
@@ -64,7 +64,7 @@ activityImportForCourse data_body =
         []
         []
         []
-        (Just (Api.Data.encodeImportForCourse data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeImportForCourse data_body)))
         Api.Data.importForCourseResultDecoder
 
 
@@ -88,7 +88,7 @@ activityPartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeActivity data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeActivity data_body)))
         Api.Data.activityDecoder
 
 
@@ -112,5 +112,5 @@ activityUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeActivity data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeActivity data_body)))
         Api.Data.activityDecoder

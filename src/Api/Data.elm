@@ -26,6 +26,7 @@ module Api.Data exposing
     , CourseEnrollmentReadRole(..)
     , CourseEnrollmentWrite
     , CourseEnrollmentWriteRole(..)
+    , CourseMarking(..)
     , CourseType(..)
     , Department
     , EducationShallow
@@ -65,6 +66,7 @@ module Api.Data exposing
     , courseEnrollmentReadRoleVariants
     , courseEnrollmentWriteDecoder
     , courseEnrollmentWriteRoleVariants
+    , courseMarkingVariants
     , courseTypeVariants
     , departmentDecoder
     , educationShallowDecoder
@@ -237,10 +239,12 @@ type alias Course =
     , createdAt : Maybe Posix
     , updatedAt : Maybe Posix
     , type_ : Maybe CourseType
+    , marking : Maybe CourseMarking
     , title : String
     , description : Maybe String
     , forClass : Maybe String
     , forGroup : Maybe String
+    , archived : Maybe Posix
     , forSpecialization : Maybe Uuid
     , logo : Maybe Uuid
     , cover : Maybe Uuid
@@ -253,6 +257,7 @@ type CourseType
     | CourseTypeSEM
     | CourseTypeCLB
     | CourseTypeELE
+    | CourseTypeADM
 
 
 courseTypeVariants : List CourseType
@@ -262,6 +267,23 @@ courseTypeVariants =
     , CourseTypeSEM
     , CourseTypeCLB
     , CourseTypeELE
+    , CourseTypeADM
+    ]
+
+
+type CourseMarking
+    = CourseMarkingNOP
+    | CourseMarkingFVE
+    | CourseMarkingHND
+    | CourseMarkingCST
+
+
+courseMarkingVariants : List CourseMarking
+courseMarkingVariants =
+    [ CourseMarkingNOP
+    , CourseMarkingFVE
+    , CourseMarkingHND
+    , CourseMarkingCST
     ]
 
 
@@ -794,10 +816,12 @@ encodeCoursePairs model =
             , maybeEncode "created_at" Api.Time.encodeDateTime model.createdAt
             , maybeEncode "updated_at" Api.Time.encodeDateTime model.updatedAt
             , maybeEncode "type" encodeCourseType model.type_
+            , maybeEncode "marking" encodeCourseMarking model.marking
             , encode "title" Json.Encode.string model.title
             , maybeEncodeNullable "description" Json.Encode.string model.description
             , maybeEncode "for_class" Json.Encode.string model.forClass
             , maybeEncodeNullable "for_group" Json.Encode.string model.forGroup
+            , maybeEncodeNullable "archived" Api.Time.encodeDateTime model.archived
             , maybeEncodeNullable "for_specialization" Uuid.encode model.forSpecialization
             , maybeEncodeNullable "logo" Uuid.encode model.logo
             , maybeEncodeNullable "cover" Uuid.encode model.cover
@@ -824,10 +848,34 @@ stringFromCourseType model =
         CourseTypeELE ->
             "ELE"
 
+        CourseTypeADM ->
+            "ADM"
+
 
 encodeCourseType : CourseType -> Json.Encode.Value
 encodeCourseType =
     Json.Encode.string << stringFromCourseType
+
+
+stringFromCourseMarking : CourseMarking -> String
+stringFromCourseMarking model =
+    case model of
+        CourseMarkingNOP ->
+            "NOP"
+
+        CourseMarkingFVE ->
+            "FVE"
+
+        CourseMarkingHND ->
+            "HND"
+
+        CourseMarkingCST ->
+            "CST"
+
+
+encodeCourseMarking : CourseMarking -> Json.Encode.Value
+encodeCourseMarking =
+    Json.Encode.string << stringFromCourseMarking
 
 
 encodeCourseEnrollmentRead : CourseEnrollmentRead -> Json.Encode.Value
@@ -1712,10 +1760,12 @@ courseDecoder =
         |> maybeDecode "created_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> maybeDecode "type" courseTypeDecoder Nothing
+        |> maybeDecode "marking" courseMarkingDecoder Nothing
         |> decode "title" Json.Decode.string
         |> maybeDecodeNullable "description" Json.Decode.string Nothing
         |> maybeDecode "for_class" Json.Decode.string Nothing
         |> maybeDecodeNullable "for_group" Json.Decode.string Nothing
+        |> maybeDecodeNullable "archived" Api.Time.dateTimeDecoder Nothing
         |> maybeDecodeNullable "for_specialization" Uuid.decoder Nothing
         |> maybeDecodeNullable "logo" Uuid.decoder Nothing
         |> maybeDecodeNullable "cover" Uuid.decoder Nothing
@@ -1741,6 +1791,32 @@ courseTypeDecoder =
 
                     "ELE" ->
                         Json.Decode.succeed CourseTypeELE
+
+                    "ADM" ->
+                        Json.Decode.succeed CourseTypeADM
+
+                    other ->
+                        Json.Decode.fail <| "Unknown type: " ++ other
+            )
+
+
+courseMarkingDecoder : Json.Decode.Decoder CourseMarking
+courseMarkingDecoder =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\value ->
+                case value of
+                    "NOP" ->
+                        Json.Decode.succeed CourseMarkingNOP
+
+                    "FVE" ->
+                        Json.Decode.succeed CourseMarkingFVE
+
+                    "HND" ->
+                        Json.Decode.succeed CourseMarkingHND
+
+                    "CST" ->
+                        Json.Decode.succeed CourseMarkingCST
 
                     other ->
                         Json.Decode.fail <| "Unknown type: " ++ other

@@ -30,7 +30,7 @@ module Api.Request.Education exposing
     )
 
 import Api
-import Api.Data
+import Api.Data exposing (..)
 import Dict
 import Http
 import Json.Decode
@@ -46,7 +46,7 @@ educationCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeEducationShallow data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeEducationShallow data_body)))
         Api.Data.educationShallowDecoder
 
 
@@ -82,7 +82,7 @@ educationPartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeEducationShallow data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeEducationShallow data_body)))
         Api.Data.educationShallowDecoder
 
 
@@ -106,7 +106,7 @@ educationSpecializationCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeEducationSpecialization data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeEducationSpecialization data_body)))
         Api.Data.educationSpecializationDecoder
 
 
@@ -142,7 +142,7 @@ educationSpecializationPartialUpdate id_path data_body =
         [ ( "id", Uuid.toString id_path ) ]
         []
         []
-        (Just (Api.Data.encodeEducationSpecialization data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeEducationSpecialization data_body)))
         Api.Data.educationSpecializationDecoder
 
 
@@ -166,7 +166,7 @@ educationSpecializationUpdate id_path data_body =
         [ ( "id", Uuid.toString id_path ) ]
         []
         []
-        (Just (Api.Data.encodeEducationSpecialization data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeEducationSpecialization data_body)))
         Api.Data.educationSpecializationDecoder
 
 
@@ -178,5 +178,5 @@ educationUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeEducationShallow data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeEducationShallow data_body)))
         Api.Data.educationShallowDecoder

@@ -34,7 +34,7 @@ module Api.Request.User exposing
     )
 
 import Api
-import Api.Data
+import Api.Data exposing (..)
 import Dict
 import Http
 import Json.Decode
@@ -49,7 +49,7 @@ userCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeUserShallow data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeUserShallow data_body)))
         Api.Data.userShallowDecoder
 
 
@@ -97,7 +97,7 @@ userImportStudentsCsv data_body =
         []
         []
         []
-        (Just (Api.Data.encodeImportStudentsCSVRequest data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeImportStudentsCSVRequest data_body)))
         Api.Data.importStudentsCSVResultDecoder
 
 
@@ -121,7 +121,7 @@ userLogin data_body =
         []
         []
         []
-        (Just (Api.Data.encodeLogin data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeLogin data_body)))
         Api.Data.tokenDecoder
 
 
@@ -145,7 +145,7 @@ userPartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeUserShallow data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeUserShallow data_body)))
         Api.Data.userShallowDecoder
 
 
@@ -169,7 +169,7 @@ userResetPasswordComplete data_body =
         []
         []
         []
-        (Just (Api.Data.encodeResetPasswordComplete data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeResetPasswordComplete data_body)))
         (Json.Decode.succeed ())
 
 
@@ -181,7 +181,7 @@ userResetPasswordRequest data_body =
         []
         []
         []
-        (Just (Api.Data.encodeResetPasswordRequest data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeResetPasswordRequest data_body)))
         (Json.Decode.succeed ())
 
 
@@ -205,7 +205,7 @@ userSetEmail id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeSetEmail data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeSetEmail data_body)))
         (Json.Decode.succeed ())
 
 
@@ -217,7 +217,7 @@ userSetPassword id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeSetPassword data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeSetPassword data_body)))
         (Json.Decode.succeed ())
 
 
@@ -229,5 +229,5 @@ userUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeUserShallow data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeUserShallow data_body)))
         Api.Data.userShallowDecoder

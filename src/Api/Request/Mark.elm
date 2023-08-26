@@ -25,7 +25,7 @@ module Api.Request.Mark exposing
     )
 
 import Api
-import Api.Data
+import Api.Data exposing (..)
 import Dict
 import Http
 import Json.Decode
@@ -40,7 +40,7 @@ markCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeMark data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeMark data_body)))
         Api.Data.markDecoder
 
 
@@ -88,7 +88,7 @@ markPartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeMark data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeMark data_body)))
         Api.Data.markDecoder
 
 
@@ -112,5 +112,5 @@ markUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeMark data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeMark data_body)))
         Api.Data.markDecoder

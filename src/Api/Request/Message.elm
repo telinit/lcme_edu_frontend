@@ -24,7 +24,7 @@ module Api.Request.Message exposing
     )
 
 import Api
-import Api.Data
+import Api.Data exposing (..)
 import Dict
 import Http
 import Json.Decode
@@ -39,7 +39,7 @@ messageCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeMessage data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeMessage data_body)))
         Api.Data.messageDecoder
 
 
@@ -75,7 +75,7 @@ messagePartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeMessage data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeMessage data_body)))
         Api.Data.messageDecoder
 
 
@@ -99,5 +99,5 @@ messageUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeMessage data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeMessage data_body)))
         Api.Data.messageDecoder

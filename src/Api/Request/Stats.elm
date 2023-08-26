@@ -17,7 +17,7 @@
 module Api.Request.Stats exposing (statsCounters)
 
 import Api
-import Api.Data
+import Api.Data exposing (..)
 import Dict
 import Http
 import Json.Decode

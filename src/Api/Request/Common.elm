@@ -30,7 +30,7 @@ module Api.Request.Common exposing
     )
 
 import Api
-import Api.Data
+import Api.Data exposing (..)
 import Dict
 import Http
 import Json.Decode
@@ -46,7 +46,7 @@ commonDepartmentCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeDepartment data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeDepartment data_body)))
         Api.Data.departmentDecoder
 
 
@@ -82,7 +82,7 @@ commonDepartmentPartialUpdate id_path data_body =
         [ ( "id", Uuid.toString id_path ) ]
         []
         []
-        (Just (Api.Data.encodeDepartment data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeDepartment data_body)))
         Api.Data.departmentDecoder
 
 
@@ -106,7 +106,7 @@ commonDepartmentUpdate id_path data_body =
         [ ( "id", Uuid.toString id_path ) ]
         []
         []
-        (Just (Api.Data.encodeDepartment data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeDepartment data_body)))
         Api.Data.departmentDecoder
 
 
@@ -118,7 +118,7 @@ commonOrganizationCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeOrganization data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeOrganization data_body)))
         Api.Data.organizationDecoder
 
 
@@ -154,7 +154,7 @@ commonOrganizationPartialUpdate id_path data_body =
         [ ( "id", Uuid.toString id_path ) ]
         []
         []
-        (Just (Api.Data.encodeOrganization data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeOrganization data_body)))
         Api.Data.organizationDecoder
 
 
@@ -178,5 +178,5 @@ commonOrganizationUpdate id_path data_body =
         [ ( "id", Uuid.toString id_path ) ]
         []
         []
-        (Just (Api.Data.encodeOrganization data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeOrganization data_body)))
         Api.Data.organizationDecoder

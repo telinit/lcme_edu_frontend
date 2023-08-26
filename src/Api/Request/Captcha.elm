@@ -20,7 +20,7 @@ module Api.Request.Captcha exposing
     )
 
 import Api
-import Api.Data
+import Api.Data exposing (..)
 import Dict
 import Http
 import Json.Decode

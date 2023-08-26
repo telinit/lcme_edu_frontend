@@ -17,7 +17,7 @@ module Api exposing
     , withTracker
     )
 
-import Http
+import Http exposing (Body)
 import Json.Decode
 import Json.Encode
 import Task
@@ -38,7 +38,7 @@ type Request a
         }
 
 
-request : String -> String -> List ( String, String ) -> List ( String, Maybe String ) -> List ( String, Maybe String ) -> Maybe Json.Encode.Value -> Json.Decode.Decoder a -> Request a
+request : String -> String -> List ( String, String ) -> List ( String, Maybe String ) -> List ( String, Maybe String ) -> Maybe Body -> Json.Decode.Decoder a -> Request a
 request method path pathParams queryParams headerParams body decoder =
     Request
         { method = method
@@ -46,7 +46,7 @@ request method path pathParams queryParams headerParams body decoder =
         , basePath = "https://edu.lnmo.ru/api"
         , pathParams = interpolatePath path pathParams
         , queryParams = queries queryParams
-        , body = Maybe.withDefault Http.emptyBody (Maybe.map Http.jsonBody body)
+        , body = Maybe.withDefault Http.emptyBody body
         , decoder = decoder
         , timeout = Nothing
         , tracker = Nothing

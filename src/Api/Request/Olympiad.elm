@@ -30,7 +30,7 @@ module Api.Request.Olympiad exposing
     )
 
 import Api
-import Api.Data
+import Api.Data exposing (..)
 import Dict
 import Http
 import Json.Decode
@@ -45,7 +45,7 @@ olympiadCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeOlympiad data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeOlympiad data_body)))
         Api.Data.olympiadDecoder
 
 
@@ -81,7 +81,7 @@ olympiadPartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeOlympiad data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeOlympiad data_body)))
         Api.Data.olympiadDecoder
 
 
@@ -93,7 +93,7 @@ olympiadParticipationCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeOlympiadParticipation data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeOlympiadParticipation data_body)))
         Api.Data.olympiadParticipationDecoder
 
 
@@ -129,7 +129,7 @@ olympiadParticipationPartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeOlympiadParticipation data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeOlympiadParticipation data_body)))
         Api.Data.olympiadParticipationDecoder
 
 
@@ -153,7 +153,7 @@ olympiadParticipationUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeOlympiadParticipation data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeOlympiadParticipation data_body)))
         Api.Data.olympiadParticipationDecoder
 
 
@@ -177,5 +177,5 @@ olympiadUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeOlympiad data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeOlympiad data_body)))
         Api.Data.olympiadDecoder

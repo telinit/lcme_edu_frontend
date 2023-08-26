@@ -24,7 +24,7 @@ module Api.Request.Unread exposing
     )
 
 import Api
-import Api.Data
+import Api.Data exposing (..)
 import Dict
 import Http
 import Json.Decode
@@ -39,7 +39,7 @@ unreadCreate data_body =
         []
         []
         []
-        (Just (Api.Data.encodeUnreadObject data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeUnreadObject data_body)))
         Api.Data.unreadObjectDecoder
 
 
@@ -75,7 +75,7 @@ unreadPartialUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeUnreadObject data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeUnreadObject data_body)))
         Api.Data.unreadObjectDecoder
 
 
@@ -99,5 +99,5 @@ unreadUpdate id_path data_body =
         [ ( "id", identity id_path ) ]
         []
         []
-        (Just (Api.Data.encodeUnreadObject data_body))
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeUnreadObject data_body)))
         Api.Data.unreadObjectDecoder
