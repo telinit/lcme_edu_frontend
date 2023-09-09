@@ -3,6 +3,7 @@ src/Api/Request/Activity.elm
 src/Api/Request/Captcha.elm
 src/Api/Request/Common.elm
 src/Api/Request/Course.elm
+src/Api/Request/Download.elm
 src/Api/Request/Education.elm
 src/Api/Request/File.elm
 src/Api/Request/Mark.elm

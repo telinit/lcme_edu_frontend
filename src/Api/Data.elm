@@ -33,6 +33,7 @@ module Api.Data exposing
     , EducationSpecialization
     , ErrorMessage
     , File
+    , FileQuota
     , ImportForCourse
     , ImportForCourseResult
     , ImportForCourseResultObject
@@ -83,6 +84,7 @@ module Api.Data exposing
     , encodeEducationSpecialization
     , encodeErrorMessage
     , encodeFile
+    , encodeFileQuota
     , encodeImportForCourse
     , encodeImportForCourseResult
     , encodeImportForCourseResultObject
@@ -104,6 +106,7 @@ module Api.Data exposing
     , encodeUserShallow
     , errorMessageDecoder
     , fileDecoder
+    , fileQuotaDecoder
     , importForCourseDecoder
     , importForCourseResultDecoder
     , importForCourseResultObjectDecoder
@@ -393,6 +396,14 @@ type alias File =
     , hash : String
     , size : Int
     , mimeType : String
+    , owner : Maybe Uuid
+    , parent : Maybe Uuid
+    }
+
+
+type alias FileQuota =
+    { used : Int
+    , total : Int
     }
 
 
@@ -597,6 +608,7 @@ type alias UserDeep =
     , middleName : Maybe String
     , birthDate : Maybe Posix
     , avatar : Maybe String
+    , fileQuota : Maybe Int
     }
 
 
@@ -619,6 +631,7 @@ type alias UserShallow =
     , middleName : Maybe String
     , birthDate : Maybe Posix
     , avatar : Maybe String
+    , fileQuota : Maybe Int
     , children : Maybe (List Uuid)
     }
 
@@ -1097,6 +1110,29 @@ encodeFilePairs model =
             , encode "hash" Json.Encode.string model.hash
             , encode "size" Json.Encode.int model.size
             , encode "mime_type" Json.Encode.string model.mimeType
+            , maybeEncodeNullable "owner" Uuid.encode model.owner
+            , maybeEncodeNullable "parent" Uuid.encode model.parent
+            ]
+    in
+    pairs
+
+
+encodeFileQuota : FileQuota -> Json.Encode.Value
+encodeFileQuota =
+    encodeObject << encodeFileQuotaPairs
+
+
+encodeFileQuotaWithTag : ( String, String ) -> FileQuota -> Json.Encode.Value
+encodeFileQuotaWithTag ( tagField, tag ) model =
+    encodeObject (encodeFileQuotaPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeFileQuotaPairs : FileQuota -> List EncodedField
+encodeFileQuotaPairs model =
+    let
+        pairs =
+            [ encode "used" Json.Encode.int model.used
+            , encode "total" Json.Encode.int model.total
             ]
     in
     pairs
@@ -1587,6 +1623,7 @@ encodeUserDeepPairs model =
             , maybeEncodeNullable "middle_name" Json.Encode.string model.middleName
             , maybeEncodeNullable "birth_date" Api.Time.encodeDate model.birthDate
             , maybeEncodeNullable "avatar" Json.Encode.string model.avatar
+            , maybeEncodeNullable "file_quota" Json.Encode.int model.fileQuota
             ]
     in
     pairs
@@ -1624,6 +1661,7 @@ encodeUserShallowPairs model =
             , maybeEncodeNullable "middle_name" Json.Encode.string model.middleName
             , maybeEncodeNullable "birth_date" Api.Time.encodeDate model.birthDate
             , maybeEncodeNullable "avatar" Json.Encode.string model.avatar
+            , maybeEncodeNullable "file_quota" Json.Encode.int model.fileQuota
             , maybeEncode "children" (Json.Encode.list Uuid.encode) model.children
             ]
     in
@@ -1951,6 +1989,15 @@ fileDecoder =
         |> decode "hash" Json.Decode.string
         |> decode "size" Json.Decode.int
         |> decode "mime_type" Json.Decode.string
+        |> maybeDecodeNullable "owner" Uuid.decoder Nothing
+        |> maybeDecodeNullable "parent" Uuid.decoder Nothing
+
+
+fileQuotaDecoder : Json.Decode.Decoder FileQuota
+fileQuotaDecoder =
+    Json.Decode.succeed FileQuota
+        |> decode "used" Json.Decode.int
+        |> decode "total" Json.Decode.int
 
 
 importForCourseDecoder : Json.Decode.Decoder ImportForCourse
@@ -2193,6 +2240,7 @@ userDeepDecoder =
         |> maybeDecodeNullable "middle_name" Json.Decode.string Nothing
         |> maybeDecodeNullable "birth_date" Api.Time.dateDecoder Nothing
         |> maybeDecodeNullable "avatar" Json.Decode.string Nothing
+        |> maybeDecodeNullable "file_quota" Json.Decode.int Nothing
 
 
 userShallowDecoder : Json.Decode.Decoder UserShallow
@@ -2216,6 +2264,7 @@ userShallowDecoder =
         |> maybeDecodeNullable "middle_name" Json.Decode.string Nothing
         |> maybeDecodeNullable "birth_date" Api.Time.dateDecoder Nothing
         |> maybeDecodeNullable "avatar" Json.Decode.string Nothing
+        |> maybeDecodeNullable "file_quota" Json.Decode.int Nothing
         |> maybeDecode "children" (Json.Decode.list Uuid.decoder) Nothing
 
 

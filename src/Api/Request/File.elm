@@ -15,32 +15,23 @@
 
 
 module Api.Request.File exposing
-    ( fileCreate
-    , fileDelete
+    ( fileDelete
     , fileList
     , filePartialUpdate
+    , fileQuota
     , fileRead
     , fileUpdate
+    , fileUpload
     )
 
 import Api
 import Api.Data exposing (..)
 import Dict
+import File exposing (File)
 import Http
 import Json.Decode
 import Json.Encode
-
-
-fileCreate : Api.Data.File -> Api.Request Api.Data.File
-fileCreate data_body =
-    Api.request
-        "POST"
-        "/file/"
-        []
-        []
-        []
-        (Maybe.map Http.jsonBody (Just (Api.Data.encodeFile data_body)))
-        Api.Data.fileDecoder
+import Uuid exposing (Uuid)
 
 
 fileDelete : String -> Api.Request ()
@@ -79,6 +70,18 @@ filePartialUpdate id_path data_body =
         Api.Data.fileDecoder
 
 
+fileQuota : Api.Request Api.Data.FileQuota
+fileQuota =
+    Api.request
+        "GET"
+        "/file/quota/"
+        []
+        []
+        []
+        Nothing
+        Api.Data.fileQuotaDecoder
+
+
 fileRead : String -> Api.Request Api.Data.File
 fileRead id_path =
     Api.request
@@ -100,4 +103,16 @@ fileUpdate id_path data_body =
         []
         []
         (Maybe.map Http.jsonBody (Just (Api.Data.encodeFile data_body)))
+        Api.Data.fileDecoder
+
+
+fileUpload : File -> Maybe Uuid -> Api.Request Api.Data.File
+fileUpload file parentFileId =
+    Api.request
+        "POST"
+        "/file/upload/"
+        []
+        []
+        []
+        (Just <| Http.multipartBody <| List.filterMap identity [ Just <| Http.filePart "file" file, Maybe.map (Http.stringPart "parentFileId" Uuid.toString) parentFileId ])
         Api.Data.fileDecoder
