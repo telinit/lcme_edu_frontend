@@ -106,7 +106,7 @@ fileUpdate id_path data_body =
         Api.Data.fileDecoder
 
 
-fileUpload : File -> Maybe Uuid -> Api.Request Api.Data.File
+fileUpload : File.File -> Maybe Uuid -> Api.Request Api.Data.File
 fileUpload file parentFileId =
     Api.request
         "POST"
@@ -114,5 +114,5 @@ fileUpload file parentFileId =
         []
         []
         []
-        (Just <| Http.multipartBody <| List.filterMap identity [ Just <| Http.filePart "file" file, Maybe.map (Http.stringPart "parentFileId" Uuid.toString) parentFileId ])
+        (Just <| Http.multipartBody <| List.filterMap identity [ Just <| Http.filePart "file" file, Maybe.map (Http.stringPart "parentFileId" << Uuid.toString) parentFileId ])
         Api.Data.fileDecoder

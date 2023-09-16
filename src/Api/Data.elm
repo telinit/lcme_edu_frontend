@@ -124,6 +124,7 @@ module Api.Data exposing
     , setEmailDecoder
     , setPasswordDecoder
     , stringFromActivityFinalType
+    , stringFromCourseEnrollmentReadRole
     , tokenDecoder
     , unreadObjectDecoder
     , unreadObjectTypeVariants

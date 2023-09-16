@@ -43,7 +43,7 @@ request method path pathParams queryParams headerParams body decoder =
     Request
         { method = method
         , headers = headers headerParams
-        , basePath = "https://edu.lnmo.ru/api"
+        , basePath = "/api"
         , pathParams = interpolatePath path pathParams
         , queryParams = queries queryParams
         , body = Maybe.withDefault Http.emptyBody body
