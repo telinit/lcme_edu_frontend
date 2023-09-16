@@ -12,6 +12,7 @@ import Iso8601 exposing (fromTime, toTime)
 import Json.Decode as JD
 import Random exposing (Generator)
 import Task exposing (Task)
+import Theme
 import Time exposing (Month(..), Zone)
 import Tuple exposing (first, second)
 import Uuid exposing (Uuid)
@@ -100,7 +101,7 @@ onClickPreventStop msg =
 
 
 link_span attrs body =
-    span ([ style "color" "#4183C4", style "cursor" "pointer" ] ++ attrs) body
+    span ([ style "color" Theme.default.colors.ui.link, style "cursor" "pointer" ] ++ attrs) body
 
 
 arrayUpdate : Int -> (a -> a) -> Array a -> Array a
@@ -330,6 +331,7 @@ user_deep_to_shallow userDeep =
     , children = Just <| List.filterMap .id userDeep.children
     , currentClass = userDeep.currentClass
     , currentSpec = userDeep.currentSpec
+    , fileQuota = userDeep.fileQuota
     }
 
 
@@ -685,3 +687,21 @@ arrayFind f a =
                     Nothing
     in
     arrayFind2 0
+
+
+sendMessage : msg -> Cmd msg
+sendMessage msg =
+    Task.perform (always msg) (Task.succeed ())
+
+
+listLast : List a -> Maybe a
+listLast l =
+    case l of
+        [] ->
+            Nothing
+
+        [ x ] ->
+            Just x
+
+        _ :: b ->
+            listLast b

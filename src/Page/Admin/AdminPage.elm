@@ -6,12 +6,14 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Page.Admin.ExportMarks as ExportMarks
 import Page.Admin.ImportStudentsCSV as ImportStudentsCSV
+import Page.Admin.Test as Test
 
 
 type Subpage
     = SubpageIndex
     | SubpageImportStudents (Maybe ImportStudentsCSV.Model)
     | SubpageExportMarks (Maybe ExportMarks.Model)
+    | SubpageTest (Maybe Test.Model)
 
 
 type MenuItemType
@@ -24,6 +26,7 @@ type Msg
     = MsgChangeSubpage Subpage
     | MsgSubpageImportStudents ImportStudentsCSV.Msg
     | MsgSubpageExportMarks ExportMarks.Msg
+    | MsgSubpageTest Test.Msg
 
 
 type alias Model =
@@ -71,6 +74,18 @@ update msg model =
                             in
                             ( { model | currentSubpage = SubpageExportMarks (Just m) }, Cmd.map MsgSubpageExportMarks c )
 
+                SubpageTest maybeModel ->
+                    case maybeModel of
+                        Just _ ->
+                            ignore
+
+                        Nothing ->
+                            let
+                                ( m, c ) =
+                                    Test.init model.token
+                            in
+                            ( { model | currentSubpage = SubpageTest (Just m) }, Cmd.map MsgSubpageTest c )
+
         MsgSubpageImportStudents msg_ ->
             case model.currentSubpage of
                 SubpageImportStudents (Just model_) ->
@@ -95,6 +110,18 @@ update msg model =
                 _ ->
                     ignore
 
+        MsgSubpageTest msg_ ->
+            case model.currentSubpage of
+                SubpageTest (Just model_) ->
+                    let
+                        ( m, c ) =
+                            Test.update msg_ model_
+                    in
+                    ( { model | currentSubpage = SubpageTest (Just m) }, Cmd.map MsgSubpageTest c )
+
+                _ ->
+                    ignore
+
 
 viewMenu : Model -> Html Msg
 viewMenu model =
@@ -103,6 +130,7 @@ viewMenu model =
         items =
             [ { type_ = MenuItemTypeSubpage (SubpageImportStudents Nothing), label = "Импорт учащихся", icon = "cog" }
             , { type_ = MenuItemTypeSubpage (SubpageExportMarks Nothing), label = "Экспорт оценок", icon = "cog" }
+            , { type_ = MenuItemTypeSubpage (SubpageTest Nothing), label = "Test page", icon = "cog" }
             , { type_ = MenuItemTypeExternalLink "/djadmin", label = "Админка Django", icon = "cog" }
             , { type_ = MenuItemTypeExternalLink "/swagger", label = "Swagger API", icon = "cog" }
             ]
@@ -165,6 +193,35 @@ viewSubpage model =
 
                 Nothing ->
                     loading
+
+        SubpageTest maybeModel ->
+            case maybeModel of
+                Just model_ ->
+                    Html.map MsgSubpageTest <| Test.view model_
+
+                Nothing ->
+                    loading
+
+
+subscribtions : Model -> Sub Msg
+subscribtions model =
+    case model.currentSubpage of
+        SubpageIndex ->
+            Sub.none
+
+        SubpageImportStudents maybeModel ->
+            Sub.none
+
+        SubpageExportMarks maybeModel ->
+            Sub.none
+
+        SubpageTest maybeModel ->
+            case maybeModel of
+                Just model_ ->
+                    Sub.map MsgSubpageTest (Test.subscriptions model_)
+
+                Nothing ->
+                    Sub.none
 
 
 view : Model -> Html Msg
