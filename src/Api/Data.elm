@@ -40,6 +40,7 @@ module Api.Data exposing
     , ImportStudentsCSVRequest
     , ImportStudentsCSVResult
     , Login
+    , MakeDir
     , Mark
     , Message
     , MessageType(..)
@@ -91,6 +92,7 @@ module Api.Data exposing
     , encodeImportStudentsCSVRequest
     , encodeImportStudentsCSVResult
     , encodeLogin
+    , encodeMakeDir
     , encodeMark
     , encodeMessage
     , encodeOlympiad
@@ -113,6 +115,7 @@ module Api.Data exposing
     , importStudentsCSVRequestDecoder
     , importStudentsCSVResultDecoder
     , loginDecoder
+    , makeDirDecoder
     , markDecoder
     , messageDecoder
     , messageTypeVariants
@@ -440,6 +443,12 @@ type alias ImportStudentsCSVResult =
 type alias Login =
     { username : String
     , password : String
+    }
+
+
+type alias MakeDir =
+    { name : String
+    , parent : Maybe Uuid
     }
 
 
@@ -1264,6 +1273,27 @@ encodeLoginPairs model =
     pairs
 
 
+encodeMakeDir : MakeDir -> Json.Encode.Value
+encodeMakeDir =
+    encodeObject << encodeMakeDirPairs
+
+
+encodeMakeDirWithTag : ( String, String ) -> MakeDir -> Json.Encode.Value
+encodeMakeDirWithTag ( tagField, tag ) model =
+    encodeObject (encodeMakeDirPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeMakeDirPairs : MakeDir -> List EncodedField
+encodeMakeDirPairs model =
+    let
+        pairs =
+            [ encode "name" Json.Encode.string model.name
+            , maybeEncode "parent" Uuid.encode model.parent
+            ]
+    in
+    pairs
+
+
 encodeMark : Mark -> Json.Encode.Value
 encodeMark =
     encodeObject << encodeMarkPairs
@@ -2040,6 +2070,13 @@ loginDecoder =
     Json.Decode.succeed Login
         |> decode "username" Json.Decode.string
         |> decode "password" Json.Decode.string
+
+
+makeDirDecoder : Json.Decode.Decoder MakeDir
+makeDirDecoder =
+    Json.Decode.succeed MakeDir
+        |> decode "name" Json.Decode.string
+        |> maybeDecode "parent" Uuid.decoder Nothing
 
 
 markDecoder : Json.Decode.Decoder Mark

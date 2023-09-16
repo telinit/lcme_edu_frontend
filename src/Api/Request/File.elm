@@ -17,6 +17,7 @@
 module Api.Request.File exposing
     ( fileDelete
     , fileList
+    , fileMkdir
     , filePartialUpdate
     , fileQuota
     , fileRead
@@ -56,6 +57,18 @@ fileList =
         []
         Nothing
         (Json.Decode.list Api.Data.fileDecoder)
+
+
+fileMkdir : Api.Data.MakeDir -> Api.Request Api.Data.File
+fileMkdir data_body =
+    Api.request
+        "POST"
+        "/file/mkdir/"
+        []
+        []
+        []
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeMakeDir data_body)))
+        Api.Data.fileDecoder
 
 
 filePartialUpdate : String -> Api.Data.File -> Api.Request Api.Data.File
