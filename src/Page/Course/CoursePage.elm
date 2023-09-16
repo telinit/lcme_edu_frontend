@@ -1,30 +1,31 @@
 module Page.Course.CoursePage exposing (..)
 
-import Api exposing (ext_task, task, withToken)
+import Api exposing (ext_task)
 import Api.Data exposing (Activity, ActivityContentType(..), Course, CourseEnrollmentRead, CourseEnrollmentReadRole(..), EducationSpecialization, ImportForCourseResult, UserDeep)
 import Api.Request.Activity exposing (activityImportForCourse, activityList)
-import Api.Request.Course exposing (courseBulkSetActivities, courseEnrollmentList, courseRead)
-import Api.Request.Education exposing (educationSpecializationList, educationSpecializationRead)
+import Api.Request.Course exposing (courseEnrollmentList, courseRead)
+import Api.Request.Education exposing (educationSpecializationList)
 import Component.Activity as CA
-import Component.FileInput as FI
 import Component.MessageBox as MessageBox exposing (Type(..))
 import Component.Modal as Modal
 import Component.MultiTask as MultiTask exposing (Msg(..))
+import Component.UI.Breadcrumb as Breadcrumb
+import Component.UI.Common exposing (Action(..))
+import Component.UI.FileInput as FI
 import Csv.Parser
-import Dict exposing (Dict)
 import File
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Http exposing (Error(..))
 import List
+import Page.Course.CourseHeader as Header
 import Page.Course.CourseMembers as CourseMembers
-import Page.CourseListPage exposing (empty_to_nothing)
 import Set
 import String
 import Task
 import Time exposing (Posix)
-import Util exposing (assoc_update, get_id_str, httpErrorToString, list_insert_at, maybeFilter, task_to_cmd, user_full_name, zip)
+import Util exposing (assoc_update, get_id_str, httpErrorToString, list_insert_at, zip)
 import Uuid exposing (Uuid)
 
 
@@ -55,7 +56,7 @@ type alias FetchedData =
 
 type State
     = Fetching (MultiTask.Model Http.Error FetchResult)
-    | FetchDone FetchedData (List ( Int, CA.Model )) CourseMembers.Model
+    | FetchDone FetchedData (List ( Int, CA.Model )) CourseMembers.Model Header.Model
     | FetchFailed String
 
 
@@ -65,16 +66,11 @@ type Msg
     | MsgCloseMembers
     | MsgCloseActivitiesImport
     | MsgOnClickImportActivities
-    | MsgOnClickEdit
-    | MsgOnClickEditCancel
-    | MsgOnClickSave
     | MsgOnClickAddGen
     | MsgOnClickAddFin
     | MsgOnClickAddTsk
     | MsgOnClickAddTxt
     | MsgOnClickAddBefore Int (Maybe Posix)
-    | MsgCourseSaved
-    | MsgCourseSaveError String
     | MsgActivity Int CA.Msg
     | MsgFileInputImport FI.Msg
     | MsgOnInputActivityCSVSep String
@@ -87,6 +83,8 @@ type Msg
     | MsgOnClickOpenPrimitiveActImport
     | MsgCloseActivitiesImportPrimitive
     | MsgCourseMembers CourseMembers.Msg
+    | MsgHeader Header.Msg
+    | MsgDoReloadCourse
 
 
 type FetchResult
@@ -125,7 +123,6 @@ type alias Model =
     , user : UserDeep
     , show_members : Bool
     , edit_mode : EditMode
-    , save_error : Maybe String
     , is_staff : Bool
     , teaching_here : Bool
     , managing_here : Bool
@@ -165,7 +162,6 @@ init token course_id user =
       , user = user
       , show_members = False
       , edit_mode = EditOff
-      , save_error = Nothing
       , is_staff =
             not <|
                 Set.isEmpty <|
@@ -184,9 +180,18 @@ init token course_id user =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     case model.state of
-        FetchDone _ id_comps _ ->
-            Sub.batch <|
-                List.map (\( k, v ) -> Sub.map (MsgActivity k) <| CA.subscriptions v) id_comps
+        FetchDone _ id_comps model_members model_header ->
+            let
+                subs_act =
+                    List.map (\( k, v ) -> Sub.map (MsgActivity k) <| CA.subscriptions v) id_comps
+
+                sub_header =
+                    Sub.map MsgHeader <| Header.subscribtions model_header
+
+                sub_members =
+                    Sub.map MsgCourseMembers <| CourseMembers.subscriptions model_members
+            in
+            Sub.batch <| subs_act ++ [ sub_header, sub_members ]
 
         _ ->
             Sub.none
@@ -216,10 +221,10 @@ fixOrder model =
                     ( k, CA.setUpDownControls up down <| CA.setOrder (j + 1) v ) :: fixOrder_ (j + 1) tl
     in
     case model.state of
-        FetchDone c acts members ->
+        FetchDone c acts model_members model_header ->
             { model
                 | state =
-                    FetchDone c (fixOrder_ 0 acts) members
+                    FetchDone c (fixOrder_ 0 acts) model_members model_header
             }
 
         _ ->
@@ -267,8 +272,8 @@ setEditMode edt model =
     let
         new_state =
             case model.state of
-                FetchDone course acts members ->
-                    FetchDone course (List.map (\( k, v ) -> ( k, CA.setEditable edt v )) acts) members
+                FetchDone course acts model_members model_header ->
+                    FetchDone course (List.map (\( k, v ) -> ( k, CA.setEditable edt v )) acts) model_members model_header
 
                 _ ->
                     model.state
@@ -711,16 +716,24 @@ update msg model =
 
                 ( mMembers, cMembers ) =
                     CourseMembers.init model.token course.id enrollments teaching_here (model.is_staff || managing_here)
+
+                ( mHeader, cHeader ) =
+                    Header.init model.token
+                        (teaching_here || (model.is_staff || managing_here))
+                        { course = Just course
+                        , teachers = Just <| List.filter (.role >> (==) CourseEnrollmentReadRoleT) enrollments
+                        , specs = Nothing
+                        }
             in
             ( { model
                 | state =
-                    FetchDone data pairs_id_comp mMembers
+                    FetchDone data pairs_id_comp mMembers mHeader
                 , activity_component_pk = model.activity_component_pk + len
                 , teaching_here = teaching_here
                 , managing_here = managing_here
                 , observing_here = observing_here
               }
-            , Cmd.batch (cmdsAct ++ [ Cmd.map MsgCourseMembers cMembers ])
+            , Cmd.batch (cmdsAct ++ [ Cmd.map MsgCourseMembers cMembers, Cmd.map MsgHeader cHeader ])
             )
     in
     case ( msg, model.state ) of
@@ -747,16 +760,7 @@ update msg model =
         ( MsgCloseMembers, _ ) ->
             ( { model | show_members = False }, Cmd.none )
 
-        ( MsgOnClickEdit, FetchDone _ _ _ ) ->
-            ( fixOrder <|
-                setEditMode True
-                    { model
-                        | edit_mode = EditOn AddNone False
-                    }
-            , Cmd.none
-            )
-
-        ( MsgActivity id msg_, FetchDone course act_components members ) ->
+        ( MsgActivity id msg_, FetchDone course act_components model_members model_header ) ->
             case
                 List.head <| List.filter (Tuple.first >> (==) id) act_components
             of
@@ -776,7 +780,8 @@ update msg model =
                                                     (activityMoveUp id <|
                                                         assoc_update id m act_components
                                                     )
-                                                    members
+                                                    model_members
+                                                    model_header
                                         }
                                     , Cmd.batch [ Cmd.map (MsgActivity id) c, CA.doScrollInto m ]
                                     )
@@ -789,7 +794,8 @@ update msg model =
                                                     (activityMoveDown id <|
                                                         assoc_update id m act_components
                                                     )
-                                                    members
+                                                    model_members
+                                                    model_header
                                         }
                                     , Cmd.batch [ Cmd.map (MsgActivity id) c, CA.doScrollInto m ]
                                     )
@@ -801,7 +807,8 @@ update msg model =
                                                 FetchDone
                                                     course
                                                     (List.filter (Tuple.first >> (/=) id) act_components)
-                                                    members
+                                                    model_members
+                                                    model_header
                                         }
                                     , Cmd.none
                                     )
@@ -811,7 +818,8 @@ update msg model =
                                         | state =
                                             FetchDone course
                                                 (assoc_update id m act_components)
-                                                members
+                                                model_members
+                                                model_header
                                       }
                                     , Cmd.map (MsgActivity id) c
                                     )
@@ -876,7 +884,7 @@ update msg model =
         ( MsgOnClickAddBefore i Nothing, _ ) ->
             ( model, Task.perform (Just >> MsgOnClickAddBefore i) <| Time.now )
 
-        ( MsgOnClickAddBefore i (Just t), FetchDone ({ course, spec, enrollments, activities } as data) act_components members ) ->
+        ( MsgOnClickAddBefore i (Just t), FetchDone ({ course, spec, enrollments, activities } as data) act_components model_members model_header ) ->
             let
                 act =
                     case ( model.edit_mode, course.id ) of
@@ -1021,90 +1029,11 @@ update msg model =
                                             ( model.activity_component_pk, CA.setEditable True <| CA.revalidate m )
                                             act_components
                                         )
-                                        members
+                                        model_members
+                                        model_header
                             }
                     , Cmd.map (MsgActivity model.activity_component_pk) c
                     )
-
-        ( MsgOnClickEditCancel, FetchDone ({ course, spec, enrollments, activities } as data) _ _ ) ->
-            let
-                ( m, c ) =
-                    parse_course data
-            in
-            ( setEditMode False m, c )
-
-        ( MsgOnClickSave, FetchDone ({ course, spec, enrollments, activities } as data) act_components members ) ->
-            let
-                ac_to_tuple : CA.Model -> Maybe ( String, Activity )
-                ac_to_tuple c =
-                    case CA.getActivity c of
-                        Just act ->
-                            case act.id of
-                                Just id ->
-                                    Just ( Uuid.toString id, act )
-
-                                Nothing ->
-                                    Nothing
-
-                        Nothing ->
-                            Nothing
-
-                create : List Activity
-                create =
-                    List.filterMap
-                        (Tuple.second
-                            >> CA.getActivity
-                            >> maybeFilter (.id >> (==) Nothing)
-                        )
-                        act_components
-
-                update_ : Dict String Activity
-                update_ =
-                    Dict.fromList <| List.filterMap (Tuple.second >> ac_to_tuple) act_components
-
-                validationErrors : List ( CA.FieldName, CA.FieldError )
-                validationErrors =
-                    List.concat <|
-                        List.map
-                            (\( _, a ) -> Dict.toList <| CA.getValidationErrors <| CA.revalidate a)
-                            act_components
-            in
-            case validationErrors of
-                [] ->
-                    ( model
-                    , task_to_cmd (httpErrorToString >> MsgCourseSaveError) (\_ -> MsgCourseSaved) <|
-                        ext_task identity
-                            model.token
-                            []
-                            (courseBulkSetActivities
-                                (Maybe.withDefault "" <| Maybe.map Uuid.toString course.id)
-                                { create = create
-                                , update = update_
-                                }
-                            )
-                    )
-
-                _ ->
-                    ( { model | state = FetchDone data act_components members }
-                    , task_to_cmd identity identity <|
-                        Task.succeed <|
-                            MsgCourseSaveError <|
-                                "Невозможно сохранить изменения: есть ошибки во введенных значениях ("
-                                    ++ String.fromInt (List.length validationErrors)
-                                    ++ ")"
-                    )
-
-        ( MsgCourseSaveError e, FetchDone course act_components _ ) ->
-            ( { model | save_error = Just e }, Cmd.none )
-
-        ( MsgCourseSaved, FetchDone ({ course, spec, enrollments, activities } as data) act_components _ ) ->
-            let
-                ( m, c ) =
-                    init model.token (Maybe.withDefault "" <| Maybe.map Uuid.toString course.id) model.user
-            in
-            ( setEditMode False m
-            , c
-            )
 
         -- TODO: update course?
         ( MsgOnClickImportActivities, _ ) ->
@@ -1148,7 +1077,7 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        ( MsgOnClickActivitiesImport, FetchDone ({ course, spec, enrollments, activities } as data) _ _ ) ->
+        ( MsgOnClickActivitiesImport, FetchDone ({ course, spec, enrollments, activities } as data) _ _ _ ) ->
             case model.activity_import_state of
                 ActivityImportStateDataInput _ _ _ ->
                     ( model, Cmd.none )
@@ -1221,7 +1150,7 @@ update msg model =
         ( MsgOnInputActivityPrimitiveImport v, _ ) ->
             ( { model | activity_primitive_import = Just v }, Cmd.none )
 
-        ( MsgOnClickActivityPrimitiveImport, FetchDone ({ course, spec, enrollments, activities } as data) la members ) ->
+        ( MsgOnClickActivityPrimitiveImport, FetchDone ({ course, spec, enrollments, activities } as data) la model_members model_header ) ->
             let
                 new_act : Int -> String -> Maybe Activity
                 new_act i t =
@@ -1284,7 +1213,7 @@ update msg model =
                                 topics
             in
             ( { model
-                | state = FetchDone data (la ++ zip listPK (List.map (CA.setEditable True) lm)) members
+                | state = FetchDone data (la ++ zip listPK (List.map (CA.setEditable True) lm)) model_members model_header
                 , activity_component_pk = model.activity_component_pk + lenTopics
                 , activity_primitive_import = Nothing
               }
@@ -1297,7 +1226,7 @@ update msg model =
         ( MsgCloseActivitiesImportPrimitive, _ ) ->
             ( { model | activity_primitive_import = Nothing }, Cmd.none )
 
-        ( MsgCourseMembers msg_, FetchDone course la model_members ) ->
+        ( MsgCourseMembers msg_, FetchDone course la model_members model_header ) ->
             let
                 ( m, c ) =
                     CourseMembers.update msg_ model_members
@@ -1306,15 +1235,26 @@ update msg model =
                 CourseMembers.MsgEnrolling (TaskFinishedAll results) ->
                     ( model
                     , if List.all (Result.toMaybe >> (/=) Nothing) results then
-                        Task.perform (\_ -> MsgCourseSaved) <| Task.succeed ()
+                        Task.perform (\_ -> MsgDoReloadCourse) <| Task.succeed ()
 
                       else
                         Cmd.none
                     )
 
                 _ ->
-                    ( { model | state = FetchDone course la m }, Cmd.map MsgCourseMembers c )
+                    ( { model | state = FetchDone course la m model_header }, Cmd.map MsgCourseMembers c )
 
+        ( MsgHeader msg_, FetchDone course la model_members model_header ) ->
+            let
+                ( m, c ) =
+                    Header.update msg_ model_header
+            in
+            ( { model | state = FetchDone course la model_members m }, Cmd.map MsgHeader c )
+
+        ( MsgDoReloadCourse, FetchDone course la model_members model_header ) ->
+            ( model, Cmd.none )
+
+        -- TODO
         ( _, _ ) ->
             ( model, Cmd.none )
 
@@ -1528,7 +1468,7 @@ viewActivitiesImport model =
                                     [ i [ class "undo icon" ] []
                                     , text "Начать сначала"
                                     ]
-                                , button [ class "ui button green", onClick MsgCourseSaved ]
+                                , button [ class "ui button green", onClick MsgDoReloadCourse ]
                                     [ text "Перезагрузить курс"
                                     ]
                                 ]
@@ -1659,175 +1599,18 @@ viewActivitiesImport model =
                                     ]
 
 
-viewCourse : FetchedData -> List ( Int, CA.Model ) -> CourseMembers.Model -> Model -> Html Msg
-viewCourse data components_activity members model =
+viewCourse : FetchedData -> List ( Int, CA.Model ) -> CourseMembers.Model -> Header.Model -> Model -> Html Msg
+viewCourse data components_activity members_model header_model model =
     let
         breadcrumbs =
-            div [ class "ui large breadcrumb" ]
-                [ a [ class "section", href "/courses" ]
-                    [ text "Предметы" ]
-                , i [ class "right chevron icon divider" ]
-                    []
-                , div [ class "active section" ]
-                    [ text data.course.title ]
+            Breadcrumb.view
+                [ { label = "Главная", onClick = Just (ActionGotoLink "/"), icon = Nothing }
+                , { label = "Предметы", onClick = Just (ActionGotoLink "/courses"), icon = Nothing }
+                , { label = data.course.title, onClick = Nothing, icon = Nothing }
                 ]
-
         header =
-            let
-                default_cover_url =
-                    "/img/course_cover.webp"
-
-                default_logo_url =
-                    "/img/course.jpg"
-
-                cover_img =
-                    Maybe.withDefault default_cover_url <|
-                        Maybe.map (\f -> "/api/file/" ++ Uuid.toString f ++ "/download") data.course.cover
-
-                logo_img =
-                    Maybe.withDefault default_logo_url <|
-                        Maybe.map (\f -> "/api/file/" ++ Uuid.toString f ++ "/download") data.course.logo
-
-                for_class =
-                    let
-                        classes =
-                            [ class "users icon", style "color" "#679", style "white-space" "nowrap" ]
-                    in
-                    case ( data.course.forClass, data.spec ) of
-                        ( Just cls, Just spec ) ->
-                            span []
-                                [ i classes []
-                                , text <| cls ++ " класс (" ++ spec.name ++ " направление)"
-                                ]
-
-                        ( Just cls, Nothing ) ->
-                            span []
-                                [ i classes []
-                                , text <| cls ++ " класс"
-                                ]
-
-                        ( _, _ ) ->
-                            text ""
-
-                for_group =
-                    case empty_to_nothing data.course.forGroup of
-                        Just g ->
-                            span [ style "white-space" "nowrap" ]
-                                [ i [ class "list ol icon", style "color" "#679" ] []
-                                , text <| g
-                                ]
-
-                        Nothing ->
-                            text ""
-
-                description =
-                    if (String.trim <| Maybe.withDefault "" data.course.description) == "" then
-                        "(нет описания)"
-
-                    else
-                        Maybe.withDefault "" data.course.description
-
-                teacher =
-                    case List.head <| List.filter (\e -> e.role == CourseEnrollmentReadRoleT) data.enrollments of
-                        Just t ->
-                            span [ class "ml-10", style "white-space" "nowrap" ]
-                                [ i [ class "user icon", style "color" "#679" ] []
-                                , text
-                                    "Преподаватель: "
-                                , a [ href <| "/profile/" ++ get_id_str t.person ] [ text <| user_full_name t.person ]
-                                ]
-
-                        Nothing ->
-                            text ""
-
-                buttons =
-                    case ( model.is_staff || model.teaching_here || model.managing_here, model.edit_mode ) of
-                        ( False, _ ) ->
-                            []
-
-                        ( _, EditOff ) ->
-                            [ button
-                                [ class "ui button yellow"
-                                , onClick MsgOnClickEdit
-                                ]
-                                [ i [ class "icon edit outline" ] [], text "Редактировать" ]
-                            ]
-
-                        ( _, EditOn _ mod ) ->
-                            [ button
-                                [ class "ui button"
-                                , onClick MsgOnClickEditCancel
-                                ]
-                                [ i [ class "icon close" ] [], text "Отмена" ]
-                            , button
-                                [ class "ui primary button"
-                                , classList [ ( "disabled", not mod ) ]
-                                , onClick MsgOnClickSave
-                                ]
-                                [ i [ class "icon save outline" ] [], text "Сохранить" ]
-                            , Maybe.withDefault (text "") <|
-                                Maybe.map
-                                    (\err ->
-                                        div
-                                            [ class "ui popup error bottom center transition visible"
-                                            , style "position" "relative"
-                                            , style "display" "block"
-                                            ]
-                                            [ div [ class "header" ]
-                                                [ text "Ошибка при сохранении" ]
-                                            , div [ class "" ]
-                                                [ text err ]
-                                            ]
-                                    )
-                                    model.save_error
-                            ]
-            in
-            div
-                [ style "background" ("linear-gradient( rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8) ), url('" ++ cover_img ++ "')")
-                , style "padding" "1em"
-                , style "margin" "1em"
-                , style "overflow" "hidden"
-                , style "color" "white"
-                , class "row center-xs"
-                ]
-                [ div
-                    [ class "col-sm-3 col-xs center-xs"
-
-                    -- , style "margin-right" "1em"
-                    , style "min-width" "300px"
-                    , style "max-width" "300px"
-                    ]
-                    [ img
-                        [ src logo_img
-                        , style "object-fit" "cover"
-                        , style "object-position" "center"
-                        , style "width" "100%"
-                        , style "height" "300px"
-                        ]
-                        []
-                    ]
-                , div [ class "col-sm between-xs row start-xs", style "flex-flow" "column nowrap" ]
-                    [ div []
-                        [ div [ class "ml-10 mr-10 row between-md center-xs", style "margin-bottom" "0.5em" ]
-                            [ h1
-                                [ class "col"
-                                , style "margin" "0"
-                                ]
-                                [ text data.course.title ]
-                            , div
-                                [ class "col ml-10", style "height" "0"
-                                ]
-                                buttons
-                            ]
-                        , p [ style "max-height" "180px", style "overflow" "hidden", style "margin-left" "2em" ] [ text description ]
-                        ]
-                    , div [ class "row around-xs", style "margin-top" "2em" ]
-                        [ for_class
-                        , for_group
-                        , teacher
-                        ]
-                    ]
-                ]
+            Html.map MsgHeader <|
+                Header.view header_model
 
         add_activity_bar =
             if model.edit_mode /= EditOff then
@@ -1950,7 +1733,7 @@ viewCourse data components_activity members model =
             Modal.view
                 "members"
                 "Участники"
-                (Html.map MsgCourseMembers <| CourseMembers.view members)
+                (Html.map MsgCourseMembers <| CourseMembers.view members_model)
                 MsgCloseMembers
                 [ ( "Закрыть", MsgCloseMembers ) ]
                 do_show
@@ -2027,8 +1810,8 @@ view model =
             in
             div [ class "ui text container" ] [ Html.map MsgFetch fetcher ]
 
-        FetchDone data components_activity members ->
-            viewCourse data components_activity members model
+        FetchDone data components_activity members_model header_model ->
+            viewCourse data components_activity members_model header_model model
 
         FetchFailed err ->
             MessageBox.view Error False Nothing (text "Ошибка") (text <| "Не удалось получить данные курса: " ++ err)
