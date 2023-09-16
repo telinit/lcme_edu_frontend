@@ -6,8 +6,7 @@ import Api.Request.Education exposing (educationSpecializationList)
 import Api.Request.User exposing (userList)
 import Component.Misc exposing (user_link)
 import Component.MultiTask as MT
-import Component.Select as Select
-import Css.Transitions exposing (background)
+import Component.UI.Select as Select
 import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)

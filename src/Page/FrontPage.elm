@@ -7,7 +7,6 @@ import Html exposing (Html, a, div, h1, p, text)
 import Html.Attributes exposing (class, href)
 import Task
 import Time exposing (Posix, Zone)
-import Util exposing (user_deep_to_shallow, user_full_name)
 
 
 type Msg

@@ -459,3 +459,7 @@ view model =
                         else
                             []
                        )
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none

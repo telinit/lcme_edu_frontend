@@ -9,7 +9,7 @@ import Browser.Dom exposing (Error(..), focus)
 import Component.Misc exposing (checkbox, user_link)
 import Component.Modal as Modal
 import Component.MultiTask as MultiTask exposing (Msg(..))
-import Component.Select as Select
+import Component.UI.Select as Select
 import Dict as D exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (attribute, autofocus, checked, class, href, id, style, tabindex, type_, value)

@@ -37,7 +37,9 @@ main =
 
 
 type alias State =
-    { token : String }
+    { token : String
+    , hostname : String
+    }
 
 
 type alias Model =
@@ -128,7 +130,7 @@ parse_url url =
 
 
 init : State -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init { token } url key =
+init { token, hostname } url key =
     let
         urlStr =
             Url.toString url
@@ -482,6 +484,9 @@ subscriptions model =
 
         PageCourse model_ ->
             Sub.map MsgPageCourse <| CoursePage.subscriptions model_
+
+        PageAdmin model_ ->
+            Sub.map MsgPageAdmin <| AdminPage.subscribtions model_
 
         _ ->
             Sub.none

@@ -1,4 +1,4 @@
-module Component.Select exposing (..)
+module Component.UI.Select exposing (..)
 
 import Browser.Events
 import Dict exposing (Dict)

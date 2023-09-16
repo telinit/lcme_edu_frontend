@@ -1,4 +1,4 @@
-module Component.FileInput exposing (..)
+module Component.UI.FileInput exposing (..)
 
 import File exposing (File)
 import File.Select

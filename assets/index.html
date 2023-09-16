@@ -23,7 +23,10 @@
     <script>
         var app = Elm.Main.init({
             node: document.getElementById("app"),
-            flags: {"token": localStorage.getItem("token") || ""}
+            flags: {
+                "token": localStorage.getItem("token") || "",
+                "hostname": window.location.hostname
+            }
         });
 
         if (app.ports.setStorage)

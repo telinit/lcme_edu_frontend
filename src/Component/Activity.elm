@@ -3,8 +3,7 @@ module Component.Activity exposing (..)
 import Api exposing (task, withToken)
 import Api.Data exposing (Activity, ActivityContentType(..), activityFinalTypeDecoder, stringFromActivityFinalType)
 import Api.Request.Activity exposing (activityRead)
-import Component.Select as SEL
-import Css exposing (active)
+import Component.UI.Select as SEL
 import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -13,8 +12,7 @@ import Json.Decode as JD
 import Markdown.Option
 import Markdown.Render
 import Page.CourseListPage exposing (empty_to_nothing)
-import Ports exposing (initDropdown, scrollIdIntoView)
-import Process
+import Ports exposing (scrollIdIntoView)
 import Random
 import Task
 import Theme

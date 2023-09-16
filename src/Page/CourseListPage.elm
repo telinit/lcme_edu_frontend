@@ -1,17 +1,17 @@
 module Page.CourseListPage exposing (..)
 
-import Api exposing (ext_task, task, withToken)
+import Api exposing (ext_task)
 import Api.Data exposing (Course, Course, EducationSpecialization, File)
 import Api.Request.Course exposing (courseList)
 import Api.Request.Education exposing (educationSpecializationList)
 import Component.MultiTask as MT
-import Component.Select as Select
+import Component.UI.Select as Select
 import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput)
 import Http
-import Util exposing (dictGroupBy, get_id_str, httpErrorToString, task_to_cmd)
+import Util exposing (dictGroupBy, get_id_str, httpErrorToString)
 import Uuid exposing (Uuid)
 
 
@@ -329,7 +329,7 @@ viewCourse specs course =
                 ]
             , div
                 [ class "description"
-                , style "max-height" "300px"
+                , style "max-height" "150px"
                 , style "overflow" "hidden"
                 ]
                 [ text <| String.trim <| Maybe.withDefault "" course.description

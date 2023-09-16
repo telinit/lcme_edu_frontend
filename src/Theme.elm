@@ -28,6 +28,7 @@ type alias Colors =
         }
     , ui :
         { primary : CSSColor
+        , link : CSSColor
         }
     }
 
@@ -61,6 +62,7 @@ default =
             }
         , ui =
             { primary = "rgb(65, 131, 196)"
+            , link = "#4183C4"
             }
         }
     , fonts = {}

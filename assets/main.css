@@ -48,3 +48,11 @@
 .row.nowrap {
     flex-wrap: nowrap;
 }
+
+.file-item:hover {
+    background-color: rgb(238, 246, 255);
+}
+
+.file-item.selected {
+    background-color: rgb(124, 178, 238, 0.7) !important;
+}
