@@ -705,3 +705,24 @@ listLast l =
 
         _ :: b ->
             listLast b
+
+
+validateFileName : String -> Bool
+validateFileName fn =
+    let
+        blacklist =
+            [ "", ".", ".." ]
+
+        blacklistSub =
+            [ "/", "\\" ]
+
+        okBlacklist =
+            not <| List.member fn blacklist
+
+        okLen =
+            String.length fn < 256
+
+        okBlacklistSub =
+            List.all (\sub -> not <| String.contains sub fn) blacklistSub
+    in
+    okBlacklist && okLen && okBlacklistSub

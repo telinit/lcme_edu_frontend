@@ -24,7 +24,11 @@ view id_ title body_ msg_close buttons do_show =
                 [ div [ class "header" ]
                     [ div [ class "row between-xs" ]
                         [ text title
-                        , i [ class "close icon", onClick msg_close, style "cursor" "pointer" ]
+                        , i
+                            [ class "close icon"
+                            , onClick msg_close
+                            , style "cursor" "pointer"
+                            ]
                             []
                         ]
                     ]
@@ -44,3 +48,24 @@ view id_ title body_ msg_close buttons do_show =
 
     else
         text ""
+
+
+viewInline body =
+    div
+        [ style "width" "100%"
+        , style "height" "100%"
+        , style "background" "rgba(0, 0, 0, 0.5)"
+        , style "z-index" "10"
+        , style "position" "absolute"
+        , class "row center-xs middle-xs m-0"
+        ]
+        [ div
+            [ class "col ui modal"
+            , style "background" "white"
+            , style "display" "initial"
+            ]
+            [ div [ class "header" ] [ text "header" ]
+            , div [ class "content" ] [ body ]
+            , div [ class "actions" ] [ text "123" ]
+            ]
+        ]

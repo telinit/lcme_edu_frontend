@@ -72,6 +72,7 @@ type Msg
     | MsgOnClickAddTxt
     | MsgOnClickAddBefore Int (Maybe Posix)
     | MsgActivity Int CA.Msg
+    | MsgActivityClicked Int
     | MsgFileInputImport FI.Msg
     | MsgOnInputActivityCSVSep String
     | MsgOnClickActivitiesImport
@@ -800,7 +801,7 @@ update msg model =
                                     , Cmd.batch [ Cmd.map (MsgActivity id) c, CA.doScrollInto m ]
                                     )
 
-                                CA.MsgOnClickDelete ->
+                                CA.MsgActivityDeleteDone (Ok _) ->
                                     ( fixOrder
                                         { model
                                             | state =
@@ -828,6 +829,25 @@ update msg model =
 
                 Nothing ->
                     ( model, Cmd.none )
+
+        ( MsgActivityClicked id, FetchDone course act_components model_members model_header ) ->
+            if model.teaching_here || model.managing_here || model.is_staff then
+                let
+                    acts =
+                        List.map
+                            (\( id2, act ) ->
+                                if id2 == id then
+                                    ( id2, CA.setEditable True act )
+
+                                else
+                                    ( id2, act )
+                            )
+                            act_components
+                in
+                ( { model | state = FetchDone course acts model_members model_header }, Cmd.none )
+
+            else
+                ( model, Cmd.none )
 
         ( MsgOnClickAddGen, _ ) ->
             let
@@ -1608,6 +1628,7 @@ viewCourse data components_activity members_model header_model model =
                 , { label = "Предметы", onClick = Just (ActionGotoLink "/courses"), icon = Nothing }
                 , { label = data.course.title, onClick = Nothing, icon = Nothing }
                 ]
+
         header =
             Html.map MsgHeader <|
                 Header.view header_model
@@ -1723,7 +1744,7 @@ viewCourse data components_activity members_model header_model model =
                     List.concat <|
                         List.indexedMap
                             (\i ( id, comp ) ->
-                                [ CA.view comp |> Html.map (MsgActivity id)
+                                [ div [ onClick (MsgActivityClicked id) ] [ CA.view comp |> Html.map (MsgActivity id) ]
                                 , add_activity_placeholder (i + 1)
                                 ]
                             )

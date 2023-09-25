@@ -14,11 +14,12 @@ type alias Item msg =
     , color : Maybe String
     , isActive : Bool
     , isDisabled : Bool
+    , title : Maybe String
     }
 
 
 type alias Model msg =
-    { items : List (Item msg)
+    { items : List (List (Item msg))
     , isVertical : Bool
     , isCompact : Bool
     , size : Maybe Size
@@ -44,25 +45,43 @@ viewItem item =
                   , ( "disabled", item.isDisabled )
                   ]
                 ]
+
+        onClickOverride =
+            if item.isDisabled then
+                Nothing
+
+            else
+                item.onClick
+
+        title_ =
+            maybeToList <| Maybe.map title item.title
     in
-    case item.onClick of
+    case onClickOverride of
         Nothing ->
-            span [ classList cls ] <| ico ++ [ text item.label ]
+            span ([ classList cls ] ++ title_) <| ico ++ [ text item.label ]
 
         Just (ActionGotoLink url) ->
-            a [ classList cls, href url ] <| ico ++ [ text item.label ]
+            a ([ classList cls, href url ] ++ title_) <| ico ++ [ text item.label ]
 
         Just (ActionMessage msg) ->
-            span [ classList cls, onClick msg, style "cursor" "pointer" ] <| ico ++ [ text item.label ]
+            span
+                ([ classList cls
+                 , onClick msg
+                 , style "cursor" "pointer"
+                 ]
+                    ++ title_
+                )
+            <|
+                ico
+                    ++ [ text item.label ]
 
 
-view : Model msg -> Html msg
-view model =
+viewFull : Model msg -> Html msg
+viewFull model =
     let
         cl =
             [ ( "ui", True )
             , ( Maybe.withDefault "" <| Maybe.map size2String model.size, model.size /= Nothing )
-            , ( "сompact", model.isCompact )
             , ( "vertical", model.isVertical )
             , ( "labeled icon menu", True )
             ]
@@ -70,4 +89,73 @@ view model =
     div
         [ classList cl ]
     <|
-        List.map viewItem model.items
+        List.map (div [ class "mr-10" ] << List.map viewItem) model.items
+
+
+viewCompact : Model msg -> Html msg
+viewCompact model =
+    let
+        viewItem2 : Item msg -> Html msg
+        viewItem2 item =
+            let
+                classes =
+                    classList
+                        [ ( "ui", True )
+                        , ( "disabled", item.isDisabled )
+                        , ( "active", item.isActive )
+                        , ( "button", True )
+                        ]
+
+                buttonBody =
+                    case item.icon of
+                        Just (IconGeneric icon color) ->
+                            [ i [ class <| icon ++ " " ++ color ++ " icon" ] []
+                            ]
+
+                        Just (IconCustom html) ->
+                            [ html
+                            ]
+
+                        Nothing ->
+                            []
+
+                title_ =
+                    maybeToList <| Maybe.map title item.title
+            in
+            case item.onClick of
+                Just (ActionGotoLink link) ->
+                    a [ href link ] [ button [ classes ] buttonBody ]
+
+                Just (ActionMessage msg) ->
+                    button
+                        ([ classes
+                         , onClick msg
+                         , style "cursor" "pointer"
+                         ]
+                            ++ title_
+                        )
+                        buttonBody
+
+                Nothing ->
+                    button [ classes ] buttonBody
+
+        viewGroup i =
+            div
+                [ classList
+                    ([ ( "ui", True ) ]
+                        ++ (maybeToList <| Maybe.map (\sz -> ( size2String sz, True )) model.size)
+                        ++ [ ( "icon buttons", True ) ]
+                        ++ [ ( "pl-10", i /= 0 ) ]
+                    )
+                ]
+                << List.map viewItem2
+    in
+    div [] <| List.indexedMap viewGroup model.items
+
+
+view model =
+    if model.isCompact then
+        viewCompact model
+
+    else
+        viewFull model

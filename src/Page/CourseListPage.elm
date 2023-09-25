@@ -1,7 +1,7 @@
 module Page.CourseListPage exposing (..)
 
 import Api exposing (ext_task)
-import Api.Data exposing (Course, Course, EducationSpecialization, File)
+import Api.Data exposing (Course, EducationSpecialization, File)
 import Api.Request.Course exposing (courseList)
 import Api.Request.Education exposing (educationSpecializationList)
 import Component.MultiTask as MT
@@ -11,7 +11,8 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput)
 import Http
-import Util exposing (dictGroupBy, get_id_str, httpErrorToString)
+import Time exposing (utc)
+import Util exposing (dictGroupBy, get_id_str, httpErrorToString, monthToInt)
 import Uuid exposing (Uuid)
 
 
@@ -40,6 +41,7 @@ type alias Filter =
     , group : String
     , spec : Select.Model
     , groupBy : Select.Model
+    , archived : Bool
     }
 
 
@@ -52,6 +54,7 @@ type State
 type GroupBy
     = GroupByNone
     | GroupByClass
+    | GroupByYear
 
 
 type alias Model =
@@ -59,6 +62,33 @@ type alias Model =
     , token : String
     , filter : Filter
     }
+
+
+getCourseAcademicYear : Course -> Maybe ( Int, Int )
+getCourseAcademicYear course =
+    case course.createdAt of
+        Nothing ->
+            Nothing
+
+        Just createdAt ->
+            let
+                m : Time.Month
+                m =
+                    Time.toMonth utc createdAt
+
+                y : Int
+                y =
+                    Time.toYear utc createdAt
+
+                y_ : Int
+                y_ =
+                    if monthToInt m < 6 then
+                        y - 1
+
+                    else
+                        y
+            in
+            Just ( y_, y_ + 1 )
 
 
 empty_to_nothing : Maybe String -> Maybe String
@@ -78,6 +108,9 @@ getGroupBy model =
             case s of
                 "class" ->
                     GroupByClass
+
+                "year" ->
+                    GroupByYear
 
                 _ ->
                     GroupByNone
@@ -145,13 +178,37 @@ groupBy group_by courses specs =
             in
             dictGroupBy key courses
 
+        GroupByYear ->
+            let
+                key course =
+                    case getCourseAcademicYear course of
+                        Nothing ->
+                            "Год неизвестен"
 
-init : String -> ( Model, Cmd Msg )
-init token =
+                        Just ( a, b ) ->
+                            String.fromInt a ++ " - " ++ String.fromInt b ++ " год"
+            in
+            dictGroupBy key courses
+
+
+init : String -> Bool -> ( Model, Cmd Msg )
+init token archived =
     let
         ( m, c ) =
             MT.init
-                [ ( ext_task FetchedCourses token [] courseList, "Получаем список курсов" )
+                [ ( ext_task FetchedCourses
+                        token
+                        [ ( "archived__isnull"
+                          , if archived then
+                                "False"
+
+                            else
+                                "True"
+                          )
+                        ]
+                        courseList
+                  , "Получаем список курсов"
+                  )
                 , ( ext_task FetchedSpecs token [] educationSpecializationList, "Получаем список специализаций" )
                 ]
 
@@ -173,6 +230,7 @@ init token =
             , group = ""
             , spec = sm
             , groupBy = Select.doSelect "" gm
+            , archived = archived
             }
       }
     , Cmd.batch
@@ -408,20 +466,26 @@ view model =
                 StateCompleted courses specs ->
                     let
                         gb =
-                            getGroupBy model
+                            if model.filter.archived then
+                                GroupByYear
+
+                            else
+                                GroupByNone
+
+                        -- getGroupBy model
                     in
                     case gb of
-                        GroupByClass ->
+                        GroupByNone ->
+                            view_courses specs courses
+
+                        _ ->
                             let
                                 grouped =
-                                    groupBy gb courses specs
+                                    Debug.log "grouped" <| groupBy gb courses specs
                             in
                             List.concat <|
                                 List.map (\( g, cs ) -> [ h2 [] [ text g ] ] ++ view_courses specs cs) <|
                                     Dict.toList grouped
-
-                        _ ->
-                            view_courses specs courses
 
                 StateError err ->
                     [ div [ class "ui negative message" ]
@@ -431,10 +495,36 @@ view model =
                     ]
 
                 StateLoading m ->
-                    [ Html.map MsgFetch <| MT.view (\_ -> "OK") httpErrorToString m ]
+                    [ Html.map MsgFetch <| MT.view (always "OK") httpErrorToString m ]
     in
     div [ class "center-xs" ] <|
-        [ h1 [] [ text "Доступные предметы" ]
+        [ div [ class "row between-xs middle-xs" ]
+            [ h1 [ class "m-0" ]
+                [ text <|
+                    if model.filter.archived then
+                        "Архив курсов"
+
+                    else
+                        "Доступные предметы"
+                ]
+            , a
+                [ href <|
+                    if model.filter.archived then
+                        "/courses"
+
+                    else
+                        "/courses/archive"
+                ]
+                [ button [ class "ui button" ]
+                    [ text <|
+                        if model.filter.archived then
+                            "Актуальные"
+
+                        else
+                            "Архив"
+                    ]
+                ]
+            ]
         , viewFilter model.filter
         ]
             ++ body

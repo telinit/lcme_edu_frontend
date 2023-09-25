@@ -76,7 +76,7 @@ type ParsedUrl
     | UrlLogin
     | UrlLogout
     | UrlPageFront
-    | UrlCourseList
+    | UrlCourseList Bool
     | UrlCourse String
     | UrlMarks
     | UrlMarksOfPerson Uuid
@@ -113,7 +113,8 @@ parse_url url =
                 , map UrlPasswordReset (s "login" </> s "password_reset" <?> Query.string "token")
                 , map UrlLogin (s "login")
                 , map UrlLogout (s "logout")
-                , map UrlCourseList (s "courses")
+                , map (UrlCourseList True) (s "courses" </> s "archive")
+                , map (UrlCourseList False) (s "courses")
                 , map UrlCourse (s "course" </> string)
                 , map UrlMarks (s "marks")
                 , map (Maybe.withDefault UrlNotFound << Maybe.map UrlMarksOfPerson << Uuid.fromString) (s "marks" </> s "student" </> string)
@@ -239,13 +240,13 @@ update msg model =
                                 ]
                             )
 
-                        ( UrlCourseList, Right token ) ->
+                        ( UrlCourseList archived, Right token ) ->
                             let
                                 ( layout_, cmd_1 ) =
                                     DefaultLayout.init token.user
 
                                 ( model_, cmd_2 ) =
-                                    CourseListPage.init token.key
+                                    CourseListPage.init token.key archived
                             in
                             ( { model
                                 | page = PageCourseList model_

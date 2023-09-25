@@ -1,13 +1,14 @@
 module Component.Activity exposing (..)
 
-import Api exposing (task, withToken)
+import Api exposing (ext_task, task, withToken)
 import Api.Data exposing (Activity, ActivityContentType(..), activityFinalTypeDecoder, stringFromActivityFinalType)
-import Api.Request.Activity exposing (activityRead)
+import Api.Request.Activity exposing (activityDelete, activityRead, activityUpdate)
 import Component.UI.Select as SEL
 import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onCheck, onClick, onInput)
+import Http
 import Json.Decode as JD
 import Markdown.Option
 import Markdown.Render
@@ -18,7 +19,7 @@ import Task
 import Theme
 import Time exposing (utc)
 import Tuple exposing (first, second)
-import Util exposing (finalTypeToStr, httpErrorToString, isoDateToPosix, posixToDDMMYYYY, posixToFullDate, posixToISODate, task_to_cmd)
+import Util exposing (finalTypeToStr, get_id_str, httpErrorToString, isoDateToPosix, posixToDDMMYYYY, posixToFullDate, posixToISODate, task_to_cmd)
 import Uuid exposing (Uuid, uuidGenerator)
 
 
@@ -47,6 +48,7 @@ type Msg
     | MsgFinTypeSelect SEL.Msg
     | MsgSetField Field String
     | MsgOnClickDelete
+    | MsgOnClickSave
     | MsgMoveUp
     | MsgMoveDown
     | MsgInitUI
@@ -54,6 +56,8 @@ type Msg
     | MsgSetInternalID Uuid
     | MsgMarkdownMsg Markdown.Render.MarkdownMsg
     | MsgGotTZ Time.Zone
+    | MsgActivityUpdateDone (Result Http.Error Activity)
+    | MsgActivityDeleteDone (Result Http.Error ())
 
 
 type alias FieldName =
@@ -380,6 +384,20 @@ doScrollInto model =
         Maybe.map (Uuid.toString >> scrollIdIntoView) model.internal_id
 
 
+doUpdateActivity : String -> Activity -> Cmd Msg
+doUpdateActivity token activity =
+    Task.attempt MsgActivityUpdateDone <|
+        ext_task identity token [] <|
+            activityUpdate (get_id_str activity) activity
+
+
+doDeleteActivity : String -> Uuid -> Cmd Msg
+doDeleteActivity token activityID =
+    Task.attempt MsgActivityDeleteDone <|
+        ext_task identity token [] <|
+            activityDelete (Uuid.toString activityID)
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Maybe.withDefault Sub.none <|
@@ -510,6 +528,34 @@ update msg model =
 
         ( MsgGotTZ tz, _ ) ->
             ( { model | tz = tz }, Cmd.none )
+
+        ( MsgOnClickSave, StateActivity act _ ) ->
+            ( model, doUpdateActivity model.token act )
+
+        ( MsgOnClickDelete, StateActivity act _ ) ->
+            case act.id of
+                Just id ->
+                    ( setEditable False model, doDeleteActivity model.token id )
+
+                Nothing ->
+                    ( setEditable False model, Cmd.none )
+
+        ( MsgActivityUpdateDone res, StateActivity _ validations ) ->
+            case res of
+                Ok new_act ->
+                    init_from_activity model.token new_act
+
+                Err error ->
+                    ( { model | state = StateError (httpErrorToString error) }, Cmd.none )
+
+        ( MsgActivityDeleteDone res, StateActivity _ validations ) ->
+            case res of
+                Ok _ ->
+                    -- TODO: Add a new state for this
+                    ( { model | state = StateLoading }, Cmd.none )
+
+                Err error ->
+                    ( { model | state = StateError (httpErrorToString error) }, Cmd.none )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -769,6 +815,33 @@ viewRead model =
             text ""
 
 
+actionButtons =
+    div [ class "row end-xs pb-10", style "height" "100%", style "width" "100%" ]
+        [ button
+            [ class "ui button red"
+            , style "position" "relative"
+
+            --, style "left" "50px"
+            , style "top" "5px"
+            , onClick MsgOnClickDelete
+            ]
+            [ i [ class "icon trash" ] []
+            , text "Удалить"
+            ]
+        , button
+            [ class "ui button blue"
+            , style "position" "relative"
+
+            --, style "left" "50px"
+            , style "top" "5px"
+            , onClick MsgOnClickSave
+            ]
+            [ i [ class "icon trash" ] []
+            , text "Сохранить"
+            ]
+        ]
+
+
 viewWrite : Model -> Html Msg
 viewWrite model =
     let
@@ -1019,20 +1092,10 @@ viewWrite model =
                                 , h1 [ style "margin" "10px 0 0 10px" ] [ text <| String.fromInt activity.order ]
                                 ]
                             , div [ class "field start-xs col-xs-12 col-sm-3" ]
-                                [ div [ class "row middle-xs end-md center-xs", style "height" "100%" ]
-                                    [ button
-                                        [ class "ui button red"
-                                        , style "position" "relative"
-
-                                        --, style "left" "50px"
-                                        , style "top" "5px"
-                                        , onClick MsgOnClickDelete
-                                        ]
-                                        [ i [ class "icon trash" ] []
-                                        , text "Удалить"
-                                        ]
-                                    ]
-                                ]
+                                []
+                            ]
+                        , div [ class "row mt-10" ]
+                            [ actionButtons
                             ]
                         ]
 
@@ -1098,19 +1161,9 @@ viewWrite model =
                                         , h1 [ style "margin" "10px 0 0 10px" ] [ text <| String.fromInt activity.order ]
                                         ]
                                     , div [ class "field start-xs col-xs-12 col-sm-3" ]
-                                        [ div [ class "row middle-xs end-md center-xs", style "height" "100%" ]
-                                            [ button
-                                                [ class "ui button red"
-                                                , style "position" "relative"
-
-                                                --, style "left" "50px"
-                                                , style "top" "5px"
-                                                , onClick MsgOnClickDelete
-                                                ]
-                                                [ i [ class "icon trash" ] []
-                                                , text "Удалить"
-                                                ]
-                                            ]
+                                        []
+                                    , div [ class "row mt-10" ]
+                                        [ actionButtons
                                         ]
                                     ]
                                 ]
@@ -1256,19 +1309,9 @@ viewWrite model =
                                 , h1 [ style "margin" "10px 0 0 10px" ] [ text <| String.fromInt activity.order ]
                                 ]
                             , div [ class "field start-xs col-xs-12 col-sm-3" ]
-                                [ div [ class "row middle-xs end-md center-xs", style "height" "100%" ]
-                                    [ button
-                                        [ class "ui button red"
-                                        , style "position" "relative"
-
-                                        --, style "left" "50px"
-                                        , style "top" "5px"
-                                        , onClick MsgOnClickDelete
-                                        ]
-                                        [ i [ class "icon trash" ] []
-                                        , text "Удалить"
-                                        ]
-                                    ]
+                                []
+                            , div [ class "row mt-10" ]
+                                [ actionButtons
                                 ]
                             ]
                         ]
@@ -1452,19 +1495,9 @@ viewWrite model =
                                 , h1 [ style "margin" "10px 0 0 10px" ] [ text <| String.fromInt activity.order ]
                                 ]
                             , div [ class "field start-xs col-xs-12 col-sm-3" ]
-                                [ div [ class "row middle-xs end-md center-xs", style "height" "100%" ]
-                                    [ button
-                                        [ class "ui button red"
-                                        , style "position" "relative"
-
-                                        --, style "left" "50px"
-                                        , style "top" "5px"
-                                        , onClick MsgOnClickDelete
-                                        ]
-                                        [ i [ class "icon trash" ] []
-                                        , text "Удалить"
-                                        ]
-                                    ]
+                                []
+                            , div [ class "row mt-10" ]
+                                [ actionButtons
                                 ]
                             ]
                         ]

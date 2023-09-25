@@ -56,3 +56,15 @@
 .file-item.selected {
     background-color: rgb(124, 178, 238, 0.7) !important;
 }
+
+.ui.button:focus {
+    background-color: #E0E1E2;
+}
+
+.ui.button:hover {
+    background-color: #CACBCD;
+}
+
+.ui.button:active {
+    background-color: #BABBBC;
+}
