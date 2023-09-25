@@ -687,7 +687,7 @@ viewInit model_ =
 
 view : Model -> Html Msg
 view model =
-    case (Debug.log "model" model).state of
+    case model.state of
         StateInit model_ ->
             viewInit model_
 

@@ -481,7 +481,7 @@ view model =
                         _ ->
                             let
                                 grouped =
-                                    Debug.log "grouped" <| groupBy gb courses specs
+                                    groupBy gb courses specs
                             in
                             List.concat <|
                                 List.map (\( g, cs ) -> [ h2 [] [ text g ] ] ++ view_courses specs cs) <|

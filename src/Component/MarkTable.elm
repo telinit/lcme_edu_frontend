@@ -374,13 +374,29 @@ initForStudent token student_id =
     let
         ( m, c ) =
             MultiTask.init
-                [ ( ext_task FetchedCourseList token [ ( "enrollments__person", Uuid.toString student_id ), ( "enrollments__role", "s" ) ] courseList
+                [ ( ext_task FetchedCourseList
+                        token
+                        [ ( "enrollments__person", Uuid.toString student_id )
+                        , ( "enrollments__role", "s" )
+                        , ( "archived__isnull", "True" )
+                        ]
+                        courseList
                   , "Получение данных о курсах"
                   )
-                , ( ext_task FetchedActivities token [ ( "course__enrollments__person", Uuid.toString student_id ) ] activityList
+                , ( ext_task FetchedActivities
+                        token
+                        [ ( "course__enrollments__person", Uuid.toString student_id )
+                        , ( "course__archived__isnull", "True" )
+                        ]
+                        activityList
                   , "Получение тем занятий"
                   )
-                , ( ext_task FetchedMarks token [ ( "student", Uuid.toString student_id ) ] markList
+                , ( ext_task FetchedMarks
+                        token
+                        [ ( "student", Uuid.toString student_id )
+                        , ( "activity__course__archived__isnull", "True" )
+                        ]
+                        markList
                   , "Получение оценок"
                   )
                 ]
