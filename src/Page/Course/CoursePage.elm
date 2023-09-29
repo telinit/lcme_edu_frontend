@@ -1046,7 +1046,7 @@ update msg model =
                                     FetchDone data
                                         (list_insert_at
                                             i
-                                            ( model.activity_component_pk, CA.setEditable True <| CA.revalidate m )
+                                            ( model.activity_component_pk, CA.setEditable True <| CA.revalidate { m | activityExists = False } )
                                             act_components
                                         )
                                         model_members
@@ -1222,22 +1222,36 @@ update msg model =
                     List.range (maxOrder + 1) (maxOrder + lenTopics)
 
                 listPK =
-                    List.range model.activity_component_pk (model.activity_component_pk + lenTopics - 1)
+                    List.range model.activity_component_pk
+                        (model.activity_component_pk + lenTopics - 1)
+
+                initActivityComponent act =
+                    let
+                        ( m1, c1 ) =
+                            CA.init_from_activity model.token act
+
+                        ( m2, c2 ) =
+                            ( CA.setExisting False m1, c1 )
+
+                        ( m3, c3 ) =
+                            CA.update CA.MsgOnClickSave m2
+                    in
+                    ( m3, Cmd.batch [ c2, c3 ] )
 
                 ( lm, lc ) =
                     List.unzip <|
                         List.filterMap identity <|
                             List.map2
-                                (\i t -> Maybe.map (CA.init_from_activity model.token) <| new_act i t)
+                                (\i t -> Maybe.map initActivityComponent <| new_act i t)
                                 listOrder
                                 topics
             in
             ( { model
-                | state = FetchDone data (la ++ zip listPK (List.map (CA.setEditable True) lm)) model_members model_header
+                | state = FetchDone data (la ++ zip listPK lm) model_members model_header
                 , activity_component_pk = model.activity_component_pk + lenTopics
                 , activity_primitive_import = Nothing
               }
-            , Cmd.batch <| List.map2 (\k c_ -> Cmd.map (MsgActivity k) c_) listPK lc
+            , Cmd.batch <| List.map3 (\k m_ c_ -> Cmd.map (MsgActivity k) c_) listPK lm lc
             )
 
         ( MsgOnClickOpenPrimitiveActImport, _ ) ->
@@ -1352,10 +1366,7 @@ viewPrimitiveImport model =
             , li [] [ strong [] [ text "Часы" ], text " - 1" ]
             ]
         , p []
-            [ text "Введите список тем в поле ниже - по одной теме на строку. Пустые строки будут проигнорированы. Не забудьте "
-            , strong [] [ text "сохранить " ]
-            , text "изменения на странице курса."
-            ]
+            [ text "Введите список тем в поле ниже - по одной теме на строку. Пустые строки будут проигнорированы." ]
         , div [ class "row center-xs" ]
             [ div [ class "col-xs-12 center-xs" ]
                 [ div [ class "row ui form field" ]
@@ -1641,6 +1652,7 @@ viewCourse data components_activity members_model header_model model =
                     , style "position" "sticky"
                     , style "top" "0"
                     , style "z-index" "10"
+                    , style "padding-bottom" "0"
                     ]
                     [ div [ class "row around-xs" ]
                         [ div [ class "col-xs-12 mb-5" ]
@@ -1685,6 +1697,20 @@ viewCourse data components_activity members_model header_model model =
                                 [ i [ class "bars icon" ] []
                                 , text "Список тем"
                                 ]
+                            ]
+                        , div [ class "col-xs-12 start-xs mb-5" ]
+                            [ span
+                                [ style "width" "100%"
+                                , style "display" "inline-block"
+                                , style "text-align" "right"
+                                , style "font-size" "10pt"
+                                ]
+                              <|
+                                if components_activity == [] then
+                                    []
+
+                                else
+                                    [ i [ class "info blue icon" ] [], text "Для редактирования темы нажмите на нее." ]
                             ]
                         ]
                     ]

@@ -407,7 +407,7 @@ viewCourse specs course =
                     (\g ->
                         div [ class "col-xs" ]
                             [ i [ class "list ol icon" ] []
-                            , text g
+                            , text <| "Группа: " ++ g
                             ]
                     )
                   <|

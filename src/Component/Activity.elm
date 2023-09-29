@@ -368,6 +368,11 @@ getID model =
             Nothing
 
 
+setExisting : Bool -> Model -> Model
+setExisting exists model =
+    { model | activityExists = exists }
+
+
 getActivity : Model -> Maybe Activity
 getActivity model =
     case model.state of
@@ -543,7 +548,7 @@ update msg model =
 
         ( MsgOnClickSave, StateActivity act _ ) ->
             ( model
-            , (if model.activityExists then
+            , (if not model.activityExists then
                 doCreateActivity
 
                else
@@ -836,7 +841,7 @@ viewRead model =
             text ""
 
 
-actionButtons =
+actionButtons valid =
     div [ class "row end-xs pb-10", style "height" "100%", style "width" "100%" ]
         [ button
             [ class "ui button red"
@@ -850,14 +855,19 @@ actionButtons =
             , text "Удалить"
             ]
         , button
-            [ class "ui button blue"
+            [ classList [ ( "ui button blue", True ), ( "disabled", not valid ) ]
             , style "position" "relative"
 
             --, style "left" "50px"
             , style "top" "5px"
-            , onClick MsgOnClickSave
+            , onClick <|
+                if valid then
+                    MsgOnClickSave
+
+                else
+                    MsgNoop
             ]
-            [ i [ class "icon trash" ] []
+            [ i [ class "icon save" ] []
             , text "Сохранить"
             ]
         ]
@@ -1116,7 +1126,7 @@ viewWrite model =
                                 []
                             ]
                         , div [ class "row mt-10", style "width" "100%" ]
-                            [ actionButtons
+                            [ actionButtons (Dict.isEmpty validations)
                             ]
                         ]
 
@@ -1184,7 +1194,7 @@ viewWrite model =
                                     , div [ class "field start-xs col-xs-12 col-sm-3" ]
                                         []
                                     , div [ class "row mt-10", style "width" "100%" ]
-                                        [ actionButtons
+                                        [ actionButtons (Dict.isEmpty validations)
                                         ]
                                     ]
                                 ]
@@ -1332,7 +1342,7 @@ viewWrite model =
                             , div [ class "field start-xs col-xs-12 col-sm-3" ]
                                 []
                             , div [ class "row mt-10", style "width" "100%" ]
-                                [ actionButtons
+                                [ actionButtons (Dict.isEmpty validations)
                                 ]
                             ]
                         ]
@@ -1518,7 +1528,7 @@ viewWrite model =
                             , div [ class "field start-xs col-xs-12 col-sm-3" ]
                                 []
                             , div [ class "row mt-10", style "width" "100%" ]
-                                [ actionButtons
+                                [ actionButtons (Dict.isEmpty validations)
                                 ]
                             ]
                         ]
