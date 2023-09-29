@@ -1094,7 +1094,7 @@ viewWrite model =
                             , div [ class "field start-xs col-xs-12 col-sm-3" ]
                                 []
                             ]
-                        , div [ class "row mt-10" ]
+                        , div [ class "row mt-10", style "width" "100%" ]
                             [ actionButtons
                             ]
                         ]
@@ -1162,7 +1162,7 @@ viewWrite model =
                                         ]
                                     , div [ class "field start-xs col-xs-12 col-sm-3" ]
                                         []
-                                    , div [ class "row mt-10" ]
+                                    , div [ class "row mt-10", style "width" "100%" ]
                                         [ actionButtons
                                         ]
                                     ]
@@ -1310,7 +1310,7 @@ viewWrite model =
                                 ]
                             , div [ class "field start-xs col-xs-12 col-sm-3" ]
                                 []
-                            , div [ class "row mt-10" ]
+                            , div [ class "row mt-10", style "width" "100%" ]
                                 [ actionButtons
                                 ]
                             ]
@@ -1496,7 +1496,7 @@ viewWrite model =
                                 ]
                             , div [ class "field start-xs col-xs-12 col-sm-3" ]
                                 []
-                            , div [ class "row mt-10" ]
+                            , div [ class "row mt-10", style "width" "100%" ]
                                 [ actionButtons
                                 ]
                             ]

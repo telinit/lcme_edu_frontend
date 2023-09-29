@@ -1634,7 +1634,7 @@ viewCourse data components_activity members_model header_model model =
                 Header.view header_model
 
         add_activity_bar =
-            if model.edit_mode /= EditOff then
+            if model.is_staff || model.managing_here || model.teaching_here then
                 div
                     [ class "ui text container segment mr-10"
                     , style "background-color" "#EEE"
