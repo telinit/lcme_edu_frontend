@@ -2,7 +2,7 @@ module Component.Activity exposing (..)
 
 import Api exposing (ext_task, task, withToken)
 import Api.Data exposing (Activity, ActivityContentType(..), activityFinalTypeDecoder, stringFromActivityFinalType)
-import Api.Request.Activity exposing (activityDelete, activityRead, activityUpdate)
+import Api.Request.Activity exposing (activityCreate, activityDelete, activityRead, activityUpdate)
 import Component.UI.Select as SEL
 import Dict exposing (Dict)
 import Html exposing (..)
@@ -83,6 +83,7 @@ type alias Model =
     , up_down : ControlsUpDown
     , internal_id : Maybe Uuid
     , component_fin_type : Maybe SEL.Model
+    , activityExists : Bool
     }
 
 
@@ -112,6 +113,7 @@ init_creator token =
       , internal_id = Nothing
       , component_fin_type = Nothing
       , tz = utc
+      , activityExists = False
       }
     , Cmd.batch [ doGenID, doGetTZ ]
     )
@@ -126,6 +128,7 @@ init_from_id token id =
       , internal_id = Nothing
       , component_fin_type = Nothing
       , tz = utc
+      , activityExists = False
       }
     , Cmd.batch [ doFetch token id, doGenID, doGetTZ ]
     )
@@ -164,6 +167,7 @@ init_from_activity token act =
                                 Maybe.map stringFromActivityFinalType act.finalType
                             )
                             m
+              , activityExists = True
               }
             , Cmd.batch [ Cmd.map MsgFinTypeSelect c, doGenID, doGetTZ ]
             )
@@ -176,6 +180,7 @@ init_from_activity token act =
               , internal_id = Nothing
               , component_fin_type = Nothing
               , tz = utc
+              , activityExists = True
               }
             , Cmd.batch [ doGenID, doGetTZ ]
             )
@@ -391,6 +396,13 @@ doUpdateActivity token activity =
             activityUpdate (get_id_str activity) activity
 
 
+doCreateActivity : String -> Activity -> Cmd Msg
+doCreateActivity token activity =
+    Task.attempt MsgActivityUpdateDone <|
+        ext_task identity token [] <|
+            activityCreate { activity | id = Nothing }
+
+
 doDeleteActivity : String -> Uuid -> Cmd Msg
 doDeleteActivity token activityID =
     Task.attempt MsgActivityDeleteDone <|
@@ -530,7 +542,16 @@ update msg model =
             ( { model | tz = tz }, Cmd.none )
 
         ( MsgOnClickSave, StateActivity act _ ) ->
-            ( model, doUpdateActivity model.token act )
+            ( model
+            , (if model.activityExists then
+                doCreateActivity
+
+               else
+                doUpdateActivity
+              )
+                model.token
+                act
+            )
 
         ( MsgOnClickDelete, StateActivity act _ ) ->
             case act.id of
