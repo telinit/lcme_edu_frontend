@@ -116,6 +116,12 @@ view model =
             , ( "visible", model.active )
             , ( "fluid", model.fluid )
             ]
+        , style "z-index" <|
+            if model.active then
+                "20"
+
+            else
+                "initial"
         ]
         [ div
             [ style "position" "absolute"

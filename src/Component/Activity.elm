@@ -19,7 +19,7 @@ import Task
 import Theme
 import Time exposing (utc)
 import Tuple exposing (first, second)
-import Util exposing (finalTypeToStr, get_id_str, httpErrorToString, isoDateToPosix, posixToDDMMYYYY, posixToFullDate, posixToISODate, task_to_cmd)
+import Util exposing (finalTypeToStr, get_id_str, httpErrorToString, isoDateToPosix, posixToDDMMYYYY, posixToFullDate, posixToISODate, sendMessage, task_to_cmd)
 import Uuid exposing (Uuid, uuidGenerator)
 
 
@@ -460,24 +460,26 @@ update msg model =
                                 in
                                 case res of
                                     Ok t ->
-                                        ( { model
-                                            | state =
-                                                StateActivity
-                                                    { act
-                                                        | finalType = Just t
-                                                        , title = finalTypeToStr { finalType = Just t }
-                                                    }
-                                                    validations
-                                            , component_fin_type = Just m
-                                          }
+                                        ( revalidate
+                                            { model
+                                                | state =
+                                                    StateActivity
+                                                        { act
+                                                            | finalType = Just t
+                                                            , title = finalTypeToStr { finalType = Just t }
+                                                        }
+                                                        validations
+                                                , component_fin_type = Just m
+                                            }
                                         , Cmd.map MsgFinTypeSelect c
                                         )
 
                                     _ ->
-                                        ( { model
-                                            | state = StateActivity act validations
-                                            , component_fin_type = Just m
-                                          }
+                                        ( revalidate
+                                            { model
+                                                | state = StateActivity act validations
+                                                , component_fin_type = Just m
+                                            }
                                         , Cmd.map MsgFinTypeSelect c
                                         )
 
@@ -561,7 +563,11 @@ update msg model =
         ( MsgOnClickDelete, StateActivity act _ ) ->
             case act.id of
                 Just id ->
-                    ( setEditable False model, doDeleteActivity model.token id )
+                    if model.activityExists then
+                        ( setEditable False model, doDeleteActivity model.token id )
+
+                    else
+                        ( setEditable False model, sendMessage <| MsgActivityDeleteDone (Ok ()) )
 
                 Nothing ->
                     ( setEditable False model, Cmd.none )
@@ -841,7 +847,7 @@ viewRead model =
             text ""
 
 
-actionButtons valid =
+actionButtons valid is_new =
     div [ class "row end-xs pb-10", style "height" "100%", style "width" "100%" ]
         [ button
             [ class "ui button red"
@@ -850,6 +856,12 @@ actionButtons valid =
             --, style "left" "50px"
             , style "top" "5px"
             , onClick MsgOnClickDelete
+            , style "display" <|
+                if is_new then
+                    "none"
+
+                else
+                    "initial"
             ]
             [ i [ class "icon trash" ] []
             , text "Удалить"
@@ -898,40 +910,6 @@ viewWrite model =
                                      ]
                                         ++ body
                                     )
-                                , div
-                                    [ class "col ml-10"
-                                    ]
-                                  <|
-                                    List.filterMap identity
-                                        [ if u then
-                                            Just <|
-                                                div [ class "row mb-10" ]
-                                                    [ button
-                                                        [ class "ui button"
-                                                        , style "background-color" fg
-                                                        , onClick MsgMoveUp
-                                                        ]
-                                                        [ i [ class "angle up icon", style "margin" "0" ] []
-                                                        ]
-                                                    ]
-
-                                          else
-                                            Nothing
-                                        , if d then
-                                            Just <|
-                                                div [ class "row" ]
-                                                    [ button
-                                                        [ class "ui button"
-                                                        , style "background-color" fg
-                                                        , onClick MsgMoveDown
-                                                        ]
-                                                        [ i [ class "angle down icon", style "margin" "0" ] []
-                                                        ]
-                                                    ]
-
-                                          else
-                                            Nothing
-                                        ]
                                 ]
                             ]
                         ]
@@ -1126,7 +1104,7 @@ viewWrite model =
                                 []
                             ]
                         , div [ class "row mt-10", style "width" "100%" ]
-                            [ actionButtons (Dict.isEmpty validations)
+                            [ actionButtons (Dict.isEmpty validations) (not model.activityExists)
                             ]
                         ]
 
@@ -1194,7 +1172,7 @@ viewWrite model =
                                     , div [ class "field start-xs col-xs-12 col-sm-3" ]
                                         []
                                     , div [ class "row mt-10", style "width" "100%" ]
-                                        [ actionButtons (Dict.isEmpty validations)
+                                        [ actionButtons (Dict.isEmpty validations) (not model.activityExists)
                                         ]
                                     ]
                                 ]
@@ -1342,7 +1320,7 @@ viewWrite model =
                             , div [ class "field start-xs col-xs-12 col-sm-3" ]
                                 []
                             , div [ class "row mt-10", style "width" "100%" ]
-                                [ actionButtons (Dict.isEmpty validations)
+                                [ actionButtons (Dict.isEmpty validations) (not model.activityExists)
                                 ]
                             ]
                         ]
@@ -1528,7 +1506,7 @@ viewWrite model =
                             , div [ class "field start-xs col-xs-12 col-sm-3" ]
                                 []
                             , div [ class "row mt-10", style "width" "100%" ]
-                                [ actionButtons (Dict.isEmpty validations)
+                                [ actionButtons (Dict.isEmpty validations) (not model.activityExists)
                                 ]
                             ]
                         ]
