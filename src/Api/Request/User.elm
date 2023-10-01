@@ -20,6 +20,7 @@ module Api.Request.User exposing
     , userGetDeep
     , userImpersonate
     , userImportStudentsCsv
+    , userImportTeachersCsv
     , userList
     , userLogin
     , userLogout
@@ -99,6 +100,18 @@ userImportStudentsCsv data_body =
         []
         (Maybe.map Http.jsonBody (Just (Api.Data.encodeImportStudentsCSVRequest data_body)))
         Api.Data.importStudentsCSVResultDecoder
+
+
+userImportTeachersCsv : Api.Data.ImportTeachersCSVRequest -> Api.Request Api.Data.ImportTeachersCSVResult
+userImportTeachersCsv data_body =
+    Api.request
+        "POST"
+        "/user/import_teachers_csv/"
+        []
+        []
+        []
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeImportTeachersCSVRequest data_body)))
+        Api.Data.importTeachersCSVResultDecoder
 
 
 userList : Api.Request (List Api.Data.UserShallow)

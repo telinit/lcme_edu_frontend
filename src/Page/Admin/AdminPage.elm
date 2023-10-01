@@ -6,12 +6,14 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Page.Admin.ExportMarks as ExportMarks
 import Page.Admin.ImportStudentsCSV as ImportStudentsCSV
+import Page.Admin.ImportTeachersCSV as ImportTeachersCSV
 import Page.Admin.Test as Test
 
 
 type Subpage
     = SubpageIndex
     | SubpageImportStudents (Maybe ImportStudentsCSV.Model)
+    | SubpageImportTeachers (Maybe ImportTeachersCSV.Model)
     | SubpageExportMarks (Maybe ExportMarks.Model)
     | SubpageTest (Maybe Test.Model)
 
@@ -27,6 +29,7 @@ type Msg
     | MsgSubpageImportStudents ImportStudentsCSV.Msg
     | MsgSubpageExportMarks ExportMarks.Msg
     | MsgSubpageTest Test.Msg
+    | MsgSubpageImportTeachers ImportTeachersCSV.Msg
 
 
 type alias Model =
@@ -86,6 +89,18 @@ update msg model =
                             in
                             ( { model | currentSubpage = SubpageTest (Just m) }, Cmd.map MsgSubpageTest c )
 
+                SubpageImportTeachers mbm ->
+                    case mbm of
+                        Nothing ->
+                            let
+                                ( m, c ) =
+                                    ImportTeachersCSV.init model.token
+                            in
+                            ( { model | currentSubpage = SubpageImportTeachers (Just m) }, Cmd.map MsgSubpageImportTeachers c )
+
+                        Just _ ->
+                            ignore
+
         MsgSubpageImportStudents msg_ ->
             case model.currentSubpage of
                 SubpageImportStudents (Just model_) ->
@@ -122,6 +137,18 @@ update msg model =
                 _ ->
                     ignore
 
+        MsgSubpageImportTeachers msg_ ->
+            case model.currentSubpage of
+                SubpageImportTeachers (Just model_) ->
+                    let
+                        ( m, c ) =
+                            ImportTeachersCSV.update msg_ model_
+                    in
+                    ( { model | currentSubpage = SubpageImportTeachers (Just m) }, Cmd.map MsgSubpageImportTeachers c )
+
+                _ ->
+                    ignore
+
 
 viewMenu : Model -> Html Msg
 viewMenu model =
@@ -129,6 +156,7 @@ viewMenu model =
         items : List { type_ : MenuItemType, label : String, icon : String }
         items =
             [ { type_ = MenuItemTypeSubpage (SubpageImportStudents Nothing), label = "Импорт учащихся", icon = "cog" }
+            , { type_ = MenuItemTypeSubpage (SubpageImportTeachers Nothing), label = "Импорт преподавателей", icon = "cog" }
             , { type_ = MenuItemTypeSubpage (SubpageExportMarks Nothing), label = "Экспорт оценок", icon = "cog" }
             , { type_ = MenuItemTypeSubpage (SubpageTest Nothing), label = "Test page", icon = "cog" }
             , { type_ = MenuItemTypeExternalLink "/djadmin", label = "Админка Django", icon = "cog" }
@@ -202,6 +230,14 @@ viewSubpage model =
                 Nothing ->
                     loading
 
+        SubpageImportTeachers maybeModel ->
+            case maybeModel of
+                Just model_ ->
+                    Html.map MsgSubpageImportTeachers <| ImportTeachersCSV.view model_
+
+                Nothing ->
+                    loading
+
 
 subscribtions : Model -> Sub Msg
 subscribtions model =
@@ -219,6 +255,14 @@ subscribtions model =
             case maybeModel of
                 Just model_ ->
                     Sub.map MsgSubpageTest (Test.subscriptions model_)
+
+                Nothing ->
+                    Sub.none
+
+        SubpageImportTeachers maybeModel ->
+            case maybeModel of
+                Just model_ ->
+                    Sub.map MsgSubpageImportTeachers (ImportTeachersCSV.subscriptions model_)
 
                 Nothing ->
                     Sub.none

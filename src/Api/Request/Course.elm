@@ -15,8 +15,7 @@
 
 
 module Api.Request.Course exposing
-    ( courseBulkSetActivities
-    , courseCreate
+    ( courseCreate
     , courseDelete
     , courseEnrollmentCreate
     , courseEnrollmentDelete
@@ -36,18 +35,6 @@ import Dict
 import Http
 import Json.Decode
 import Json.Encode
-
-
-courseBulkSetActivities : String -> Api.Data.BulkSetActivities -> Api.Request ()
-courseBulkSetActivities id_path data_body =
-    Api.request
-        "POST"
-        "/course/{id}/bulk_set_activities/"
-        [ ( "id", identity id_path ) ]
-        []
-        []
-        (Maybe.map Http.jsonBody (Just (Api.Data.encodeBulkSetActivities data_body)))
-        (Json.Decode.succeed ())
 
 
 courseCreate : Api.Data.Course -> Api.Request Api.Data.Course

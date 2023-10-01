@@ -18,7 +18,6 @@ module Api.Data exposing
     ( Activity
     , ActivityContentType(..)
     , ActivityFinalType(..)
-    , BulkSetActivities
     , Challenge
     , Counters
     , Course
@@ -39,6 +38,8 @@ module Api.Data exposing
     , ImportForCourseResultObject
     , ImportStudentsCSVRequest
     , ImportStudentsCSVResult
+    , ImportTeachersCSVRequest
+    , ImportTeachersCSVResult
     , Login
     , MakeDir
     , Mark
@@ -60,7 +61,6 @@ module Api.Data exposing
     , activityDecoder
     , activityFinalTypeDecoder
     , activityFinalTypeVariants
-    , bulkSetActivitiesDecoder
     , challengeDecoder
     , countersDecoder
     , courseDecoder
@@ -74,7 +74,6 @@ module Api.Data exposing
     , educationShallowDecoder
     , educationSpecializationDecoder
     , encodeActivity
-    , encodeBulkSetActivities
     , encodeChallenge
     , encodeCounters
     , encodeCourse
@@ -91,6 +90,8 @@ module Api.Data exposing
     , encodeImportForCourseResultObject
     , encodeImportStudentsCSVRequest
     , encodeImportStudentsCSVResult
+    , encodeImportTeachersCSVRequest
+    , encodeImportTeachersCSVResult
     , encodeLogin
     , encodeMakeDir
     , encodeMark
@@ -114,6 +115,8 @@ module Api.Data exposing
     , importForCourseResultObjectDecoder
     , importStudentsCSVRequestDecoder
     , importStudentsCSVResultDecoder
+    , importTeachersCSVRequestDecoder
+    , importTeachersCSVResultDecoder
     , loginDecoder
     , makeDirDecoder
     , markDecoder
@@ -220,12 +223,6 @@ activityFinalTypeVariants =
     , ActivityFinalTypeE
     , ActivityFinalTypeF
     ]
-
-
-type alias BulkSetActivities =
-    { create : List Activity
-    , update : Dict.Dict String Activity
-    }
 
 
 type alias Challenge =
@@ -436,6 +433,16 @@ type alias ImportStudentsCSVRequest =
 
 
 type alias ImportStudentsCSVResult =
+    { data : List (List String)
+    }
+
+
+type alias ImportTeachersCSVRequest =
+    { data : String
+    }
+
+
+type alias ImportTeachersCSVResult =
     { data : List (List String)
     }
 
@@ -755,27 +762,6 @@ stringFromActivityFinalType model =
 encodeActivityFinalType : ActivityFinalType -> Json.Encode.Value
 encodeActivityFinalType =
     Json.Encode.string << stringFromActivityFinalType
-
-
-encodeBulkSetActivities : BulkSetActivities -> Json.Encode.Value
-encodeBulkSetActivities =
-    encodeObject << encodeBulkSetActivitiesPairs
-
-
-encodeBulkSetActivitiesWithTag : ( String, String ) -> BulkSetActivities -> Json.Encode.Value
-encodeBulkSetActivitiesWithTag ( tagField, tag ) model =
-    encodeObject (encodeBulkSetActivitiesPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeBulkSetActivitiesPairs : BulkSetActivities -> List EncodedField
-encodeBulkSetActivitiesPairs model =
-    let
-        pairs =
-            [ encode "create" (Json.Encode.list encodeActivity) model.create
-            , encode "update" (Json.Encode.dict identity encodeActivity) model.update
-            ]
-    in
-    pairs
 
 
 encodeChallenge : Challenge -> Json.Encode.Value
@@ -1244,6 +1230,46 @@ encodeImportStudentsCSVResultWithTag ( tagField, tag ) model =
 
 encodeImportStudentsCSVResultPairs : ImportStudentsCSVResult -> List EncodedField
 encodeImportStudentsCSVResultPairs model =
+    let
+        pairs =
+            [ encode "data" (Json.Encode.list (Json.Encode.list Json.Encode.string)) model.data
+            ]
+    in
+    pairs
+
+
+encodeImportTeachersCSVRequest : ImportTeachersCSVRequest -> Json.Encode.Value
+encodeImportTeachersCSVRequest =
+    encodeObject << encodeImportTeachersCSVRequestPairs
+
+
+encodeImportTeachersCSVRequestWithTag : ( String, String ) -> ImportTeachersCSVRequest -> Json.Encode.Value
+encodeImportTeachersCSVRequestWithTag ( tagField, tag ) model =
+    encodeObject (encodeImportTeachersCSVRequestPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeImportTeachersCSVRequestPairs : ImportTeachersCSVRequest -> List EncodedField
+encodeImportTeachersCSVRequestPairs model =
+    let
+        pairs =
+            [ encode "data" Json.Encode.string model.data
+            ]
+    in
+    pairs
+
+
+encodeImportTeachersCSVResult : ImportTeachersCSVResult -> Json.Encode.Value
+encodeImportTeachersCSVResult =
+    encodeObject << encodeImportTeachersCSVResultPairs
+
+
+encodeImportTeachersCSVResultWithTag : ( String, String ) -> ImportTeachersCSVResult -> Json.Encode.Value
+encodeImportTeachersCSVResultWithTag ( tagField, tag ) model =
+    encodeObject (encodeImportTeachersCSVResultPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeImportTeachersCSVResultPairs : ImportTeachersCSVResult -> List EncodedField
+encodeImportTeachersCSVResultPairs model =
     let
         pairs =
             [ encode "data" (Json.Encode.list (Json.Encode.list Json.Encode.string)) model.data
@@ -1800,13 +1826,6 @@ activityFinalTypeDecoder =
             )
 
 
-bulkSetActivitiesDecoder : Json.Decode.Decoder BulkSetActivities
-bulkSetActivitiesDecoder =
-    Json.Decode.succeed BulkSetActivities
-        |> decode "create" (Json.Decode.list activityDecoder)
-        |> decode "update" (Json.Decode.dict activityDecoder)
-
-
 challengeDecoder : Json.Decode.Decoder Challenge
 challengeDecoder =
     Json.Decode.succeed Challenge
@@ -2062,6 +2081,18 @@ importStudentsCSVRequestDecoder =
 importStudentsCSVResultDecoder : Json.Decode.Decoder ImportStudentsCSVResult
 importStudentsCSVResultDecoder =
     Json.Decode.succeed ImportStudentsCSVResult
+        |> decode "data" (Json.Decode.list (Json.Decode.list Json.Decode.string))
+
+
+importTeachersCSVRequestDecoder : Json.Decode.Decoder ImportTeachersCSVRequest
+importTeachersCSVRequestDecoder =
+    Json.Decode.succeed ImportTeachersCSVRequest
+        |> decode "data" Json.Decode.string
+
+
+importTeachersCSVResultDecoder : Json.Decode.Decoder ImportTeachersCSVResult
+importTeachersCSVResultDecoder =
+    Json.Decode.succeed ImportTeachersCSVResult
         |> decode "data" (Json.Decode.list (Json.Decode.list Json.Decode.string))
 
 

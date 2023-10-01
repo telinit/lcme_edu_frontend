@@ -1,11 +1,10 @@
-module Page.Admin.ImportStudentsCSV exposing (..)
+module Page.Admin.ImportTeachersCSV exposing (..)
 
 import Api exposing (ext_task)
-import Api.Data exposing (ImportStudentsCSVResult)
-import Api.Request.User exposing (userImportStudentsCsv)
+import Api.Data exposing (ImportTeachersCSVResult)
+import Api.Request.User exposing (userImportTeachersCsv)
 import Component.MessageBox as MessageBox
 import Csv.Encode
-import Csv.Parser
 import File.Download
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -18,13 +17,13 @@ import Util exposing (httpErrorToString, zip)
 type State
     = StateInput String
     | StateInProgress
-    | StateFinished (Result Http.Error ImportStudentsCSVResult)
+    | StateFinished (Result Http.Error ImportTeachersCSVResult)
 
 
 type Msg
     = MsgOnInputData String
     | MsgOnClickDownloadReport
-    | MsgImportFinished (Result Http.Error ImportStudentsCSVResult)
+    | MsgImportFinished (Result Http.Error ImportTeachersCSVResult)
     | MsgOnClickStartImport
 
 
@@ -38,7 +37,7 @@ doImport : String -> String -> Cmd Msg
 doImport token data =
     Task.attempt MsgImportFinished <|
         ext_task identity token [] <|
-            userImportStudentsCsv { data = data }
+            userImportTeachersCsv { data = data }
 
 
 init : String -> ( Model, Cmd Msg )
@@ -147,24 +146,25 @@ view model =
                                 (text <| "Ошибка импорта: " ++ httpErrorToString error)
     in
     div [ class "col-xs-12" ]
-        [ h2 [] [ text "Импорт учащихся и родителей" ]
+        [ h2 [] [ text "Импорт преподавателей и предметов" ]
         , div [ class "col" ]
             [ p [] [ text "Введите данные для импорта в тестовое поле ниже. Формат данных - UTF-8 CSV, разделитель - запятая." ]
             , p [] [ text "Необходимые поля:" ]
             , ul []
-                [ li [] [ strong [] [ text "Класс" ], text "" ]
+                [ li [] [ strong [] [ text "Фамилия преподавателя" ], text "" ]
+                , li [] [ strong [] [ text "Имя преподавателя" ], text "" ]
+                , li [] [ strong [] [ text "Отчество преподавателя" ], text "" ]
+                , li [] [ strong [] [ text "Курс" ], text "" ]
                 , li [] [ strong [] [ text "Направление" ], text "" ]
-                , li [] [ strong [] [ text "Фамилия учащегося" ], text "" ]
-                , li [] [ strong [] [ text "Имя учащегося" ], text "" ]
-                , li [] [ strong [] [ text "Отчество учащегося" ], text "" ]
-                , li [] [ strong [] [ text "Фамилия родителя 1" ], text "" ]
-                , li [] [ strong [] [ text "Имя родителя 1" ], text "" ]
-                , li [] [ strong [] [ text "Отчество родителя 1" ], text "" ]
-                , li [] [ strong [] [ text "Фамилия родителя 2" ], text "" ]
-                , li [] [ strong [] [ text "Имя родителя 2" ], text "" ]
-                , li [] [ strong [] [ text "Отчество родителя 2" ], text "" ]
+                , li [] [ strong [] [ text "Класс" ], text "" ]
+                , li [] [ strong [] [ text "Группа" ], text "" ]
                 ]
             , state
             ]
         , div [] []
         ]
+
+
+subscriptions : Model -> Sub msg
+subscriptions _ =
+    Sub.none
