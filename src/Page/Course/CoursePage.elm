@@ -12,8 +12,11 @@ import Component.MultiTask as MultiTask exposing (Msg(..))
 import Component.UI.Breadcrumb as Breadcrumb
 import Component.UI.Common exposing (Action(..))
 import Component.UI.FileInput as FI
+import Csv.Encode
 import Csv.Parser
+import Dict exposing (Dict)
 import File
+import File.Download
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
@@ -25,7 +28,7 @@ import Set
 import String
 import Task
 import Time exposing (Posix)
-import Util exposing (assoc_update, get_id_str, httpErrorToString, listIndexedEdgedMap, list_insert_at, zip)
+import Util exposing (assoc_update, get_id_str, httpErrorToString, listIndexedEdgedMap, list_insert_at, posixToDDMMYYYY, posixToISODate, zip)
 import Uuid exposing (Uuid)
 
 
@@ -66,6 +69,7 @@ type Msg
     | MsgCloseMembers
     | MsgCloseActivitiesImport
     | MsgOnClickImportActivities
+    | MsgOnClickExportActivities
     | MsgOnClickAddGen
     | MsgOnClickAddFin
     | MsgOnClickAddTsk
@@ -684,6 +688,72 @@ validateActivityCSV sep data =
                             "Ошибка около символа " ++ String.fromInt p ++ ": Обнаружены данные после завершенного экранирования."
                       }
                     ]
+
+
+makeActivityExportData : List CA.Model -> List (List String)
+makeActivityExportData activities =
+    let
+        activityHWDict : Dict String Activity
+        activityHWDict =
+            Dict.fromList <|
+                List.filterMap
+                    (\mod ->
+                        CA.getActivity mod
+                            |> Maybe.andThen (\act -> Maybe.map (\id -> ( Uuid.toString id, act )) act.linkedActivity)
+                    )
+                    activities
+
+        header =
+            [ "Номер"
+            , "Дата"
+            , "Тема"
+            , "Ключевое слово"
+            , "Раздел"
+            , "ФГОС"
+            , "Раздел научной дисциплины"
+            , "Форма занятия"
+            , "Материалы урока"
+            , "Домашнее задание"
+            , "Количество оценок"
+            , "Часы"
+            ]
+
+        activityToRow : Activity -> Maybe (List String)
+        activityToRow act =
+            case act.contentType of
+                Just ActivityContentTypeGEN ->
+                    Just
+                        [ act.order |> String.fromInt
+                        , act.date |> Maybe.map (posixToDDMMYYYY Time.utc) |> Maybe.withDefault ""
+                        , act.title
+                        , act.keywords |> Maybe.withDefault ""
+                        , act.group |> Maybe.withDefault ""
+                        , act.fgosComplient
+                            |> Maybe.map
+                                (\b ->
+                                    if b then
+                                        "Да"
+
+                                    else
+                                        "Нет"
+                                )
+                            |> Maybe.withDefault ""
+                        , act.scientificTopic |> Maybe.withDefault ""
+                        , act.lessonType |> Maybe.withDefault ""
+                        , act.body |> Maybe.withDefault ""
+                        , Dict.get (get_id_str act) activityHWDict |> Maybe.andThen .body |> Maybe.withDefault ""
+                        , act.marksLimit |> Maybe.map String.fromInt |> Maybe.withDefault ""
+                        , act.hours |> Maybe.map String.fromInt |> Maybe.withDefault ""
+                        ]
+
+                _ ->
+                    Nothing
+
+        modelToRow : CA.Model -> Maybe (List String)
+        modelToRow mod =
+            CA.getActivity mod |> Maybe.andThen activityToRow
+    in
+    header :: List.filterMap modelToRow activities
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -1336,6 +1406,27 @@ update msg model =
         ( MsgDoReloadCourse, FetchDone course la model_members model_header ) ->
             ( model, Cmd.none )
 
+        ( MsgOnClickExportActivities, FetchDone fetchedData la model_members model_header ) ->
+            let
+                data : List (List String)
+                data =
+                    makeActivityExportData <| List.map Tuple.second la
+
+                enc =
+                    Csv.Encode.withoutFieldNames identity
+
+                csv =
+                    Csv.Encode.encode { encoder = enc, fieldSeparator = ',' } data
+
+                fileName =
+                    fetchedData.course.title
+                        ++ " "
+                        ++ (fetchedData.course.forClass |> Maybe.withDefault "")
+                        ++ " класс"
+                        ++ ".csv"
+            in
+            ( model, File.Download.string fileName "text/csv" csv )
+
         -- TODO
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -1712,19 +1803,19 @@ viewCourse data components_activity members_model header_model model =
                                 , style "flex-wrap" "nowrap"
                                 ]
                                 [ text "Добавить: " ]
-                            , button [ class "ui button green", onClick MsgOnClickAddGen ]
+                            , button [ class "compact ui button green", onClick MsgOnClickAddGen ]
                                 [ i [ class "plus icon" ] []
                                 , text "Тема"
                                 ]
-                            , button [ class "ui button green", onClick MsgOnClickAddFin ]
+                            , button [ class "compact ui button green", onClick MsgOnClickAddFin ]
                                 [ i [ class "plus icon" ] []
                                 , text "Контроль"
                                 ]
-                            , button [ class "ui button green", onClick MsgOnClickAddTsk ]
+                            , button [ class "compact ui button green", onClick MsgOnClickAddTsk ]
                                 [ i [ class "plus icon" ] []
                                 , text "Задание"
                                 ]
-                            , button [ class "ui button green", onClick MsgOnClickAddTxt ]
+                            , button [ class "compact ui button green", onClick MsgOnClickAddTxt ]
                                 [ i [ class "plus icon" ] []
                                 , text "Материал"
                                 ]
@@ -1737,13 +1828,24 @@ viewCourse data components_activity members_model header_model model =
                                 , class "mr-10"
                                 ]
                                 [ text "Импорт: " ]
-                            , button [ class "ui button green", onClick MsgOnClickImportActivities ]
+                            , button [ class "compact ui button green", onClick MsgOnClickImportActivities ]
                                 [ i [ class "file icon" ] []
                                 , text "CSV КТП"
                                 ]
-                            , button [ class "ui button green", onClick MsgOnClickOpenPrimitiveActImport ]
+                            , button [ class "compact ui button green", onClick MsgOnClickOpenPrimitiveActImport ]
                                 [ i [ class "bars icon" ] []
                                 , text "Список тем"
+                                ]
+                            , span
+                                [ style "min-width" "100px"
+                                , style "display" "inline-block"
+                                , style "text-align" "right"
+                                , class "mr-10"
+                                ]
+                                [ text "Экспорт: " ]
+                            , button [ class "compact ui button blue", onClick MsgOnClickExportActivities ]
+                                [ i [ class "file icon" ] []
+                                , text "CSV КТП"
                                 ]
                             ]
                         , div [ class "col-xs-12 start-xs mb-5" ]
