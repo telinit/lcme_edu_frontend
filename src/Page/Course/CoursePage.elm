@@ -2,7 +2,7 @@ module Page.Course.CoursePage exposing (..)
 
 import Api exposing (ext_task)
 import Api.Data exposing (Activity, ActivityContentType(..), Course, CourseEnrollmentRead, CourseEnrollmentReadRole(..), EducationSpecialization, ImportForCourseResult, UserDeep)
-import Api.Request.Activity exposing (activityImportForCourse, activityList)
+import Api.Request.Activity exposing (activityImportForCourse, activityList, activityReorder)
 import Api.Request.Course exposing (courseEnrollmentList, courseRead)
 import Api.Request.Education exposing (educationSpecializationList)
 import Component.Activity as CA
@@ -25,7 +25,7 @@ import Set
 import String
 import Task
 import Time exposing (Posix)
-import Util exposing (assoc_update, get_id_str, httpErrorToString, list_insert_at, zip)
+import Util exposing (assoc_update, get_id_str, httpErrorToString, listIndexedEdgedMap, list_insert_at, zip)
 import Uuid exposing (Uuid)
 
 
@@ -86,6 +86,7 @@ type Msg
     | MsgCourseMembers CourseMembers.Msg
     | MsgHeader Header.Msg
     | MsgDoReloadCourse
+    | MsgActivityReorderDone (Result Http.Error ())
 
 
 type FetchResult
@@ -201,31 +202,26 @@ subscriptions model =
 fixOrder : Model -> Model
 fixOrder model =
     let
-        fixOrder_ j l =
-            let
-                up =
-                    j /= 0
-
-                down =
-                    case l of
-                        [ _ ] ->
-                            False
-
-                        _ ->
-                            True
-            in
-            case l of
+        fixOrder_ : Int -> List ( key, CA.Model ) -> List ( key, CA.Model )
+        fixOrder_ ix listKeyActivityComponent =
+            case listKeyActivityComponent of
                 [] ->
                     []
 
-                ( k, v ) :: tl ->
-                    ( k, CA.setUpDownControls up down <| CA.setOrder (j + 1) v ) :: fixOrder_ (j + 1) tl
+                ( k, act ) :: rest ->
+                    ( k
+                    , CA.setUpDownControls (ix /= 1) (rest /= []) <|
+                        CA.setOrder
+                            ix
+                            act
+                    )
+                        :: fixOrder_ (ix + 1) rest
     in
     case model.state of
         FetchDone c acts model_members model_header ->
             { model
                 | state =
-                    FetchDone c (fixOrder_ 0 acts) model_members model_header
+                    FetchDone c (fixOrder_ 1 acts) model_members model_header
             }
 
         _ ->
@@ -258,13 +254,36 @@ activityMoveDown id acts =
             acts
 
 
+doPostActivityOrder : Model -> Cmd Msg
+doPostActivityOrder model =
+    case model.state of
+        FetchDone _ listKeyedActs _ _ ->
+            Task.attempt MsgActivityReorderDone <|
+                ext_task identity model.token [] <|
+                    activityReorder
+                        { activityIds =
+                            List.filterMap
+                                (\( _, v ) ->
+                                    if v.activityExists then
+                                        Maybe.andThen .id <| CA.getActivity v
+
+                                    else
+                                        Nothing
+                                )
+                                listKeyedActs
+                        }
+
+        _ ->
+            Cmd.none
+
+
 setModified : Bool -> Model -> Model
 setModified mod model =
     case model.edit_mode of
         EditOff ->
             model
 
-        EditOn addMode isModified ->
+        EditOn addMode _ ->
             { model | edit_mode = EditOn addMode mod }
 
 
@@ -773,45 +792,74 @@ update msg model =
                         ( new_model, cmd ) =
                             case msg_ of
                                 CA.MsgMoveUp ->
-                                    ( fixOrder
-                                        { model
-                                            | state =
-                                                FetchDone
-                                                    course
-                                                    (activityMoveUp id <|
-                                                        assoc_update id m act_components
-                                                    )
-                                                    model_members
-                                                    model_header
-                                        }
-                                    , Cmd.batch [ Cmd.map (MsgActivity id) c, CA.doScrollInto m ]
+                                    let
+                                        model_ =
+                                            fixOrder
+                                                { model
+                                                    | state =
+                                                        FetchDone
+                                                            course
+                                                            (activityMoveUp id <|
+                                                                assoc_update id m act_components
+                                                            )
+                                                            model_members
+                                                            model_header
+                                                }
+                                    in
+                                    ( model_
+                                    , Cmd.batch [ Cmd.map (MsgActivity id) c, doPostActivityOrder model_, CA.doScrollInto m ]
                                     )
 
                                 CA.MsgMoveDown ->
-                                    ( fixOrder
-                                        { model
-                                            | state =
-                                                FetchDone course
-                                                    (activityMoveDown id <|
-                                                        assoc_update id m act_components
-                                                    )
-                                                    model_members
-                                                    model_header
-                                        }
-                                    , Cmd.batch [ Cmd.map (MsgActivity id) c, CA.doScrollInto m ]
+                                    let
+                                        model_ =
+                                            fixOrder
+                                                { model
+                                                    | state =
+                                                        FetchDone course
+                                                            (activityMoveDown id <|
+                                                                assoc_update id m act_components
+                                                            )
+                                                            model_members
+                                                            model_header
+                                                }
+                                    in
+                                    ( model_
+                                    , Cmd.batch [ Cmd.map (MsgActivity id) c, doPostActivityOrder model_, CA.doScrollInto m ]
                                     )
 
                                 CA.MsgActivityDeleteDone (Ok _) ->
-                                    ( fixOrder
-                                        { model
-                                            | state =
-                                                FetchDone
-                                                    course
-                                                    (List.filter (Tuple.first >> (/=) id) act_components)
-                                                    model_members
-                                                    model_header
-                                        }
-                                    , Cmd.none
+                                    let
+                                        model_ =
+                                            fixOrder
+                                                { model
+                                                    | state =
+                                                        FetchDone
+                                                            course
+                                                            (List.filter (Tuple.first >> (/=) id) act_components)
+                                                            model_members
+                                                            model_header
+                                                }
+                                    in
+                                    ( model_
+                                    , doPostActivityOrder model_
+                                    )
+
+                                CA.MsgActivityUpdateDone (Ok newAct) ->
+                                    let
+                                        model_ =
+                                            fixOrder
+                                                { model
+                                                    | state =
+                                                        FetchDone
+                                                            course
+                                                            (assoc_update id m act_components)
+                                                            model_members
+                                                            model_header
+                                                }
+                                    in
+                                    ( model_
+                                    , Cmd.batch [ Cmd.map (MsgActivity id) c, doPostActivityOrder model_ ]
                                     )
 
                                 _ ->
@@ -844,7 +892,7 @@ update msg model =
                             )
                             act_components
                 in
-                ( { model | state = FetchDone course acts model_members model_header }, Cmd.none )
+                ( fixOrder { model | state = FetchDone course acts model_members model_header }, Cmd.none )
 
             else
                 ( model, Cmd.none )

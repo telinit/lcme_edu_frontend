@@ -726,3 +726,22 @@ validateFileName fn =
             List.all (\sub -> not <| String.contains sub fn) blacklistSub
     in
     okBlacklist && okLen && okBlacklistSub
+
+
+listIndexedEdgedMap : (Int -> Bool -> a -> Maybe b) -> List a -> List b
+listIndexedEdgedMap mapper list =
+    let
+        listIndexedEdgedMap_ ix list_ =
+            case list_ of
+                [] ->
+                    []
+
+                a :: b ->
+                    case mapper ix (b == []) a of
+                        Just x ->
+                            x :: listIndexedEdgedMap_ (ix + 1) b
+
+                        Nothing ->
+                            listIndexedEdgedMap_ (ix + 1) b
+    in
+    listIndexedEdgedMap_ 0 list

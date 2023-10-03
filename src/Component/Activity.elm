@@ -910,6 +910,40 @@ viewWrite model =
                                      ]
                                         ++ body
                                     )
+                                , div
+                                    [ class "col ml-10"
+                                    ]
+                                  <|
+                                    List.filterMap identity
+                                        [ if u then
+                                            Just <|
+                                                div [ class "row mb-10" ]
+                                                    [ button
+                                                        [ class "ui button"
+                                                        , style "background-color" fg
+                                                        , onClick MsgMoveUp
+                                                        ]
+                                                        [ i [ class "angle up icon", style "margin" "0" ] []
+                                                        ]
+                                                    ]
+
+                                          else
+                                            Nothing
+                                        , if d then
+                                            Just <|
+                                                div [ class "row" ]
+                                                    [ button
+                                                        [ class "ui button"
+                                                        , style "background-color" fg
+                                                        , onClick MsgMoveDown
+                                                        ]
+                                                        [ i [ class "angle down icon", style "margin" "0" ] []
+                                                        ]
+                                                    ]
+
+                                          else
+                                            Nothing
+                                        ]
                                 ]
                             ]
                         ]

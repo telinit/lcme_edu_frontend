@@ -48,6 +48,7 @@ module Api.Data exposing
     , Olympiad
     , OlympiadParticipation
     , Organization
+    , Reorder
     , ResetPasswordComplete
     , ResetPasswordRequest
     , SetEmail
@@ -99,6 +100,7 @@ module Api.Data exposing
     , encodeOlympiad
     , encodeOlympiadParticipation
     , encodeOrganization
+    , encodeReorder
     , encodeResetPasswordComplete
     , encodeResetPasswordRequest
     , encodeSetEmail
@@ -125,6 +127,7 @@ module Api.Data exposing
     , olympiadDecoder
     , olympiadParticipationDecoder
     , organizationDecoder
+    , reorderDecoder
     , resetPasswordCompleteDecoder
     , resetPasswordRequestDecoder
     , setEmailDecoder
@@ -535,6 +538,11 @@ type alias Organization =
     , updatedAt : Maybe Posix
     , name : String
     , nameShort : Maybe String
+    }
+
+
+type alias Reorder =
+    { activityIds : List Uuid
     }
 
 
@@ -1479,6 +1487,26 @@ encodeOrganizationPairs model =
     pairs
 
 
+encodeReorder : Reorder -> Json.Encode.Value
+encodeReorder =
+    encodeObject << encodeReorderPairs
+
+
+encodeReorderWithTag : ( String, String ) -> Reorder -> Json.Encode.Value
+encodeReorderWithTag ( tagField, tag ) model =
+    encodeObject (encodeReorderPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeReorderPairs : Reorder -> List EncodedField
+encodeReorderPairs model =
+    let
+        pairs =
+            [ encode "activity_ids" (Json.Encode.list Uuid.encode) model.activityIds
+            ]
+    in
+    pairs
+
+
 encodeResetPasswordComplete : ResetPasswordComplete -> Json.Encode.Value
 encodeResetPasswordComplete =
     encodeObject << encodeResetPasswordCompletePairs
@@ -2199,6 +2227,12 @@ organizationDecoder =
         |> maybeDecode "updated_at" Api.Time.dateTimeDecoder Nothing
         |> decode "name" Json.Decode.string
         |> maybeDecodeNullable "name_short" Json.Decode.string Nothing
+
+
+reorderDecoder : Json.Decode.Decoder Reorder
+reorderDecoder =
+    Json.Decode.succeed Reorder
+        |> decode "activity_ids" (Json.Decode.list Uuid.decoder)
 
 
 resetPasswordCompleteDecoder : Json.Decode.Decoder ResetPasswordComplete

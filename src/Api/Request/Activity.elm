@@ -21,6 +21,7 @@ module Api.Request.Activity exposing
     , activityList
     , activityPartialUpdate
     , activityRead
+    , activityReorder
     , activityUpdate
     )
 
@@ -102,6 +103,18 @@ activityRead id_path =
         []
         Nothing
         Api.Data.activityDecoder
+
+
+activityReorder : Api.Data.Reorder -> Api.Request ()
+activityReorder data_body =
+    Api.request
+        "POST"
+        "/activity/reorder/"
+        []
+        []
+        []
+        (Maybe.map Http.jsonBody (Just (Api.Data.encodeReorder data_body)))
+        (Json.Decode.succeed ())
 
 
 activityUpdate : String -> Api.Data.Activity -> Api.Request Api.Data.Activity
